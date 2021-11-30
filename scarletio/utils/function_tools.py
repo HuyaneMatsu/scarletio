@@ -1,8 +1,12 @@
-__all__ = ('alchemy_incendiary', 'call',)
+__all__ = ('alchemy_incendiary', 'call', 'copy_func',)
 
 from types import FunctionType
 
 from .docs import has_docs
+from .trace import ignore_frame
+
+ignore_frame(__spec__.origin, '__call__', 'return self.func(*self.args)', )
+ignore_frame(__spec__.origin, '__call__', 'return self.func(*self.args, **kwargs)', )
 
 @has_docs
 def call(function):

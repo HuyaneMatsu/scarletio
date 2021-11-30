@@ -21,6 +21,7 @@ setup(
     packages = [
         'scarletio',
         'scarletio.async_core',
+        'scarletio.async_core.futures',
         'scarletio.utils',
         'scarletio.web_client',
         'scarletio.web_common',
