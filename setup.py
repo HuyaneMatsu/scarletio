@@ -21,9 +21,9 @@ setup(
     packages = [
         'scarletio',
         'scarletio.async_core',
-        'scarletio.async_core.futures',
+        'scarletio.async_core.traps',
         'scarletio.utils',
-        'scarletio.web_client',
+        'scarletio.http_client',
         'scarletio.web_common',
     ],
     url = 'https://github.com/HuyaneMatsu/scarletio',
