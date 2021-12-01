@@ -6,7 +6,7 @@ from urllib.parse import SplitResult, parse_qsl as parse_query_string_list, urlj
 from math import isinf, isnan
 from datetime import datetime
 
-from ..utils import multidict, cached_property
+from ..utils import MultiValueDictionary, cached_property
 from .quoting import quote, unquote
 
 NoneType = type(None)
@@ -525,15 +525,15 @@ class URL:
     @cached_property
     def query(self):
         """
-        A multidict representing parsed query parameters in decoded representation.
+        A MultiValueDictionary representing parsed query parameters in decoded representation.
         
-        An empty multidict is returned if the url has no query parts.
+        An empty MultiValueDictionary is returned if the url has no query parts.
         
         Returns
         -------
-        query : `multidict` of (`str`, `Any`) items
+        query : `MultiValueDictionary` of (`str`, `Any`) items
         """
-        return multidict(parse_query_string_list(self.query_string, keep_blank_values=True))
+        return MultiValueDictionary(parse_query_string_list(self.query_string, keep_blank_values=True))
     
     @property
     def raw_query_string(self):

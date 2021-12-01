@@ -38,7 +38,7 @@ class HttpProcessingError(Exception):
         Http error code. Defaults to `0`.
     message : `str`
         Error message. Defaults to empty string.
-    headers : `None` or ``imultidict`` of (`str`, `str`) items
+    headers : `None` or ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Respective headers.
     """
     def __init__(self, message='', code=0, headers=None):
@@ -59,7 +59,7 @@ class AbortHandshake(HttpProcessingError, InvalidHandshake):
         Http error code. Defaults to `0`.
     message : `str`
         Error message. Defaults to empty string.
-    headers : `None` or ``imultidict`` of (`str`, `str`) items
+    headers : `None` or ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Respective headers.
     response : `None` or ``ClientResponse``
         Received http answer.
@@ -86,7 +86,7 @@ class ProxyError(HttpProcessingError):
         Http error code. Defaults to `0`.
     message : `str`
         Error message. Defaults to empty string.
-    headers : `None` or ``imultidict`` of (`str`, `str`) items
+    headers : `None` or ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Respective headers.
     """
     pass
@@ -116,7 +116,7 @@ class ContentEncodingError(HttpProcessingError, PayloadError):
         Http error code. Defaults to `0`.
     message : `str`
         Error message. Defaults to empty string.
-    headers : `None` or ``imultidict`` of (`str`, `str`) items
+    headers : `None` or ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Respective headers.
     """
     def __init__(self, message='Bad Request', headers=None):

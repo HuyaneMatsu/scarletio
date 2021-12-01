@@ -7,14 +7,14 @@ from .docs import *
 from .export_include import *
 from .function_tools import *
 from .hybrid_value_dictionary import *
-from .imultidict import *
+from .ignore_case_multi_value_dictionary import *
 from .istr import *
 from .json import *
 from .keep_type import *
 from .method_like import *
 from .methodize import *
 from .modulize import *
-from .multidict import *
+from .multi_value_dictionary import *
 from .properties import *
 from .removed_descriptor import *
 from .sorted_list import *
@@ -35,14 +35,14 @@ __all__ = (
     *export_include.__all__,
     *function_tools.__all__,
     *hybrid_value_dictionary.__all__,
-    *imultidict.__all__,
+    *ignore_case_multi_value_dictionary.__all__,
     *istr.__all__,
     *json.__all__,
     *keep_type.__all__,
     *method_like.__all__,
     *methodize.__all__,
     *modulize.__all__,
-    *multidict.__all__,
+    *multi_value_dictionary.__all__,
     *properties.__all__,
     *removed_descriptor.__all__,
     *sorted_list.__all__,

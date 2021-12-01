@@ -4,7 +4,7 @@ import base64, binascii, os, re, mimetypes as mime_types, uuid, zlib
 from io import StringIO, TextIOBase, BytesIO, BufferedRandom, IOBase, BufferedReader
 from urllib.parse import urlencode as url_encode
 
-from ..utils import export, imultidict, multidict, to_json
+from ..utils import export, IgnoreCaseMultiValueDictionary, MultiValueDictionary, to_json
 from ..async_core import AsyncIO
 
 from .quoting import unquote
@@ -83,7 +83,7 @@ class PayloadBase:
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : `imultidict` of (`str`, `str`) items
+    headers : `IgnoreCaseMultiValueDictionary` of (`str`, `str`) items
         Payload specific headers.
     size : `None` or `int`
         The payload's size if applicable.
@@ -107,7 +107,7 @@ class PayloadBase:
         self.filename = filename = kwargs.get('filename', None)
         self.size = None
         
-        headers = imultidict()
+        headers = IgnoreCaseMultiValueDictionary()
         
         content_type = kwargs.get('content_type', None)
         if content_type is None:
@@ -173,7 +173,7 @@ class BytesPayload(PayloadBase):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``imultidict`` of (`str`, `str`) items
+    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
     size : `None` or `int`
         The payload's size if applicable.
@@ -225,7 +225,7 @@ class StringPayload(BytesPayload):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``imultidict`` of (`str`, `str`) items
+    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
     size : `None` or `int`
         The payload's size if applicable.
@@ -281,7 +281,7 @@ class StringIOPayload(StringPayload):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``imultidict`` of (`str`, `str`) items
+    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
     size : `None` or `int`
         The payload's size if applicable.
@@ -317,7 +317,7 @@ class IOBasePayload(PayloadBase):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``imultidict`` of (`str`, `str`) items
+    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
     size : `None` or `int`
         The payload's size if applicable.
@@ -386,7 +386,7 @@ class TextIOPayload(IOBasePayload):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``imultidict`` of (`str`, `str`) items
+    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
     size : `None` or `int`
         The payload's size if applicable.
@@ -469,7 +469,7 @@ class BytesIOPayload(IOBasePayload):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``imultidict`` of (`str`, `str`) items
+    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
     size : `None` or `int`
         The payload's size if applicable.
@@ -482,7 +482,7 @@ class BytesIOPayload(IOBasePayload):
         ----------
         data : `BytesIO` instance
             The payload's data.
-        kwargs : ``imultidict`` of (`str`, `str`) items
+        kwargs : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
             Additional keyword parameters.
         """
         IOBasePayload.__init__(self, data, kwargs)
@@ -507,7 +507,7 @@ class BufferedReaderPayload(IOBasePayload):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``imultidict`` of (`str`, `str`) items
+    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
     size : `None` or `int`
         The payload's size if applicable.
@@ -549,7 +549,7 @@ class JsonPayload(BytesPayload):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``imultidict`` of (`str`, `str`) items
+    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
     size : `None` or `int`
         The payload's size if applicable.
@@ -591,7 +591,7 @@ class AsyncIterablePayload(PayloadBase):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``imultidict`` of (`str`, `str`) items
+    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
     size : `None` or `int`
         The payload's size if applicable.
@@ -649,7 +649,7 @@ class AsyncIOPayload(IOBasePayload):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``imultidict`` of (`str`, `str`) items
+    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
     size : `None` or `int`
         The payload's size if applicable.
@@ -690,7 +690,7 @@ class BodyPartReaderPayload(PayloadBase):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``imultidict`` of (`str`, `str`) items
+    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
     size : `None` or `int`
         The payload's size if applicable.
@@ -755,7 +755,7 @@ class MimeType:
             return
         
         parts = mime_type.split(';')
-        parameters = multidict()
+        parameters = MultiValueDictionary()
         for item in parts[1:]:
             if not item:
                 continue
@@ -1057,7 +1057,7 @@ class MultipartWriter(PayloadBase):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``imultidict`` of (`str`, `str`) items
+    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
     size : `None` or `int`
         The payload's size if applicable.
@@ -1146,7 +1146,7 @@ class MultipartWriter(PayloadBase):
         ----------
         body_part : ``PayloadBase``, ``BodyPartReader``, `bytes`, `bytearray`, `memoryview`, `BytesIO`, `StringIO`, \
             `TextIOBase`, `BufferedReader`, `BufferedRandom`, `IOBase`, ``AsyncIO``, `async-iterable` instance
-        headers : `None` or ``imultidict`` of (`str`, `str`) items, Optional
+        headers : `None` or ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items, Optional
             Optional headers for the field.
         
         Returns
@@ -1163,7 +1163,7 @@ class MultipartWriter(PayloadBase):
             - The `payload`'s content has unknown content-transfer-encoding.
         """
         if headers is None:
-            headers = imultidict()
+            headers = IgnoreCaseMultiValueDictionary()
         
         if isinstance(body_part, PayloadBase):
             if (headers is not None):
@@ -1276,7 +1276,7 @@ class MultipartWriter(PayloadBase):
         ----------
         obj : `None`, `str`, `int`, `float`, `list` of repeat, `dict` of (`str`, repeat) items
             The payload's data.
-        headers : `None` or ``imultidict`` of (`str`, `str`) items, Optional
+        headers : `None` or ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items, Optional
             Optional headers for the json field.
 
         Returns
@@ -1307,7 +1307,7 @@ class MultipartWriter(PayloadBase):
         ----------
         obj : `mapping` of (`str`, `Any`) items, `sequence` of `tuple` (`str`, `Any`) items
             The object, what should be percent encoded for a post request.
-        headers : `None` or ``imultidict`` of (`str`, `str`) items, Optional
+        headers : `None` or ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items, Optional
             Optional headers for the url_encoded field.
         
         Returns

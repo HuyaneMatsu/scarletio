@@ -1,13 +1,13 @@
-__all__ = ('multidict', )
+__all__ = ('IgnoreCaseMultiValueDictionary', )
 
 from .docs import has_docs
-from .multidict import multidict
+from .multi_value_dictionary import MultiValueDictionary
 from .istr import istr
 
 @has_docs
-class imultidict(multidict):
+class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
     """
-    ``multidict`` subclass, what can be used to hold http headers.
+    ``MultiValueDictionary`` subclass, what can be used to hold http headers.
     
     It's keys ignore casing.
     """
@@ -16,15 +16,15 @@ class imultidict(multidict):
     @has_docs
     def __init__(self, iterable=None):
         """
-        Creates a new ``imultidict`` instance.
+        Creates a new ``IgnoreCaseMultiValueDictionary`` instance.
         
         Parameters
         ----------
         iterable : `None` or `iterable`, Optional
-            Iterable to update the created multidict initially.
+            Iterable to update the created MultiValueDictionary initially.
             
             Can be given as one of the following:
-                - ``multidict`` instance.
+                - ``MultiValueDictionary`` instance.
                 - `dict` instance.
                 - `iterable` of `key` - `value` pairs.
         """
@@ -40,7 +40,7 @@ class imultidict(multidict):
             for key, values in dict.items(iterable):
                 setitem(self, key, values.copy())
         
-        elif isinstance(iterable, multidict):
+        elif isinstance(iterable, MultiValueDictionary):
             for key, values in dict.items(iterable):
                 setitem(self, istr(key), values.copy())
         
@@ -62,7 +62,7 @@ class imultidict(multidict):
     @has_docs
     def __getitem__(self, key):
         """
-        Returns the multidict's `value` for the given `key`. If the `key` has more values, then returns the 0th of
+        Returns the MultiValueDictionary's `value` for the given `key`. If the `key` has more values, then returns the 0th of
         them.
         """
         key = istr(key)
@@ -70,23 +70,23 @@ class imultidict(multidict):
     
     @has_docs
     def __setitem__(self, key, value):
-        """Adds the given `key` - `value` pair to the multidict."""
+        """Adds the given `key` - `value` pair to the MultiValueDictionary."""
         key = istr(key)
-        multidict.__setitem__(self, key, value)
+        MultiValueDictionary.__setitem__(self, key, value)
     
     @has_docs
     def __delitem__(self, key):
         """
-        Removes the `value` for the given `key` from the multidict. If the `key` has more values, then removes only
+        Removes the `value` for the given `key` from the MultiValueDictionary. If the `key` has more values, then removes only
         the 0th of them.
         """
         key = istr(key)
-        multidict.__delitem__(self, key)
+        MultiValueDictionary.__delitem__(self, key)
     
     @has_docs
     def extend(self, mapping):
         """
-        Extends the multidict titled with the given `mapping`'s items.
+        Extends the MultiValueDictionary titled with the given `mapping`'s items.
         
         Parameters
         ----------
@@ -115,7 +115,7 @@ class imultidict(multidict):
         key : `Any`
             The `key` to match.
         default : `Any`, Optional
-            Default value to return if `key` is not present in the multidict. Defaults to `None`.
+            Default value to return if `key` is not present in the MultiValueDictionary. Defaults to `None`.
         
         Returns
         -------
@@ -123,7 +123,7 @@ class imultidict(multidict):
             The values for the given `key` if present.
         """
         key = istr(key)
-        return multidict.get_all(self, key, default)
+        return MultiValueDictionary.get_all(self, key, default)
     
     @has_docs
     def get_one(self, key, default=None):
@@ -135,7 +135,7 @@ class imultidict(multidict):
         key : `Any`
             The key to match.
         default : `Any`, Optional
-            Default value to return if `key` is not present in the multidict. Defaults to `None`.
+            Default value to return if `key` is not present in the MultiValueDictionary. Defaults to `None`.
         
         Returns
         -------
@@ -143,7 +143,7 @@ class imultidict(multidict):
             The value for the given key if present.
         """
         key = istr(key)
-        return multidict.get_one(self, key, default)
+        return MultiValueDictionary.get_one(self, key, default)
     
     get = get_one
     
@@ -152,14 +152,14 @@ class imultidict(multidict):
         """
         Returns the value for the given `key`.
         
-        If the `key` is not present in the multidict, then set's the given `default` value as it.
+        If the `key` is not present in the MultiValueDictionary, then set's the given `default` value as it.
         
         Parameters
         ----------
         key : `Any`
             The key to match.
         default : `Any`, Optional
-            Default value to set and return if `key` is not present in the multidict.
+            Default value to set and return if `key` is not present in the MultiValueDictionary.
         
         Returns
         -------
@@ -167,19 +167,19 @@ class imultidict(multidict):
             The first value for which `key` matched, or `default` if none.
         """
         key = istr(key)
-        return multidict.setdefault(self, key, default)
+        return MultiValueDictionary.setdefault(self, key, default)
     
     @has_docs
     def pop_all(self, key, default=...):
         """
-        Removes all the values from the multidict which the given `key` matched.
+        Removes all the values from the MultiValueDictionary which the given `key` matched.
         
         Parameters
         ----------
         key : `Any`
             The key to match.
         default : `Any`, Optional
-            Default value to return if `key` is not present in the multidict.
+            Default value to return if `key` is not present in the MultiValueDictionary.
         
         Returns
         -------
@@ -189,22 +189,22 @@ class imultidict(multidict):
         Raises
         ------
         KeyError
-            if `key` is not present in the multidict and `default` value is not given either.
+            if `key` is not present in the MultiValueDictionary and `default` value is not given either.
         """
         key = istr(key)
-        return multidict.pop_all(self, key, default)
+        return MultiValueDictionary.pop_all(self, key, default)
     
     @has_docs
     def pop_one(self, key, default=...):
         """
-        Removes the first value from the multidict, which matches the given `key`.
+        Removes the first value from the MultiValueDictionary, which matches the given `key`.
         
         Parameters
         ----------
         key : `Any`
             The key to match.
         default : `Any`, Optional
-            Default value to return if `key` is not present in the multidict.
+            Default value to return if `key` is not present in the MultiValueDictionary.
         
         Returns
         -------
@@ -214,9 +214,9 @@ class imultidict(multidict):
         Raises
         ------
         KeyError
-            if `key` is not present in the multidict and `default` value is not given either.
+            if `key` is not present in the MultiValueDictionary and `default` value is not given either.
         """
         key = istr(key)
-        return multidict.pop_one(self, key, default)
+        return MultiValueDictionary.pop_one(self, key, default)
     
     pop = pop_one

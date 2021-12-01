@@ -1,50 +1,50 @@
-__all__ = ('multidict', )
+__all__ = ('MultiValueDictionary', )
 
 from .docs import has_docs
 from .removed_descriptor import RemovedDescriptor
 
 @has_docs
-class _multidict_items:
+class _MultiValueDictionaryItemIterator:
     """
-    ``multidict`` item iterator.
+    ``MultiValueDictionary`` item iterator.
     
     Attributes
     ----------
-    _parent : ``multidict``
-        The parent multidict.
+    _parent : ``MultiValueDictionary``
+        The parent MultiValueDictionary.
     """
     __slots__ = ('_parent',)
     
     @has_docs
     def __init__(self, parent):
         """
-        Creates a new ``multidict`` item iterator.
+        Creates a new ``MultiValueDictionary`` item iterator.
         
         Parameters
         ----------
-        parent : ``multidict``
-            The parent multidict.
+        parent : ``MultiValueDictionary``
+            The parent multi value dictionary.
         """
         self._parent = parent
     
     
     @has_docs
     def __len__(self):
-        """Returns the respective ``multidict``'s length."""
+        """Returns the respective ``MultiValueDictionary``'s length."""
         return len(self._parent)
     
     
     @has_docs
     def __iter__(self):
         """
-        Iterates over the respective ``multidict``'s items.
+        Iterates over the respective ``MultiValueDictionary``'s items.
         
         This method is a generator.
         
         Yields
         -------
         item : `tuple` (`Any`, `Any`)
-            Items of the respective multidict as `key` - `value` pairs.
+            Items of the respective MultiValueDictionary as `key` - `value` pairs.
         """
         for key, values in dict.items(self._parent):
             for value in values:
@@ -53,7 +53,7 @@ class _multidict_items:
     
     @has_docs
     def __contains__(self, item):
-        """Returns whether the respective multidict contains the given item."""
+        """Returns whether the respective MultiValueDictionary contains the given item."""
         key, value = item
         parent = self._parent
         try:
@@ -64,59 +64,60 @@ class _multidict_items:
 
 
 @has_docs
-class _multidict_values:
+class _MultiValueDictionaryValueIterator:
     """
-    ``multidict`` value iterator.
+    ``MultiValueDictionary`` value iterator.
     
     Attributes
     ----------
-    _parent : ``multidict``
-        The parent multidict.
+    _parent : ``MultiValueDictionary``
+        The parent MultiValueDictionary.
     """
     __slots__ = ('_parent',)
     
     @has_docs
     def __init__(self, parent):
         """
-        Creates a new ``multidict`` value iterator.
+        Creates a new ``MultiValueDictionary`` value iterator.
         
         Parameters
         ----------
-        parent : ``multidict``
-            The parent multidict.
+        parent : ``MultiValueDictionary``
+            The parent MultiValueDictionary.
         """
         self._parent = parent
     
     @has_docs
     def __len__(self):
-        """Returns the respective ``multidict``'s length."""
+        """Returns the respective ``MultiValueDictionary``'s length."""
         return len(self._parent)
     
     @has_docs
     def __iter__(self):
         """
-        Iterates over the respective ``multidict``'s values.
+        Iterates over the respective ``MultiValueDictionary``'s values.
         
         This method is a generator.
         
         Yields
         -------
         value : `Any`
-            Values of the respective multidict.
+            Values of the respective MultiValueDictionary.
         """
         for values in dict.values(self._parent):
             yield from values
     
     @has_docs
     def __contains__(self, value):
-        """Returns whether the respective multidict contains the given value."""
+        """Returns whether the respective MultiValueDictionary contains the given value."""
         for values in dict.values(self._parent):
             if value in values:
                 return True
         return False
 
+
 @has_docs
-class multidict(dict):
+class MultiValueDictionary(dict):
     """
     Dictionary subclass, which can hold multiple values bound to a single key.
     """
@@ -125,15 +126,15 @@ class multidict(dict):
     @has_docs
     def __init__(self, iterable=None):
         """
-        Creates a new ``multidict`` instance.
+        Creates a new ``MultiValueDictionary`` instance.
         
         Parameters
         ----------
         iterable : `None` or `iterable`, Optional
-            Iterable to update the created multidict initially.
+            Iterable to update the created MultiValueDictionary initially.
             
             Can be given as one of the following:
-                - ``multidict`` instance.
+                - ``MultiValueDictionary`` instance.
                 - `dict` instance.
                 - `iterable` of `key` - `value` pairs.
         """
@@ -145,7 +146,7 @@ class multidict(dict):
         getitem = dict.__getitem__
         setitem = dict.__setitem__
         
-        if isinstance(iterable, multidict):
+        if isinstance(iterable, MultiValueDictionary):
             for key, values in dict.items(iterable):
                 setitem(self, key, values.copy())
         
@@ -165,14 +166,14 @@ class multidict(dict):
     @has_docs
     def __getitem__(self, key):
         """
-        Returns the multidict's `value` for the given `key`. If the `key` has more values, then returns the 0th of
+        Returns the MultiValueDictionary's `value` for the given `key`. If the `key` has more values, then returns the 0th of
         them.
         """
         return dict.__getitem__(self, key)[0]
     
     @has_docs
     def __setitem__(self, key, value):
-        """Adds the given `key` - `value` pair to the multidict."""
+        """Adds the given `key` - `value` pair to the MultiValueDictionary."""
         try:
             line = dict.__getitem__(self, key)
         except KeyError:
@@ -184,7 +185,7 @@ class multidict(dict):
     @has_docs
     def __delitem__(self, key):
         """
-        Removes the `value` for the given `key` from the multidict. If the `key` has more values, then removes only
+        Removes the `value` for the given `key` from the MultiValueDictionary. If the `key` has more values, then removes only
         the 0th of them.
         """
         my_list = dict.__getitem__(self, key)
@@ -196,7 +197,7 @@ class multidict(dict):
     @has_docs
     def extend(self, mapping):
         """
-        Extends the multidict with the given `mapping`'s items.
+        Extends the MultiValueDictionary with the given `mapping`'s items.
         
         Parameters
         ----------
@@ -224,7 +225,7 @@ class multidict(dict):
         key : `Any`
             The `key` to match.
         default : `Any`, Optional
-            Default value to return if `key` is not present in the multidict. Defaults to `None`.
+            Default value to return if `key` is not present in the MultiValueDictionary. Defaults to `None`.
         
         Returns
         -------
@@ -246,7 +247,7 @@ class multidict(dict):
         key : `Any`
             The key to match.
         default : `Any`, Optional
-            Default value to return if `key` is not present in the multidict. Defaults to `None`.
+            Default value to return if `key` is not present in the MultiValueDictionary. Defaults to `None`.
         
         Returns
         -------
@@ -267,14 +268,14 @@ class multidict(dict):
         """
         Returns the value for the given `key`.
         
-        If the `key` is not present in the multidict, then set's the given `default` value as it.
+        If the `key` is not present in the MultiValueDictionary, then set's the given `default` value as it.
         
         Parameters
         ----------
         key : `Any`
             The key to match.
         default : `Any`, Optional
-            Default value to set and return if `key` is not present in the multidict.
+            Default value to set and return if `key` is not present in the MultiValueDictionary.
         
         Returns
         -------
@@ -294,14 +295,14 @@ class multidict(dict):
     @has_docs
     def pop_all(self, key, default=...):
         """
-        Removes all the values from the multidict which the given `key` matched.
+        Removes all the values from the MultiValueDictionary which the given `key` matched.
         
         Parameters
         ----------
         key : `Any`
             The key to match.
         default : `Any`, Optional
-            Default value to return if `key` is not present in the multidict.
+            Default value to return if `key` is not present in the MultiValueDictionary.
         
         Returns
         -------
@@ -311,7 +312,7 @@ class multidict(dict):
         Raises
         ------
         KeyError
-            if `key` is not present in the multidict and `default` value is not given either.
+            if `key` is not present in the MultiValueDictionary and `default` value is not given either.
         """
         try:
             return dict.pop(self, key)
@@ -323,14 +324,14 @@ class multidict(dict):
     @has_docs
     def pop_one(self, key, default=...):
         """
-        Removes the first value from the multidict, which matches the given `key`.
+        Removes the first value from the MultiValueDictionary, which matches the given `key`.
         
         Parameters
         ----------
         key : `Any`
             The key to match.
         default : `Any`, Optional
-            Default value to return if `key` is not present in the multidict.
+            Default value to return if `key` is not present in the MultiValueDictionary.
         
         Returns
         -------
@@ -340,7 +341,7 @@ class multidict(dict):
         Raises
         ------
         KeyError
-            if `key` is not present in the multidict and `default` value is not given either.
+            if `key` is not present in the MultiValueDictionary and `default` value is not given either.
         """
         try:
             values = dict.__getitem__(self, key)
@@ -361,12 +362,12 @@ class multidict(dict):
     @has_docs
     def copy(self):
         """
-        Copies the multidict.
+        Copies the MultiValueDictionary.
         
         Returns
         -------
-        new : ``multidict`` instance
-            The new multidict.
+        new : ``MultiValueDictionary`` instance
+            The new MultiValueDictionary.
         """
         new = dict.__new__(type(self))
         setitem = dict.__setitem__
@@ -378,28 +379,28 @@ class multidict(dict):
     @has_docs
     def items(self):
         """
-        Returns an item iterator for the multidict.
+        Returns an item iterator for the MultiValueDictionary.
         
         Returns
         -------
-        items : ``_multidict_items``
+        items : ``_MultiValueDictionaryItemIterator``
         """
-        return _multidict_items(self)
+        return _MultiValueDictionaryItemIterator(self)
     
     @has_docs
     def values(self):
         """
-        Returns a value iterator for the multidict.
+        Returns a value iterator for the MultiValueDictionary.
         
         Returns
         -------
-        items : ``_multidict_values``
+        items : ``_MultiValueDictionaryValueIterator``
         """
-        return _multidict_values(self)
+        return _MultiValueDictionaryValueIterator(self)
     
     @has_docs
     def __repr__(self):
-        """Returns the multidict's representation."""
+        """Returns the MultiValueDictionary's representation."""
         result = [
             self.__class__.__name__,
             '({',
@@ -423,7 +424,7 @@ class multidict(dict):
     @has_docs
     def kwargs(self):
         """
-        Converts the multidict to `**kwargs`-able dictionary. If a `key` has more values, then always returns the last
+        Converts the MultiValueDictionary to `**kwargs`-able dictionary. If a `key` has more values, then always returns the last
         value for it.
         
         Returns

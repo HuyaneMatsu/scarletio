@@ -23,7 +23,7 @@ class ReuBytesIO(BytesIO):
     
     Attributes
     ----------
-    _last_op : `int`
+    _last_operation : `int`
         The last called operation of the buffer.
         
         If switching after reading to writing the buffer seeks to `0`.
@@ -40,14 +40,15 @@ class ReuBytesIO(BytesIO):
     _size : `int`
         The position, till the buffer was written by the last reading session and can be read back.
     """
-    __slots__ = ('_last_op', '_size')
+    __slots__ = ('_last_operation', '_size')
     
     def __init__(self,):
         """
         Initializes the buffer.
         """
         self._size = 0
-        self._last_op = OPERATION_WRITE
+        self._last_operation = OPERATION_WRITE
+    
     
     def write(self, data):
         """
@@ -60,14 +61,15 @@ class ReuBytesIO(BytesIO):
         data : `bytes-like`
             The data to write.
         """
-        if self._last_op != OPERATION_WRITE:
+        if self._last_operation != OPERATION_WRITE:
             BytesIO.seek(self, 0)
             self._size = 0
-            self._last_op = OPERATION_WRITE
+            self._last_operation = OPERATION_WRITE
         
         amount = BytesIO.write(self, data)
         self._size += amount
         return amount
+    
     
     def read(self, amount=None):
         """
@@ -84,7 +86,7 @@ class ReuBytesIO(BytesIO):
         data : `bytes`
             The red data.
         """
-        self._last_op = OPERATION_READ
+        self._last_operation = OPERATION_READ
         
         if amount is None:
             amount = self._size-self.tell()
@@ -95,11 +97,13 @@ class ReuBytesIO(BytesIO):
         
         return BytesIO.read(self, amount)
     
+    
     def close(self):
         """
         Seeks back to position `0`.
         """
         self.seek(0)
+    
     
     def __len__(self):
         """
@@ -110,6 +114,7 @@ class ReuBytesIO(BytesIO):
         length : `int`
         """
         return self._size
+    
     
     def seek(self, offset, whence=os.SEEK_SET):
         """
@@ -195,9 +200,11 @@ class _AsyncIOIterator:
         """
         self._wrapped = wrapped
     
+    
     def __aiter__(self):
         """Asynchronous iterating an ``_AsyncIOIterator`` returns itself."""
         return self
+    
     
     async def __anext__(self):
         """
@@ -247,6 +254,7 @@ class AsyncIO:
         self._io = await executor.execute(alchemy_incendiary(open, args, kwargs))
         return self
     
+    
     @classmethod
     def wrap(cls, io):
         """
@@ -270,6 +278,7 @@ class AsyncIO:
         self._executor = executor
         return self
     
+    
     @property
     def buffer(self):
         """
@@ -280,6 +289,7 @@ class AsyncIO:
         buffer : ``_io.BufferedWriter`` or ``_io.BufferedReader``
         """
         return self._io.buffer
+    
     
     def __del__(self):
         """Releases the executor and closes the wrapped `file-io` if not yet done."""
@@ -303,6 +313,7 @@ class AsyncIO:
         closed : `bool`
         """
         return (self._executor is None)
+    
     
     async def detach(self):
         """
@@ -329,6 +340,7 @@ class AsyncIO:
         self._executor = None
         return raw
     
+    
     async def detach_to_self(self):
         """
         Separates the wrapped `file-io`'s underlying raw stream from the buffer and attaches it to the ``AsyncIO``
@@ -345,6 +357,7 @@ class AsyncIO:
             raise ValueError(IO_CLOSED_OR_DETACHED)
         self._io = await executor.execute(self._io.detach)
     
+    
     @property
     def encoding(self):
         """
@@ -355,6 +368,7 @@ class AsyncIO:
         encoding : `str`
         """
         return self._io.encoding
+    
     
     @property
     def errors(self):
@@ -367,6 +381,7 @@ class AsyncIO:
         """
         return self._io.errors
     
+    
     def fileno(self):
         """
         Returns the underlying file descriptor.
@@ -376,6 +391,7 @@ class AsyncIO:
         fd : `int`
         """
         return self._io.fileno()
+    
     
     async def flush(self):
         """
@@ -395,7 +411,8 @@ class AsyncIO:
             raise ValueError(IO_CLOSED_OR_DETACHED)
         
         return await executor.execute(self._io.flush)
-        
+    
+    
     def isatty(self):
         """
         Returns whether the stream is interactive.
@@ -405,6 +422,7 @@ class AsyncIO:
         isatty : `bool`
         """
         return self._io.isatty()
+    
     
     @property
     def line_buffering(self):
@@ -417,6 +435,7 @@ class AsyncIO:
         """
         return self._io.line_buffering
     
+    
     @property
     def mode(self):
         """
@@ -427,6 +446,7 @@ class AsyncIO:
         mode : `str`
         """
         return self._io.mode
+    
     
     @property
     def name(self):
@@ -439,6 +459,7 @@ class AsyncIO:
         """
         return self._io.name
     
+    
     @property
     def newlines(self):
         """
@@ -450,6 +471,7 @@ class AsyncIO:
         newlines : `None`, `str` or `tuple` of `str`
         """
         return self._io.newlines
+    
     
     async def read(self, size=-1):
         """
@@ -483,6 +505,7 @@ class AsyncIO:
         
         return await executor.execute(alchemy_incendiary(self._io.read, (size,),))
     
+    
     def read1(self, *args):
         """
         Reads from the underlying stream.
@@ -515,6 +538,7 @@ class AsyncIO:
         
         return executor.execute(alchemy_incendiary(self._io.read1, args,))
     
+    
     @property
     def readable(self):
         """
@@ -525,6 +549,7 @@ class AsyncIO:
         readable : `bool`
         """
         return self._io.readable
+    
     
     async def readinto(self, b):
         """
@@ -549,6 +574,7 @@ class AsyncIO:
             raise ValueError(IO_CLOSED_OR_DETACHED)
         
         return await executor.execute(alchemy_incendiary(self._io.readinto, (b,),))
+    
     
     async def readinto1(self, b):
         """
@@ -575,6 +601,7 @@ class AsyncIO:
             raise ValueError(IO_CLOSED_OR_DETACHED)
         
         return await executor.execute(alchemy_incendiary(self._io.readinto1, (b,),))
+    
     
     async def readline(self, size=-1):
         """
@@ -608,6 +635,7 @@ class AsyncIO:
         
         return await executor.execute(alchemy_incendiary(self._io.readline, (size,),))
     
+    
     async def readlines(self, hint=-1):
         """
         Read and return a list of lines from the stream.
@@ -634,6 +662,7 @@ class AsyncIO:
         
         io = self._io
         return await executor.execute(alchemy_incendiary(io.__class__.readlines, (io, hint,),))
+    
     
     async def seek(self, offset, whence=os.SEEK_SET):
         """
@@ -678,6 +707,7 @@ class AsyncIO:
         io = self._io
         return await executor.execute(alchemy_incendiary(io.__class__.seek, (io, offset, whence),))
     
+    
     def seekable(self):
         """
         Returns whether the stream supports random access. If not, then ``.seek``, ``.tell`` and ``.truncate`` will
@@ -688,6 +718,7 @@ class AsyncIO:
         seekable : `bool`
         """
         return self._io.seekable()
+    
     
     async def tell(self):
         """
@@ -711,6 +742,7 @@ class AsyncIO:
             raise ValueError(IO_CLOSED_OR_DETACHED)
         
         return await executor.execute(self._io.tell)
+    
     
     async def truncate(self, size=None):
         """
@@ -744,6 +776,7 @@ class AsyncIO:
         io = self._io
         return await executor.execute(alchemy_incendiary(io.__class__.truncate, (io, size,),))
     
+    
     def writable(self):
         """
         Returns whether the stream supports writing. If not, then, then ``.write``, ``.writelines``  and ``.truncate``
@@ -754,6 +787,7 @@ class AsyncIO:
         writable : `bool`
         """
         return self._io.writable()
+    
     
     async def write(self, b):
         """
@@ -787,6 +821,7 @@ class AsyncIO:
         io = self._io
         return await executor.execute(alchemy_incendiary(io.__class__.write, (io, b,),))
     
+    
     async def writelines(self, lines):
         """
         Write a list of lines to the stream. Line separators are not added, so it is usual for each of the lines
@@ -813,9 +848,10 @@ class AsyncIO:
         io = self._io
         return await executor.execute(alchemy_incendiary(io.__class__.writelines, (io, lines,),))
     
+    
     def __repr__(self):
         """Returns the io's representation"""
-        result = [
+        repr_parts = [
             '<',
             self.__class__.__name__,
             ' io=',
@@ -824,16 +860,16 @@ class AsyncIO:
         
         executor = self._executor
         if executor is None:
-            result.append(' closed')
+            repr_parts.append(' closed')
         else:
-            result.append(', executor=')
-            result.append(repr(executor))
+            repr_parts.append(', executor=')
+            repr_parts.append(repr(executor))
         
-        result.append('>')
-        
-        return ''.join(result)
+        repr_parts.append('>')
+        return ''.join(repr_parts)
     
     __str__ = __repr__
+    
     
     def __enter__(self):
         """
@@ -844,6 +880,7 @@ class AsyncIO:
             raise ValueError('Can not enter an already closed or detached io.')
         
         return self
+    
     
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Closes the asynchronous io."""
@@ -884,9 +921,11 @@ class _ReuAsyncIOIterator:
         """
         self._wrapped = wrapped
     
+    
     def __aiter__(self):
         """Asynchronous iterating an ``_ReuAsyncIOIterator`` returns itself."""
         return self
+    
     
     async def __anext__(self):
         """Reads a line from the respective file."""
@@ -955,6 +994,7 @@ class ReuAsyncIO(AsyncIO):
         self._should_seek = False
         return self
     
+    
     def close(self):
         """
         Sets the internal ``._should_seek`` slot to `True`, marking the io to seek back to the start at the next
@@ -962,7 +1002,9 @@ class ReuAsyncIO(AsyncIO):
         """
         self._should_seek = True
     
+    
     real_close = AsyncIO.__del__
+    
     
     @classmethod
     def wrap(cls, io):
@@ -987,6 +1029,7 @@ class ReuAsyncIO(AsyncIO):
         self._executor = executor
         self._should_seek = False
         return self
+    
     
     async def detach(self):
         """
@@ -1014,6 +1057,7 @@ class ReuAsyncIO(AsyncIO):
         self._should_seek = False
         return raw
     
+    
     @staticmethod
     def _seek_and_call(self, func, *args):
         """
@@ -1037,6 +1081,7 @@ class ReuAsyncIO(AsyncIO):
         io.seek(0)
         self._should_seek = False
         return func(self._io, *args)
+    
     
     async def read(self, size=-1):
         """
@@ -1075,7 +1120,8 @@ class ReuAsyncIO(AsyncIO):
             task = alchemy_incendiary(func, (self._io, size,),)
         
         return await executor.execute(task)
-        
+    
+    
     async def read1(self, *args):
         """
         Reads from the underlying stream.
@@ -1114,6 +1160,7 @@ class ReuAsyncIO(AsyncIO):
         
         return await executor.execute(task)
     
+    
     async def readinto(self, b):
         """
         Read bytes into a pre-allocated writable `bytes-like` object `b`, and return the number of bytes read.
@@ -1143,6 +1190,7 @@ class ReuAsyncIO(AsyncIO):
             task = alchemy_incendiary(func, (self._io, b,),)
         
         return await executor.execute(task)
+    
     
     async def readinto1(self, b):
         """
@@ -1175,6 +1223,7 @@ class ReuAsyncIO(AsyncIO):
             task = alchemy_incendiary(func, (self._io, b,),)
         
         return await executor.execute(task)
+    
     
     async def readline(self, size=-1):
         """
@@ -1214,6 +1263,7 @@ class ReuAsyncIO(AsyncIO):
         
         return await executor.execute(task)
     
+    
     async def readlines(self, hint=-1):
         """
         Read and return a list of lines from the stream.
@@ -1250,6 +1300,7 @@ class ReuAsyncIO(AsyncIO):
             task = alchemy_incendiary(func, (self._io, hint,),)
         
         return await executor.execute(task)
+    
     
     async def seek(self, offset, whence=os.SEEK_SET):
         """
@@ -1299,6 +1350,7 @@ class ReuAsyncIO(AsyncIO):
         
         return await executor.execute(task)
     
+    
     async def tell(self):
         """
         Return the current stream position.
@@ -1327,6 +1379,7 @@ class ReuAsyncIO(AsyncIO):
             return 0
         
         return await executor.execute(self._io.tell)
+    
     
     def __aiter__(self):
         """

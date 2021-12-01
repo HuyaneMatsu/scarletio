@@ -3,7 +3,7 @@ __all__ = ('Formdata', )
 from io import IOBase
 from urllib.parse import urlencode
 
-from ..utils import multidict
+from ..utils import MultiValueDictionary
 
 from .headers import CONTENT_TYPE, CONTENT_TRANSFER_ENCODING, CONTENT_LENGTH
 from .multipart import MultipartWriter, create_payload, BytesPayload
@@ -15,11 +15,11 @@ class Formdata:
     
     Attributes
     ----------
-    fields : `list` of `tuple` (`multidict` of (`str`, `str`) items, `multidict` of (`str`, `str`) items, `Any`)
+    fields : `list` of `tuple` (`MultiValueDictionary` of (`str`, `str`) items, `MultiValueDictionary` of (`str`, `str`) items, `Any`)
         The fields of the formdata. Each element is a tuple, which contains the following elements:
-        - `type_options` : `multidict` of (`str`, `str`) items;
+        - `type_options` : `MultiValueDictionary` of (`str`, `str`) items;
             Additional information used by the created ``PayloadBase`` instance when the field is generated.
-        - `headers` : `multidict` of (`str`, `str`) items;
+        - `headers` : `MultiValueDictionary` of (`str`, `str`) items;
             The field specific headers.
         - value : `Any`;
             The field's value.
@@ -119,7 +119,7 @@ class Formdata:
             if (filename is None) and (transfer_encoding is None):
                 filename = name
         
-        type_options = multidict()
+        type_options = MultiValueDictionary()
         type_options['name'] = name
         
         if (filename is not None):
