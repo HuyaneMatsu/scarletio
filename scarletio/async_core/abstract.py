@@ -1,15 +1,8 @@
-__all__ = ('AbstractTransportLayerBase', 'AbstractReadProtocolBase', 'AbstractGenericProtocolBase',
-    'AbstractReadWriteProtocolBase', 'AbstractDatagramProtocolBase')
+__all__ = ('AbstractBidirectionalTransportLayerBase', 'AbstractProtocolBase', 'AbstractTransportLayerBase', )
 
 class AbstractTransportLayerBase:
     """
     Defines abstract transport layer functionality.
-    
-    Inheritance
-    -----------
-    - ``AbstractTransportLayerBase`` -> ``TransportLayerBase``
-    - ``TransportLayerBase`` -> ``SocketTransportLayerBase``
-    - ``SocketTransportLayerBase`` -> ``SocketTransportLayer`` | ``DatagramSocketTransportLayer``
     """
     __slots__ = ()
     
@@ -227,18 +220,37 @@ class AbstractTransportLayerBase:
         return False
 
 
-class AbstractGenericProtocolBase:
+class AbstractProtocolBase:
     """
     Defines abstract protocol functionality.
     
-    Inheritance
-    -----------
-    - ``AbstractGenericProtocolBase`` -> ``AbstractReadProtocolBase`` | ``AbstractDatagramProtocolBase``
-    - ``AbstractReadProtocolBase`` -> ``AbstractReadWriteProtocolBase`` | ``ReadProtocolBase`` |
-        ``DatagramMergerReadProtocol``
-    - ``ReadProtocolBase`` -> ``ReadWriteProtocolBase``
-    - ``AbstractDatagramProtocolBase`` -> ``DatagramAddressedReadProtocol`` | ``DatagramMergerReadProtocol``
-    - ``AbstractReadWriteProtocolBase`` -> ``ReadWriteProtocolBase``
+    Structure
+    ---------
+    All protocol should implement the following methods:
+    - ``.connection_made``
+    - ``.connection_lost``
+    - ``.close``
+    - ``.close_transport``
+    - ``.get_transport``
+    - ``.get_extra_info``
+    
+    Read protocols should implement the following:
+    - ``.set_exception``
+    - ``.eof_received``
+    - ``.data_received``
+    
+    Write protocols should implement the following:
+    - ``.pause_writing``
+    - ``.resume_writing``
+    - ``.write``
+    - ``.writelines``
+    - ``.write_eof``
+    - ``.can_write_eof``
+    - ``.drain``
+    
+    Datagram protocols should implement the following:
+    - ``.datagram_received``
+    - ``.error_received``
     """
     __slots__ = ()
     
@@ -276,12 +288,34 @@ class AbstractGenericProtocolBase:
         """
         pass
     
-
-class AbstractReadProtocolBase(AbstractGenericProtocolBase):
-    """
-    Abstract protocol base, which defines generic read protocol functionality.
-    """
-    __slots__ = ()
+    
+    def close_transport(self, force=False):
+        """
+        Starts the shutdown process of the protocol's transport if applicable.
+        
+        Parameters
+        ----------
+        force : `bool`
+            Whether the transport should be shut down immediately.
+        """
+        transport = self.get_transport()
+        if (transport is not None):
+            transport.close()
+            
+            if force:
+                transport.abort()
+    
+    
+    def get_transport(self):
+        """
+        Returns the transport layer of the protocol.
+        
+        Returns
+        -------
+        transport : `None` or ``AbstractTransportLayerBase``
+        """
+        pass
+    
     
     def get_extra_info(self, name, default=None):
         """
@@ -300,7 +334,7 @@ class AbstractReadProtocolBase(AbstractGenericProtocolBase):
         """
         return default
     
-
+    
     def set_exception(self, exception):
         """
         Called by ``.connection_lost`` if the connection is closed by an exception, or can be called if any method
@@ -340,14 +374,7 @@ class AbstractReadProtocolBase(AbstractGenericProtocolBase):
             The received data.
         """
         pass
-
-
-
-class AbstractReadWriteProtocolBase(AbstractReadProtocolBase):
-    """
-    Abstract protocol base, which defines generic read and write protocol functionality.
-    """
-    __slots__ = ()
+    
     
     def pause_writing(self):
         """
@@ -432,13 +459,7 @@ class AbstractReadWriteProtocolBase(AbstractReadProtocolBase):
             Connection lost exception if applicable.
         """
         pass
-
-
-class AbstractDatagramProtocolBase(AbstractGenericProtocolBase):
-    """
-    Abstract protocol base, which defines generic datagram and write protocol functionality.
-    """
-    __slots__ = ()
+    
     
     def datagram_received(self, data, address):
         """
@@ -464,3 +485,10 @@ class AbstractDatagramProtocolBase(AbstractGenericProtocolBase):
             The catched exception.
         """
         pass
+
+
+class AbstractBidirectionalTransportLayerBase(AbstractTransportLayerBase, AbstractProtocolBase):
+    """
+    Defines abstract bidirectional transport layer functionality.
+    """
+    __slots__ = ()

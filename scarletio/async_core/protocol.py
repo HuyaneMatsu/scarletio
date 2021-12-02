@@ -6,11 +6,11 @@ from ..utils import copy_docs
 
 from .exceptions import CancelledError
 from .traps import Future, skip_ready_cycle, future_or_timeout, Task
-from .abstract import AbstractReadProtocolBase, AbstractReadWriteProtocolBase, AbstractDatagramProtocolBase
+from .abstract import AbstractProtocolBase
 
 CHUNK_LIMIT = 32
 
-class ReadProtocolBase(AbstractReadProtocolBase):
+class ReadProtocolBase(AbstractProtocolBase):
     """
     Asynchronous read protocol implementation.
     
@@ -112,12 +112,12 @@ class ReadProtocolBase(AbstractReadProtocolBase):
         return ''.join(repr_parts)
     
     
-    @copy_docs(AbstractReadProtocolBase.connection_made)
+    @copy_docs(AbstractProtocolBase.connection_made)
     def connection_made(self, transport):
         self._transport = transport
     
     
-    @copy_docs(AbstractReadProtocolBase.connection_lost)
+    @copy_docs(AbstractProtocolBase.connection_lost)
     def connection_lost(self, exception):
         """
         Called when the connection is lost or closed.
@@ -136,14 +136,7 @@ class ReadProtocolBase(AbstractReadProtocolBase):
             self.set_exception(exception)
     
     
-    @copy_docs(AbstractReadProtocolBase.close)
-    def close(self):
-        transport = self._transport
-        if (transport is not None):
-            transport.close()
-    
-    
-    @copy_docs(AbstractReadProtocolBase.get_extra_info)
+    @copy_docs(AbstractProtocolBase.get_extra_info)
     def get_extra_info(self, name, default=None):
         transport = self._transport
         if transport is None:
@@ -152,6 +145,18 @@ class ReadProtocolBase(AbstractReadProtocolBase):
             info = transport.get_extra_info(name, default)
         
         return info
+    
+    
+    @copy_docs(AbstractProtocolBase.close)
+    def close(self):
+        transport = self._transport
+        if (transport is not None):
+            transport.close()
+    
+    
+    @copy_docs(AbstractProtocolBase.close_transport)
+    def get_transport(self):
+        return self._transport
     
     
     # read related
@@ -191,7 +196,7 @@ class ReadProtocolBase(AbstractReadProtocolBase):
         return True
     
     
-    @copy_docs(AbstractReadProtocolBase.set_exception)
+    @copy_docs(AbstractProtocolBase.set_exception)
     def set_exception(self, exception):
         self._exception = exception
         
@@ -206,7 +211,7 @@ class ReadProtocolBase(AbstractReadProtocolBase):
         self._payload_reader = None
     
     
-    @copy_docs(AbstractReadProtocolBase.eof_received)
+    @copy_docs(AbstractProtocolBase.eof_received)
     def eof_received(self):
         self._at_eof = True
         
@@ -253,7 +258,7 @@ class ReadProtocolBase(AbstractReadProtocolBase):
         return False
     
     
-    @copy_docs(AbstractReadProtocolBase.data_received)
+    @copy_docs(AbstractProtocolBase.data_received)
     def data_received(self, data):
         if not data:
             return
@@ -764,7 +769,7 @@ class ReadProtocolBase(AbstractReadProtocolBase):
 
 
 
-class ReadWriteProtocolBase(ReadProtocolBase, AbstractReadWriteProtocolBase):
+class ReadWriteProtocolBase(ReadProtocolBase):
     """
     Read-write asynchronous protocol implementation.
     
@@ -813,34 +818,12 @@ class ReadWriteProtocolBase(ReadProtocolBase, AbstractReadWriteProtocolBase):
         return self
     
     
-    def _copy_attrs_to(self, other):
-        """
-        Copies the protocol's attributes to an other one.
-        
-        Can be used to change a protocol's type by creating an other one and copying the old's attributes.
-        
-        Parameters
-        ----------
-        other : ``ProtocolBase`` instance
-            The other protocol to copy self's attributes to.
-        """
-        other._transport = self._transport
-        other._exception = self._exception
-        other._chunks = self._chunks
-        other._offset = self._offset
-        other._at_eof = self._at_eof
-        other._payload_reader = self._payload_reader
-        other._payload_waiter = self._payload_waiter
-        other._paused = self._paused
-        other._drain_waiter = self._drain_waiter
-    
-    
-    @copy_docs(AbstractReadWriteProtocolBase.pause_writing)
+    @copy_docs(AbstractProtocolBase.pause_writing)
     def pause_writing(self):
         self._paused = True
     
     
-    @copy_docs(AbstractReadWriteProtocolBase.resume_writing)
+    @copy_docs(AbstractProtocolBase.resume_writing)
     def resume_writing(self):
         self._paused = False
         
@@ -890,7 +873,7 @@ class ReadWriteProtocolBase(ReadProtocolBase, AbstractReadWriteProtocolBase):
             drain_waiter.set_exception(exception)
     
     
-    @copy_docs(AbstractReadWriteProtocolBase.write)
+    @copy_docs(AbstractProtocolBase.write)
     def write(self, data):
         transport = self._transport
         if transport is None:
@@ -899,7 +882,7 @@ class ReadWriteProtocolBase(ReadProtocolBase, AbstractReadWriteProtocolBase):
         transport.write(data)
     
     
-    @copy_docs(AbstractReadWriteProtocolBase.writelines)
+    @copy_docs(AbstractProtocolBase.writelines)
     def writelines(self, lines):
         transport = self._transport
         if transport is None:
@@ -908,14 +891,14 @@ class ReadWriteProtocolBase(ReadProtocolBase, AbstractReadWriteProtocolBase):
         transport.writelines(lines)
     
     
-    @copy_docs(AbstractReadWriteProtocolBase.write_eof)
+    @copy_docs(AbstractProtocolBase.write_eof)
     def write_eof(self):
         transport = self._transport
         if (transport is not None):
             transport.write_eof()
     
     
-    @copy_docs(AbstractReadWriteProtocolBase.can_write_eof)
+    @copy_docs(AbstractProtocolBase.can_write_eof)
     def can_write_eof(self):
         transport = self._transport
         if (transport is None):
@@ -924,7 +907,7 @@ class ReadWriteProtocolBase(ReadProtocolBase, AbstractReadWriteProtocolBase):
         return transport.can_write_eof()
     
     
-    @copy_docs(AbstractReadWriteProtocolBase.drain)
+    @copy_docs(AbstractProtocolBase.drain)
     async def drain(self):
         # use after writing
         exception = self._exception
@@ -941,7 +924,7 @@ class ReadWriteProtocolBase(ReadProtocolBase, AbstractReadWriteProtocolBase):
 
 
 
-class DatagramAddressedReadProtocol(AbstractDatagramProtocolBase):
+class DatagramAddressedReadProtocol(AbstractProtocolBase):
     """
     Datagram reader protocol for reading from payloads form multiple addresses.
     
@@ -951,7 +934,7 @@ class DatagramAddressedReadProtocol(AbstractDatagramProtocolBase):
         Dictionary to store the alive readers by address.
     _loop : ``EventThread``
         The loop to what the protocol is bound to.
-    _protocol_type : `type`
+    _protocol_factory : `type`
         Protocol type to create for each address.
     _transport : `Any`
         Asynchronous transport implementation, what calls the protocol's ``.datagram_received`` when data is
@@ -959,9 +942,9 @@ class DatagramAddressedReadProtocol(AbstractDatagramProtocolBase):
     _waiters : `None`, `list` of `Future`
         Waiters for any payload receive if applicable.
     """
-    __slots__ = ('_by_address', '_loop', '_protocol_type', '_transport', '_waiters',)
+    __slots__ = ('_by_address', '_loop', '_protocol_factory', '_transport', '_waiters',)
     
-    def __new__(cls, loop, *, protocol_type=ReadProtocolBase):
+    def __new__(cls, loop, protocol_factory):
         """
         Creates a new datagram addressed read protocol instance bound to the given loop.
         
@@ -969,7 +952,7 @@ class DatagramAddressedReadProtocol(AbstractDatagramProtocolBase):
         ----------
         loop : ``EventThread``
             The loop to what the protocol gonna be bound to.
-        protocol_type : `type`, Optional (Keyword only)
+        protocol_factory : `callable`
             Protocol type to create for each address.
             
             Defaults to ``ReadProtocolBase``.
@@ -979,18 +962,18 @@ class DatagramAddressedReadProtocol(AbstractDatagramProtocolBase):
         self._by_address = {}
         self._transport = None
         self._waiters = None
-        self._protocol_type = protocol_type
+        self._protocol_factory = protocol_factory
         return self
     
     
-    @copy_docs(AbstractDatagramProtocolBase.connection_made)
+    @copy_docs(AbstractProtocolBase.connection_made)
     def connection_made(self, transport):
         self._transport = transport
         for reader_protocol in self._by_address.values():
             reader_protocol.connection_made(transport)
     
     
-    @copy_docs(AbstractDatagramProtocolBase.connection_lost)
+    @copy_docs(AbstractProtocolBase.connection_lost)
     def connection_lost(self, exception):
         for reader_protocol in self._by_address.values():
             if exception is None:
@@ -999,13 +982,13 @@ class DatagramAddressedReadProtocol(AbstractDatagramProtocolBase):
                 reader_protocol.set_exception(exception)
     
     
-    @copy_docs(AbstractDatagramProtocolBase.datagram_received)
+    @copy_docs(AbstractProtocolBase.datagram_received)
     def datagram_received(self, data, address):
         by_address = self._by_address
         try:
             protocol = by_address[address]
         except KeyError:
-            protocol = self._protocol_type(self._loop)
+            protocol = self._protocol_factory()
             protocol.connection_made(self._transport)
             by_address[address] = protocol
         
@@ -1019,7 +1002,7 @@ class DatagramAddressedReadProtocol(AbstractDatagramProtocolBase):
                 waiter.set_result_if_pending(result)
     
     
-    @copy_docs(AbstractDatagramProtocolBase.error_received)
+    @copy_docs(AbstractProtocolBase.error_received)
     def error_received(self, exception):
         pass
     
@@ -1081,14 +1064,19 @@ class DatagramAddressedReadProtocol(AbstractDatagramProtocolBase):
             return result
     
     
-    @copy_docs(AbstractDatagramProtocolBase.close)
+    @copy_docs(AbstractProtocolBase.close)
     def close(self):
         transport = self._transport
         if (transport is not None):
             transport.close()
+    
+    
+    @copy_docs(AbstractProtocolBase.close_transport)
+    def get_transport(self):
+        return self._transport
 
 
-class DatagramMergerReadProtocol(ReadProtocolBase, AbstractDatagramProtocolBase):
+class DatagramMergerReadProtocol(ReadProtocolBase):
     """
     Asynchronous read protocol implementation.
     
@@ -1122,6 +1110,6 @@ class DatagramMergerReadProtocol(ReadProtocolBase, AbstractDatagramProtocolBase)
     """
     __slots__ = ()
     
-    @copy_docs(AbstractDatagramProtocolBase.datagram_received)
+    @copy_docs(AbstractProtocolBase.datagram_received)
     def datagram_received(self, data, address):
         self.data_received(data)

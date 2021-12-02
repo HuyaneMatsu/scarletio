@@ -5,14 +5,14 @@ from collections import deque
 
 from ..utils import copy_docs
 
-from .abstract import AbstractReadWriteProtocolBase
+from .abstract import AbstractBidirectionalTransportLayerBase
 from .transport_layer import TransportLayerBase
 from .ssl_pipe import SSLPipe
 from .extra_info import EXTRA_INFO_NAME_SSL_CONTEXT, EXTRA_INFO_NAME_SSL_OBJECT, EXTRA_INFO_NAME_PEER_CERTIFICATION, \
     EXTRA_INFO_NAME_CIPHER, EXTRA_INFO_NAME_COMPRESSION, set_extra_info, get_has_extra_info
 
 
-class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractReadWriteProtocolBase):
+class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTransportLayerBase):
     """
     Asynchronous SSL protocol implementation on top of a `socket`. Uses `MemoryBIO` instances for incoming and
     outgoing data.
@@ -180,7 +180,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractReadWriteProtoc
                     connection_made_waiter.set_exception(exception)
     
     
-    @copy_docs(AbstractReadWriteProtocolBase.connection_made)
+    @copy_docs(AbstractBidirectionalTransportLayerBase.connection_made)
     def connection_made(self, transport):
         self._transport = transport
         self._ssl_pipe = SSLPipe(self._ssl_context, self._server_side, self._server_hostname)
@@ -191,7 +191,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractReadWriteProtoc
         self._loop.call_soon(self._process_write_backlog)
     
     
-    @copy_docs(AbstractReadWriteProtocolBase.connection_lost)
+    @copy_docs(AbstractBidirectionalTransportLayerBase.connection_lost)
     def connection_lost(self, exception):
         if self._session_established:
             self._session_established = False
@@ -202,17 +202,17 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractReadWriteProtoc
         self._wake_up_connection_made_waiter(exception)
     
     
-    @copy_docs(AbstractReadWriteProtocolBase.pause_writing)
+    @copy_docs(AbstractBidirectionalTransportLayerBase.pause_writing)
     def pause_writing(self):
         self._protocol.pause_writing()
     
     
-    @copy_docs(AbstractReadWriteProtocolBase.resume_writing)
+    @copy_docs(AbstractBidirectionalTransportLayerBase.resume_writing)
     def resume_writing(self):
         self._protocol.resume_writing()
     
     
-    @copy_docs(AbstractReadWriteProtocolBase.data_received)
+    @copy_docs(AbstractBidirectionalTransportLayerBase.data_received)
     def data_received(self, data):
         try:
             ssl_data, application_data = self._ssl_pipe.feed_ssl_data(data)
@@ -232,7 +232,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractReadWriteProtoc
             break
     
     
-    @copy_docs(AbstractReadWriteProtocolBase.eof_received)
+    @copy_docs(AbstractBidirectionalTransportLayerBase.eof_received)
     def eof_received(self):
         try:
             self._wake_up_connection_made_waiter(ConnectionResetError)

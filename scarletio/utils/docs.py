@@ -1,4 +1,4 @@
-__all__ = ('copy_docs',  'has_docs', 'set_docs', )
+__all__ = ('DOCS_ENABLED', 'copy_docs',  'has_docs', 'set_docs', )
 
 from functools import partial as partial_func
 
@@ -25,9 +25,12 @@ def has_docs(target):
     
     return target
 
+if DOCS_ENABLED and (has_docs.__doc__ is None):
+    DOCS_ENABLED = False
 
 if not DOCS_ENABLED:
     has_docs.__doc__ = None
+
 
 @has_docs
 def set_docs(target, docs):

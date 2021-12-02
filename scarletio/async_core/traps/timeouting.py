@@ -1,15 +1,15 @@
-__all__ = ('future_or_timeout',)
+__all__ = ('future_or_timeout', 'repeat_timeout',)
 
 from threading import current_thread
 
 from ...utils import include
 from ..exceptions import CancelledError
+from ..time import LOOP_TIME
 
-from .handles import _TimeoutHandleCanceller
+from .handle_cancellers import _TimeoutHandleCanceller
 from .task import Task
 
 EventThread = include('EventThread')
-LOOP_TIME = include('LOOP_TIME')
 
 def future_or_timeout(future, timeout):
     """
@@ -41,11 +41,11 @@ def future_or_timeout(future, timeout):
     """
     loop = future._loop
     callback = _TimeoutHandleCanceller()
-    handler = loop.call_later(timeout, callback, future)
-    if handler is None:
+    handle = loop.call_later(timeout, callback, future)
+    if handle is None:
         raise RuntimeError(f'`future_or_timeout` was called with future with a stopped loop {loop!r}')
     
-    callback.handler = handler
+    callback._handle = handle
     future.add_done_callback(callback)
 
 
@@ -88,9 +88,12 @@ class repeat_timeout:
     
     def __new__(cls, timeout):
         """
-        timeout :
-            The time to drop `TimeoutException` after.
+        Creates a new repeated timeouter.
         
+        Parameters
+        ----------
+        timeout : `float`
+            The time to drop `TimeoutException` after.
         """
         thread = current_thread()
         if not isinstance(thread, EventThread):
@@ -109,17 +112,21 @@ class repeat_timeout:
         self._exception = None
         return self
     
+    
     def __iter__(self):
         """Iterating a timeout handler returns itself."""
         return self
+    
     
     def __next__(self):
         """Called when the timeout handler does a loop, resetting its timeout."""
         self._last_set = LOOP_TIME()
     
+    
     def __enter__(self):
         """Entering a timeout handler returns itself."""
         return self
+    
     
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Exists the repeated timeout, dropping `TimeoutError` when cancelled."""

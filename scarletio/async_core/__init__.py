@@ -7,6 +7,7 @@ from .ios import *
 from .protocol import *
 from .ssl_pipe import *
 from .ssl_transport_layer import *
+from .time import *
 from .transport_layer import *
 
 __all__ = (
@@ -19,5 +20,6 @@ __all__ = (
     *protocol.__all__,
     *ssl_pipe.__all__,
     *ssl_transport_layer.__all__,
+    *time.__all__,
     *transport_layer.__all__,
 )

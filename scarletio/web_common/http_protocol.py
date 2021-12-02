@@ -1,10 +1,10 @@
-__all__ = ()
+__all__ = ('HttpReadProtocol', 'HttpReadWriteProtocol',)
 
 import re, base64, binascii
 from struct import Struct
 from random import getrandbits
 
-from ..utils import include, IgnoreCaseMultiValueDictionary
+from ..utils import IgnoreCaseMultiValueDictionary, copy_docs
 from ..async_core import ReadProtocolBase, ReadWriteProtocolBase
 
 from .headers import CONTENT_LENGTH, CONTENT_TYPE, CONTENT_TRANSFER_ENCODING, CONTENT_ENCODING, METHOD_CONNECT
@@ -12,17 +12,15 @@ from .exceptions import PayloadError, WebSocketProtocolError
 from .compressors import COMPRESSION_ERRORS, get_decompressor_for
 from .http_message import RawResponseMessage, RawRequestMessage
 from .helpers import HttpVersion
-from .websocket_frame import apply_websocket_mask, WebsocketFrame
+from .websocket_frame import apply_websocket_mask, WebSocketFrame
 from .helpers import HttpVersion11
+from .mime_type import MimeType
 
 HTTP_STATUS_RP = re.compile(b'HTTP/(\d)\.(\d) (\d\d\d)(?: (.*?))?\r\n')
 HTTP_REQUEST_RP = re.compile(b'([^ ]+) ([^ ]+) HTTP/(\d)\.(\d)\r\n')
 
 HTTP_STATUS_LINE_RP = re.compile(b'HTTP/(\d)\.(\d) (\d\d\d)(?: (.*?))?')
 HTTP_REQUEST_LINE_RP = re.compile(b'([^ ]+) ([^ ]+) HTTP/(\d)\.(\d)')
-
-
-MimeType = include('MimeType')
 
 MAX_LINE_LENGTH = 8190
 
@@ -858,7 +856,7 @@ class HttpReadProtocol(ReadProtocolBase):
         
         Returns
         -------
-        frame : ``WebsocketFrame``
+        frame : ``WebSocketFrame``
             The read websocket frame.
         
         Raises
@@ -895,10 +893,7 @@ class HttpReadProtocol(ReadProtocolBase):
             data = yield from self._read_exactly(length)
             data = apply_websocket_mask(mask,data)
         
-        frame = object.__new__(WebsocketFrame)
-        frame.data = data
-        frame.head_1 = head_1
-        return frame
+        return WebSocketFrame._from_fields(data, head_1)
     
     
     def get_payload_reader_task(self, message):
@@ -1098,7 +1093,36 @@ class HttpReadProtocol(ReadProtocolBase):
             collected.append(chunk)
         
         return b''.join(collected)
-
+    
+    
+    def isekai_into(self, other_class):
+        """
+        Copies the protocol's attributes to an other one.
+        
+        Can be used to change a protocol's type.
+        
+        Parameters
+        ----------
+        other_class : `type`
+            The other protocol asynchronous protocol type to isekai self into.
+        
+        Returns
+        -------
+        new : `other_class
+        """
+        new = object.__new__(other_class)
+        
+        new._transport = self._transport
+        new._exception = self._exception
+        new._chunks = self._chunks
+        new._offset = self._offset
+        new._at_eof = self._at_eof
+        new._payload_reader = self._payload_reader
+        new._payload_waiter = self._payload_waiter
+        new._paused = self._paused
+        
+        return new
+    
 
 class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
     """
@@ -1191,10 +1215,21 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
         if transport is None:
             raise RuntimeError('Protocol has no attached transport.')
         
-        result = [f'HTTP/{version.major}.{version.minor} {status.value} {status.phrase}\r\n']
-        extend = result.extend
-        for k, v in headers.items():
-            extend((k, ': ', v, '\r\n'))
+        result = [
+            'HTTP/',
+            str(version.major),
+            '.',
+            str(version.minor),
+            ' ',
+            str(status.value),
+            ' ',
+            str(status.phrase),
+            '\r\n',
+            
+        ]
+        
+        for header_key, header_value in headers.items():
+            result.extend((header_key, ': ', header_value, '\r\n'))
         
         result.append('\r\n')
         
@@ -1209,7 +1244,7 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
         
         Parameters
         ----------
-        frame : ``WebsocketFrame``
+        frame : ``WebSocketFrame``
             The websocket frame to write.
         is_client : `bool`
             Whether the respective websocket is client or server side.
@@ -1245,4 +1280,12 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
             data = frame.data
         
         transport.write(data)
+
     
+    @copy_docs(HttpReadProtocol.isekai_into)
+    def isekai_into(self, other_class):
+        new = HttpReadProtocol.isekai_into(self, other_class)
+        
+        new._drain_waiter = self._drain_waiter
+        
+        return new

@@ -1,4 +1,4 @@
-__all__ = ()
+__all__ = ('WebSocketFrame', )
 
 from .exceptions import WebSocketProtocolError
 
@@ -13,9 +13,9 @@ WEBSOCKET_OPERATION_PONG = 10
 WEBSOCKET_DATA_OPERATIONS = (WEBSOCKET_OPERATION_CONTINUOUS,  WEBSOCKET_OPERATION_TEXT, WEBSOCKET_OPERATION_BINARY)
 WEBSOCKET_CONTROL_OPERATIONS = (WEBSOCKET_OPERATION_CLOSE, WEBSOCKET_OPERATION_PING, WEBSOCKET_OPERATION_PONG)
 
-
 # TODO: whats the fastest way on pypy ? casting 64 bit ints -> xor -> replace?
 _XOR_TABLE = [bytes(a^b for a in range(256)) for b in range(256)]
+
 def apply_websocket_mask(mask, data):
     """
     Applies websocket mask on the given data and returns a new instance.
@@ -33,7 +33,7 @@ def apply_websocket_mask(mask, data):
     return data_bytes
 
 
-class WebsocketFrame:
+class WebSocketFrame:
     """
     Represents a websocket frame.
     
@@ -192,3 +192,25 @@ class WebsocketFrame:
             return
         
         raise WebSocketProtocolError(f'Invalid operation_code: {operation_code}.')
+    
+    
+    @classmethod
+    def _from_fields(cls, data, head_1):
+        """
+        Creates a new websocket frame instance.
+        
+        Parameters
+        ----------
+        data : `bytes`
+            The data of the frame.
+        head_1 : `int`
+            The first bytes of websocket frame's, because it holds all the required data needed.
+        
+        Returns
+        -------
+        self : ``WebSocketFrame``
+        """
+        self = object.__new__(cls)
+        self.data = data
+        self.head_1 = head_1
+        return self

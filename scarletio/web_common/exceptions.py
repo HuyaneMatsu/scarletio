@@ -148,7 +148,7 @@ def get_close_reason(code):
     Parameters
     ----------
     code : `int`
-        Websocket close code.
+        Web socket close code.
     
     Returns
     -------
@@ -179,11 +179,11 @@ class ConnectionClosed(Exception):
     Attributes
     ----------
     code : `int`
-        Websocket close code.
+        Web socket close code.
     exception : `None` or `BaseException`
         Source exception if applicable.
     reason : `None or `str`
-        Websocket close reason if any.
+        Web socket close reason if any.
     """
     
     def __init__(self, code, exception, reason=None):
@@ -197,7 +197,7 @@ class ConnectionClosed(Exception):
         exception : `None` or `BaseException`
             Source exception if applicable.
         reason : `None or `str`, Optional
-            Websocket close reason if any. Defaults to `None`.
+            Web socket close reason if any. Defaults to `None`.
         """
         self.code = code
         self.exception = exception

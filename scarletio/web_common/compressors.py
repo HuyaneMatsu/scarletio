@@ -1,4 +1,5 @@
-__all__ = ()
+__all__ = ('BROTLI_COMPRESSOR', 'BROTLI_DECOMPRESSOR', 'COMPRESSION_ERRORS', 'ZLIB_DECOMPRESSOR', 'ZLIB_COMPRESSOR',
+    'ZLIB_MAX_WBITS', 'get_decompressor_for',)
 
 import zlib
 
@@ -63,17 +64,22 @@ def get_decompressor_for(content_encoding):
     """
     if (content_encoding is None):
         decompressor = None
+    
     elif content_encoding == 'gzip':
         decompressor = ZLIB_DECOMPRESSOR(wbits=16+ZLIB_MAX_WBITS)
+    
     elif content_encoding == 'deflate':
         decompressor = ZLIB_DECOMPRESSOR(wbits=-ZLIB_MAX_WBITS)
+    
     elif content_encoding == 'br':
         if BROTLI_DECOMPRESSOR is None:
             raise ContentEncodingError('Can not decode content-encoding: brotli (br). Please install `brotlipy`.')
         decompressor = BROTLI_DECOMPRESSOR()
+    
     elif content_encoding == 'identity':
         # I assume this is no encoding
         decompressor = None
+    
     else:
         raise ContentEncodingError(f'Can not decode content-encoding: {content_encoding!r}.')
     

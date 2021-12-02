@@ -248,9 +248,8 @@ class SocketTransportLayerBase(TransportLayerBase):
     @copy_docs(TransportLayerBase.is_closing)
     def is_closing(self):
         return self._closing
-
-
-
+    
+    
     @copy_docs(TransportLayerBase.close)
     def close(self):
         if self._closing:
@@ -415,7 +414,7 @@ class SocketTransportLayerBase(TransportLayerBase):
             return
         
         self._protocol_paused = False
-        protocol = self.protocol
+        protocol = self._protocol
         if (protocol is not None):
             try:
                 protocol.resume_writing()

@@ -1,17 +1,18 @@
-__all__ = ()
+__all__ = ('create_payload', )
 
-import base64, binascii, os, re, mimetypes as mime_types, uuid, zlib
+import base64, binascii, os, re, mimetypes as mime_types, uuid
 from io import StringIO, TextIOBase, BytesIO, BufferedRandom, IOBase, BufferedReader
 from urllib.parse import urlencode as url_encode
 
-from ..utils import export, IgnoreCaseMultiValueDictionary, MultiValueDictionary, to_json
+from ..utils import IgnoreCaseMultiValueDictionary, to_json
 from ..async_core import AsyncIO
 
 from .quoting import unquote
 from .headers import CONTENT_DISPOSITION, CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TRANSFER_ENCODING, CONTENT_TYPE
 from .header_building_and_parsing import CHARS, build_content_disposition_header, TOKENS
-from .compressors import ZLIB_COMPRESSOR, BROTLI_COMPRESSOR
+from .compressors import ZLIB_COMPRESSOR, BROTLI_COMPRESSOR, ZLIB_MAX_WBITS
 from .exceptions import ContentEncodingError
+from .mime_type import MimeType
 
 BIG_CHUNK_LIMIT = 1<<16
 DEFAULT_CONTENT_TYPE = 'application/octet-stream'
@@ -614,6 +615,7 @@ class AsyncIterablePayload(PayloadBase):
         PayloadBase.__init__(self, data, kwargs)
         self._iterator = data.__class__.__aiter__(data)
     
+    
     async def write(self, writer):
         """
         Writes the payload to the given http writer.
@@ -720,6 +722,7 @@ class BodyPartReaderPayload(PayloadBase):
         if parameters:
             self.set_content_disposition('attachment', parameters, True)
     
+    
     async def write(self, writer):
         """
         Writes the payload to the given http writer.
@@ -738,61 +741,6 @@ class BodyPartReaderPayload(PayloadBase):
                 await writer.write(field.decode(chunk))
             else:
                 break
-
-
-@export
-class MimeType:
-    # Parses a MIME type into its components
-    
-    __slots__ = ('parameters', 'sub_type', 'suffix', 'type', )
-    def __init__(self, mime_type):
-        
-        if (mime_type is None) or (not mime_type):
-            self.type = ''
-            self.sub_type = ''
-            self.suffix = ''
-            self.parameters = {}
-            return
-        
-        parts = mime_type.split(';')
-        parameters = MultiValueDictionary()
-        for item in parts[1:]:
-            if not item:
-                continue
-            if '=' in item:
-                key, value = item.split('=', 1)
-            else:
-                key = item
-                value = ''
-            
-            parameters[key.strip().lower()] = value.strip(' "')
-        
-        
-        full_type = parts[0].strip().lower()
-        if full_type == '*':
-            full_type = '*/*'
-        
-        if '/' in full_type:
-            type_, sub_type = full_type.split('/', 1)
-        else:
-            type_ = full_type
-            sub_type = ''
-
-        if '+' in sub_type:
-            sub_type, suffix = sub_type.split('+', 1)
-        else:
-            suffix = ''
-            
-        self.type = type_
-        self.sub_type = sub_type
-        self.suffix = suffix
-        self.parameters = parameters
-    
-    def __repr__(self):
-        return (f'<{self.__class__.__name__} type={self.type!r} sub_type={self.sub_type!r} suffix={self.suffix!r} '
-            f'parameters={self.parameters!r}>')
-
-    __str__ = __repr__
 
 
 def _is_continuous_parameter(string):
@@ -821,6 +769,7 @@ def _is_continuous_parameter(string):
     
     return substring.isdigit()
 
+
 def _is_token(string):
     """
     Returns whether the given string can be a token of a content disposition parameter.
@@ -842,6 +791,7 @@ def _is_token(string):
     
     return True
 
+
 def _is_quoted(string):
     """
     Returns whether the given string is quoted inside of a content disposition parameter.
@@ -860,6 +810,7 @@ def _is_quoted(string):
     
     return False
 
+
 def _is_extended_parameter(string):
     """
     Returns whether the given string is an extended parameter of a content disposition parameter.
@@ -874,6 +825,7 @@ def _is_extended_parameter(string):
     is_extended_parameter : `bool`
     """
     return string.endswith('*')
+
 
 def _is_rfc5987(string):
     """
@@ -989,7 +941,7 @@ def parse_content_disposition(header):
     return disposition_type.lower(), parameters
 
 
-def content_disposition_filename(parameters, name='filename'):
+def get_content_disposition_filename(parameters, name='filename'):
     """
     Gets the file's name from content disposition parameters.
     
@@ -1365,6 +1317,7 @@ class MultipartWriter(PayloadBase):
         if close_boundary:
             await writer.write(b'--'+self._boundary+b'--\r\n')
 
+
 TRANSFER_ENCODING_NONE = 0
 TRANSFER_ENCODING_BASE64 = 1
 TRANSFER_ENCODING_QUOTED_PRINTABLE = 2
@@ -1417,9 +1370,9 @@ class MultipartPayloadWriter:
             +===============+===============================================+
             | `None`        | `None`                                        |
             +---------------+-----------------------------------------------+
-            | `'gzip'`      | `ZLIB_COMPRESSOR(wbits=16+zlib.MAX_WBITS)`    |
+            | `'gzip'`      | `ZLIB_COMPRESSOR(wbits=16+ZLIB_MAX_WBITS)`    |
             +---------------+-----------------------------------------------+
-            | `'deflate'`   | `ZLIB_COMPRESSOR(wbits=-zlib.MAX_WBITS)`      |
+            | `'deflate'`   | `ZLIB_COMPRESSOR(wbits=-ZLIB_MAX_WBITS)`      |
             +---------------+-----------------------------------------------+
             | `'br'`        | `BROTLI_COMPRESSOR()`                         |
             +---------------+-----------------------------------------------+
@@ -1451,18 +1404,22 @@ class MultipartPayloadWriter:
         """
         if content_encoding is None:
             compressor = None
+        
         elif content_encoding == 'gzip':
-            compressor = ZLIB_COMPRESSOR(wbits=16+zlib.MAX_WBITS)
+            compressor = ZLIB_COMPRESSOR(wbits=16+ZLIB_MAX_WBITS)
+        
         elif content_encoding == 'deflate':
-            compressor = ZLIB_COMPRESSOR(wbits=-zlib.MAX_WBITS)
+            compressor = ZLIB_COMPRESSOR(wbits=-ZLIB_MAX_WBITS)
+        
         elif content_encoding == 'br':
             if BROTLI_COMPRESSOR is None:
                 raise ContentEncodingError('Can not decode content-encoding: brotli (br). Please install `brotlipy`.')
-            
             compressor = BROTLI_COMPRESSOR()
+        
         elif content_encoding == 'identity':
             # I assume this is no encoding
             compressor = None
+        
         else:
             raise ContentEncodingError(f'Can not decode content-encoding: {content_encoding!r}.')
         
@@ -1470,12 +1427,15 @@ class MultipartPayloadWriter:
         if transfer_encoding is None:
             transfer_encoding = TRANSFER_ENCODING_NONE
             encoding_buffer = None
+            
         elif transfer_encoding == 'base64':
             transfer_encoding = TRANSFER_ENCODING_BASE64
             encoding_buffer = bytearray()
+            
         elif transfer_encoding == 'quoted-printable':
             transfer_encoding = TRANSFER_ENCODING_QUOTED_PRINTABLE
             encoding_buffer = None
+        
         else:
             transfer_encoding = TRANSFER_ENCODING_NONE
             encoding_buffer = None
@@ -1486,6 +1446,7 @@ class MultipartPayloadWriter:
         self.compressor = compressor
         self.encoding_buffer = encoding_buffer
         return self
+    
     
     async def write_eof(self):
         """
@@ -1508,6 +1469,7 @@ class MultipartPayloadWriter:
             encoding_buffer = self.encoding_buffer
             if encoding_buffer:
                 await self.writer.write(base64.b64encode(encoding_buffer))
+    
     
     async def write(self, chunk):
         """

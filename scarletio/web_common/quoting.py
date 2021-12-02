@@ -1,4 +1,5 @@
-__all__ = ()
+__all__ = ('quote', 'unquote',)
+
 from string import ascii_letters, ascii_lowercase, digits
 
 BINARY_ASCII_LOWERCASE = frozenset(ascii_lowercase.encode('ascii'))
@@ -17,6 +18,7 @@ UNQUOTE_UNSAFE_MAP = {}
 def iter_nullable_string(string):
     if (string is not None):
         yield from string
+
 
 def quote(value, safe=None, protected=None, query_string=False):
     if value is None:
