@@ -1,4 +1,4 @@
-__all__ = ('create_future', 'create_task', 'get_event_loop', 'run',)
+__all__ = ('create_event_loop', 'create_future', 'create_task', 'get_event_loop', 'run',)
 
 from threading import current_thread, enumerate as list_threads
 
@@ -91,6 +91,33 @@ def get_event_loop():
         return event_loop
     
     raise RuntimeError(f'No running event loop on {local_thread!r}.')
+
+
+def create_event_loop(**kwargs):
+    """
+    Creates a new event loop.
+    
+    Parameters
+    ----------
+    **kwargs : Keyword parameters
+        Parameters to create the event loop with.
+    
+    Other parameters
+    ----------------
+    daemon : ``bool``, Optional (Keyword only)
+        Whether the event loop should be daemon. Defaults to `False`
+    name : `None` or `str`, Optional (Keyword only)
+        The event loop's name. Defaults ot `None`.
+    start_later : `bool`, Optional (Keyword only)
+        Whether the event loop should be started only later. Defaults to `True`
+    keep_executor_count : `int`, Optional (Keyword only)
+        The minimal amount of executors, what the event thread should keep alive. Defaults to `1`.
+
+    Returns
+    -------
+    event_loop : ``EventThread``
+    """
+    return EventThread(**kwargs)
 
 
 def create_task(coroutine):

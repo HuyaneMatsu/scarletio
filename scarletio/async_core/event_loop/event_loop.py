@@ -90,7 +90,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Parameters
         ----------
-        keep_executor_count : `int`
+        keep_executor_count : `int`, Optional
             The minimal amount of executors, what the event thread should keep alive. Defaults to `1`.
         
         Notes

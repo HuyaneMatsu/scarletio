@@ -125,18 +125,18 @@ class EventThreadType(type):
         
         Parameters
         ----------
-        daemon : ``bool``
-            Whether the created thread should be daemon.
-        name : `str`
-            The created thread's name.
-        start_later : `bool`
-            Whether the event loop should be started only later
+        daemon : ``bool``, Optional
+            Whether the created thread should be daemon. Defaults to `False`.
+        name : `None` or `str`, Optional
+            The created thread's name. Defaults to `None`
+        start_later : `bool`, Optional
+            Whether the event loop should be started only later. Defaults to `True`.
         **kwargs : keyword parameters
             Additional event thread specific parameters.
         
         Other Parameters
         ----------------
-        keep_executor_count : `int`
+        keep_executor_count : `int`, Optional (Keyword only)
             The minimal amount of executors, what the event thread should keep alive. Defaults to `1`.
         
         Returns
