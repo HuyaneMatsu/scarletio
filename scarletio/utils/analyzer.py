@@ -337,7 +337,7 @@ class CallableAnalyzer:
                 else:
                     instance_to_async = INSTANCE_TO_ASYNC_CANNOT
                 
-                method_allocation = MethodLike.get_reserved_argcount(callable_)
+                method_allocation = MethodLike.get_reserved_parameter_count(callable_)
                 break
             
             if not isinstance(callable_, type) and hasattr(type(callable_), '__call__'):
@@ -353,7 +353,7 @@ class CallableAnalyzer:
                 if type(real_function) is FunctionType:
                     method_allocation = 1
                 else:
-                    method_allocation = MethodLike.get_reserved_argcount(real_function)
+                    method_allocation = MethodLike.get_reserved_parameter_count(real_function)
                 
                 break
             
@@ -384,7 +384,7 @@ class CallableAnalyzer:
                         if type(real_function) is FunctionType:
                             method_allocation = 1
                         else:
-                            method_allocation = MethodLike.get_reserved_argcount(real_function)
+                            method_allocation = MethodLike.get_reserved_parameter_count(real_function)
                         
                         break
                     
@@ -407,7 +407,7 @@ class CallableAnalyzer:
                         if type(real_function) is FunctionType:
                             method_allocation = 1
                         else:
-                            method_allocation = MethodLike.get_reserved_argcount(real_function)
+                            method_allocation = MethodLike.get_reserved_parameter_count(real_function)
                         
                         break
                     
