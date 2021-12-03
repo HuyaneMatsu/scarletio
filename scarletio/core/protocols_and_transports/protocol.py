@@ -1,4 +1,4 @@
-__all__ = ('ReadProtocolBase', 'ReadWriteProtocolBase',)
+__all__ = ('DatagramMergerReadProtocol', 'ReadProtocolBase', 'ReadWriteProtocolBase',)
 
 from collections import deque
 
