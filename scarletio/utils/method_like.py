@@ -42,7 +42,7 @@ class MethodLike(metaclass=SubCheckType):
     
     @classmethod
     @has_docs
-    def get_reserved_parameter(cls, instance):
+    def get_reserved_parameter_count(cls, instance):
         """
         Returns the given `instance`'s reserved argcount.
         
