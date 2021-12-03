@@ -1,4 +1,4 @@
-﻿__all__ = ()
+﻿__all__ = ('TCPConnector',)
 
 import socket as module_socket
 from http.cookies import SimpleCookie
@@ -19,7 +19,7 @@ else:
     SSL_CONTEXT_UNVERIFIED.set_default_verify_paths()
 
 from ..utils import IgnoreCaseMultiValueDictionary
-from ..async_core import shield, Task, LOOP_TIME
+from ..core import shield, Task, LOOP_TIME
 
 from ..web_common.http_protocol import HttpReadWriteProtocol
 from ..web_common.headers import HOST, METHOD_GET, AUTHORIZATION, PROXY_AUTHORIZATION, METHOD_CONNECT

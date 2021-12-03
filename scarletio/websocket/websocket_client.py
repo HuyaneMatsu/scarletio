@@ -5,7 +5,7 @@ from base64 import b64encode
 from os import urandom
 
 from ..utils import IgnoreCaseMultiValueDictionary, include
-from ..async_core import Future, AsyncQueue, Lock
+from ..core import Future, AsyncQueue, Lock
 
 from ..web_common.headers import CONNECTION, SEC_WEBSOCKET_KEY, AUTHORIZATION, SEC_WEBSOCKET_VERSION, \
     SEC_WEBSOCKET_EXTENSIONS, SEC_WEBSOCKET_PROTOCOL, HOST, ORIGIN, SEC_WEBSOCKET_ACCEPT, UPGRADE, METHOD_GET

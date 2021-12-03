@@ -4,7 +4,7 @@ import re, codecs
 from http.cookies import SimpleCookie, CookieError, Morsel
 
 from ..utils import IgnoreCaseMultiValueDictionary, from_json
-from ..async_core import Task
+from ..core import Task
 from ..web_common.headers import SET_COOKIE, CONNECTION, CONTENT_TYPE
 from ..web_common.multipart import MimeType
 

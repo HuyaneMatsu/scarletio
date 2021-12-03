@@ -6,7 +6,7 @@ from collections import OrderedDict
 from os import urandom
 
 from ..utils import include
-from ..async_core import Future, Task, AsyncQueue, future_or_timeout, shield, CancelledError, Lock
+from ..core import Future, Task, AsyncQueue, future_or_timeout, shield, CancelledError, Lock
 
 from ..web_common import PayloadError, ConnectionClosed, WebSocketProtocolError, HttpReadWriteProtocol, WebSocketFrame
 from ..web_common.websocket_frame import WEBSOCKET_OPERATION_CONTINUOUS, WEBSOCKET_OPERATION_TEXT, \

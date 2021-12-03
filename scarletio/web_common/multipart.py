@@ -5,7 +5,7 @@ from io import StringIO, TextIOBase, BytesIO, BufferedRandom, IOBase, BufferedRe
 from urllib.parse import urlencode as url_encode
 
 from ..utils import IgnoreCaseMultiValueDictionary, to_json
-from ..async_core import AsyncIO
+from ..core import AsyncIO
 
 from .quoting import unquote
 from .headers import CONTENT_DISPOSITION, CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TRANSFER_ENCODING, CONTENT_TYPE

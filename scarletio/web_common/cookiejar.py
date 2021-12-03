@@ -6,7 +6,7 @@ from collections import defaultdict
 from http.cookies import Morsel, SimpleCookie
 from math import ceil
 
-from ..async_core import LOOP_TIME
+from ..core import LOOP_TIME
 
 from .url import URL
 from .helpers import is_ip_address

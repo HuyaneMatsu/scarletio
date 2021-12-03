@@ -6,7 +6,7 @@ from binascii import Error as BinasciiError
 from email.utils import formatdate
 
 from ..utils import is_coroutine, IgnoreCaseMultiValueDictionary
-from ..async_core import Future, Task, AsyncQueue, CancelledError, Lock
+from ..core import Future, Task, AsyncQueue, CancelledError, Lock
 
 from ..web_common.headers import CONNECTION, SEC_WEBSOCKET_KEY, SEC_WEBSOCKET_VERSION, SEC_WEBSOCKET_EXTENSIONS, \
     SEC_WEBSOCKET_PROTOCOL, ORIGIN, SEC_WEBSOCKET_ACCEPT, UPGRADE, DATE, CONTENT_TYPE, SERVER, CONTENT_LENGTH

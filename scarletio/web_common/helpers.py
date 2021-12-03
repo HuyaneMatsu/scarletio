@@ -4,7 +4,7 @@ import base64, binascii, re
 from collections import namedtuple
 import socket as module_socket
 
-from ..async_core import CancelledError
+from ..core import CancelledError
 
 sentinel = object()
 

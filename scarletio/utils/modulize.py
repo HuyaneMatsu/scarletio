@@ -12,7 +12,6 @@ except ImportError:
 
 from .docs import has_docs
 
-IS_UNIX = (sys.platform != 'win32')
 
 # This 2 type can be function
 WrapperDescriptorType = type(object.__ne__)

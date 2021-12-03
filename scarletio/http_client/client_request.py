@@ -8,7 +8,7 @@ except ImportError:
     module_ssl = None
 
 from ..utils import IgnoreCaseMultiValueDictionary
-from ..async_core import Task, CancelledError
+from ..core import Task, CancelledError
 from ..web_common.headers import METHOD_POST_ALL, METHOD_CONNECT, CONTENT_LENGTH, ACCEPT, ACCEPT_ENCODING, HOST, \
     TRANSFER_ENCODING, COOKIE, CONTENT_ENCODING, AUTHORIZATION, CONTENT_TYPE
 from ..web_common.helpers import BasicAuth

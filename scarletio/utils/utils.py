@@ -1,4 +1,5 @@
-__all__ = ('any_to_any', 'change_on_switch', 'get_short_executable', 'list_difference', 'relative_index', 'un_map_pack', 'where', )
+__all__ = ('IS_UNIX', 'any_to_any', 'change_on_switch', 'get_short_executable', 'list_difference', 'relative_index',
+    'un_map_pack', 'where', )
 
 import sys
 from os import sep as PATH_SEPARATOR

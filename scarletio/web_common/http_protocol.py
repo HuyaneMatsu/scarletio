@@ -5,7 +5,7 @@ from struct import Struct
 from random import getrandbits
 
 from ..utils import IgnoreCaseMultiValueDictionary, copy_docs
-from ..async_core import ReadProtocolBase, ReadWriteProtocolBase
+from ..core import ReadProtocolBase, ReadWriteProtocolBase
 
 from .headers import CONTENT_LENGTH, CONTENT_TYPE, CONTENT_TRANSFER_ENCODING, CONTENT_ENCODING, METHOD_CONNECT
 from .exceptions import PayloadError, WebSocketProtocolError

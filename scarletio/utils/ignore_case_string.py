@@ -1,10 +1,10 @@
-__all__ = ('istr', )
+__all__ = ('IgnoreCaseString', )
 
 import sys
 from .docs import has_docs
 
 @has_docs
-class istr(str):
+class IgnoreCaseString(str):
     """
     Strings, which have their casing ignored.
     
@@ -19,18 +19,19 @@ class istr(str):
     def __new__(cls, value='', encoding=sys.getdefaultencoding(), errors='strict'):
         """
         Return an string which ignores casing. If object is not provided, returns the empty string. Otherwise, the
-        behavior of ``istr`` depends on whether encoding or errors is given, as follows.
+        behavior of ``IgnoreCaseString`` depends on whether encoding or errors is given, as follows.
         
-        If neither encoding nor errors is given, `istr(object)` returns `object.__str__()`, which is the "informal" or
-        nicely printable string representation of object. For string objects, this is `string`. If object does not have
-        a `__str__()` method, then `istr()` falls back to returning `repr(object)`.
+        If neither encoding nor errors is given, `IgnoreCaseString(object)` returns `object.__str__()`, which is the
+        "informal" or nicely printable string representation of object. For string objects, this is `string`. If
+        object does not have a `__str__()` method, then `IgnoreCaseString()` falls back to returning `repr(object)`.
         
         If at least one of encoding or errors is given, object should be a `bytes-like` object. In this case, if object
-        is a `byte-like` object, then `istr(bytes, encoding, errors)` is equivalent to `bytes.decode(encoding, errors)`.
-        Otherwise, the bytes object underlying the buffer object is obtained before calling `bytes.decode()`.
+        is a `byte-like` object, then `IgnoreCaseString(bytes, encoding, errors)` is equivalent to
+        `bytes.decode(encoding, errors)`. Otherwise, the bytes object underlying the buffer object is obtained before
+        calling `bytes.decode()`.
         
-        Passing a `bytes-like` object to ``istr`` without the encoding or errors parameters falls under the first case
-        of returning the informal string representation.
+        Passing a `bytes-like` object to ``IgnoreCaseString`` without the encoding or errors parameters falls under the
+        first case of returning the informal string representation.
         
         Parameters
         ----------
@@ -46,7 +47,7 @@ class istr(str):
         
         Returns
         -------
-        self : ``istr``
+        self : ``IgnoreCaseString``
         """
         if type(value) is cls:
             return value

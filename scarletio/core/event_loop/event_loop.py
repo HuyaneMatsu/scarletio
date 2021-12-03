@@ -10,9 +10,7 @@ from collections import deque
 from ssl import SSLContext, create_default_context
 from stat import S_ISSOCK
 
-IS_UNIX = (sys.platform != 'win32')
-
-from ...utils import alchemy_incendiary, DOCS_ENABLED, export, is_coroutine
+from ...utils import alchemy_incendiary, DOCS_ENABLED, export, is_coroutine, IS_UNIX
 from ...utils.trace import render_exception_into
 
 from ..traps import Future, Task, Gatherer, FutureAsyncWrapper, WaitTillFirst, WaitTillAll

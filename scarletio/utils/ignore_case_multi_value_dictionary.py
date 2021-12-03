@@ -2,7 +2,7 @@ __all__ = ('IgnoreCaseMultiValueDictionary', )
 
 from .docs import has_docs
 from .multi_value_dictionary import MultiValueDictionary
-from .istr import istr
+from .IgnoreCaseString import IgnoreCaseString
 
 @has_docs
 class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
@@ -42,16 +42,16 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
         
         elif isinstance(iterable, MultiValueDictionary):
             for key, values in dict.items(iterable):
-                setitem(self, istr(key), values.copy())
+                setitem(self, IgnoreCaseString(key), values.copy())
         
         elif isinstance(iterable, dict):
             for key, value in iterable.items():
-                key = istr(key)
+                key = IgnoreCaseString(key)
                 setitem(self, key, [value])
         
         else:
             for key, value in iterable:
-                key = istr(key)
+                key = IgnoreCaseString(key)
                 try:
                     values = getitem(self, key)
                 except KeyError:
@@ -65,13 +65,13 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
         Returns the MultiValueDictionary's `value` for the given `key`. If the `key` has more values, then returns the 0th of
         them.
         """
-        key = istr(key)
+        key = IgnoreCaseString(key)
         return dict.__getitem__(self, key)[0]
     
     @has_docs
     def __setitem__(self, key, value):
         """Adds the given `key` - `value` pair to the MultiValueDictionary."""
-        key = istr(key)
+        key = IgnoreCaseString(key)
         MultiValueDictionary.__setitem__(self, key, value)
     
     @has_docs
@@ -80,7 +80,7 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
         Removes the `value` for the given `key` from the MultiValueDictionary. If the `key` has more values, then removes only
         the 0th of them.
         """
-        key = istr(key)
+        key = IgnoreCaseString(key)
         MultiValueDictionary.__delitem__(self, key)
     
     @has_docs
@@ -96,7 +96,7 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
         getitem = dict.__getitem__
         setitem = dict.__setitem__
         for key, value in mapping.items():
-            key = istr(key)
+            key = IgnoreCaseString(key)
             try:
                 values = getitem(self, key)
             except KeyError:
@@ -122,7 +122,7 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
         values : `default or `list` of `Any`
             The values for the given `key` if present.
         """
-        key = istr(key)
+        key = IgnoreCaseString(key)
         return MultiValueDictionary.get_all(self, key, default)
     
     @has_docs
@@ -142,7 +142,7 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
         value : `default` or `Any`
             The value for the given key if present.
         """
-        key = istr(key)
+        key = IgnoreCaseString(key)
         return MultiValueDictionary.get_one(self, key, default)
     
     get = get_one
@@ -166,7 +166,7 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
         value : `default` or `Any`
             The first value for which `key` matched, or `default` if none.
         """
-        key = istr(key)
+        key = IgnoreCaseString(key)
         return MultiValueDictionary.setdefault(self, key, default)
     
     @has_docs
@@ -191,7 +191,7 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
         KeyError
             if `key` is not present in the MultiValueDictionary and `default` value is not given either.
         """
-        key = istr(key)
+        key = IgnoreCaseString(key)
         return MultiValueDictionary.pop_all(self, key, default)
     
     @has_docs
@@ -216,7 +216,7 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
         KeyError
             if `key` is not present in the MultiValueDictionary and `default` value is not given either.
         """
-        key = istr(key)
+        key = IgnoreCaseString(key)
         return MultiValueDictionary.pop_one(self, key, default)
     
     pop = pop_one

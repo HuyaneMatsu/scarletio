@@ -8,7 +8,7 @@ from .export_include import *
 from .function_tools import *
 from .hybrid_value_dictionary import *
 from .ignore_case_multi_value_dictionary import *
-from .istr import *
+from .ignore_case_string import *
 from .json import *
 from .keep_type import *
 from .method_like import *
@@ -37,7 +37,7 @@ __all__ = (
     *function_tools.__all__,
     *hybrid_value_dictionary.__all__,
     *ignore_case_multi_value_dictionary.__all__,
-    *istr.__all__,
+    *ignore_case_string.__all__,
     *json.__all__,
     *keep_type.__all__,
     *method_like.__all__,

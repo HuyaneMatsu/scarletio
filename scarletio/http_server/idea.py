@@ -9,7 +9,7 @@ from importlib.util import find_spec
 from ..web_common import URL, HttpReadWriteProtocol, PayloadError, HttpVersion11
 from ..utils import IgnoreCaseMultiValueDictionary, CallableAnalyzer
 from ..web_common.headers import METHOD_ALL, METHOD_GET
-from ..async_core import EventThread, WaitTillAll, Future, Task, CancelledError
+from ..core import EventThread, WaitTillAll, Future, Task, CancelledError
 
 INTERNAL_SERVER_ERROR = http.HTTPStatus.INTERNAL_SERVER_ERROR
 BAD_REQUEST = http.HTTPStatus.BAD_REQUEST
