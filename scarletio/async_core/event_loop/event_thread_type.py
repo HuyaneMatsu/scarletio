@@ -131,7 +131,7 @@ class EventThreadType(type):
             The created thread's name.
         start_later : `bool`
             Whether the event loop should be started only later
-        kwargs : keyword parameters
+        **kwargs : keyword parameters
             Additional event thread specific parameters.
         
         Other Parameters
