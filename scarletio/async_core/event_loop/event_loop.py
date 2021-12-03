@@ -716,7 +716,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         if current_thread() is self:
             raise RuntimeError(f'`{self.__class__.__name__}.run` should not be called from itself.')
         
-        return self.ensure_future_thread_safe(awaitable).sync_wrap().wait(timeout)
+        return self.ensure_future_thread_safe(awaitable).sync_wrap().wait(timeout, True)
     
     if __debug__:
         def render_exception_async(self, exception, before=None, after=None, file=None):

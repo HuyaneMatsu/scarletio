@@ -346,7 +346,7 @@ class FutureSyncWrapper:
                     break
     
     
-    def wait(self, timeout=None):
+    def wait(self, timeout=None, propagate_cancellation=False):
         """
         Waits till the waited future's result or exception is set.
         
@@ -364,6 +364,8 @@ class FutureSyncWrapper:
         ----------
         timeout : `None` or `float`, Optional
             Timeout in seconds till the waited future's result should be set. Giving it as `None`, means no time limit.
+        propagate_cancellation : `bool`, Optional
+            Whether cancellation should be propagated towards the waited task.
         
         Raises
         ------
@@ -378,10 +380,21 @@ class FutureSyncWrapper:
         BaseException
             The future's set exception.
         """
-        if self._waiter.wait(timeout):
+        try:
+            result_set = self._waiter.wait(timeout)
+        except:
+            if propagate_cancellation:
+                self.cancel()
+            
+            raise
+        
+        if result_set:
             return self.result()
-        else:
-            raise CancelledError
+        
+        if propagate_cancellation:
+            self.cancel()
+        
+        raise TimeoutError
     
     
     def _set_future_result(self, future, result):
