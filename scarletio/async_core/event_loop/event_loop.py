@@ -12,10 +12,10 @@ from stat import S_ISSOCK
 
 IS_UNIX = (sys.platform != 'win32')
 
-from ...utils import alchemy_incendiary, DOCS_ENABLED, set_docs, export, is_coroutine
+from ...utils import alchemy_incendiary, DOCS_ENABLED, export, is_coroutine
 from ...utils.trace import render_exception_into
 
-from ..traps import Future, Task, Gatherer, FutureAsyncWrapper, WaitTillFirst
+from ..traps import Future, Task, Gatherer, FutureAsyncWrapper, WaitTillFirst, WaitTillAll
 from ..time import LOOP_TIME, LOOP_TIME_RESOLUTION
 from .event_loop_functionality_helpers import _HAS_IPv6, _is_stream_socket, _set_reuse_port, _ip_address_info, \
     EventThreadRunDescriptor
@@ -915,7 +915,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ----------
         socket : `socket.socket`
             The socket, what the transport will use.
-        protocol : `Any`
+        protocol : `AbstractProtocolBase`
             The protocol of the transport.
         waiter : `None` or ``Future``, Optional
             Waiter, what's result should be set, when the transport is ready to use.
@@ -931,7 +931,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return SocketTransportLayer(self, extra, socket, protocol, waiter, server)
     
     
-    def _make_ssl_transport(self, socket, protocol, ssl, waiter=None, *, server_side=False, server_hostname=None,
+    def _make_ssl_transport(self, socket, protocol, ssl, waiter=None, *, server_side=False, server_host_name=None,
             extra=None, server=None):
         """
         Creates an ssl transport with the given parameters.
@@ -940,31 +940,31 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ----------
         socket : `socket.socket`
             The socket, what the transport will use.
-        protocol : `Any`
+        protocol : `AbstractProtocolBase`
             Asynchronous protocol implementation for the transport. The given protocol is wrapped into an
             ``SSLBidirectionalTransportLayer``
-        ssl : ``ssl.SSLContext``
+        ssl : `SSLContext`
             Ssl context of the respective connection.
         waiter : `None` or ``Future``, Optional
             Waiter, what's result should be set, when the transport is ready to use.
         server_side : `bool`, Optional (Keyword only)
             Whether the created ssl transport is a server side. Defaults to `False`.
-        server_hostname : `None` or `str`, Optional (Keyword only)
+        server_host_name : `None` or `str`, Optional (Keyword only)
             Overwrites the hostname that the target server’s certificate will be matched against.
             By default the value of the host parameter is used. If host is empty, there is no default and you must pass
-            a value for `server_hostname`. If `server_hostname` is an empty string, hostname matching is disabled
+            a value for `server_host_name`. If `server_host_name` is an empty string, hostname matching is disabled
             (which is a serious security risk, allowing for potential man-in-the-middle attacks).
-        extra : `None` or `dict` of (`str`, `Any`) item, Optional (Keyword only)
+        extra : `None` or `dict` of (`str`, `Any`) items, Optional (Keyword only)
             Optional transport information.
         server : `None` or ``Server``, Optional (Keyword only)
             The server to what the created socket will be attached to.
         
         Returns
         -------
-        transport : ``_SSLBidirectionalTransportLayerTransport``
+        transport : ``SSLBidirectionalTransportLayerTransport``
             The created ssl transport.
         """
-        ssl_protocol = SSLBidirectionalTransportLayer(self, protocol, ssl, waiter, server_side, server_hostname)
+        ssl_protocol = SSLBidirectionalTransportLayer(self, protocol, ssl, waiter, server_side, server_host_name, True)
         SocketTransportLayer(self, extra, socket, ssl_protocol, None, server)
         return ssl_protocol.app_transport
     
@@ -1019,8 +1019,8 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Factory function for creating an asynchronous compatible protocol.
         socket : `socket.socket`
             The sockets to serve by the respective server if applicable.
-        ssl : `None` or `ssl.SSLContext`, Optional
-            To enable ssl for the connections, give it as  `ssl.SSLContext`.
+        ssl : `None` or `SSLContext`, Optional
+            To enable ssl for the connections, give it as  `SSLContext`.
         server : `None` or ``Server``, Optional
             The respective server, what started to serve if applicable.
         backlog : `int`, Optional
@@ -1054,7 +1054,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Factory function for creating an asynchronous compatible protocol.
         socket : `socket.socket`
             The sockets to serve by the respective server if applicable.
-        ssl : `None` or `ssl.SSLContext`
+        ssl : `None` or `SSLContext`
             The ssl type of the connection if any.
         server : `None` or ``Server``
             The respective server if applicable.
@@ -1108,7 +1108,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             The accepted connection.
         extra : `None` or `dict` of (`str`, `Any`) item
             Optional transport information.
-        ssl : `None` or `ssl.SSLContext`
+        ssl : `None` or `SSLContext`
             The ssl type of the connection if any.
         server : `None` or ``Server``
             The respective server if applicable.
@@ -1170,13 +1170,13 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                 reader.cancel()
     
     
-    def remove_reader(self, fd):
+    def remove_reader(self, file_descriptor):
         """
-        Removes a read callback for the given fd.
+        Removes a read callback for the given file_descriptor.
         
         Parameters
         ----------
-        fd : `int`
+        file_descriptor : `int`
             The respective file descriptor.
         
         Returns
@@ -1189,7 +1189,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                 return False
         
         try:
-            key = self.selector.get_key(fd)
+            key = self.selector.get_key(file_descriptor)
         except KeyError:
             return False
         
@@ -1198,9 +1198,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         mask &= ~EVENT_READ
         
         if mask:
-            self.selector.modify(fd, mask, (None, writer))
+            self.selector.modify(file_descriptor, mask, (None, writer))
         else:
-            self.selector.unregister(fd)
+            self.selector.unregister(file_descriptor)
         
         if reader is not None:
             reader.cancel()
@@ -1209,13 +1209,13 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return False
     
     
-    def add_writer(self, fd, callback, *args):
+    def add_writer(self, file_descriptor, callback, *args):
         """
-        Registers a write callback for the given fd.
+        Registers a write callback for the given file_descriptor.
         
         Parameters
         ----------
-        fd : `int`
+        file_descriptor : `int`
             The respective file descriptor.
         callback : `callable`
             The function, what is called, when data the respective file descriptor becomes writable.
@@ -1228,26 +1228,26 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         handle = Handle(callback, args)
         try:
-            key = self.selector.get_key(fd)
+            key = self.selector.get_key(file_descriptor)
         except KeyError:
-            self.selector.register(fd, EVENT_WRITE, (None, handle))
+            self.selector.register(file_descriptor, EVENT_WRITE, (None, handle))
             return
         
         mask = key.events
         reader, writer = key.data
         
-        self.selector.modify(fd, mask|EVENT_WRITE, (reader, handle))
+        self.selector.modify(file_descriptor, mask|EVENT_WRITE, (reader, handle))
         if writer is not None:
             writer.cancel()
     
     
-    def remove_writer(self, fd):
+    def remove_writer(self, file_descriptor):
         """
-        Removes a write callback for the given fd.
+        Removes a write callback for the given file_descriptor.
         
         Parameters
         ----------
-        fd : `int`
+        file_descriptor : `int`
             The respective file descriptor.
         
         Returns
@@ -1260,7 +1260,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                 return False
         
         try:
-            key = self.selector.get_key(fd)
+            key = self.selector.get_key(file_descriptor)
         except KeyError:
             return False
         
@@ -1269,9 +1269,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         # remove both writer and connector.
         mask &= ~EVENT_WRITE
         if mask:
-            self.selector.modify(fd, mask, (reader, None))
+            self.selector.modify(file_descriptor, mask, (reader, None))
         else:
-            self.selector.unregister(fd)
+            self.selector.unregister(file_descriptor)
             
         if writer is not None:
             writer.cancel()
@@ -1294,15 +1294,15 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Callable returning an asynchronous protocol implementation.
         socket : `socket.socket`
             A preexisting socket object returned from `socket.accept`.
-        ssl : `None` or `ssl.SSLContext`, Optional (Keyword only)
+        ssl : `None` or `SSLContext`, Optional (Keyword only)
             Whether ssl should be enabled.
         
         Returns
         -------
-        transport : ``_SSLBidirectionalTransportLayerTransport`` or ``SocketTransportLayer``
-            The created transport. If `ssl` is enabled, creates ``_SSLBidirectionalTransportLayerTransport``, else
+        transport : ``SSLBidirectionalTransportLayerTransport`` or ``SocketTransportLayer``
+            The created transport. If `ssl` is enabled, creates ``SSLBidirectionalTransportLayerTransport``, else
             ``SocketTransportLayer``.
-        protocol : `Any`
+        protocol : `AbstractProtocolBase`
             The protocol returned by `protocol_factory`.
         
         Raises
@@ -1316,8 +1316,56 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return await self._create_connection_transport(socket, protocol_factory, ssl, '', True)
     
     
-    async def create_connection(self, protocol_factory, host=None, port=None, *, ssl=None, family=0, protocol=0,
-            flags=0, socket=None, local_address=None, server_hostname=None):
+    def _create_connection_shared_precheck(self, ssl, server_host_name, host):
+        """
+        Shared precheck by ``.create_connection_to`` and by ``.create_connection_with``.
+        
+        Parameters
+        ----------
+        ssl : `None`, `bool` or `SSLContext`
+            Whether ssl should be enabled.
+        server_host_name : `None` or `str`
+            Overwrites the host name that the target server’s certificate will be matched against.
+            Should only be passed if `ssl` is not `None`. By default the value of the host parameter is used. If host
+            is empty, there is no default and you must pass a value for `server_host_name`. If `server_host_name` is an
+            empty string, host name matching is disabled (which is a serious security risk, allowing for potential
+            man-in-the-middle attacks).
+        host : `None` or `str`
+            To what network interfaces should the connection be bound.
+        
+        Returns
+        -------
+        ssl : ``None` or `SSLContext`
+        server_host_name : `None` or `str`
+        
+        Raises
+        ------
+        ValueError
+            - If `server_host_name` is not set, meanwhile using `ssl` without `host`.
+            - If `server_host_name` is set, but `ssl` is.
+        """
+        if isinstance(ssl, bool):
+            if ssl:
+                ssl = create_default_context()
+            else:
+                ssl = None
+        
+        if (server_host_name is None):
+            if (ssl is not None):
+                # Use host as default for server_host_name.
+                if host is None:
+                    raise ValueError('You must set `server_host_name` when using `ssl` without a `host`.')
+                
+                server_host_name = host
+        else:
+            if ssl is None:
+                raise ValueError('`server_host_name` is only meaningful with `ssl`.')
+        
+        return ssl, server_host_name
+    
+    
+    async def create_connection_to(self, protocol_factory, host, port, *, ssl=None, family=0, protocol=0,
+            flags=0, local_address=None, server_host_name=None):
         """
         Open a streaming transport connection to a given address specified by `host` and `port`.
         
@@ -1329,13 +1377,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Callable returning an asynchronous protocol implementation.
         host : `None` or `str`, Optional
             To what network interfaces should the connection be bound.
-            
-            Mutually exclusive with the `socket` parameter.
         port : `None` or `int`, Optional
             The port of the `host`.
-            
-            Mutually exclusive with the `socket` parameter.
-        ssl : `None`, `bool` or `ssl.SSLContext`, Optional (Keyword only)
+        ssl : `None`, `bool` or `SSLContext`, Optional (Keyword only)
             Whether ssl should be enabled.
         family : `AddressFamily` or `int`, Optional (Keyword only)
             Can be either `AF_INET`, `AF_INET6` or `AF_UNIX`.
@@ -1343,139 +1387,147 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Can be used to narrow host resolution. Is passed to ``.get_address_info``.
         flags : `int`, Optional (Keyword only)
             Can be used to narrow host resolution. Is passed to ``.get_address_info``.
-        socket : `None` or `socket.socket`, Optional (Keyword only)
-            Whether should use an existing, already connected socket.
-            
-            Mutually exclusive with the `host` and the `port` parameters.
         local_address : `tuple` of (`None` or  `str`, `None` or `int`), Optional (Keyword only)
             Can be given as a `tuple` (`local_host`, `local_port`) to bind the socket locally. The `local_host` and
             `local_port` are looked up by ``.get_address_info``.
-        server_hostname : `None` or `str`, Optional (Keyword only)
-            Overwrites the hostname that the target server’s certificate will be matched against.
-            Should only be passed if `ssl` is not `None`. By default the value of the host parameter is used. If host
-            is empty, there is no default and you must pass a value for `server_hostname`. If `server_hostname` is an
-            empty string, hostname matching is disabled (which is a serious security risk, allowing for potential
-            man-in-the-middle attacks).
-        
-        Returns
-        -------
-        transport : ``_SSLBidirectionalTransportLayerTransport`` or ``SocketTransportLayer``
-            The created transport. If `ssl` is enabled, creates ``_SSLBidirectionalTransportLayerTransport``, else
-            ``SocketTransportLayer``.
-        protocol : `Any`
-            The protocol returned by `protocol_factory`.
         
         Raises
         ------
         ValueError
-            - If `host` or `port` is given meanwhile `socket` is also specified.
-            - If `server_hostname` is not set, meanwhile using `ssl` without `host`.
-            - If `server_hostname` is set, but `ssl` is.
-            - If neither `host`, `port` or `socket` are specified.
-            - `socket` is given, but not as a stream socket.
+            - If `server_host_name` is not set, meanwhile using `ssl` without `host`.
+            - If `server_host_name` is set, but `ssl` is.
         OSError
             - `get_address_info()` returned empty list.
             - Error while attempting to bind to address.
             - Cannot open connection to any address.
         """
-        if isinstance(ssl, bool):
-            if ssl:
-                ssl = create_default_context()
-            else:
-                ssl = None
+        ssl, server_host_name = self._create_connection_shared_precheck(ssl, server_host_name, host)
         
-        if (server_hostname is None):
-            if (ssl is not None):
-                # Use host as default for server_hostname. It is an error if host is empty or not set, e.g. when an
-                # already-connected socket was passed or when only a port is given.  To avoid this error, you can pass
-                # server_hostname='' -- this will bypass the hostname check. (This also means that if host is a numeric
-                # IP/IPv6 address, we will attempt to verify that exact address; this will probably fail, but it is
-                # possible to create a certificate for a specific IP address, so we don't judge it here.)
-                if host is None:
-                    raise ValueError('You must set `server_hostname` when using `ssl` without a `host`.')
-                server_hostname = host
+        future_1 = self._ensure_resolved((host, port), family=family, type=module_socket.SOCK_STREAM, protocol=protocol,
+            flags=flags)
+        
+        futures = [future_1]
+        if local_address is not None:
+            future_2 = self._ensure_resolved(local_address, family=family, type=module_socket.SOCK_STREAM,
+                protocol=protocol, flags=flags)
+            
+            futures.append(future_2)
+        
         else:
-            if ssl is None:
-                raise ValueError('`server_hostname` is only meaningful with `ssl`.')
+            future_2 = None
         
-        if (host is not None) or (port is not None):
-            if (socket is not None):
-                raise ValueError('`host`, `port` and `socket` can not be specified at the same time.')
-            
-            f1 = self._ensure_resolved((host, port), family=family, type=module_socket.SOCK_STREAM, protocol=protocol,
-                flags=flags)
-            fs = [f1]
-            if local_address is not None:
-                f2 = self._ensure_resolved(local_address, family=family, type=module_socket.SOCK_STREAM,
-                    protocol=protocol, flags=flags)
-                fs.append(f2)
-            else:
-                f2 = None
-            
-            await Gatherer(self, fs)
-            
-            infos = f1.result()
-            if not infos:
+        await WaitTillAll(futures, self)
+        
+        infos = future_1.result()
+        if not infos:
+            raise OSError('`get_address_info` returned empty list')
+        
+        if (future_2 is not None):
+            local_address_infos = future_2.result()
+            if not local_address_infos:
                 raise OSError('`get_address_info` returned empty list')
-            if (f2 is not None):
-                local_address_infos = f2.result()
-                if not local_address_infos:
-                    raise OSError('`get_address_info` returned empty list')
+        
+        exceptions = []
+        for family, type_, protocol, canonical_name, address in infos:
             
-            exceptions = []
-            for family, type_, protocol, canonical_name, address in infos:
-                try:
-                    socket = module_socket.socket(family=family, type=type_, proto=protocol)
-                    socket.setblocking(False)
-                    if (f2 is not None):
-                        for element in local_address_infos:
-                            local_address = element[4]
-                            try:
-                                socket.bind(local_address)
-                                break
-                            except OSError as err:
-                                err = OSError(err.errno, f'Error while attempting to bind on address '
-                                    f'{local_address!r}: {err.strerror.lower()}.')
-                                exceptions.append(err)
-                        else:
-                            socket.close()
-                            socket = None
-                            continue
-                    
-                    await self.socket_connect(socket, address)
-                except OSError as err:
-                    if (socket is not None):
+            socket = module_socket.socket(family=family, type=type_, proto=protocol)
+            
+            try:
+                socket.setblocking(False)
+                
+                if (future_2 is not None):
+                    for element in local_address_infos:
+                        local_address = element[4]
+                        try:
+                            socket.bind(local_address)
+                            break
+                        except OSError as err:
+                            err = OSError(err.errno, f'Error while attempting to bind on address '
+                                f'{local_address!r}: {err.strerror.lower()}.')
+                            exceptions.append(err)
+                    else:
                         socket.close()
-                    exceptions.append(err)
-                except:
-                    if (socket is not None):
-                        socket.close()
-                    raise
-                else:
-                    break
+                        socket = None
+                        continue
+                
+                await self.socket_connect(socket, address)
+            except OSError as err:
+                if (socket is not None):
+                    socket.close()
+                
+                exceptions.append(err)
+            
+            except:
+                if (socket is not None):
+                    socket.close()
+                
+                raise
+            
             else:
-                if len(exceptions) == 1:
-                    raise exceptions[0]
-                else:
-                    # If they all have the same str(), raise one.
-                    model = repr(exceptions[0])
-                    all_exception = [repr(exception) for exception in exceptions]
-                    if all(element == model for element in all_exception):
-                        raise exceptions[0]
-                    # Raise a combined exception so the user can see all the various error messages.
-                    raise OSError(f'Multiple exceptions: {", ".join(all_exception)}')
-        
+                break
         else:
-            if socket is None:
-                raise ValueError('`host` and `port`, neither `socket` was given.')
-            
-            if not _is_stream_socket(socket):
-                raise ValueError(f'A stream socket was expected, got {socket!r}.')
+            if len(exceptions) == 1:
+                raise exceptions[0]
+            else:
+                # If they all have the same str(), raise one.
+                exception_representations = [repr(exception) for exception in exceptions]
+                exception_representation_model = exception_representations[0]
+                
+                for exception_representation in exception_representations:
+                    if exception_representation != exception_representation_model:
+                        break
+                else:
+                    raise exceptions[0]
+                
+                # Raise a combined exception so the user can see all the various error messages.
+                raise OSError(f'Multiple exceptions: {", ".join(exception_representations)}')
         
-        return await self._create_connection_transport(socket, protocol_factory, ssl, server_hostname, False)
+        return await self._create_connection_transport(socket, protocol_factory, ssl, server_host_name, False)
     
     
-    async def _create_connection_transport(self, socket, protocol_factory, ssl, server_hostname, server_side):
+    async def create_connection_with(self, protocol_factory, socket, *, ssl=None, server_host_name=None):
+        """
+        Opens a stream transport connection to the given `socket`.
+        
+        This method is a coroutine.
+        
+        Parameters
+        ----------
+        socket : `socket.socket`
+            Whether should use an existing, already connected socket.
+        ssl : `None`, `bool` or `SSLContext`, Optional (Keyword only)
+            Whether ssl should be enabled.
+        server_host_name : `None` or `str`
+            Overwrites the host name that the target server’s certificate will be matched against.
+            Should only be passed if `ssl` is not `None`. By default the value of the host parameter is used. If host
+            is empty, there is no default and you must pass a value for `server_host_name`. If `server_host_name` is an
+            empty string, host name matching is disabled (which is a serious security risk, allowing for potential
+            man-in-the-middle attacks).
+        
+        Returns
+        -------
+        protocol : ``AbstractProtocolBase``
+            The protocol returned by `protocol_factory`.
+        
+        Raises
+        ------
+        ValueError
+            - If `server_host_name` is not set, meanwhile using `ssl` without `host`.
+            - If `server_host_name` is set, but `ssl` is.
+        OSError
+            - `get_address_info()` returned empty list.
+            - Error while attempting to bind to address.
+            - Cannot open connection to any address.
+        """
+        ssl, server_host_name = self._create_connection_shared_precheck(ssl, server_host_name, None)
+        
+        if not _is_stream_socket(socket):
+            raise ValueError(f'A stream socket was expected, got {socket!r}.')
+        
+        return await self._create_connection_transport(socket, protocol_factory, ssl, server_host_name, False)
+    
+    
+    async def _create_connection_transport(self, socket, protocol_factory, ssl, server_host_name, server_side):
         """
         Open a streaming transport connection to a given address specified by `host` and `port`.
         
@@ -1485,14 +1537,14 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ----------
         protocol_factory : `callable`.
             Callable returning an asynchronous protocol implementation.
-        ssl : `None`, `ssl.SSLContext`
+        ssl : `None`, `SSLContext`
             Whether ssl should be enabled.
         socket : `socket.socket`
             The socket to what the created transport should be connected to.
-        server_hostname : `None` or `str`
+        server_host_name : `None` or `str`
             Overwrites the hostname that the target server’s certificate will be matched against.
             Should only be passed if `ssl` is not `None`. By default the value of the host parameter is used. If host
-            is empty, there is no default and you must pass a value for `server_hostname`. If `server_hostname` is an
+            is empty, there is no default and you must pass a value for `server_host_name`. If `server_host_name` is an
             empty string, hostname matching is disabled (which is a serious security risk, allowing for potential
             man-in-the-middle attacks).
         server_side : `bool`
@@ -1512,7 +1564,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             transport = self._make_socket_transport(socket, protocol, waiter)
         else:
             transport = self._make_ssl_transport(socket, protocol, ssl, waiter, server_side=server_side,
-                server_hostname=server_hostname)
+                server_host_name=server_host_name)
         
         try:
             await waiter
@@ -1523,103 +1575,45 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return protocol
     
     
-    if IS_UNIX:
-        async def create_unix_connection(self, protocol_factory, path=None, *, socket=None, ssl=None,
-                server_hostname=None):
-            if (ssl is None):
-                if server_hostname is not None:
-                    raise ValueError('`server_hostname` is only meaningful with `ssl`.')
+    def _create_unix_connection_shared_precheck(self, ssl, server_host_name):
+        """
+        Shared precheck used by ``.create_unix_connection_to` and by ``.create_unix_connection_with``.
+        
+        Parameters
+        ----------
+        ssl : `None`, `bool` or `SSLContext`
+            Whether ssl should be enabled.
+        server_host_name : `None` or `str`
+            Overwrites the host name that the target server’s certificate will be matched against.
+            Should only be passed if `ssl` is not `None`.
+        
+        Returns
+        -------
+        ssl : ``None` or `SSLContext`
+        server_host_name : `None` or `str`
+        
+        Raises
+        ------
+            - If `server_host_name` parameter is given, but `ssl` isn't.
+            - If `ssl` parameter is given, but `server_host_name` is not.
+        """
+        if isinstance(ssl, bool):
+            if ssl:
+                ssl = create_default_context()
             else:
-                if server_hostname is None:
-                    raise ValueError('`server_hostname` parameter is required with `ssl`.')
-            
-            if path is not None:
-                if socket is not None:
-                    raise ValueError('`path` and `socket` parameters are mutually exclusive.')
-                
-                path = os.fspath(path)
-                socket = module_socket.socket(module_socket.AF_UNIX, module_socket.SOCK_STREAM, 0)
-                
-                try:
-                    socket.setblocking(False)
-                    await self.socket_connect(socket, path)
-                except:
-                    socket.close()
-                    raise
-            
-            else:
-                if socket is None:
-                    raise ValueError('Either `socket` or `path` parameters are required.')
-                
-                if socket.family not in (module_socket.AF_UNIX, module_socket.SOCK_STREAM):
-                    raise ValueError(f'A UNIX Domain Stream Socket was expected, got {socket!r}.')
-                
-                socket.setblocking(False)
-            
-            return await self._create_connection_transport(socket, protocol_factory, ssl, server_hostname, False)
+                ssl = None
         
+        if (ssl is None):
+            if server_host_name is not None:
+                raise ValueError('`server_host_name` is only meaningful with `ssl`.')
+        else:
+            if server_host_name is None:
+                raise ValueError('`server_host_name` parameter is required with `ssl`.')
         
-        async def open_unix_connection(self, path=None, **kwargs):
-            return await self.create_unix_connection(partial_func(ReadWriteProtocolBase, self), path, **kwargs)
-        
-        
-        async def create_unix_server(self, protocol_factory, path=None, *, socket=None, backlog=100, ssl=None,):
-            if (ssl is not None) and (not isinstance(ssl, ssl.SSlContext)):
-                raise TypeError(f'`ssl` can be given as `None` or as ``SSLContext``, got {ssl.__class__.__name__}.')
-            
-            if path is not None:
-                if socket is not None:
-                    raise ValueError('`path` and `socket` parameters are mutually exclusive.')
-                
-                path = os.fspath(path)
-                socket = module_socket.socket(module_socket.AF_UNIX, module_socket.SOCK_STREAM)
-                
-                # Check for abstract socket.
-                if not path.startswith('\x00'):
-                    try:
-                        if S_ISSOCK(os.stat(path).st_mode):
-                            os.remove(path)
-                    except FileNotFoundError:
-                        pass
-                
-                try:
-                    socket.bind(path)
-                except OSError as exc:
-                    socket.close()
-                    if exc.errno == errno.EADDRINUSE:
-                        # Let's improve the error message by adding  with what exact address it occurs.
-                        raise OSError(errno.EADDRINUSE, f'Address {path!r} is already in use.') from None
-                    else:
-                        raise
-                except:
-                    socket.close()
-                    raise
-            else:
-                if socket is None:
-                    raise ValueError('Either `path` or `socket` parameter is required.')
-                
-                if socket.family not in (module_socket.AF_UNIX, module_socket.SOCK_STREAM):
-                    raise ValueError(f'A UNIX Domain Stream Socket was expected, got {socket!r}.')
-            
-            socket.setblocking(False)
-            
-            return Server(self, [socket], protocol_factory, ssl, backlog)
-        
-    else:
-        async def create_unix_connection(self, protocol_factory, path=None, *, socket=None, ssl=None,
-                server_hostname=None):
-            raise NotImplementedError
-        
-        
-        async def open_unix_connection(self, path=None, **kwargs):
-            raise NotImplementedError
+        return ssl, server_host_name
     
-    
-        async def create_unix_server(self, protocol_factory, path=None, *, socket=None, backlog=100, ssl=None,):
-            raise NotImplementedError
-    
-    
-    set_docs(create_unix_connection,
+
+    async def create_unix_connection_to(self, protocol_factory, path, *, ssl=None, server_host_name=None):
         """
         Establish a unix socket connection.
         
@@ -1629,42 +1623,94 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ----------
         protocol_factory : `callable`.
             Callable returning an asynchronous protocol implementation.
-        path : `None` or `str`, Optional
+        path : `None` or `str`
             The path to open connection to.
-        socket : `socket.socket`, Optional (Keyword only)
-            A preexisting socket object to use up.
-            
-            Mutually exclusive with the `path` parameter.
-        ssl : `None` or `ssl.SSLContext`, Optional (Keyword only)
+        ssl : `None` or `SSLContext`, Optional (Keyword only)
             Whether ssl should be enabled.
-        server_hostname : `None` or `str`
+        server_host_name : `None` or `str`
             Overwrites the hostname that the target server’s certificate will be matched against.
             Should only be passed if `ssl` is not `None`. By default the value of the host parameter is used. If hos
-            is empty, there is no default and you must pass a value for `server_hostname`. If `server_hostname` is an
+            is empty, there is no default and you must pass a value for `server_host_name`. If `server_host_name` is an
             empty string, hostname matching is disabled (which is a serious security risk, allowing for potential
             man-in-the-middle attacks).
         
         Returns
         -------
-        transport : ``_SSLBidirectionalTransportLayerTransport`` or ``SocketTransportLayer``
-            The created transport. If `ssl` is enabled, creates ``_SSLBidirectionalTransportLayerTransport``, else
+        transport : ``SSLBidirectionalTransportLayerTransport`` or ``SocketTransportLayer``
+            The created transport. If `ssl` is enabled, creates ``SSLBidirectionalTransportLayerTransport``, else
             ``SocketTransportLayer``.
-        protocol : `Any`
+        protocol : `AbstractProtocolBase`
             The protocol returned by `protocol_factory`.
         
         Raises
         ------
         ValueError
-            - If `server_hostname` parameter is given, but `ssl` isn't.
-            - If `ssl` parameter is given, but `server_hostname` is not.
-            - If `path` parameter is given, when `socket` is defined as well.
-            - If neither `path` and `socket` parameters are given.
+            - If `server_host_name` parameter is given, but `ssl` isn't.
+            - If `ssl` parameter is given, but `server_host_name` is not.
+        NotImplementedError
+            Not supported on windows by the library.
+        """
+        ssl, server_host_name = self._create_unix_connection_shared_precheck(ssl, server_host_name)
+        
+        path = os.fspath(path)
+        socket = module_socket.socket(module_socket.AF_UNIX, module_socket.SOCK_STREAM, 0)
+        
+        try:
+            socket.setblocking(False)
+            await self.socket_connect(socket, path)
+        except:
+            socket.close()
+            raise
+        
+        return await self._create_connection_transport(socket, protocol_factory, ssl, server_host_name, False)
+    
+    
+    async def create_unix_connection_with(self, protocol_factory, socket, *, ssl=None, server_host_name=None):
+        """
+        Establish a unix socket connection.
+        
+        This method is a coroutine.
+        
+        Parameters
+        ----------
+        protocol_factory : `callable`.
+            Callable returning an asynchronous protocol implementation.
+        socket : `socket.socket`
+            A preexisting socket object to use up.
+        ssl : `None` or `SSLContext`, Optional (Keyword only)
+            Whether ssl should be enabled.
+        server_host_name : `None` or `str`, Optional (Keyword only)
+            Overwrites the hostname that the target server’s certificate will be matched against.
+            Should only be passed if `ssl` is not `None`.
+        
+        Returns
+        -------
+        transport : ``SSLBidirectionalTransportLayerTransport`` or ``SocketTransportLayer``
+            The created transport. If `ssl` is enabled, creates ``SSLBidirectionalTransportLayerTransport``, else
+            ``SocketTransportLayer``.
+        protocol : `AbstractProtocolBase`
+            The protocol returned by `protocol_factory`.
+        
+        Raises
+        ------
+        ValueError
+            - If `server_host_name` parameter is given, but `ssl` isn't.
+            - If `ssl` parameter is given, but `server_host_name` is not.
             - If `socket`'s is not an unix domain stream socket.
         NotImplementedError
             Not supported on windows by the library.
-        """)
+        """
+        ssl, server_host_name = self._create_unix_connection_shared_precheck(ssl, server_host_name)
+        
+        if socket.family not in (module_socket.AF_UNIX, module_socket.SOCK_STREAM):
+            raise ValueError(f'A UNIX Domain Stream Socket was expected, got {socket!r}.')
+        
+        socket.setblocking(False)
     
-    set_docs(open_unix_connection,
+        return await self._create_connection_transport(socket, protocol_factory, ssl, server_host_name, False)
+    
+    
+    async def open_unix_connection_to(self, path, *, ssl=None, server_host_name=None):
         """
         Creates an unix connection.
         
@@ -1672,25 +1718,13 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Parameters
         ----------
-        path : `None` or `str`, Optional
+        path : `str`
             The path to open connection to.
-        **kwargs : Keyword parameters
-            Additional keyword parameters to pass to ``.create_unix_connection``.
-        
-        Other Parameters
-        ----------------
-        socket : `socket.socket`, Optional (Keyword only)
-            A preexisting socket object to use up.
-            
-            Mutually exclusive with the `path` parameter.
-        ssl : `None` or `ssl.SSLContext`, Optional (Keyword only)
+        ssl : `None` or `SSLContext`, Optional (Keyword only)
             Whether ssl should be enabled.
-        server_hostname : `None` or `str`
+        server_host_name : `None` or `str`, Optional (Keyword only)
             Overwrites the hostname that the target server’s certificate will be matched against.
-            Should only be passed if `ssl` is not `None`. By default the value of the host parameter is used. If hos
-            is empty, there is no default and you must pass a value for `server_hostname`. If `server_hostname` is an
-            empty string, hostname matching is disabled (which is a serious security risk, allowing for potential
-            man-in-the-middle attacks).
+            Should only be passed if `ssl` is not `None`.
         
         Returns
         -------
@@ -1700,16 +1734,76 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         Raises
         ------
         ValueError
-            - If `server_hostname` parameter is given, but `ssl` isn't.
-            - If `ssl` parameter is given, but `server_hostname` is not.
-            - If `path` parameter is given, when `socket` is defined as well.
-            - If neither `path` and `socket` parameters are given.
+            - If `server_host_name` parameter is given, but `ssl` isn't.
+            - If `ssl` parameter is given, but `server_host_name` is not.
+        NotImplementedError
+            Not supported on windows by the library.
+        """
+        return await self.create_unix_connection_to(
+            partial_func(ReadWriteProtocolBase, self),
+            path,
+            ssl = ssl,
+            server_host_name = server_host_name,
+        )
+    
+    async def open_unix_connection_with(self, socket, *, ssl=None, server_host_name=None):
+        """
+        Creates an unix connection.
+        
+        This method is a coroutine.
+        
+        Parameters
+        ----------
+        socket : `socket.socket`
+            A preexisting socket object to use up.
+        ssl : `None` or `SSLContext`, Optional (Keyword only)
+            Whether ssl should be enabled.
+        server_host_name : `None` or `str`, Optional (Keyword only)
+            Overwrites the hostname that the target server’s certificate will be matched against.
+            Should only be passed if `ssl` is not `None`.
+        
+        Returns
+        -------
+        protocol : ``BaseProtocol``
+            The connected read and write protocol.
+        
+        Raises
+        ------
+        ValueError
+            - If `server_host_name` parameter is given, but `ssl` isn't.
+            - If `ssl` parameter is given, but `server_host_name` is not.
             - If `socket`'s is not an unix domain stream socket.
         NotImplementedError
             Not supported on windows by the library.
-        """)
+        """
+        return await self.create_unix_connection_with(
+            partial_func(ReadWriteProtocolBase, self),
+            socket,
+            ssl = ssl,
+            server_host_name = server_host_name,
+        )
     
-    set_docs(create_unix_server,
+    
+    def _create_unix_server_shared_precheck(self, ssl):
+        """
+        Shared precheck used by ``.create_unix_server_to`` and ``.create_unix_server_with``.
+        
+        Parameters
+        ----------
+        ssl : `None` or `SSLContext`
+            Whether ssl should be enabled.
+        
+        Returns
+        -------
+        ssl : ``None` or `SSLContext`
+        """
+        if (ssl is not None) and (not isinstance(ssl, ssl.SSlContext)):
+            raise TypeError(f'`ssl` can be given as `None` or as `SSLContext`, got {ssl.__class__.__name__}.')
+        
+        return ssl
+    
+    
+    async def create_unix_server_to(self, protocol_factory, path, *, backlog=100, ssl=None):
         """
         Creates an unix server (socket type AF_UNIX) listening on the given path.
         
@@ -1719,15 +1813,11 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ----------
         protocol_factory : `callable`
             Factory function for creating a protocols.
-        path : `None` or `str`
+        path : `str`
             The path to open connection to.
-        socket : `None` or `socket.socket`, Optional (Keyword only)
-            Can be specified in order to use a preexisting socket object.
-            
-            Mutually exclusive with the `path` parameter.
         backlog : `int`, Optional (Keyword only)
             The maximum number of queued connections passed to `listen()` (defaults to 100).
-        ssl : `None` or ``SSLContext``, Optional (Keyword only)
+        ssl : `None` or `SSLContext`, Optional (Keyword only)
             Whether and what ssl is enabled for the connections.
         
         Returns
@@ -1738,11 +1828,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         Raises
         ------
         TypeError
-            - If `ssl` is not given neither as `None` nor as `ssl.SSLContext` instance.
-        ValueError
-            - If both `path` and `socket` parameters are given.ó
-            - If neither `path` nor `socket` were given.
-            - If `socket` is given, but it's type is not `module_socket.SOCK_STREAM`.
+            - If `ssl` is not given neither as `None` nor as `SSLContext` instance.
         FileNotFoundError:
             The given `path` do not exists.
         OsError
@@ -1750,7 +1836,104 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             - Error while attempting to connect to `path`.
         NotImplementedError
             Not supported on windows by the library.
-        """)
+        """
+        ssl = self._create_unix_server_shared_precheck(ssl)
+    
+        path = os.fspath(path)
+        socket = module_socket.socket(module_socket.AF_UNIX, module_socket.SOCK_STREAM)
+        
+        # Check for abstract socket.
+        if not path.startswith('\x00'):
+            try:
+                if S_ISSOCK(os.stat(path).st_mode):
+                    os.remove(path)
+            except FileNotFoundError:
+                pass
+        
+        try:
+            socket.bind(path)
+        except OSError as exc:
+            socket.close()
+            if exc.errno == errno.EADDRINUSE:
+                # Let's improve the error message by adding  with what exact address it occurs.
+                raise OSError(errno.EADDRINUSE, f'Address {path!r} is already in use.') from None
+            else:
+                raise
+        except:
+            socket.close()
+            raise
+        
+        
+        socket.setblocking(False)
+        
+        return Server(self, [socket], protocol_factory, ssl, backlog)
+    
+    
+    async def create_unix_server_with(self, protocol_factory, socket, *, backlog=100., ssl=None):
+        """
+        Creates an unix server (socket type AF_UNIX) listening with the given socket.
+        
+        This method is a coroutine.
+        
+        Parameters
+        ----------
+        protocol_factory : `callable`
+            Factory function for creating a protocols.
+        socket : `socket.socket`
+            Can be specified in order to use a preexisting socket object.
+        backlog : `int`, Optional (Keyword only)
+            The maximum number of queued connections passed to `listen()` (defaults to 100).
+        ssl : `None` or `SSLContext`, Optional (Keyword only)
+            Whether and what ssl is enabled for the connections.
+        
+        Returns
+        -------
+        server : ``Server``
+            The created server instance.
+        
+        Raises
+        ------
+        TypeError
+            - If `ssl` is not given neither as `None` nor as `SSLContext` instance.
+        ValueError
+            - If `socket` is given, but it's type is not `module_socket.SOCK_STREAM`.
+        NotImplementedError
+            Not supported on windows by the library.
+        """
+        ssl = self._create_unix_server_shared_precheck(ssl)
+        
+        if socket.family not in (module_socket.AF_UNIX, module_socket.SOCK_STREAM):
+            raise ValueError(f'A UNIX Domain Stream Socket was expected, got {socket!r}.')
+        
+        socket.setblocking(False)
+        
+        return Server(self, [socket], protocol_factory, ssl, backlog)
+    
+    
+    if not IS_UNIX:
+        @copy_docs(create_unix_connection_to)
+        async def create_unix_connection_to(self, protocol_factory, path, *, ssl=None, server_host_name=None):
+            raise NotImplementedError
+        
+        @copy_docs(create_unix_connection_with)
+        async def create_unix_connection_with(self, protocol_factory, socket, *, ssl=None, server_host_name=None):
+            raise NotImplementedError
+        
+        @copy_docs(open_unix_connection_to)
+        async def open_unix_connection_to(self, path, *, ssl=None, server_host_name=None):
+            raise NotImplementedError
+        
+        @copy_docs(open_unix_connection_with)
+        async def open_unix_connection_with(self, socket, *, ssl=None, server_host_name=None):
+            raise NotImplementedError
+        
+        @copy_docs(create_unix_server_to)
+        async def create_unix_server_to(self, protocol_factory, path, *, socket, backlog=100, ssl=None,):
+            raise NotImplementedError
+        
+        @copy_docs(create_unix_server_with)
+        async def create_unix_server_with(self, protocol_factory, socket, *, backlog=100, ssl=None,):
+            raise NotImplementedError
     
     
     # await it
@@ -2144,8 +2327,42 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             self.add_writer(fd, self._socket_send_all, future, True, socket, data)
     
     
-    async def create_datagram_endpoint(self, protocol_factory, local_address=None, remote_address=None, *, family=0,
-            protocol=0, flags=0, reuse_port=False, allow_broadcast=False, socket=None):
+    async def _create_datagram_connection(self, protocol_factory, socket, address):
+        """
+        Creates a datagram connection.
+        
+        This method is a coroutine.
+        
+        Parameters
+        ----------
+        protocol_factory : `callable`
+            Factory function for creating a protocols.
+        socket : `socket.socket`
+            Socket to bind the datagram transport to.
+        address : `None` or `tuple` (`str`, `int`)
+            The last address, where the transport sent data. Defaults to `None`. The send target address should not
+            differ from the last, where the transport sent data.
+        
+        Returns
+        -------
+        protocol : ``AbstractProtocolBase``
+            The protocol returned by `protocol_factory`.
+        """
+        protocol = protocol_factory()
+        waiter = Future(self)
+        transport = DatagramSocketTransportLayer(self, socket, protocol, address, waiter, None)
+        
+        try:
+            await waiter
+        except:
+            transport.close()
+            raise
+        
+        return protocol
+    
+    
+    async def create_datagram_connection_to(self, protocol_factory, local_address, remote_address, *, family=0,
+            protocol=0, flags=0, reuse_port=False, allow_broadcast=False):
         """
         Creates a datagram connection. The socket type will be `SOCK_DGRAM`.
         
@@ -2156,32 +2373,22 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         protocol_factory : `callable`
             Factory function for creating a protocols.
         
-        local_address : `None`, `tuple` of (`None` or  `str`, `None` or `int`), `str`, `bytes`, Optional
+        local_address : `None`, `tuple` of (`None` or  `str`, `None` or `int`), `str`, `bytes`
             Can be given as a `tuple` (`local_host`, `local_port`) to bind the socket locally. The `local_host` and
             `local_port` are looked up by ``.get_address_info``.
             
             If `family` is given as `AF_UNIX`, then also can be given as path of a file or a file descriptor.
-            
-            Mutually exclusive with the `socket` parameter.
-        remote_address : `None`, `tuple` of (`None` or  `str`, `None` or `int`), `str`, `bytes`, Optional
+        remote_address : `None`, `tuple` of (`None` or  `str`, `None` or `int`), `str`, `bytes`
             Can be given as a `tuple` (`remote_host`, `remote_port`) to connect the socket to remove address. The
             `remote_host` and `remote_port` are looked up by ``.get_address_info``.
             
             If `family` is given as `AF_UNIX`, then also can be given as path of a file or a file descriptor.
-            
-            Mutually exclusive with the `socket` parameter.
         family : `AddressFamily` or `int`, Optional (Keyword only)
             Can be either `AF_INET`, `AF_INET6` or `AF_UNIX`.
-            
-            Mutually exclusive with the `socket` parameter.
         protocol : `int`, Optional (Keyword only)
             Can be used to narrow host resolution. Is passed to ``.get_address_info``.
-            
-            Mutually exclusive with the `socket` parameter.
         flags : `int`, Optional (Keyword only)
             Can be used to narrow host resolution. Is passed to ``.get_address_info``.
-            
-            Mutually exclusive with the `socket` parameter.
         reuse_port : `bool`, Optional (Keyword only)
             Tells to the kernel to allow this endpoint to be bound to the same port as an other existing endpoint
             already might be bound to.
@@ -2189,198 +2396,159 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Not supported on Windows.
         allow_broadcast : `bool`, Optional (Keyword only)
             Tells the kernel to allow this endpoint to send messages to the broadcast address.
-        socket : `None` or `socket.socket`, Optional (Keyword only)
-            Can be specified in order to use a preexisting socket object.
-            
-            Mutually exclusive with `host` and `port` parameters.
         
         Returns
         -------
         protocol : ``AbstractProtocolBase``
             The protocol returned by `protocol_factory`.
         """
-        if socket is not None:
-            if socket.type != module_socket.SOCK_DGRAM:
-                raise ValueError(f'A UDP socket was expected, got {socket!r}.')
+        address_info = []
+        
+        if (local_address is None) and (remote_address is None):
+            if family == 0:
+                raise ValueError(f'Unexpected address family: {family!r}.')
             
-            if (local_address is not None) or (remote_address is not None) or family  or protocol or flags or \
-                    reuse_port or allow_broadcast:
-                
-                collected = []
+            address_info.append((family, protocol, None, None))
+        
+        elif hasattr(module_socket, 'AF_UNIX') and family == module_socket.AF_UNIX:
+            if __debug__:
                 if (local_address is not None):
-                    collected.append(('local_address', local_address))
+                    if not isinstance(local_address, (str, bytes)):
+                        raise TypeError('`local_address` should be given as `None` or as `str` or `bytes` '
+                            f'instance, if `family` is given as ``AF_UNIX`, got '
+                            f'{local_address.__class__.__name__}')
                 
                 if (remote_address is not None):
-                    collected.append(('remote_address', remote_address))
+                    if not isinstance(remote_address, (str, bytes)):
+                        raise TypeError('`remote_address` should be given as `None` or as `str` or `bytes` '
+                            f'instance, if `family` is given as ``AF_UNIX`, got '
+                            f'{remote_address.__class__.__name__}')
+            
+            if (local_address is not None) and local_address and \
+                    (local_address[0] != (0 if isinstance(local_address, bytes) else '\x00')):
+                try:
+                    if S_ISSOCK(os.stat(local_address).st_mode):
+                        os.remove(local_address)
+                except FileNotFoundError:
+                    pass
+                except OSError as err:
+                    # Directory may have permissions only to create socket.
+                    sys.stderr.write(f'Unable to check or remove stale UNIX socket {local_address!r}: {err!s}.\n')
+            
+            address_info.append((family, protocol, local_address, remote_address))
+        
+        else:
+            # join address by (family, protocol)
+            address_infos = {}
+            if (local_address is not None):
+                infos = await self._ensure_resolved(local_address, family=family, type=module_socket.SOCK_DGRAM,
+                    protocol=protocol, flags=flags)
+                
+                if not infos:
+                    raise OSError('`get_address_info` returned empty list')
+                
+                for it_family, it_type, it_protocol, it_canonical_name, it_socket_address in infos:
+                    address_infos[(it_family, it_protocol)] = (it_socket_address, None)
+            
+            if (remote_address is not None):
+                infos = await self._ensure_resolved(remote_address, family=family, type=module_socket.SOCK_DGRAM,
+                    protocol=protocol, flags=flags)
+                
+                if not infos:
+                    raise OSError('`get_address_info` returned empty list')
+                
+                
+                for it_family, it_type, it_protocol, it_canonical_name, it_socket_address in infos:
+                    key = (it_family, it_protocol)
                     
-                if family:
-                    collected.append(('family', family))
-                
-                if protocol:
-                    collected.append(('protocol', protocol))
-                
-                if flags:
-                    collected.append(('flags', flags))
-                
-                if reuse_port:
-                    collected.append(('reuse_port', reuse_port))
-                
-                if allow_broadcast:
-                    collected.append(('allow_broadcast', allow_broadcast))
-                
-                error_message_parts = ['Socket modifier keyword parameters can not be used when `socket` is given: ']
-                
-                index = 0
-                limit = len(error_message_parts)
-                while True:
-                    name, value = collected[index]
-                    error_message_parts.append(name)
-                    error_message_parts.append('=')
-                    error_message_parts.append(repr(value))
+                    try:
+                        value = address_infos[key]
+                    except KeyError:
+                        address_value_local = None
+                    else:
+                        address_value_local = value[0]
                     
-                    index += 1
-                    if index == limit:
-                        break
-                    
-                    error_message_parts.append(', ')
+                    address_infos[key] = (address_value_local, it_socket_address)
+            
+            for key, (address_value_local, address_value_remote) in address_infos.items():
+                if (local_address is not None) and (address_value_local is None):
                     continue
                 
-                error_message_parts.append('.')
+                if (remote_address is not None) and (address_value_remote is None):
+                    continue
                 
-                raise ValueError(''.join(error_message_parts))
+                address_info.append((*key, address_value_local, address_value_remote))
             
-            socket.setblocking(False)
-            remote_address = None
-        else:
-            address_info = []
-            
-            if (local_address is None) and (remote_address is None):
-                if family == 0:
-                    raise ValueError(f'Unexpected address family: {family!r}.')
+            if not address_info:
+                raise ValueError('Can not get address information.')
+        
+        exception = None
+        
+        for family, protocol, local_address, remote_address in address_info:
+            try:
+                socket = module_socket.socket(family=family, type=module_socket.SOCK_DGRAM, proto=protocol)
                 
-                address_info.append((family, protocol, None, None))
-            
-            elif hasattr(module_socket, 'AF_UNIX') and family == module_socket.AF_UNIX:
-                if __debug__:
-                    if (local_address is not None):
-                        if not isinstance(local_address, (str, bytes)):
-                            raise TypeError('`local_address` should be given as `None` or as `str` or `bytes` '
-                                f'instance, if `family` is given as ``AF_UNIX`, got '
-                                f'{local_address.__class__.__name__}')
-                    
-                    if (remote_address is not None):
-                        if not isinstance(remote_address, (str, bytes)):
-                            raise TypeError('`remote_address` should be given as `None` or as `str` or `bytes` '
-                                f'instance, if `family` is given as ``AF_UNIX`, got '
-                                f'{remote_address.__class__.__name__}')
+                if reuse_port:
+                    _set_reuse_port(socket)
                 
-                if (local_address is not None) and local_address and \
-                        (local_address[0] != (0 if isinstance(local_address, bytes) else '\x00')):
-                    try:
-                        if S_ISSOCK(os.stat(local_address).st_mode):
-                            os.remove(local_address)
-                    except FileNotFoundError:
-                        pass
-                    except OSError as err:
-                        # Directory may have permissions only to create socket.
-                        sys.stderr.write(f'Unable to check or remove stale UNIX socket {local_address!r}: {err!s}.\n')
+                if allow_broadcast:
+                    socket.setsockopt(module_socket.SOL_SOCKET, module_socket.SO_BROADCAST, 1)
                 
-                address_info.append((family, protocol, local_address, remote_address))
-            
-            else:
-                # join address by (family, protocol)
-                address_infos = {}
+                socket.setblocking(False)
+                
                 if (local_address is not None):
-                    infos = await self._ensure_resolved(local_address, family=family, type=module_socket.SOCK_DGRAM,
-                        protocol=protocol, flags=flags)
-                    
-                    if not infos:
-                        raise OSError('`get_address_info` returned empty list')
-                    
-                    for it_family, it_type, it_protocol, it_canonical_name, it_socket_address in infos:
-                        address_infos[(it_family, it_protocol)] = (it_socket_address, None)
+                    socket.bind(local_address)
                 
                 if (remote_address is not None):
-                    infos = await self._ensure_resolved(remote_address, family=family, type=module_socket.SOCK_DGRAM,
-                        protocol=protocol, flags=flags)
-                    
-                    if not infos:
-                        raise OSError('`get_address_info` returned empty list')
-                    
-                    
-                    for it_family, it_type, it_protocol, it_canonical_name, it_socket_address in infos:
-                        key = (it_family, it_protocol)
-                        
-                        try:
-                            value = address_infos[key]
-                        except KeyError:
-                            address_value_local = None
-                        else:
-                            address_value_local = value[0]
-                        
-                        address_infos[key] = (address_value_local, it_socket_address)
-                
-                for key, (address_value_local, address_value_remote) in address_infos.items():
-                    if (local_address is not None) and (address_value_local is None):
-                        continue
-                    
-                    if (remote_address is not None) and (address_value_remote is None):
-                        continue
-                    
-                    address_info.append((*key, address_value_local, address_value_remote))
-                
-                if not address_info:
-                    raise ValueError('Can not get address information.')
+                    if not allow_broadcast:
+                        await self.socket_connect(socket, remote_address)
             
-            exception = None
-            
-            for family, protocol, local_address, remote_address in address_info:
-                try:
-                    socket = module_socket.socket(family=family, type=module_socket.SOCK_DGRAM, proto=protocol)
-                    
-                    if reuse_port:
-                        _set_reuse_port(socket)
-                    
-                    if allow_broadcast:
-                        socket.setsockopt(module_socket.SOL_SOCKET, module_socket.SO_BROADCAST, 1)
-                    
-                    socket.setblocking(False)
-                    
-                    if (local_address is not None):
-                        socket.bind(local_address)
-                    
-                    if (remote_address is not None):
-                        if not allow_broadcast:
-                            await self.socket_connect(socket, remote_address)
+            except BaseException as err:
+                if (socket is not None):
+                    socket.close()
+                    socket = None
                 
-                except BaseException as err:
-                    if (socket is not None):
-                        socket.close()
-                        socket = None
-                    
-                    if not isinstance(err, OSError):
-                        raise
-                    
-                    if (exception is None):
-                        exception = err
-                    
-                else:
-                    break
-            
+                if not isinstance(err, OSError):
+                    raise
+                
+                if (exception is None):
+                    exception = err
+                
             else:
-                raise exception
+                break
         
-        protocol = protocol_factory()
-        waiter = Future(self)
-        transport = DatagramSocketTransportLayer(self, socket, protocol, remote_address, waiter, None)
+        else:
+            raise exception
         
-        try:
-            await waiter
-        except:
-            transport.close()
-            raise
+        return await self._create_datagram_connection(protocol_factory, socket, remote_address)
+    
+
+    async def create_datagram_connection_with(self, protocol_factory, socket=None, remote_address=None, *, family=0,
+            protocol=0, flags=0, reuse_port=False, allow_broadcast=False):
+        """
+        Creates a datagram connection. The socket type will be `SOCK_DGRAM`.
         
-        return protocol
+        This method is a coroutine.
+        
+        Parameters
+        ----------
+        protocol_factory : `callable`
+            Factory function for creating a protocols.
+        
+        socket : `socket.socket`
+            Can be specified in order to use a preexisting socket object.
+        
+        Returns
+        -------
+        protocol : ``AbstractProtocolBase``
+            The protocol returned by `protocol_factory`.
+        """
+        if socket.type != module_socket.SOCK_DGRAM:
+            raise ValueError(f'A UDP socket was expected, got {socket!r}.')
+        
+        socket.setblocking(False)
+        
+        return await self._create_datagram_connection(protocol_factory, socket, None)
     
     
     def _create_server_get_address_info(self, host, port, family, flags):
@@ -2406,8 +2574,28 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return self._ensure_resolved((host, port), family=family, type=module_socket.SOCK_STREAM, flags=flags)
     
     
-    async def create_server(self, protocol_factory, host=None, port=None, *, family=module_socket.AF_UNSPEC,
-            flags=module_socket.AI_PASSIVE, socket=None, backlog=100, ssl=None,
+    def _create_server_shared_precheck(self, ssl):
+        """
+        Shared precheck used by ``.create_server`` and by ``.create_server``.
+        
+        Parameters
+        ----------
+        ssl : `None` or `SSLContext`
+            Whether and what ssl is enabled for the connections.
+        
+        Raises
+        ------
+        TypeError
+            - If `ssl` is not given either as `None` or as `SSLContext` instance.
+        """
+        if (ssl is not None) and (not isinstance(ssl, SSLContext)):
+            raise TypeError(f'`ssl` can be given as `None` or as `SSLContext`, got {ssl.__class__.__name__}.')
+        
+        return ssl
+    
+    
+    async def create_server_to(self, protocol_factory, host, port, *, family=module_socket.AF_UNSPEC,
+            flags=module_socket.AI_PASSIVE, backlog=100, ssl=None,
             reuse_address=(os.name == 'posix' and sys.platform != 'cygwin'), reuse_port=False):
         """
         Creates a TCP server (socket type SOCK_STREAM) listening on port of the host address.
@@ -2418,26 +2606,18 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ----------
         protocol_factory : `callable`
             Factory function for creating a protocols.
-        host : `None` or `str`, `iterable` of (`None` or `str`), Optional
+        host : `None` or `str`, `iterable` of (`None` or `str`)
             To what network interfaces should the server be bound.
-            
-            Mutually exclusive with the `socket` parameter.
-        port : `None` or `int`, Optional
+        port : `None` or `int`
             The port to use by the `host`(s).
-            
-            Mutually exclusive with the `socket` parameter.
         family : `AddressFamily` or `int`, Optional (Keyword only)
             Can be given either as `socket.AF_INET` or `socket.AF_INET6` to force the socket to use `IPv4` or `IPv6`.
             If not given, then  will be determined from host name.
         flags : `int`, Optional (Keyword only)
             Bit-mask for `get_address_info`.
-        socket : `None` or `socket.socket`, Optional (Keyword only)
-            Can be specified in order to use a preexisting socket object.
-            
-            Mutually exclusive with `host` and `port` parameters.
         backlog : `int`, Optional (Keyword only)
             The maximum number of queued connections passed to `listen()` (defaults to 100).
-        ssl : `None` or ``SSLContext``, Optional (Keyword only)
+        ssl : `None` or `SSLContext`, Optional (Keyword only)
             Whether and what ssl is enabled for the connections.
         reuse_address : `bool`, Optional (Keyword only)
             Tells the kernel to reuse a local socket in `TIME_WAIT` state, without waiting for its natural timeout to
@@ -2456,192 +2636,153 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         Raises
         ------
         TypeError
-            - If `ssl` is not given either as `None` or as `ssl.SSLContext` instance.
+            - If `ssl` is not given either as `None` or as `SSLContext` instance.
             - If `reuse_port` is given as non `bool`.
             - If `reuse_address` is given as non `bool`.
             - If `reuse_port` is given as non `bool`.
             - If `host` is not given as `None`, `str` and neither as `iterable` of `None` or `str`.
         ValueError
-            - If `host` or `port` parameter is given, when `socket` is defined as well.
             - If `reuse_port` is given as `True`, but not supported.
-            - If neither `host`, `port` nor `socket` were given.
-            - If `socket` is given, but it's type is not `module_socket.SOCK_STREAM`.
         OsError
             Error while attempting to binding to address.
         """
-        if (ssl is not None) and (type(ssl) is not SSLContext):
-            raise TypeError(f'`ssl` can be given as `None` or as ``SSLContext``, got {ssl.__class__.__name__}.')
+        ssl = self._create_server_shared_precheck(ssl)
         
-        if (host is not None) or (port is not None):
-            if (socket is not None):
-                raise ValueError('`host` and `port` parameters are mutually exclusive with `socket`.')
-            
-            if (reuse_address is not None) and (not isinstance(reuse_address, bool)):
-                raise TypeError('`reuse_address` can be `None` or type `bool`, got '
-                    f'`{reuse_address.__class__.__name__}`.')
-            
-            if (reuse_port is not None) and (not isinstance(reuse_port, bool)):
-                raise TypeError('`reuse_address` can be `None` or type `bool`, got '
-                    f'`{reuse_port.__class__.__name__}`.')
-            
-            if reuse_port and (not hasattr(module_socket, 'SO_REUSEPORT')):
-                raise ValueError('`reuse_port` not supported by the socket module.')
-            
-            hosts = []
-            if (host is None) or (host == ''):
-                 hosts.append(None)
-            elif isinstance(host, str):
-                hosts.append(host)
-            elif hasattr(type(host), '__iter__'):
-                for host in host:
-                    if (host is None) or (host == ''):
-                        hosts.append(None)
-                        continue
-                    
-                    if isinstance(host, str):
-                        hosts.append(host)
-                        continue
-                    
-                    raise TypeError('`host` is passed as iterable, but it yielded at least 1 not `None`, or `str` '
-                        f'instance; `{host!r}`')
-            else:
-                raise TypeError('`host` should be `None`, `str` instance or iterable of `None` or of `str` instances, '
-                    f'got {host!r}')
-            
-            sockets = []
-            
-            futures = {self._create_server_get_address_info(host, port, family, flags) for host in hosts}
-            
-            try:
-                while True:
-                    done, pending = await WaitTillFirst(futures, self)
-                    for future in done:
-                        futures.discard(future)
-                        address_infos = future.result()
-                        
-                        for address_info in address_infos:
-                            socket_family, socket_type, socket_protocol, canonical_name, socket_address = address_info
-                            
-                            try:
-                                socket = module_socket.socket(socket_family, socket_type, socket_protocol)
-                            except module_socket.error:
-                                continue
-                            
-                            sockets.append(socket)
-                            
-                            if reuse_address:
-                                socket.setsockopt(module_socket.SOL_SOCKET, module_socket.SO_REUSEADDR, True)
-                            
-                            if reuse_port:
-                                try:
-                                    socket.setsockopt(module_socket.SOL_SOCKET, module_socket.SO_REUSEPORT, 1)
-                                except OSError as err:
-                                    raise ValueError('reuse_port not supported by socket module, SO_REUSEPORT defined '
-                                        'but not implemented.') from err
-                            
-                            if (_HAS_IPv6 and (socket_family == module_socket.AF_INET6) and \
-                                    hasattr(module_socket, 'IPPROTO_IPV6')):
-                                socket.setsockopt(module_socket.IPPROTO_IPV6, module_socket.IPV6_V6ONLY, True)
-                            try:
-                                socket.bind(socket_address)
-                            except OSError as err:
-                                raise OSError(err.errno, f'Error while attempting to bind on address '
-                                    f'{socket_address!r}: {err.strerror.lower()!s}.') from None
-                    
-                    if futures:
-                        continue
-                    
-                    break
-            except:
-                for socket in sockets:
-                    socket.close()
-                    
-                for future in futures:
-                    future.cancel()
+        if (reuse_address is not None) and (not isinstance(reuse_address, bool)):
+            raise TypeError('`reuse_address` can be `None` or type `bool`, got '
+                f'`{reuse_address.__class__.__name__}`.')
+        
+        if (reuse_port is not None) and (not isinstance(reuse_port, bool)):
+            raise TypeError('`reuse_address` can be `None` or type `bool`, got '
+                f'`{reuse_port.__class__.__name__}`.')
+        
+        if reuse_port and (not hasattr(module_socket, 'SO_REUSEPORT')):
+            raise ValueError('`reuse_port` not supported by the socket module.')
+        
+        hosts = []
+        if (host is None) or (host == ''):
+             hosts.append(None)
+        elif isinstance(host, str):
+            hosts.append(host)
+        elif hasattr(type(host), '__iter__'):
+            for host in host:
+                if (host is None) or (host == ''):
+                    hosts.append(None)
+                    continue
                 
-                raise
-            
+                if isinstance(host, str):
+                    hosts.append(host)
+                    continue
+                
+                raise TypeError('`host` is passed as iterable, but it yielded at least 1 not `None`, or `str` '
+                    f'instance; `{host!r}`')
         else:
-            if socket is None:
-                raise ValueError('Neither `host`, `port` nor `socket` were given.')
+            raise TypeError('`host` should be `None`, `str` instance or iterable of `None` or of `str` instances, '
+                f'got {host!r}')
+        
+        sockets = []
+        
+        futures = {self._create_server_get_address_info(host, port, family, flags) for host in hosts}
+        
+        try:
+            while True:
+                done, pending = await WaitTillFirst(futures, self)
+                for future in done:
+                    futures.discard(future)
+                    address_infos = future.result()
+                    
+                    for address_info in address_infos:
+                        socket_family, socket_type, socket_protocol, canonical_name, socket_address = address_info
+                        
+                        try:
+                            socket = module_socket.socket(socket_family, socket_type, socket_protocol)
+                        except module_socket.error:
+                            continue
+                        
+                        sockets.append(socket)
+                        
+                        if reuse_address:
+                            socket.setsockopt(module_socket.SOL_SOCKET, module_socket.SO_REUSEADDR, True)
+                        
+                        if reuse_port:
+                            try:
+                                socket.setsockopt(module_socket.SOL_SOCKET, module_socket.SO_REUSEPORT, 1)
+                            except OSError as err:
+                                raise ValueError('reuse_port not supported by socket module, SO_REUSEPORT defined '
+                                    'but not implemented.') from err
+                        
+                        if (_HAS_IPv6 and (socket_family == module_socket.AF_INET6) and \
+                                hasattr(module_socket, 'IPPROTO_IPV6')):
+                            socket.setsockopt(module_socket.IPPROTO_IPV6, module_socket.IPV6_V6ONLY, True)
+                        try:
+                            socket.bind(socket_address)
+                        except OSError as err:
+                            raise OSError(err.errno, f'Error while attempting to bind on address '
+                                f'{socket_address!r}: {err.strerror.lower()!s}.') from None
+                
+                if futures:
+                    continue
+                
+                break
+        except:
+            for socket in sockets:
+                socket.close()
+                
+            for future in futures:
+                future.cancel()
             
-            if socket.type != module_socket.SOCK_STREAM:
-                raise ValueError(f'A stream socket was expected, got {socket!r}.')
-            
-            sockets = [socket]
+            raise
         
         for socket in sockets:
             socket.setblocking(False)
         
         return Server(self, sockets, protocol_factory, ssl, backlog)
     
-    if IS_UNIX:
-        async def connect_read_pipe(self, protocol, pipe):
-            return await UnixReadPipeTransportLayer(self, pipe, protocol)
-        
-        async def connect_write_pipe(self, protocol, pipe):
-            return await UnixWritePipeTransportLayer(self, pipe, protocol)
-        
-        async def subprocess_shell(self, command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                *, extra=None, preexecution_function=None, close_fds=True, cwd=None, startup_info=None,
-                creation_flags=0, restore_signals=True, start_new_session=False, pass_fds=(), **process_open_kwargs):
-            
-            if not isinstance(command, (bytes, str)):
-                raise TypeError(f'`cmd` must be `bytes` or `str` instance, got {command.__class__.__name__}.')
-            
-            process_open_kwargs = {
-                'preexec_fn' : preexecution_function,
-                'close_fds' : close_fds,
-                'cwd' : cwd,
-                'startupinfo' : startup_info,
-                'creationflags' : creation_flags,
-                'restore_signals' : restore_signals,
-                'start_new_session' : start_new_session,
-                'pass_fds' : pass_fds,
-                **process_open_kwargs
-            }
-            
-            return await AsyncProcess(self, command, True, stdin, stdout, stderr, 0, extra, process_open_kwargs)
-        
-        async def subprocess_exec(self, program, *args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,  extra=None, preexecution_function=None, close_fds=True, cwd=None,
-                startup_info=None, creation_flags=0, restore_signals=True, start_new_session=False, pass_fds=(),
-                **process_open_kwargs):
-            
-            process_open_kwargs = {
-                'preexec_fn' : preexecution_function,
-                'close_fds' : close_fds,
-                'cwd' : cwd,
-                'startupinfo' : startup_info,
-                'creationflags' : creation_flags,
-                'restore_signals' : restore_signals,
-                'start_new_session' : start_new_session,
-                'pass_fds' : pass_fds,
-                **process_open_kwargs,
-            }
-            
-            return await AsyncProcess(self, (program, *args), False, stdin, stdout, stderr, 0, extra,
-                process_open_kwargs)
     
-    else:
-        async def connect_read_pipe(self, protocol, pipe):
-            raise NotImplementedError
+    async def create_server_with(self, protocol_factory, socket, *, backlog=100, ssl=None):
+        """
+        Creates a TCP server (socket type SOCK_STREAM) listening on port of the host address.
         
-        async def connect_write_pipe(self, protocol, pipe):
-            raise NotImplementedError
+        This method is a coroutine.
         
-        async def subprocess_shell(self, cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, *,
-                extra=None, preexecution_function=None, close_fds=True, cwd=None, startup_info=None, creation_flags=0,
-                restore_signals=True, start_new_session=False, pass_fds=(), **process_open_kwargs):
-            raise NotImplementedError
+        Parameters
+        ----------
+        protocol_factory : `callable`
+            Factory function for creating a protocols.
+        socket : `None` or `socket.socket`
+            Can be specified in order to use a preexisting socket object.
+        backlog : `int`, Optional (Keyword only)
+            The maximum number of queued connections passed to `listen()` (defaults to 100).
+        ssl : `None` or `SSLContext`, Optional (Keyword only)
+            Whether and what ssl is enabled for the connections.
         
-        async def subprocess_exec(self, program, *args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, extra=None, preexecution_function=None, close_fds=True, cwd=None,
-                startup_info=None, creation_flags=0, restore_signals=True, start_new_session=False, pass_fds=(),
-                **process_open_kwargs):
-            raise NotImplementedError
+        Returns
+        -------
+        server : ``Server``
+            The created server instance.
+        
+        Raises
+        ------
+        TypeError
+            - If `ssl` is not given either as `None` or as `SSLContext` instance.
+        ValueError
+            - If `socket` is given, but it's type is not `module_socket.SOCK_STREAM`.
+        OsError
+            Error while attempting to binding to address.
+        """
+        ssl = self._create_server_shared_precheck(ssl)
+        
+        if socket.type != module_socket.SOCK_STREAM:
+            raise ValueError(f'A stream socket was expected, got {socket!r}.')
+        
+        socket.setblocking(False)
+        
+        sockets = [socket]
+        
+        return Server(self, sockets, protocol_factory, ssl, backlog)
     
-    set_docs(connect_read_pipe,
+    
+    async def connect_read_pipe(self, protocol, pipe):
         """
         Register the read end of the given pipe in the event loop.
         
@@ -2649,7 +2790,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Parameters
         ----------
-        protocol : `Any`
+        protocol : `AbstractProtocolBase`
             An async-io protocol implementation to use as the transport's protocol.
         pipe : `file-like` object
             The pipe to connect to on read end.
@@ -2667,9 +2808,11 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Pipe transport is only for pipes, sockets and character devices.'
         NotImplementedError
             Not supported on windows by the library.
-        """)
+        """
+        return await UnixReadPipeTransportLayer(self, None, pipe, protocol)
     
-    set_docs(connect_write_pipe,
+    
+    async def connect_write_pipe(self, protocol, pipe):
         """
         Register the write end of the given pipe in the event loop.
         
@@ -2677,7 +2820,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Parameters
         ----------
-        protocol : `Any`
+        protocol : `AbstractProtocolBase`
             An async-io protocol implementation to use as the transport's protocol.
         pipe : `file-like` object
             The pipe to connect to on write end.
@@ -2695,9 +2838,13 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Pipe transport is only for pipes, sockets and character devices.'
         NotImplementedError
             Not supported on windows by the library.
-        """)
-        
-    set_docs(subprocess_shell,
+        """
+        return await UnixWritePipeTransportLayer(self, pipe, protocol)
+    
+    
+    async def subprocess_shell(self, command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            *, extra=None, preexecution_function=None, close_fds=True, cwd=None, startup_info=None,
+            creation_flags=0, restore_signals=True, start_new_session=False, pass_fds=(), **process_open_kwargs):
         """
         Create a subprocess from cmd.
         
@@ -2771,9 +2918,29 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             If `cmd` is not given as `str` not `bytes` object.
         NotImplementedError
             Not supported on windows by the library.
-        """)
+        """
+        if not isinstance(command, (bytes, str)):
+            raise TypeError(f'`cmd` must be `bytes` or `str` instance, got {command.__class__.__name__}.')
+        
+        process_open_kwargs = {
+            'preexec_fn' : preexecution_function,
+            'close_fds' : close_fds,
+            'cwd' : cwd,
+            'startupinfo' : startup_info,
+            'creationflags' : creation_flags,
+            'restore_signals' : restore_signals,
+            'start_new_session' : start_new_session,
+            'pass_fds' : pass_fds,
+            **process_open_kwargs
+        }
+        
+        return await AsyncProcess(self, command, True, stdin, stdout, stderr, 0, extra, process_open_kwargs)
     
-    set_docs(subprocess_exec,
+    
+    async def subprocess_exec(self, program, *args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,  extra=None, preexecution_function=None, close_fds=True, cwd=None,
+            startup_info=None, creation_flags=0, restore_signals=True, start_new_session=False, pass_fds=(),
+            **process_open_kwargs):
         """
         Create a subprocess from one or more string parameters specified by args.
         
@@ -2847,4 +3014,40 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ------
         NotImplementedError
             Not supported on windows by the library.
-        """)
+        """
+        process_open_kwargs = {
+            'preexec_fn' : preexecution_function,
+            'close_fds' : close_fds,
+            'cwd' : cwd,
+            'startupinfo' : startup_info,
+            'creationflags' : creation_flags,
+            'restore_signals' : restore_signals,
+            'start_new_session' : start_new_session,
+            'pass_fds' : pass_fds,
+            **process_open_kwargs,
+        }
+        
+        return await AsyncProcess(self, (program, *args), False, stdin, stdout, stderr, 0, extra,
+            process_open_kwargs)
+
+    if IS_UNIX:
+        @copy_docs(connect_read_pipe)
+        async def connect_read_pipe(self, protocol, pipe):
+            raise NotImplementedError
+        
+        @copy_docs(connect_write_pipe)
+        async def connect_write_pipe(self, protocol, pipe):
+            raise NotImplementedError
+        
+        @copy_docs(subprocess_shell)
+        async def subprocess_shell(self, cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, *,
+                extra=None, preexecution_function=None, close_fds=True, cwd=None, startup_info=None, creation_flags=0,
+                restore_signals=True, start_new_session=False, pass_fds=(), **process_open_kwargs):
+            raise NotImplementedError
+        
+        @copy_docs(subprocess_exec)
+        async def subprocess_exec(self, program, *args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE, extra=None, preexecution_function=None, close_fds=True, cwd=None,
+                startup_info=None, creation_flags=0, restore_signals=True, start_new_session=False, pass_fds=(),
+                **process_open_kwargs):
+            raise NotImplementedError
