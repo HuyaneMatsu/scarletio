@@ -213,7 +213,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
             try:
                 await self.handler(self)
             except BaseException as err:
-                await self._loop.render_exc_async(err,
+                await self._loop.render_exception_async(err,
                     before = [
                         'Unhandled exception occurred at',
                         self.__class__.__name__,
@@ -458,7 +458,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
             self.connection_open()
         
         except (CancelledError, ConnectionError) as err:
-            await self._loop.render_exc_async(err, before = [
+            await self._loop.render_exception_async(err, before = [
                 'Unhandled exception occurred at ',
                 self.__class__.__name__,
                 '.handshake, when handshaking:\n'])
@@ -514,7 +514,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
                 self.fail_connection()
                 await self.wait_for_connection_lost()
             except BaseException as err2:
-                await self._loop.render_exc_async(
+                await self._loop.render_exception_async(
                     err2,
                     before = [
                         'Unhandled exception occurred at ',

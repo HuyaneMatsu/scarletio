@@ -157,7 +157,7 @@ class SSLPipe:
             raise RuntimeError('Handshake in progress or completed.')
         
         self._ssl_object = self._ssl_context.wrap_bio(self._incoming, self._outgoing, server_side=self._server_side,
-            server_host_name=self._server_host_name)
+            server_hostname=self._server_host_name)
         
         self._state = SSL_PIPE_STATE_DO_HANDSHAKE
         self._handshake_callback = callback

@@ -210,7 +210,7 @@ class HTTPRequestHandler(HttpReadWriteProtocol):
         try:
             request_message = await self.set_payload_reader(self._read_http_request())
         except (CancelledError, ConnectionError) as err:
-            await self.loop.render_exc_async(err, before = [
+            await self.loop.render_exception_async(err, before = [
                 'Unhandled exception occurred at `',
                 self.__class__.__name__,
                 '._try_receive_request`, when reading request.:\n'])
@@ -237,7 +237,7 @@ class HTTPRequestHandler(HttpReadWriteProtocol):
             self.write_http_response(status, headers, body=body)
             self.close_transport(force=True)
         except BaseException as err2:
-            await self.loop.render_exc_async(err2, before=[
+            await self.loop.render_exception_async(err2, before=[
                 'Unhandled exception occurred at `',
                 self.__class__.__name__,
                 '._try_receive_request`, when handling an other exception;',

@@ -544,7 +544,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             self.fail_connection(1009)
         
         except BaseException as err:
-            await self._loop.render_exc_async(err, [
+            await self._loop.render_exception_async(err, [
                 'Unexpected exception occurred at ',
                 repr(self),
                 '.transfer_data\n',

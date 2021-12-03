@@ -280,7 +280,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
             Exception occurred when processing backlog meanwhile handshaking.
         """
         self._in_handshake = False
-        ssl_object = self._ssl_pipe.ssl_object
+        ssl_object = self._ssl_pipe._ssl_object
         
         if (handshake_exception is None):
             try:
@@ -345,7 +345,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
                 if offset < len(data):
                     write_backlog[0] = (data, offset)
                     # A short write means that a write is blocked on a read, we need to enable reading if it is paused!
-                    assert self._ssl_pipe.need_ssl_data
+                    assert self._ssl_pipe._need_ssl_data
                     if transport._paused:
                         transport.resume_reading()
                     

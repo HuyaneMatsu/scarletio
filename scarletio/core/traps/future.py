@@ -564,7 +564,7 @@ class Future:
             
             if state == FUTURE_STATE_FINISHED:
                 if (self._exception is not None):
-                    self._loop.render_exc_maybe_async(
+                    self._loop.render_exception_maybe_async(
                         self._exception,
                         [
                             self.__class__.__name__,

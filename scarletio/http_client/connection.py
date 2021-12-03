@@ -114,7 +114,7 @@ class Connection:
         try:
             callback()
         except BaseException as err:
-            self.connector.loop.render_exc_async(
+            self.connector.loop.render_exception_async(
                 err,
                 [
                     'Exception occurred at ',
@@ -137,7 +137,7 @@ class Connection:
             try:
                 callback()
             except BaseException as err:
-                self.connector.loop.render_exc_async(
+                self.connector.loop.render_exception_async(
                     err,
                     [
                         'Exception occurred at ',

@@ -963,9 +963,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         transport : ``SSLBidirectionalTransportLayerTransport``
             The created ssl transport.
         """
-        ssl_protocol = SSLBidirectionalTransportLayer(self, protocol, ssl, waiter, server_side, server_host_name, True)
-        SocketTransportLayer(self, extra, socket, ssl_protocol, None, server)
-        return ssl_protocol.app_transport
+        ssl_transport = SSLBidirectionalTransportLayer(self, protocol, ssl, waiter, server_side, server_host_name, True)
+        SocketTransportLayer(self, extra, socket, ssl_transport, None, server)
+        return ssl_transport
     
     
     def empty_self_socket(self):

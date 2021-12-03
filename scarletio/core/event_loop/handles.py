@@ -96,7 +96,7 @@ class Handle:
         try:
             self.func(*self.args)
         except BaseException as err:
-            current_thread().render_exc_async(err, [
+            current_thread().render_exception_async(err, [
                 'Exception occurred at ',
                 self.__class__.__name__,
                 '._run\nAt running ',

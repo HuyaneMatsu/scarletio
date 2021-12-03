@@ -70,7 +70,7 @@ class TransportLayerBase(AbstractTransportLayerBase):
             Additional error message to render.
         """
         if not isinstance(exception, (BrokenPipeError, ConnectionResetError, ConnectionAbortedError)):
-            self._loop.render_exc_async(
+            self._loop.render_exception_async(
                 exception,
                 [
                     message,
@@ -320,7 +320,7 @@ class SocketTransportLayerBase(TransportLayerBase):
             try:
                 protocol.pause_writing()
             except BaseException as err:
-                self._loop.render_exc_async(
+                self._loop.render_exception_async(
                     err,
                     [
                         'Exception occurred at:\n',
@@ -417,7 +417,7 @@ class SocketTransportLayerBase(TransportLayerBase):
             try:
                 protocol.resume_writing()
             except BaseException as err:
-                self._loop.render_exc_async(
+                self._loop.render_exception_async(
                     err,
                     [
                         'Exception occurred at:\n',
@@ -762,7 +762,7 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
     @copy_docs(SocketTransportLayerBase._fatal_error)
     def _fatal_error(self, exception, message='Fatal error on transport'):
         if not isinstance(exception, OSError):
-            self._loop.render_exc_async(
+            self._loop.render_exception_async(
                 exception,
                 [
                     message,

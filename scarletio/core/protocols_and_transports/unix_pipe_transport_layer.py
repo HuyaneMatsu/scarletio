@@ -179,7 +179,7 @@ class UnixReadPipeTransportLayer(TransportLayerBase):
     @copy_docs(TransportLayerBase._fatal_error)
     def _fatal_error(self, exception, message='Fatal error on pipe transport'):
         if not (isinstance(exception, OSError) and (exception.errno == errno.EIO)):
-            self._loop.render_exc_async(
+            self._loop.render_exception_async(
                 exception,
                 [
                     message,
@@ -482,7 +482,7 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
     @copy_docs(TransportLayerBase._fatal_error)
     def _fatal_error(self, exception, message='Fatal error on pipe transport'):
         if not isinstance(exception, OSError):
-            self._loop.render_exc_async(
+            self._loop.render_exception_async(
                 exception,
                 [
                     message,
@@ -569,7 +569,7 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
         try:
             protocol.pause_writing()
         except BaseException as err:
-            self._loop.render_exc_async(err, [
+            self._loop.render_exception_async(err, [
                 repr(self), '`._maybe_pause_protocol` failed\n'
                 'On: ', repr(protocol), '.pause_writing()\n'])
     
@@ -585,7 +585,7 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
                 try:
                     protocol.resume_writing()
                 except BaseException as err:
-                    self._loop.render_exc_async(err, [
+                    self._loop.render_exception_async(err, [
                         repr(self), '`._maybe_resume_protocol` failed\n'
                         'on: ', repr(protocol), '.resume_writing()\n'])
     
