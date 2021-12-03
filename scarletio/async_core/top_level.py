@@ -104,7 +104,7 @@ def create_event_loop(**kwargs):
     
     Other parameters
     ----------------
-    daemon : ``bool``, Optional (Keyword only)
+    daemon : `bool`, Optional (Keyword only)
         Whether the event loop should be daemon. Defaults to `False`
     name : `None` or `str`, Optional (Keyword only)
         The event loop's name. Defaults ot `None`.

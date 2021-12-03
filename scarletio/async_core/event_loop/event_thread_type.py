@@ -125,7 +125,7 @@ class EventThreadType(type):
         
         Parameters
         ----------
-        daemon : ``bool``, Optional
+        daemon : `bool`, Optional
             Whether the created thread should be daemon. Defaults to `False`.
         name : `None` or `str`, Optional
             The created thread's name. Defaults to `None`

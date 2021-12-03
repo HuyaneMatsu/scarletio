@@ -1365,8 +1365,8 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return ssl, server_host_name
     
     
-    async def create_connection_to(self, protocol_factory, host, port, *, ssl=None, address_family=0, address_protocol=0,
-            address_flags=0, local_address=None, server_host_name=None):
+    async def create_connection_to(self, protocol_factory, host, port, *, ssl=None, socket_family=0,
+            socket_protocol=0, socket_flags=0, local_address=None, server_host_name=None):
         """
         Open a streaming transport connection to a given address specified by `host` and `port`.
         
@@ -1382,11 +1382,11 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             The port of the `host`.
         ssl : `None`, `bool` or `SSLContext`, Optional (Keyword only)
             Whether ssl should be enabled.
-        address_family : `AddressFamily` or `int`, Optional (Keyword only)
+        socket_family : `AddressFamily` or `int`, Optional (Keyword only)
             Can be either `AF_INET`, `AF_INET6` or `AF_UNIX`.
-        address_protocol : `int`, Optional (Keyword only)
+        socket_protocol : `int`, Optional (Keyword only)
             Can be used to narrow host resolution. Is passed to ``.get_address_info``.
-        address_flags : `int`, Optional (Keyword only)
+        socket_flags : `int`, Optional (Keyword only)
             Can be used to narrow host resolution. Is passed to ``.get_address_info``.
         local_address : `tuple` of (`None` or  `str`, `None` or `int`), Optional (Keyword only)
             Can be given as a `tuple` (`local_host`, `local_port`) to bind the socket locally. The `local_host` and
@@ -1404,13 +1404,13 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         """
         ssl, server_host_name = self._create_connection_shared_precheck(ssl, server_host_name, host)
         
-        future_1 = self._ensure_resolved((host, port), family=address_family, type=module_socket.SOCK_STREAM,
-            protocol=address_protocol, flags=address_flags)
+        future_1 = self._ensure_resolved((host, port), family=socket_family, type=module_socket.SOCK_STREAM,
+            protocol=socket_protocol, flags=socket_flags)
         
         futures = [future_1]
         if local_address is not None:
-            future_2 = self._ensure_resolved(local_address, family=address_family, type=module_socket.SOCK_STREAM,
-                protocol=address_protocol, flags=address_flags)
+            future_2 = self._ensure_resolved(local_address, family=socket_family, type=module_socket.SOCK_STREAM,
+                protocol=socket_protocol, flags=socket_flags)
             
             futures.append(future_2)
         
@@ -1429,9 +1429,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                 raise OSError('`get_address_info` returned empty list')
         
         exceptions = []
-        for address_family, address_type, address_protocol, canonical_name, address in infos:
+        for socket_family, socket_type, socket_protocol, canonical_name, address in infos:
             
-            socket = module_socket.socket(family=address_family, type=address_type, proto=address_protocol)
+            socket = module_socket.socket(family=socket_family, type=socket_type, proto=socket_protocol)
             
             try:
                 socket.setblocking(False)
@@ -1967,19 +1967,19 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             - `type` : `SocketKind` or `int`. Socket type.
             - `protocol` : `int`. Protocol type.
             - `canonical_name` : `str`. Represents the canonical name of the host.
-            - `address_address` : `tuple` (`str, `int`). Socket address containing the `host` and the `port`.
+            - `socket_address` : `tuple` (`str, `int`). Socket address containing the `host` and the `port`.
         """
         return self.run_in_executor(alchemy_incendiary(
             module_socket.getaddrinfo, (host, port, family, type, protocol, flags,),))
     
     # await it
-    def get_name_info(self, address_address, flags=0):
+    def get_name_info(self, socket_address, flags=0):
         """
         Asynchronous version of `socket.getnameinfo()`.
         
         Parameters
         ----------
-        address_address : `tuple` (`str`, `int`)
+        socket_address : `tuple` (`str`, `int`)
              Socket address as a tuple of `host` and `port`.
         flags : `int`, Optional
             Can be used to narrow host resolution.
@@ -1989,7 +1989,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         future : ``Future``
             An awaitable future, what will yield the lookup's result.
         """
-        return self.run_in_executor(alchemy_incendiary(module_socket.getnameinfo, (address_address, flags,),))
+        return self.run_in_executor(alchemy_incendiary(module_socket.getnameinfo, (socket_address, flags,),))
     
     
     def _ensure_resolved(self, address, *, family=0, type=module_socket.SOCK_STREAM, protocol=0, flags=0):
@@ -2016,7 +2016,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             - `type` : `SocketKind` or `int`. Socket type.
             - `protocol` : `int`. Protocol type.
             - `canonical_name` : `str`. Represents the canonical name of the host.
-            - `address_address` : `tuple` (`str, `int`). Socket address containing the `host` and the `port`.
+            - `socket_address` : `tuple` (`str, `int`). Socket address containing the `host` and the `port`.
             
             Might raise `OSError` as well.
         """
@@ -2362,8 +2362,8 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return protocol
     
     
-    async def create_datagram_connection_to(self, protocol_factory, local_address, remote_address, *, address_family=0,
-            address_protocol=0, address_flags=0, reuse_port=False, allow_broadcast=False):
+    async def create_datagram_connection_to(self, protocol_factory, local_address, remote_address, *, socket_family=0,
+            socket_protocol=0, socket_flags=0, reuse_port=False, allow_broadcast=False):
         """
         Creates a datagram connection. The socket type will be `SOCK_DGRAM`.
         
@@ -2378,17 +2378,17 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Can be given as a `tuple` (`local_host`, `local_port`) to bind the socket locally. The `local_host` and
             `local_port` are looked up by ``.get_address_info``.
             
-            If `address_family` is given as `AF_UNIX`, then also can be given as path of a file or a file descriptor.
+            If `socket_family` is given as `AF_UNIX`, then also can be given as path of a file or a file descriptor.
         remote_address : `None`, `tuple` of (`None` or  `str`, `None` or `int`), `str`, `bytes`
             Can be given as a `tuple` (`remote_host`, `remote_port`) to connect the socket to remove address. The
             `remote_host` and `remote_port` are looked up by ``.get_address_info``.
             
-            If `address_family` is given as `AF_UNIX`, then also can be given as path of a file or a file descriptor.
-        address_family : `AddressFamily` or `int`, Optional (Keyword only)
+            If `socket_family` is given as `AF_UNIX`, then also can be given as path of a file or a file descriptor.
+        socket_family : `AddressFamily` or `int`, Optional (Keyword only)
             Can be either `AF_INET`, `AF_INET6` or `AF_UNIX`.
-        address_protocol : `int`, Optional (Keyword only)
+        socket_protocol : `int`, Optional (Keyword only)
             Can be used to narrow host resolution. Is passed to ``.get_address_info``.
-        address_flags : `int`, Optional (Keyword only)
+        socket_flags : `int`, Optional (Keyword only)
             Can be used to narrow host resolution. Is passed to ``.get_address_info``.
         reuse_port : `bool`, Optional (Keyword only)
             Tells to the kernel to allow this endpoint to be bound to the same port as an other existing endpoint
@@ -2406,23 +2406,23 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         address_info = []
         
         if (local_address is None) and (remote_address is None):
-            if address_family == 0:
-                raise ValueError(f'Unexpected address family: {address_family!r}.')
+            if socket_family == 0:
+                raise ValueError(f'Unexpected address family: {socket_family!r}.')
             
-            address_info.append((address_family, address_protocol, None, None))
+            address_info.append((socket_family, socket_protocol, None, None))
         
-        elif hasattr(module_socket, 'AF_UNIX') and address_family == module_socket.AF_UNIX:
+        elif hasattr(module_socket, 'AF_UNIX') and socket_family == module_socket.AF_UNIX:
             if __debug__:
                 if (local_address is not None):
                     if not isinstance(local_address, (str, bytes)):
                         raise TypeError('`local_address` should be given as `None` or as `str` or `bytes` '
-                            f'instance, if `address_family` is given as `AF_UNIX`, got '
+                            f'instance, if `socket_family` is given as `AF_UNIX`, got '
                             f'{local_address.__class__.__name__}')
                 
                 if (remote_address is not None):
                     if not isinstance(remote_address, (str, bytes)):
                         raise TypeError('`remote_address` should be given as `None` or as `str` or `bytes` '
-                            f'instance, if `address_family` is given as `AF_UNIX`, got '
+                            f'instance, if `socket_family` is given as `AF_UNIX`, got '
                             f'{remote_address.__class__.__name__}')
             
             if (local_address is not None) and local_address and \
@@ -2436,43 +2436,43 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                     # Directory may have permissions only to create socket.
                     sys.stderr.write(f'Unable to check or remove stale UNIX socket {local_address!r}: {err!s}.\n')
             
-            address_info.append((address_family, address_protocol, local_address, remote_address))
+            address_info.append((socket_family, socket_protocol, local_address, remote_address))
         
         else:
-            # join address by (address_family, address_protocol)
+            # join address by (socket_family, socket_protocol)
             address_infos = {}
             if (local_address is not None):
-                infos = await self._ensure_resolved(local_address, family=address_family, type=module_socket.SOCK_DGRAM,
-                    protocol=address_protocol, flags=address_flags)
+                infos = await self._ensure_resolved(local_address, family=socket_family, type=module_socket.SOCK_DGRAM,
+                    protocol=socket_protocol, flags=socket_flags)
                 
                 if not infos:
                     raise OSError('`get_address_info` returned empty list')
                 
                 for (
-                    iterated_address_family,
-                    iterated_address_type,
-                    iterated_address_protocol,
+                    iterated_socket_family,
+                    iterated_socket_type,
+                    iterated_socket_protocol,
                     iterated_socket_canonical_name,
-                    iterated_address_address
+                    iterated_socket_address
                 ) in infos:
-                    address_infos[(iterated_address_family, iterated_address_protocol)] = (iterated_address_address, None)
+                    address_infos[(iterated_socket_family, iterated_socket_protocol)] = (iterated_socket_address, None)
             
             if (remote_address is not None):
-                infos = await self._ensure_resolved(remote_address, family=address_family, type=module_socket.SOCK_DGRAM,
-                    protocol=address_protocol, flags=address_flags)
+                infos = await self._ensure_resolved(remote_address, family=socket_family, type=module_socket.SOCK_DGRAM,
+                    protocol=socket_protocol, flags=socket_flags)
                 
                 if not infos:
                     raise OSError('`get_address_info` returned empty list')
                 
                 
                 for (
-                    iterated_address_family,
-                    iterated_address_type,
-                    iterated_address_protocol,
+                    iterated_socket_family,
+                    iterated_socket_type,
+                    iterated_socket_protocol,
                     iterated_canonical_name,
-                    iterated_address_address,
+                    iterated_socket_address,
                 ) in infos:
-                    key = (iterated_address_family, iterated_address_protocol)
+                    key = (iterated_socket_family, iterated_socket_protocol)
                     
                     try:
                         value = address_infos[key]
@@ -2481,7 +2481,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                     else:
                         address_value_local = value[0]
                     
-                    address_infos[key] = (address_value_local, iterated_address_address)
+                    address_infos[key] = (address_value_local, iterated_socket_address)
             
             for key, (address_value_local, address_value_remote) in address_infos.items():
                 if (local_address is not None) and (address_value_local is None):
@@ -2497,12 +2497,12 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         exception = None
         
-        for address_family, address_protocol, local_address, remote_address in address_info:
+        for socket_family, socket_protocol, local_address, remote_address in address_info:
             try:
                 socket = module_socket.socket(
-                    family = address_family,
+                    family = socket_family,
                     type = module_socket.SOCK_DGRAM,
-                    proto = address_protocol,
+                    proto = socket_protocol,
                 )
                 
                 if reuse_port:
@@ -2540,7 +2540,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return await self._create_datagram_connection(protocol_factory, socket, remote_address)
     
 
-    async def create_datagram_connection_with(self, protocol_factory, socket=None):
+    async def create_datagram_connection_with(self, protocol_factory, socket):
         """
         Creates a datagram connection. The socket type will be `SOCK_DGRAM`.
         
@@ -2566,7 +2566,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return await self._create_datagram_connection(protocol_factory, socket, None)
     
     
-    def _create_server_get_address_info(self, host, port, address_family, address_flags):
+    def _create_server_get_address_info(self, host, port, socket_family, socket_flags):
         """
         Gets address info for the given parameters. This method is used by ``.create_server``, when resolving hosts.
         
@@ -2576,9 +2576,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Network interfaces should the server be bound.
         port : `None` or `int`
             The port to use by the `host`.
-        address_family : `AddressFamily` or `int`
+        socket_family : `AddressFamily` or `int`
             The family of the address.
-        address_flags : `int`
+        socket_flags : `int`
             Bit-mask for `get_address_info`.
         
         Returns
@@ -2586,8 +2586,8 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         future : ``Future``
             A future, what's result is set, when the address is dispatched.
         """
-        return self._ensure_resolved((host, port), family=address_family, type=module_socket.SOCK_STREAM,
-            flags=address_flags)
+        return self._ensure_resolved((host, port), family=socket_family, type=module_socket.SOCK_STREAM,
+            flags=socket_flags)
     
     
     def _create_server_shared_precheck(self, ssl):
@@ -2610,8 +2610,8 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return ssl
     
     
-    async def create_server_to(self, protocol_factory, host, port, *, address_family=module_socket.AF_UNSPEC,
-            address_flags=module_socket.AI_PASSIVE, backlog=100, ssl=None,
+    async def create_server_to(self, protocol_factory, host, port, *, socket_family=module_socket.AF_UNSPEC,
+            socket_flags=module_socket.AI_PASSIVE, backlog=100, ssl=None,
             reuse_address=(os.name == 'posix' and sys.platform != 'cygwin'), reuse_port=False):
         """
         Creates a TCP server (socket type SOCK_STREAM) listening on port of the host address.
@@ -2626,10 +2626,10 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             To what network interfaces should the server be bound.
         port : `None` or `int`
             The port to use by the `host`(s).
-        address_family : `AddressFamily` or `int`, Optional (Keyword only)
+        socket_family : `AddressFamily` or `int`, Optional (Keyword only)
             Can be given either as `socket.AF_INET` or `socket.AF_INET6` to force the socket to use `IPv4` or `IPv6`.
             If not given, then  will be determined from host name.
-        address_flags : `int`, Optional (Keyword only)
+        socket_flags : `int`, Optional (Keyword only)
             Bit-mask for `get_address_info`.
         backlog : `int`, Optional (Keyword only)
             The maximum number of queued connections passed to `listen()` (defaults to 100).
@@ -2698,7 +2698,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         sockets = []
         
-        futures = {self._create_server_get_address_info(host, port, address_family, address_flags) for host in hosts}
+        futures = {self._create_server_get_address_info(host, port, socket_family, socket_flags) for host in hosts}
         
         try:
             while True:
@@ -2708,15 +2708,15 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                     address_infos = future.result()
                     
                     for (
-                        address_family,
-                        address_type,
-                        address_protocol,
+                        socket_family,
+                        socket_type,
+                        socket_protocol,
                         address_canonical_name,
-                        address_address,
+                        socket_address,
                     ) in address_infos:
                         
                         try:
-                            socket = module_socket.socket(address_family, address_type, address_protocol)
+                            socket = module_socket.socket(socket_family, socket_type, socket_protocol)
                         except module_socket.error:
                             continue
                         
@@ -2732,14 +2732,14 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                                 raise ValueError('reuse_port not supported by socket module, SO_REUSEPORT defined '
                                     'but not implemented.') from err
                         
-                        if (_HAS_IPv6 and (address_family == module_socket.AF_INET6) and \
+                        if (_HAS_IPv6 and (socket_family == module_socket.AF_INET6) and \
                                 hasattr(module_socket, 'IPPROTO_IPV6')):
                             socket.setsockopt(module_socket.IPPROTO_IPV6, module_socket.IPV6_V6ONLY, True)
                         try:
-                            socket.bind(address_address)
+                            socket.bind(socket_address)
                         except OSError as err:
                             raise OSError(err.errno, f'Error while attempting to bind on address '
-                                f'{address_address!r}: {err.strerror.lower()!s}.') from None
+                                f'{socket_address!r}: {err.strerror.lower()!s}.') from None
                 
                 if futures:
                     continue
