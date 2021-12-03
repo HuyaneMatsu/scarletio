@@ -24,11 +24,9 @@ from .handles import Handle, TimerHandle, TimerWeakHandle
 from .event_thread_suspender import ThreadSuspenderContext
 from .server import Server
 from .executor import Executor
-from ..protocol import ReadWriteProtocolBase
-from ..transport_layer import SocketTransportLayer, DatagramSocketTransportLayer
-from ..ssl_transport_layer import SSLBidirectionalTransportLayer
+from ..protocols_and_transports import ReadWriteProtocolBase, SocketTransportLayer, DatagramSocketTransportLayer, \
+    SSLBidirectionalTransportLayer, UnixReadPipeTransportLayer, UnixWritePipeTransportLayer
 from ..exceptions import CancelledError
-from ..unix_pipe_transport_layer import UnixReadPipeTransportLayer, UnixWritePipeTransportLayer
 from ..subprocess import AsyncProcess
 from .cycler import Cycler
 
@@ -118,7 +116,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
     
     def is_started(self):
         """
-        Returns whether the thread was started.
+        Returns whether the event loop was started.
         
         Returns
         -------
@@ -132,6 +130,24 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             return True
         
         return False
+    
+    
+    def is_stopped(self):
+        """
+        Returns whether the event loop was stopped.
+        
+        Returns
+        -------
+        is_stopped : `bool`
+        """
+        if not self.started:
+            is_stopped = False
+        elif self._is_stopped or (not self.running):
+            is_stopped = True
+        else:
+            is_stopped = False
+        
+        return is_stopped
     
     
     def _maybe_start(self):
@@ -453,6 +469,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             handle = Handle(callbacks.pop(), (future,))
             self._ready.append(handle)
     
+    
     def create_future(self):
         """
         Creates a future bound to the event loop.
@@ -463,6 +480,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             The created future.
         """
         return Future(self)
+    
     
     def create_task(self, coroutine):
         """
@@ -479,6 +497,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             The created task instance.
         """
         return Task(coroutine, self)
+    
     
     def create_task_thread_safe(self, coroutine):
         """
@@ -498,6 +517,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         task = Task(coroutine, self)
         self.wake_up()
         return task
+    
     
     def enter(self):
         """
@@ -548,6 +568,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             return Task(type_.__await__(coroutine_or_future), self)
         
         raise TypeError('A Future, a coroutine or an awaitable is required.')
+    
     
     def ensure_future_thread_safe(self, coroutine_or_future):
         """
@@ -664,6 +685,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                         handle._run()
                 handle = None # remove from locals or the gc derps out.
     
+    
     def caller(self, awaitable, timeout=None):
         """
         Ensures the given awaitable on the event loop and returns it's result when done.
@@ -698,36 +720,36 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return self.ensure_future_thread_safe(awaitable).sync_wrap().wait(timeout)
     
     if __debug__:
-        def render_exc_async(self, exception, before=None, after=None, file=None):
-            future = self.run_in_executor(alchemy_incendiary(self._render_exc_sync, (exception, before, after, file),))
+        def render_exception_async(self, exception, before=None, after=None, file=None):
+            future = self.run_in_executor(alchemy_incendiary(self._render_exception_sync, (exception, before, after, file),))
             future.__silence__()
             return future
         
         @classmethod
-        def render_exc_maybe_async(cls, exception, before=None, after=None, file=None):
+        def render_exception_maybe_async(cls, exception, before=None, after=None, file=None):
             local_thread = current_thread()
             if isinstance(local_thread, EventThread):
-                future = local_thread.run_in_executor(alchemy_incendiary(cls._render_exc_sync,
+                future = local_thread.run_in_executor(alchemy_incendiary(cls._render_exception_sync,
                     (exception, before, after, file),))
                 future.__silence__()
             else:
-                cls._render_exc_sync(exception, before, after, file)
+                cls._render_exception_sync(exception, before, after, file)
     
     else:
-        def render_exc_async(self, exception, before=None, after=None, file=None):
-            return self.run_in_executor(alchemy_incendiary(self._render_exc_sync, (exception, before, after, file),))
+        def render_exception_async(self, exception, before=None, after=None, file=None):
+            return self.run_in_executor(alchemy_incendiary(self._render_exception_sync, (exception, before, after, file),))
         
         @classmethod
-        def render_exc_maybe_async(cls, exception, before=None, after=None, file=None):
+        def render_exception_maybe_async(cls, exception, before=None, after=None, file=None):
             local_thread = current_thread()
             if isinstance(local_thread, EventThread):
-                local_thread.run_in_executor(alchemy_incendiary(cls._render_exc_sync,
+                local_thread.run_in_executor(alchemy_incendiary(cls._render_exception_sync,
                     (exception, before, after, file),))
             else:
-                cls._render_exc_sync(exception, before, after, file)
+                cls._render_exception_sync(exception, before, after, file)
     
     if DOCS_ENABLED:
-        render_exc_async.__doc__ = (
+        render_exception_async.__doc__ = (
         """
         Renders the given exception's traceback in a non blocking way.
         
@@ -754,7 +776,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         """)
     
     if DOCS_ENABLED:
-        render_exc_maybe_async.__doc__ = (
+        render_exception_maybe_async.__doc__ = (
         """
         Renders the given exception's traceback. If called from an ``EventThread`` instance, then will not block it.
         
@@ -778,7 +800,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         """)
     
     @staticmethod
-    def _render_exc_sync(exception, before, after, file):
+    def _render_exception_sync(exception, before, after, file):
         """
         Renders the given exception in a blocking way.
         
@@ -920,7 +942,8 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         socket : `socket.socket`
             The socket, what the transport will use.
         protocol : `Any`
-            Asynchronous protocol implementation for the transport. The given protocol is wrapped into an ``SSLBidirectionalTransportLayer``
+            Asynchronous protocol implementation for the transport. The given protocol is wrapped into an
+            ``SSLBidirectionalTransportLayer``
         ssl : ``ssl.SSLContext``
             Ssl context of the respective connection.
         waiter : `None` or ``Future``, Optional
@@ -962,6 +985,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                 continue
             except BlockingIOError:
                 break
+    
     
     def wake_up(self):
         """
@@ -1005,6 +1029,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         """
         self.add_reader(socket.fileno(), self._accept_connection, protocol_factory, socket, ssl, server, backlog)
     
+    
     def _stop_serving(self, socket):
         """
         Stops serving the given socket. by removing it's reader callback and closing it.
@@ -1016,6 +1041,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         """
         self.remove_reader(socket.fileno())
         socket.close()
+    
     
     def _accept_connection(self, protocol_factory, socket, ssl, server, backlog):
         """
@@ -1048,7 +1074,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                 if err.errno in (errno.EMFILE, errno.ENFILE, errno.ENOBUFS, errno.ENOMEM):
                     # Some platforms (e.g. Linux keep reporting the FD as ready, so we remove the read handler
                     # temporarily. We'll try again in a while.
-                    self.render_exc_async(
+                    self.render_exception_async(
                         err,
                         before = [
                             'Exception occurred at',
@@ -1105,7 +1131,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                 raise
         
         except BaseException as err:
-            self.render_exc_async(
+            self.render_exception_async(
                 err,
                 [
                     'Exception occurred at ',
@@ -1782,6 +1808,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         """
         return self.run_in_executor(alchemy_incendiary(module_socket.getnameinfo, (socket_address, flags,),))
     
+    
     def _ensure_resolved(self, address, *, family=0, type=module_socket.SOCK_STREAM, protocol=0, flags=0):
         """
         Ensures, that the given address is already a resolved IP. If not, gets it's address.
@@ -1823,6 +1850,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         future.set_result([info])
         return future
     
+    
     async def socket_accept(self, socket):
         """
         Accept a connection. Modeled after the blocking `socket.accept()` method.
@@ -1846,7 +1874,8 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         future = Future(self)
         self._socket_accept(future, False, socket)
         return await future
-
+    
+    
     def _socket_accept(self, future, registered, socket):
         """
         Method used by ``.socket_accept`` to check whether the respective socket can be accepted already.
@@ -1882,7 +1911,8 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             future.set_exception(err)
         else:
             future.set_result((conn, address))
-            
+    
+    
     async def socket_connect(self, socket, address):
         """
         Connect the given socket to a remote socket at address.
@@ -1920,6 +1950,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         await future
     
+    
     class _socket_connect_done:
         """
         Callback added to the waited future by ``EventThread.socket_connect`` to remove the respective socket from the
@@ -1956,6 +1987,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             """
             future._loop.remove_writer(self.fd)
     
+    
     def _socket_connect_callback(self, future, socket, address):
         """
         Reader callback, what is called, when the respective socket is connected. Added by ``.socket_connect``, when the
@@ -1985,6 +2017,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         else:
             future.set_result(None)
     
+    
     async def socket_receive(self, socket, n):
         """
         Receive up to `n` from the given socket. Asynchronous version of `socket.recv()`.
@@ -2010,7 +2043,8 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         future = Future(self)
         self._socket_receive(future, False, socket, n)
         return await future
-
+    
+    
     def _socket_receive(self, future, registered, socket, n):
         """
         Added reader callback by ``.socket_receive``. This method is repeated till the data is successfully polled.
@@ -2030,7 +2064,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         if registered:
             self.remove_reader(fd)
         
-        if future.cancelled():
+        if future.done():
             return
         
         try:
@@ -2041,6 +2075,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             future.set_exception(err)
         else:
             future.set_result(data)
+    
     
     async def socket_send_all(self, socket, data):
         """
@@ -2061,7 +2096,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         -----
         There is no way to determine how much data, if any was successfully received on the other end of the connection.
         """
-        if type(data) is not memoryview:
+        if not isinstance(data, memoryview):
             data = memoryview(data)
         
         if data:
@@ -2108,6 +2143,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                 data = data[n:]
             
             self.add_writer(fd, self._socket_send_all, future, True, socket, data)
+    
     
     async def create_datagram_endpoint(self, protocol_factory, local_address=None, remote_address=None, *, family=0,
             protocol=0, flags=0, reuse_port=False, allow_broadcast=False, socket=None):

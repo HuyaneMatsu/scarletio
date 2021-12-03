@@ -1,10 +1,9 @@
-__all__ = ()
+__all__ = ('SSLBidirectionalTransportLayer',)
 
 from ssl import create_default_context as create_default_ssl_context, SSLError
 from collections import deque
 
-from ..utils import copy_docs
-
+from ...utils import copy_docs
 from .abstract import AbstractBidirectionalTransportLayerBase
 from .transport_layer import TransportLayerBase
 from .ssl_pipe import SSLPipe

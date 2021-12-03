@@ -1,15 +1,13 @@
-__all__ = ('TransportLayerBase',)
+__all__ = ('TransportLayerBase', 'SocketTransportLayer', 'DatagramSocketTransportLayer',)
 
 import selectors
 import socket as module_socket
 from collections import deque
 
-from ..utils import copy_docs
-
+from ...utils import copy_docs
 from .abstract import AbstractTransportLayerBase
-from .extra_info import get_extra_info, EXTRA_INFO_NAME_SSL_CONTEXT, EXTRA_INFO_NAME_SSL_OBJECT, \
-    EXTRA_INFO_NAME_SOCKET, EXTRA_INFO_NAME_PEER_CERTIFICATION, EXTRA_INFO_NAME_CIPHER, EXTRA_INFO_NAME_COMPRESSION, \
-    EXTRA_INFO_NAME_SOCKET_NAME, EXTRA_INFO_NAME_PEER_NAME, set_extra_info, has_extra_info
+from .extra_info import get_extra_info, EXTRA_INFO_NAME_SOCKET, EXTRA_INFO_NAME_SOCKET_NAME, \
+    EXTRA_INFO_NAME_PEER_NAME, set_extra_info, has_extra_info
 
 if hasattr(module_socket, 'TCP_NODELAY'):
     def _set_nodelay(socket):

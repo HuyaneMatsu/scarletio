@@ -2,10 +2,9 @@ __all__ = ('ReadProtocolBase', 'ReadWriteProtocolBase',)
 
 from collections import deque
 
-from ..utils import copy_docs
-
-from .exceptions import CancelledError
-from .traps import Future, skip_ready_cycle, future_or_timeout, Task
+from ...utils import copy_docs
+from ..exceptions import CancelledError
+from ..traps import Future, skip_ready_cycle, future_or_timeout, Task
 from .abstract import AbstractProtocolBase
 
 CHUNK_LIMIT = 32
