@@ -50,7 +50,7 @@ class HTTPStreamWriter:
         self.compressor = compressor
         
         self.protocol = protocol
-        self.transport = protocol.transport
+        self.transport = protocol.get_transport()
         
         self.chunked = chunked
         self.size = 0
@@ -114,7 +114,7 @@ class HTTPStreamWriter:
         if self.size > WRITE_CHUNK_LIMIT:
             self.size = 0
             protocol = self.protocol
-            if protocol.transport is not None:
+            if protocol.get_transport() is not None:
                 await protocol._drain_helper()
     
     
@@ -155,7 +155,7 @@ class HTTPStreamWriter:
             self._write(chunk)
         
         protocol = self.protocol
-        if protocol.transport is not None:
+        if protocol.get_transport() is not None:
             await protocol._drain_helper()
         
         self._at_eof = True

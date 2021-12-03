@@ -326,7 +326,7 @@ class ReadProtocolBase(AbstractProtocolBase):
         future : ``Future``
             The respective ``.payload_waiter``.
         """
-        if future.cancelled():
+        if future.is_cancelled():
             self.eof_received()
     
     
@@ -863,7 +863,7 @@ class ReadWriteProtocolBase(ReadProtocolBase):
             return
         
         self._drain_waiter = None
-        if drain_waiter.done():
+        if drain_waiter.is_done():
             return
         
         if exception is None:

@@ -54,11 +54,11 @@ def sleep(delay, loop=None):
         return future
     
     callback = object.__new__(_SleepHandleCanceller)
-    handler = loop.call_later(delay, callback, future)
-    if handler is None:
+    handle = loop.call_later(delay, callback, future)
+    if handle is None:
         raise RuntimeError(f'`sleep` was called with future with a stopped loop {loop!r}')
     
     future._callbacks.append(callback)
-    callback.handler = handler
+    callback._handle = handle
     return future
 

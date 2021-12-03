@@ -127,7 +127,7 @@ class ConnectorBase:
                     continue
                 
                 del alive_protocols_for_host[index]
-                transport = protocol.transport
+                transport = protocol.get_transport()
                 if key.is_ssl and (transport is not None):
                     transport.abort()
             
@@ -231,11 +231,11 @@ class ConnectorBase:
         now = LOOP_TIME()
         while alive_protocols_for_host:
             protocol, time = alive_protocols_for_host.pop()
-            if (protocol.transport is None):
+            if (protocol.get_transport() is None):
                 continue
             
             if (now - time) > KEEP_ALIVE_TIMEOUT:
-                transport = protocol.transport
+                transport = protocol.get_transport()
                 protocol.close()
                 if key.is_ssl and (transport is not None):
                     transport.abort()

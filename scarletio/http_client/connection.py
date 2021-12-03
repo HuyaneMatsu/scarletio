@@ -74,7 +74,7 @@ class Connection:
         if protocol is None:
             return None
         
-        return protocol.transport
+        return protocol.get_transport()
     
     @property
     def writer(self):
@@ -201,7 +201,7 @@ class Connection:
         if protocol is None:
             return True
         
-        if protocol.transport is None:
+        if protocol.get_transport() is None:
             return True
         
         return False

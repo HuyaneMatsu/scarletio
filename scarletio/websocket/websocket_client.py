@@ -344,9 +344,8 @@ class WebSocketClient(WebSocketCommonProtocol):
             protocol = connection.protocol
             connection.detach()
             
-            self = object.__new__(cls)
-            WebSocketCommonProtocol.__init__(self, loop, url.host, url.port, is_ssl=is_ssl, **websocket_kwargs)
-            protocol._copy_attrs_to(self)
+            self = protocol.isekai_into(cls)
+            self._set_common_websocket_attributes(url.host, url.port, is_ssl=is_ssl, **websocket_kwargs)
             self.extensions = accepted_extensions
             self.subprotocol = subprotocol
             self._transport.set_protocol(self)

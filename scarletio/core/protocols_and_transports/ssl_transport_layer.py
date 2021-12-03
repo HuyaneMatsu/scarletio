@@ -172,7 +172,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
         connection_made_waiter = self._connection_made_waiter
         if (connection_made_waiter is not None):
             self._connection_made_waiter = None
-            if connection_made_waiter.pending():
+            if connection_made_waiter.is_pending():
                 if exception is None:
                     connection_made_waiter.set_result(None)
                 else:

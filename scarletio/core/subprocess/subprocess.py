@@ -568,7 +568,7 @@ class AsyncProcess:
             exit_waiters = self._exit_waiters
             if (exit_waiters is not None):
                 for waiter in self._exit_waiters:
-                    if not waiter.cancelled():
+                    if not waiter.is_cancelled():
                         waiter.set_result(return_code)
             
             self._exit_waiters = None

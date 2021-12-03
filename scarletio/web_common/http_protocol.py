@@ -1112,6 +1112,7 @@ class HttpReadProtocol(ReadProtocolBase):
         """
         new = object.__new__(other_class)
         
+        new._loop = self._loop
         new._transport = self._transport
         new._exception = self._exception
         new._chunks = self._chunks

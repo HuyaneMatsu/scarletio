@@ -2080,7 +2080,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             
             # First time `registered` is given as `False` and at the case, the `future` can not be cancelled yet.
             # Later it is called with `True`.
-            if future.cancelled():
+            if future.is_cancelled():
                 return
         
         try:
@@ -2089,9 +2089,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         except (BlockingIOError, InterruptedError):
             self.add_reader(fd, self._socket_accept, future, True, socket)
         except BaseException as err:
-            future.set_exception(err)
+            future.set_exception_if_pending(err)
         else:
-            future.set_result((conn, address))
+            future.set_result_if_pending((conn, address))
     
     
     async def socket_connect(self, socket, address):
@@ -2111,7 +2111,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         """
         if not hasattr(module_socket, 'AF_UNIX') or (socket.family != module_socket.AF_UNIX):
             resolved = self._ensure_resolved(address, family=socket.family, protocol=socket.proto)
-            if not resolved.done():
+            if not resolved.is_done():
                 await resolved
             address = resolved.result()[0][4]
         
@@ -2183,7 +2183,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         address : `tuple` (`str`, `int`)
             The address to connect to.
         """
-        if future.done():
+        if future.is_done():
             return
         
         try:
@@ -2245,7 +2245,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         if registered:
             self.remove_reader(fd)
         
-        if future.done():
+        if future.is_done():
             return
         
         try:
@@ -2306,7 +2306,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         if registered:
             self.remove_writer(fd)
         
-        if future.done():
+        if future.is_done():
             return
         
         try:

@@ -395,7 +395,7 @@ class ExecutorThread(Thread):
                     return
                 
                 future = pair.future
-                if future.done():
+                if future.is_done():
                     future = None
                     continue
                 
@@ -492,7 +492,7 @@ class ExecutorThread(Thread):
         limit = len(results)
         while index < limit:
             future = results[index]
-            if future.done():
+            if future.is_done():
                 del results[index]
                 limit -= 1
             else:
@@ -649,7 +649,7 @@ class ClaimedExecutor:
             callback = _ClaimEndedCallback(self.parent, executor)
             for element in results:
                 future = element.future
-                if future.done():
+                if future.is_done():
                     continue
                 
                 future.add_done_callback(callback)

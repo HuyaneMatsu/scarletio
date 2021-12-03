@@ -133,7 +133,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
     
     is_client = True # placeholder for subclasses
     
-    def __new__(cls, loop, host, port, *, is_ssl=False, close_timeout=10., max_size=1<<26, max_queue=None):
+    def __new__(cls, loop, host, port, *, is_ssl=False, close_timeout=10.0, max_size=1<<26, max_queue=None):
         """
         Initializes the ``WebSocketCommonProtocol`` with setting it's common attributes.
         
@@ -157,7 +157,30 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             removed. Defaults to `None`.
         """
         self = HttpReadWriteProtocol.__new__(cls, loop)
+        self._set_common_websocket_attributes(host, port, is_ssl, close_timeout, max_size, max_queue)
+        return self
+    
+    def _set_common_websocket_attributes(self, host, port, is_ssl, close_timeout=10.0, max_size=1<<26, max_queue=None):
+        """
+        Sets the common websocket specific attributes for teh protocol.
         
+        Parameters
+        ----------
+        host : `str`
+            The respective server's address to connect to.
+        port : `int`
+            The respective server's port to connect to.
+        is_ssl : `bool`
+            Whether the connection is secure. Defaults to `False`.
+        close_timeout : `float`, Optional
+            The maximal duration in seconds what is waited for response after close frame is sent. Defaults to `10.0`.
+        max_size : `int`, Optional
+            Max payload size to receive. If a payload exceeds it, ``PayloadError`` is raised. Defaults to `67108864`
+            bytes.
+        max_queue : `None` or `int`, Optional
+            Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of it is
+            removed. Defaults to `None`.
+        """
         self.host = host
         self.port = port
         self.is_ssl = is_ssl
@@ -165,7 +188,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         self.max_size = max_size # set it to a BIG number if u wanna ignore max size
         self.max_queue = max_queue
         
-        self._drain_lock = Lock(loop)
+        self._drain_lock = Lock(self._loop)
         
         self.state = WEBSOCKET_STATE_CONNECTING
         
@@ -175,16 +198,14 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         self.close_code = 0
         self.close_reason = None
         
-        self.connection_lost_waiter = Future(loop)
-        self.messages = AsyncQueue(loop=loop, max_length=max_queue)
+        self.connection_lost_waiter = Future(self._loop)
+        self.messages = AsyncQueue(loop=self._loop, max_length=max_queue)
         
         self.pings = OrderedDict()
         
         self.transfer_data_task = None
         self.transfer_data_exception = None
         self.close_connection_task = None
-        
-        return self
     
     
     def connection_open(self):
@@ -243,7 +264,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         if transfer_data_task is None:
             return False
         
-        if self.transfer_data_task.done():
+        if self.transfer_data_task.is_done():
             return False
         
         return True
@@ -490,7 +511,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         state = self.state
         if state == WEBSOCKET_STATE_OPEN:
             # if self.transfer_data_task exited without a closing handshake.
-            if self.transfer_data_task.done():
+            if self.transfer_data_task.is_done():
                 await shield(self.close_connection_task, self._loop)
                 raise ConnectionClosed(self.close_code, None, self.close_reason)
             return
@@ -901,7 +922,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
                     return
         finally:
             # finally ensures that the transport never remains open
-            if self.connection_lost_waiter.done() and not self.is_ssl:
+            if self.connection_lost_waiter.is_done() and not self.is_ssl:
                 return
             
             # Close the TCP connection
@@ -929,7 +950,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         is_connection_lost : `bool`
             Returns `True` if the connection is lost.
         """
-        if self.connection_lost_waiter.pending():
+        if self.connection_lost_waiter.is_pending():
             try:
                 task = shield(self.connection_lost_waiter, self._loop)
                 future_or_timeout(task, self.close_timeout)
@@ -937,9 +958,9 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             except TimeoutError:
                 pass
         
-        # re-check self.connection_lost_waiter.done() synchronously because connection_lost() could run between the
+        # re-check self.connection_lost_waiter.is_done() synchronously because connection_lost() could run between the
         # moment the timeout occurs and the moment this coroutine resumes running.
-        return self.connection_lost_waiter.done()
+        return self.connection_lost_waiter.is_done()
     
     def fail_connection(self, code=1006, reason=''):
         """
