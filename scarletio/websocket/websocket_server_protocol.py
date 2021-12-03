@@ -1,6 +1,6 @@
 __all__ = ('WebSocketCommonProtocol',)
 
-import hashlib, codecs
+import hashlib
 from base64 import b64encode, b64decode
 from binascii import Error as BinasciiError
 from email.utils import formatdate

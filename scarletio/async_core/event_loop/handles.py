@@ -3,7 +3,7 @@ __all__ = ()
 from threading import current_thread
 from types import MethodType
 
-from ..utils import ignore_frame, WeakReferer, weak_method, WeakCallable
+from ...utils import ignore_frame, WeakReferer, weak_method, WeakCallable
 
 ignore_frame(__spec__.origin, '_run', 'self.func(*self.args)', )
 ignore_frame(__spec__.origin, 'run', 'handle._run()', )

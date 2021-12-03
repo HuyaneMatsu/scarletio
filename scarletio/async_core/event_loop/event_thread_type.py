@@ -4,7 +4,7 @@ import threading
 from threading import Thread, Event as SyncEvent, current_thread
 import socket as module_socket
 
-from ..utils import ignore_frame
+from ...utils import ignore_frame
 
 ignore_frame(threading.__spec__.origin, '_bootstrap', 'self._bootstrap_inner()', )
 ignore_frame(threading.__spec__.origin, '_bootstrap_inner', 'self.run()', )

@@ -1,6 +1,6 @@
 __all__ = ('WebSocketCommonProtocol', )
 
-import hashlib, codecs
+import codecs
 import http as module_http
 from collections import OrderedDict
 from os import urandom

@@ -1,9 +1,9 @@
 __all__ = ()
 
-from ..utils import copy_docs
+from ...utils import copy_docs
 
-from .abstract import AbstractTransportLayerBase
-from .traps import skip_ready_cycle
+from ..protocols_and_transports import AbstractTransportLayerBase
+from ..traps import skip_ready_cycle
 
 class SubprocessWriter(AbstractTransportLayerBase):
     """

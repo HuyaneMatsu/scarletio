@@ -4,8 +4,8 @@ import sys
 from threading import current_thread
 import socket as module_socket
 
-from .traps import Task
-from ..utils import include, docs_property, DOCS_ENABLED
+from ..traps import Task
+from ...utils import include, docs_property, DOCS_ENABLED
 
 EventThread = include('EventThread')
 

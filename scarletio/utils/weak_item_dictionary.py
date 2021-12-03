@@ -1,30 +1,30 @@
-__all__ = ('WeakKeyDictionary',)
-
+__all__ = ('WeakItemDictionary',)
 
 from .docs import has_docs
-from .weak_core import WeakReferer, add_to_pending_removals
+from .weak_core import WeakReferer, add_to_pending_removals, KeyedReferer, WeakHasher
+from .weak_key_dictionary import _WeakKeyDictionaryCallback, _WeakKeyDictionaryKeyIterator
 
 @has_docs
-class _WeakKeyDictionaryCallback:
+class _WeakItemDictionaryValueCallback:
     """
-    Callback used by ``WeakKeyDictionary``-s.
+    Callback used by ``WeakItemDictionary``-s.
     
     Attributes
     ----------
-    _parent : ``WeakReferer`` to ``WeakKeyDictionary``
-        The parent weak key dictionary.
+    _parent : ``WeakReferer`` to ``WeakItemDictionary``
+        The parent weak or hybrid value dictionary.
     """
     __slots__ = ('_parent', )
     
     @has_docs
     def __new__(cls, parent):
         """
-        Creates a new ``_WeakKeyDictionaryCallback`` instance bound to the given ``WeakKeyDictionary`` instance.
+        Creates a new ``_WeakItemDictionaryValueCallback`` instance.
         
         Parameters
         ----------
-        parent : ``WeakKeyDictionary``
-            The parent weak key dictionary.
+        parent : ``WeakItemDictionary``
+            The parent weak or hybrid value dictionary.
         """
         parent = WeakReferer(parent)
         self = object.__new__(cls)
@@ -35,117 +35,58 @@ class _WeakKeyDictionaryCallback:
     @has_docs
     def __call__(self, reference):
         """
-        Called when a key of the respective weak key dictionary is garbage collected.
+        Called when a value of the respective weak value is garbage collected.
         
         Parameters
         ----------
-        reference : ``WeakReferer``
+        reference : ``KeyedReferer``
             Weakreference to the respective object.
         """
         parent = self._parent()
         if parent is None:
             return
         
+        key_reference = reference.key
+        
         if parent._iterating:
-            add_to_pending_removals(parent, reference)
+            add_to_pending_removals(parent, key_reference)
         else:
             try:
-                dict.__delitem__(parent, reference)
+                dict.__delitem__(parent, key_reference)
             except KeyError:
                 pass
 
 
 @has_docs
-class _WeakKeyDictionaryKeyIterator:
+class _WeakItemDictionaryValueIterator:
     """
-    Key iterator for ``WeakKeyDictionary``-s.
+    Value iterator for ``WeakValueDictionary``-s.
     
     Attributes
     ----------
-    _parent : ``WeakReferer`` to ``WeakKeyDictionary``
-        The parent weak key dictionary.
+    _parent : ``WeakReferer`` to ``WeakValueDictionary``
+        The parent weak value dictionary.
     """
     __slots__ = ('_parent',)
+    
     
     @has_docs
     def __init__(self, parent):
         """
-        Creates a new ``_WeakKeyDictionaryKeyIterator`` instance bound to the given ``WeakKeyDictionary``.
+        Creates a new ``_WeakValueDictionaryValueIterator`` instance bound to the given ``WeakValueDictionary``.
         
         Parameters
         ----------
-        parent : ``WeakKeyDictionary``
-            The parent weak key dictionary.
+        parent : ``WeakValueDictionary``
+            The parent weak value dictionary.
         """
         self._parent = parent
+    
     
     @has_docs
     def __iter__(self):
         """
-        Iterates over a weak key dictionary's keys.
-        
-        This method is a generator.
-        
-        Yields
-        ------
-        key : `Any`
-        """
-        parent = self._parent
-        parent._iterating += 1
-        
-        try:
-            for key_reference in dict.keys(parent):
-                key = key_reference()
-                if (key is None):
-                    add_to_pending_removals(parent, key_reference)
-                    continue
-                
-                yield key
-                continue
-        
-        finally:
-            parent._iterating -= 1
-            parent._commit_removals()
-    
-    @has_docs
-    def __contains__(self, contains_key):
-        """Returns whether the respective ``WeakKeyDictionary`` contains the given key."""
-        return (contains_key in self._parent)
-    
-    @has_docs
-    def __len__(self):
-        """Returns the respective ``WeakKeyDictionary``'s length."""
-        return len(self._parent)
-
-
-@has_docs
-class _WeakKeyDictionaryValueIterator:
-    """
-    Value iterator for ``WeakKeyDictionary``-s.
-    
-    Attributes
-    ----------
-    _parent : ``WeakReferer`` to ``WeakKeyDictionary``
-        The parent weak key dictionary.
-    """
-    __slots__ = ('_parent',)
-    
-    @has_docs
-    def __init__(self, parent):
-        """
-        Creates a new ``_WeakKeyDictionaryValueIterator`` instance bound to the given ``WeakKeyDictionary``.
-        
-        Parameters
-        ----------
-        parent : ``WeakKeyDictionary``
-            The parent weak key dictionary.
-        """
-        self._parent = parent
-    
-    @has_docs
-    def __iter__(self):
-        """
-        Iterates over a weak key dictionary's values.
+        Iterates over a weak value dictionary's values.
         
         This method is a generator.
         
@@ -157,9 +98,10 @@ class _WeakKeyDictionaryValueIterator:
         parent._iterating += 1
         
         try:
-            for key_reference, value in dict.items(parent):
-                if (key_reference() is None):
-                    add_to_pending_removals(parent, key_reference)
+            for value_reference in dict.values(parent):
+                value = value_reference()
+                if (value is None):
+                    add_to_pending_removals(parent, value_reference.key)
                     continue
                 
                 yield value
@@ -169,14 +111,15 @@ class _WeakKeyDictionaryValueIterator:
             parent._iterating -= 1
             parent._commit_removals()
     
+    
     @has_docs
     def __contains__(self, contains_value):
-        """Returns whether the respective ``WeakKeyDictionary`` contains the given value."""
+        """Returns whether the respective ``WeakValueDictionary`` contains the given value."""
         parent = self._parent
-        
-        for key_reference, value in dict.items(parent):
-            if (key_reference() is None):
-                add_to_pending_removals(parent, key_reference)
+        for value_reference in dict.values(parent):
+            value = value_reference()
+            if (value is None):
+                add_to_pending_removals(parent, value_reference.key)
                 continue
             
             if value == contains_value:
@@ -190,34 +133,35 @@ class _WeakKeyDictionaryValueIterator:
         
         return result
     
+    
     @has_docs
     def __len__(self):
-        """Returns the respective ``WeakKeyDictionary``'s length."""
+        """Returns the respective ``WeakValueDictionary``'s length."""
         return len(self._parent)
 
 
+
 @has_docs
-class _WeakKeyDictionaryItemIterator:
+class _WeakItemDictionaryItemIterator:
     """
-    Item iterator for ``WeakKeyDictionary``-s.
+    Item iterator for ``WeakItemDictionary``-s.
     
     Attributes
     ----------
-    _parent : ``WeakReferer`` to ``WeakKeyDictionary``
-        The parent weak key dictionary.
+    _parent : ``WeakReferer`` to ``WeakItemDictionary``
+        The parent weak item dictionary.
     """
     __slots__ = ('_parent',)
-    
     
     @has_docs
     def __init__(self, parent):
         """
-        Creates a new ``_WeakKeyDictionaryItemIterator`` instance bound to the given ``WeakKeyDictionary``.
+        Creates a new ``_WeakItemDictionaryItemIterator`` instance bound to the given ``WeakItemDictionary``.
         
         Parameters
         ----------
-        parent : ``WeakKeyDictionary``
-            The parent weak key dictionary.
+        parent : ``WeakItemDictionary``
+            The parent weak item dictionary.
         """
         self._parent = parent
     
@@ -225,7 +169,7 @@ class _WeakKeyDictionaryItemIterator:
     @has_docs
     def __iter__(self):
         """
-        Iterates over a weak key dictionary's items.
+        Iterates over a weak item dictionary's items.
         
         This method is a generator.
         
@@ -237,9 +181,14 @@ class _WeakKeyDictionaryItemIterator:
         parent._iterating += 1
         
         try:
-            for key_reference, value in dict.items(parent):
+            for key_reference, value_reference in dict.items(parent):
                 key = key_reference()
                 if (key is None):
+                    add_to_pending_removals(parent, key_reference)
+                    continue
+                
+                value = value_reference()
+                if (value is None):
                     add_to_pending_removals(parent, key_reference)
                     continue
                 
@@ -253,12 +202,14 @@ class _WeakKeyDictionaryItemIterator:
     
     @has_docs
     def __contains__(self, contains_item):
-        """Returns whether the respective ``WeakKeyDictionary`` contains the given item."""
+        """Returns whether the respective ``WeakItemDictionary`` contains the given item."""
         if not isinstance(contains_item, tuple):
             return False
         
         if len(contains_item) != 2:
             return False
+        
+        parent = self._parent
         
         contains_key, contains_value = contains_item
         
@@ -267,8 +218,17 @@ class _WeakKeyDictionaryItemIterator:
         except TypeError:
             return False
         
-        value = dict.get(self._parent, contains_key_reference)
+        value_reference = dict.get(self._parent, contains_key_reference)
+        if value_reference is None:
+            return False
+        
+        value = value_reference()
         if value is None:
+            if parent._iterating:
+                add_to_pending_removals(parent, value_reference.key)
+            else:
+                dict.__delitem__(parent, value_reference.key)
+            
             return False
         
         return (value == contains_value)
@@ -276,23 +236,26 @@ class _WeakKeyDictionaryItemIterator:
     
     @has_docs
     def __len__(self):
-        """Returns the respective ``WeakKeyDictionary``'s length."""
+        """Returns the respective ``WeakItemDictionary``'s length."""
         return len(self._parent)
 
 
+
 @has_docs
-class WeakKeyDictionary(dict):
+class WeakItemDictionary(dict):
     """
-    Weak key dictionary, which stores it's keys weakly referenced.
+    weak item dictionary, which stores it's values weakly referenced.
     
     Attributes
     ----------
-    _pending_removals : `None` or `set` of ``WeakReferer``
-        Pending removals of the weak key dictionary if applicable.
+    _pending_removals : `None` or `set` of (``KeyedReferer`` or ``WeakHasher``)
+        Pending removals of the weak item dictionary if applicable.
     _iterating : `int`
-        Whether the weak key dictionary is iterating and how much times.
-    _callback : ``_WeakKeyDictionaryCallback``
-        Callback added to the ``WeakKeyDictionary``'s weak keys.
+        Whether the weak item dictionary is iterating and how much times.
+    _key_callback : ``_WeakKeyDictionaryCallback``
+        Callback added to the ``WeakItemDictionary``'s weak keys.
+    _value_callback : ``_WeakItemDictionaryValueCallback``
+        Callback added to the ``WeakItemDictionary``'s weak values.
     
     Class Attributes
     ----------------
@@ -301,16 +264,16 @@ class WeakKeyDictionary(dict):
     
     Notes
     -----
-    ``WeakKeyDictionary`` instances are weakreferable.
+    ``WeakItemDictionary`` instances are weakreferable.
     """
-    __slots__ = ('__weakref__', '_pending_removals', '_iterating', '_callback')
+    __slots__ = ('__weakref__', '_pending_removals', '_iterating', '_key_callback', '_value_callback')
     
     MAX_REPR_ELEMENT_LIMIT = 50
     
     @has_docs
     def _commit_removals(self):
         """
-        Commits the pending removals of the weak key dictionary if applicable.
+        Commits the pending removals of the weak item dictionary if applicable.
         """
         if self._iterating:
             return
@@ -325,26 +288,44 @@ class WeakKeyDictionary(dict):
             try:
                 dict.__delitem__(self, key_reference)
             except KeyError:
-                return
+                pass
     
     # __class__ -> same
     
     @has_docs
     def __contains__(self, key):
-        """Returns whether the weak key dictionary contains the given key."""
+        """Returns whether the weak item dictionary contains the given key."""
         try:
             key = WeakReferer(key)
         except TypeError:
             return False
         
-        return dict.__contains__(self, key)
+        value_reference = dict.get(self, key, None)
+        if value_reference is None:
+            return False
+        
+        value = value_reference()
+        if (value is not None):
+            return True
+        
+        if self._iterating:
+            add_to_pending_removals(self, value_reference.key)
+        else:
+            dict.__delitem__(self, key)
+        
+        return False
     
     # __delattr__ -> same
     
     @has_docs
     def __delitem__(self, key):
-        """Deletes the value of the weak key dictionary which matches the given key."""
-        dict.__delitem__(self, WeakReferer(key))
+        """Deletes the value of the weak item dictionary which matches the given key."""
+        try:
+            key = WeakReferer(key)
+        except TypeError:
+            raise KeyError(key) from None
+        
+        dict.__delitem__(self, key)
     
     # __dir__ -> same
     # __doc__ -> same
@@ -355,8 +336,23 @@ class WeakKeyDictionary(dict):
     
     @has_docs
     def __getitem__(self, key):
-        """Gets the value of the weak key dictionary which matches the given key."""
-        return dict.__getitem__(self, WeakReferer(key))
+        """Gets the value of the weak item dictionary which matches the given key."""
+        try:
+            key = WeakReferer(key)
+        except TypeError:
+            raise KeyError(key) from None
+        
+        value_reference = dict.__getitem__(self, key)
+        value = value_reference()
+        if (value is not None):
+            return value
+        
+        if self._iterating:
+            add_to_pending_removals(self, value_reference.key)
+        else:
+            dict.__delitem__(self, key)
+        
+        raise KeyError(key)
     
     # __gt__ -> same
     # __hash__ -> same
@@ -364,7 +360,7 @@ class WeakKeyDictionary(dict):
     @has_docs
     def __init__(self, iterable=None):
         """
-        Creates a new ``WeakKeyDictionary`` instance from the given iterable.
+        Creates a new ``WeakItemDictionary`` instance from the given iterable.
         
         Parameters
         ----------
@@ -373,7 +369,8 @@ class WeakKeyDictionary(dict):
         """
         self._pending_removals = None
         self._iterating = 0
-        self._callback = _WeakKeyDictionaryCallback(self)
+        self._key_callback = _WeakKeyDictionaryCallback(self)
+        self._value_callback = _WeakItemDictionaryValueCallback(self)
         if (iterable is not None):
             self.update(iterable)
     
@@ -381,14 +378,14 @@ class WeakKeyDictionary(dict):
     
     @has_docs
     def __iter__(self):
-        """Returns a ``_WeakKeyDictionaryKeyIterator`` iterating over the weak key dictionary's keys."""
+        """Returns a ``_WeakItemDictionaryKeyIterator`` iterating over the weak item dictionary's keys."""
         return iter(_WeakKeyDictionaryKeyIterator(self))
     
     # __le__ -> same
     
     @has_docs
     def __len__(self):
-        """Returns the length of the weak key dictionary."""
+        """Returns the length of the weak item dictionary."""
         length = dict.__len__(self)
         pending_removals = self._pending_removals
         if (pending_removals is not None):
@@ -404,15 +401,20 @@ class WeakKeyDictionary(dict):
     
     @has_docs
     def __repr__(self):
-        """Returns the representation of the weak key dictionary."""
+        """Returns the representation of the weak item dictionary."""
         result = [self.__class__.__name__, '({']
         
         if len(self):
             limit = self.MAX_REPR_ELEMENT_LIMIT
             collected = 0
-            for key_reference, value in dict.items(self):
+            for key_reference, value_reference in dict.items(self):
                 key = key_reference()
                 if (key is None):
+                    add_to_pending_removals(self, key_reference)
+                    continue
+                
+                value = value_reference()
+                if (value is None):
                     add_to_pending_removals(self, key_reference)
                     continue
                 
@@ -421,7 +423,7 @@ class WeakKeyDictionary(dict):
                 result.append(repr(value))
                 result.append(', ')
                 
-                collected += 1
+                collected +=1
                 if collected != limit:
                     continue
                 
@@ -437,7 +439,6 @@ class WeakKeyDictionary(dict):
                 result[-1] = '})'
             
             self._commit_removals()
-            
         else:
             result.append('})')
         
@@ -447,8 +448,10 @@ class WeakKeyDictionary(dict):
     
     @has_docs
     def __setitem__(self, key, value):
-        """Adds the given `key` - `value` pair to the weak key dictionary."""
-        dict.__setitem__(self, WeakReferer(key, self._callback), value)
+        """Adds the given `key` - `value` pair to the weak item dictionary."""
+        key_reference = WeakReferer(key, self._key_callback)
+        value_reference = KeyedReferer(value, self._value_callback, key_reference)
+        dict.__setitem__(self, key_reference, value_reference)
     
     # __sizeof__ -> same
     
@@ -459,42 +462,54 @@ class WeakKeyDictionary(dict):
     @has_docs
     def clear(self):
         """
-        Clears the weak key dictionary.
+        Clears the weak item dictionary.
         """
         dict.clear(self)
         self._pending_removals = None
     
+    
     @has_docs
     def copy(self):
         """
-        Copies the weak key dictionary.
+        Copies the weak item dictionary.
         
         Returns
         -------
-        new : ``WeakKeyDictionary``
+        new : ``WeakItemDictionary``
         """
         new = dict.__new__(type(self))
         new._pending_removals = None
-        callback = _WeakKeyDictionaryCallback(new)
-        new._callback = callback
+        key_callback = _WeakKeyDictionaryCallback(new)
+        new._key_callback = key_callback
+        value_callback = _WeakItemDictionaryValueCallback(new)
+        new._value_callback = value_callback
         
-        for key_reference, value in dict.items(self):
+        for key_reference, value_reference in dict.items(self):
             key = key_reference()
             if key is None:
                 add_to_pending_removals(self, key_reference)
                 continue
             
-            dict.__setitem__(new, WeakReferer(key, callback), value)
+            value = value_reference()
+            if value is None:
+                add_to_pending_removals(self, key_reference)
+                continue
+            
+            key_reference = WeakReferer(key, self._key_callback)
+            value_reference = KeyedReferer(value, self._value_callback, key_reference)
+            
+            dict.__setitem__(new, key_reference, value_reference)
             continue
         
         self._commit_removals()
         
         return new
     
+    
     @has_docs
     def get(self, key, default=None):
         """
-        Gets the value of the weak key dictionary which matches the given key.
+        Gets the value of the weak item dictionary which matches the given key.
         
         Parameters
         ----------
@@ -508,23 +523,43 @@ class WeakKeyDictionary(dict):
         value : `Any` or `default`
             The key's matched value. If no value was matched returns the `default` value.
         """
-        return dict.get(self, WeakReferer(key), default)
+        try:
+            key_reference = WeakReferer(key)
+        except TypeError:
+            pass
+        else:
+            value_reference = dict.get(self, key_reference, default)
+            if value_reference is default:
+                return default
+            
+            value = value_reference()
+            if (value is not None):
+                return value
+            
+            if self._iterating:
+                add_to_pending_removals(self, value_reference.key)
+            else:
+                dict.__delitem__(self, key)
+        
+        return default
+    
     
     @has_docs
     def items(self):
         """
-        Returns item iterator for the weak key dictionary.
+        Returns item iterator for the weak item dictionary.
         
         Returns
         -------
-        item_iterator : ``_WeakKeyDictionaryItemIterator``
+        item_iterator : ``_WeakItemDictionaryItemIterator``
         """
-        return _WeakKeyDictionaryItemIterator(self)
+        return _WeakItemDictionaryItemIterator(self)
+    
     
     @has_docs
     def keys(self):
         """
-        Returns key iterator for the weak key dictionary.
+        Returns key iterator for the weak item dictionary.
         
         Returns
         -------
@@ -532,10 +567,11 @@ class WeakKeyDictionary(dict):
         """
         return _WeakKeyDictionaryKeyIterator(self)
     
+    
     @has_docs
     def pop(self, key, default=...):
         """
-        Pops the value of the weak key dictionary which matches the given key.
+        Pops the value of the weak item dictionary which matches the given key.
         
         Parameters
         ----------
@@ -554,14 +590,23 @@ class WeakKeyDictionary(dict):
         KeyError
             If `key` could not be matched and `default` value is was not given either.
         """
-        try:
-            key_reference = WeakReferer(key)
-        except TypeError:
-            raise KeyError(key) from None
-        
-        value = dict.pop(self, key_reference, ...)
-        if (value is not ...):
+        # Use goto
+        while True:
+            try:
+                key_reference = WeakReferer(key)
+            except TypeError:
+                break
+            
+            value_reference = dict.pop(self, key_reference, ...)
+            if (value_reference is ...):
+                break
+                
+            value = value_reference()
+            if (value is None):
+                break
+            
             return value
+        
         
         if default is ...:
             raise KeyError(key)
@@ -572,7 +617,7 @@ class WeakKeyDictionary(dict):
     @has_docs
     def popitem(self):
         """
-        Pops an item of the key value dictionary.
+        Pops an item of the weak item dictionary.
         
         Returns
         -------
@@ -581,42 +626,47 @@ class WeakKeyDictionary(dict):
         Raises
         ------
         KeyError
-            If the weak key dictionary is empty.
+            If the weak item dictionary is empty.
         """
         while dict.__len__(self):
-            key_reference, value = dict.popitem(self)
+            key_reference, value_reference = dict.popitem(self)
             key = key_reference()
+            if key is None:
+                continue
             
-            if (key is not None):
-                return key, value
+            value = value_reference()
+            if value is None:
+                continue
             
-            continue
+            return key, value
         
         raise KeyError('popitem(): dictionary is empty.')
     
     
     @has_docs
-    def setdefault(self, key, default=None):
+    def setdefault(self, key, default):
         """
         Returns the value for the given `key`.
         
-        If the `key` is not present in the weak key dictionary, then set's the given `default` value as it.
+        If the `key` is not present in the weak item dictionary, then set's the given `default` value as it.
         
         Parameters
         ----------
         key : `Any`
             The key to match.
         default : `Any`, Optional
-            Default value to set and return if `key` is not present in the weak key dictionary.
+            Default value to set and return if `key` is not present in the weak item dictionary.
         
         Returns
         -------
         value : `default` or `Any`
             The matched value, or `default` if none.
         """
-        value = dict.get(self, WeakReferer(key), ...)
-        if (value is not ...):
-            return value
+        value_reference = dict.get(self, WeakReferer(key), ...)
+        if (value_reference is not ...):
+            value = value_reference()
+            if (value is not None):
+                return value
         
         self[key] = default
         return default
@@ -625,12 +675,12 @@ class WeakKeyDictionary(dict):
     @has_docs
     def update(self, iterable):
         """
-        Updates the weak key dictionary with the given iterable's elements.
+        Updates the weak item dictionary with the given iterable's elements.
         
         Parameters
         ----------
         iterable : `iterable`
-            Iterable to extend the weak key dictionary with.
+            Iterable to extend the weak item dictionary with.
             
             Can be given as an object, which:
             - supports `.items` iterator.
@@ -663,7 +713,7 @@ class WeakKeyDictionary(dict):
                 index += 1
                 
                 try:
-                    iterator=iter(item)
+                    iterator = iter(item)
                 except TypeError:
                     raise TypeError(f'Cannot convert dictionary update sequence element #{index} to a sequence.') \
                         from None
@@ -693,9 +743,9 @@ class WeakKeyDictionary(dict):
                         break
                 
                 if length > 9000:
-                    length='OVER 9000!'
+                    length = 'OVER 9000!'
                 else:
-                    length=repr(length)
+                    length = repr(length)
                 
                 raise ValueError(f'Dictionary update sequence element #{index} has length {length}; 2 is required.')
             return
@@ -706,10 +756,10 @@ class WeakKeyDictionary(dict):
     @has_docs
     def values(self):
         """
-        Returns value iterator for the weak key dictionary.
+        Returns value iterator for the weak item dictionary.
         
         Returns
         -------
-        value_iterator : ``_WeakKeyDictionaryValueIterator``
+        value_iterator : ``_WeakItemDictionaryValueIterator``
         """
-        return _WeakKeyDictionaryValueIterator(self)
+        return _WeakItemDictionaryValueIterator(self)

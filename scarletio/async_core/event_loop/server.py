@@ -1,6 +1,6 @@
 __all__ = ('Server', )
 
-from .traps import skip_ready_cycle, Future
+from ..traps import skip_ready_cycle, Future
 
 class Server:
     """

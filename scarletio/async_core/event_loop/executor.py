@@ -4,10 +4,10 @@ import sys
 from threading import Lock as SyncLock, Event as SyncEvent, Thread, current_thread
 from collections import deque
 
-from ..utils import include, ignore_frame
-from ..utils.trace import render_exception_into
-from .traps import Future
-from .exceptions import CancelledError
+from ...utils import include, ignore_frame
+from ...utils.trace import render_exception_into
+from ..traps import Future
+from ..exceptions import CancelledError
 
 EventThread = include('EventThread')
 

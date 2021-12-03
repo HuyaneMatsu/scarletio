@@ -1,8 +1,8 @@
 __all__ = ()
 
-from ..utils import copy_docs
+from ...utils import copy_docs
 
-from .abstract import AbstractProtocolBase
+from ..protocols_and_transports import AbstractProtocolBase
 
 
 class SubprocessWritePipeProtocol(AbstractProtocolBase):

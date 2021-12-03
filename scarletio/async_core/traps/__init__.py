@@ -9,9 +9,9 @@ from .handle_cancellers import *
 from .locks import *
 from .queues import *
 from .result_gathering_future import *
-from .sync_executing import *
 from .task import *
 from .task_suppression import *
+from .task_thread_switcher import *
 from .timeouting import *
 from .wait_continously import *
 from .wait_till_all import *
@@ -30,9 +30,9 @@ __all__ = (
     *locks.__all__,
     *queues.__all__,
     *result_gathering_future.__all__,
-    *sync_executing.__all__,
     *task.__all__,
     *task_suppression.__all__,
+    *task_thread_switcher.__all__,
     *timeouting.__all__,
     *wait_continously.__all__,
     *wait_till_all.__all__,

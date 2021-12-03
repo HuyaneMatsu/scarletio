@@ -2,7 +2,7 @@ __all__ = ('Cycler', 'EventThread', 'LOOP_TIME', 'LOOP_TIME_RESOLUTION', 'Thread
 
 import sys, errno, weakref, subprocess, os
 import socket as module_socket
-from functools.partial import partial_func
+from functools import partial as partial_func
 from selectors import DefaultSelector, EVENT_WRITE, EVENT_READ
 from threading import current_thread, Thread
 from heapq import heappop, heappush
@@ -12,11 +12,11 @@ from stat import S_ISSOCK
 
 IS_UNIX = (sys.platform != 'win32')
 
-from ..utils import alchemy_incendiary, DOCS_ENABLED, set_docs, export, is_coroutine
-from ..utils.trace import render_exception_into
+from ...utils import alchemy_incendiary, DOCS_ENABLED, set_docs, export, is_coroutine
+from ...utils.trace import render_exception_into
 
-from .traps import Future, Task, Gatherer, FutureAsyncWrapper, WaitTillFirst
-from .time import LOOP_TIME, LOOP_TIME_RESOLUTION
+from ..traps import Future, Task, Gatherer, FutureAsyncWrapper, WaitTillFirst
+from ..time import LOOP_TIME, LOOP_TIME_RESOLUTION
 from .event_loop_functionality_helpers import _HAS_IPv6, _is_stream_socket, _set_reuse_port, _ip_address_info, \
     EventThreadRunDescriptor
 from .event_thread_type import EventThreadType
@@ -24,12 +24,13 @@ from .handles import Handle, TimerHandle, TimerWeakHandle
 from .event_thread_suspender import ThreadSuspenderContext
 from .server import Server
 from .executor import Executor
-from .protocol import ReadWriteProtocolBase
-from .transport_layer import SocketTransportLayer, DatagramSocketTransportLayer
-from .ssl_transport_layer import SSLBidirectionalTransportLayer
-from .exceptions import CancelledError
-from .unix_pipe_transport_layer import UnixReadPipeTransport, UnixWritePipeTransport
-from .subprocess import AsyncProcess
+from ..protocol import ReadWriteProtocolBase
+from ..transport_layer import SocketTransportLayer, DatagramSocketTransportLayer
+from ..ssl_transport_layer import SSLBidirectionalTransportLayer
+from ..exceptions import CancelledError
+from ..unix_pipe_transport_layer import UnixReadPipeTransportLayer, UnixWritePipeTransportLayer
+from ..subprocess import AsyncProcess
+from .cycler import Cycler
 
 @export
 class EventThread(Executor, Thread, metaclass=EventThreadType):
@@ -2481,10 +2482,10 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                     done, pending = await WaitTillFirst(futures, self)
                     for future in done:
                         futures.discard(future)
-                        infos = future.result()
+                        address_infos = future.result()
                         
-                        for info in infos:
-                            socket_family, socket_type, socket_protocol, canonical_name, socket_address = info
+                        for address_info in address_infos:
+                            socket_family, socket_type, socket_protocol, canonical_name, socket_address = address_info
                             
                             try:
                                 socket = module_socket.socket(socket_family, socket_type, socket_protocol)
@@ -2541,10 +2542,10 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
     
     if IS_UNIX:
         async def connect_read_pipe(self, protocol, pipe):
-            return await UnixReadPipeTransport(self, pipe, protocol)
+            return await UnixReadPipeTransportLayer(self, pipe, protocol)
         
         async def connect_write_pipe(self, protocol, pipe):
-            return await UnixWritePipeTransport(self, pipe, protocol)
+            return await UnixWritePipeTransportLayer(self, pipe, protocol)
         
         async def subprocess_shell(self, command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                 *, extra=None, preexecution_function=None, close_fds=True, cwd=None, startup_info=None,
@@ -2622,7 +2623,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Returns
         -------
-        transport : ``UnixReadPipeTransport``
+        transport : ``UnixReadPipeTransportLayer``
             The created transport.
         
         Raises
@@ -2650,7 +2651,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Returns
         -------
-        transport : ``UnixReadPipeTransport``
+        transport : ``UnixReadPipeTransportLayer``
             The created transport.
         
         Raises

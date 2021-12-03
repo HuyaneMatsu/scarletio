@@ -54,6 +54,7 @@ class _WeakValueDictionaryCallback:
             except KeyError:
                 pass
 
+
 @has_docs
 class _WeakValueDictionaryKeyIterator:
     """
@@ -66,6 +67,7 @@ class _WeakValueDictionaryKeyIterator:
     """
     __slots__ = ('_parent',)
     
+    
     @has_docs
     def __init__(self, parent):
         """
@@ -77,6 +79,7 @@ class _WeakValueDictionaryKeyIterator:
             The parent weak value dictionary.
         """
         self._parent = parent
+    
     
     @has_docs
     def __iter__(self):
@@ -105,10 +108,12 @@ class _WeakValueDictionaryKeyIterator:
             parent._iterating -= 1
             parent._commit_removals()
     
+    
     @has_docs
     def __contains__(self, key):
         """Returns whether the respective ``WeakValueDictionary`` contains the given key."""
         return (key in self._parent)
+    
     
     @has_docs
     def __len__(self):
@@ -140,6 +145,7 @@ class _WeakValueDictionaryValueIterator:
         """
         self._parent = parent
     
+    
     @has_docs
     def __iter__(self):
         """
@@ -168,6 +174,7 @@ class _WeakValueDictionaryValueIterator:
             parent._iterating -= 1
             parent._commit_removals()
     
+    
     @has_docs
     def __contains__(self, contains_value):
         """Returns whether the respective ``WeakValueDictionary`` contains the given value."""
@@ -188,6 +195,7 @@ class _WeakValueDictionaryValueIterator:
         parent._commit_removals()
         
         return result
+    
     
     @has_docs
     def __len__(self):

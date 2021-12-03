@@ -1,11 +1,11 @@
 ﻿__all__ = ('AsyncProcess',)
 
-import os, sys, errno
+import sys
 from subprocess import TimeoutExpired, PIPE, Popen
 from socket import socketpair as create_socket_pair
 
-from .traps import Task, Future, WaitTillAll, future_or_timeout
-from .protocol import ReadProtocolBase
+from ..traps import Task, Future, WaitTillAll, future_or_timeout
+from ..protocols_and_transports import ReadProtocolBase
 
 IS_AIX = sys.platform.startswith('aix')
 LIMIT = 1<<16
