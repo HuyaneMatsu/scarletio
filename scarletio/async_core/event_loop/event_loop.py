@@ -1,4 +1,4 @@
-__all__ = ('Cycler', 'EventThread', 'LOOP_TIME', 'LOOP_TIME_RESOLUTION', 'ThreadSuspenderContext', )
+__all__ = ('EventThread', )
 
 import sys, errno, weakref, subprocess, os
 import socket as module_socket
@@ -3051,7 +3051,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return await AsyncProcess(self, (program, *args), False, stdin, stdout, stderr, 0, extra,
             process_open_kwargs)
 
-    if IS_UNIX:
+    if not IS_UNIX:
         @copy_docs(connect_read_pipe)
         async def connect_read_pipe(self, protocol, pipe):
             raise NotImplementedError

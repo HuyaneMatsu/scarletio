@@ -35,7 +35,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
         Whether the ssl transport is in handshaking.
     _protocol : ``AbstractTransportLayerBase``
         Asynchronous protocol implementation.
-    _server_hostname : `None` or `str`
+    _server_host_name : `None` or `str`
         The ssl protocol's server hostname if applicable.
     _server_side : `bool`
         Whether the ssl protocol is server side.
@@ -53,10 +53,10 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
         write from.
     """
     __slots__ = ('_call_connection_made', '_closing', '_connection_made_waiter', '_in_handshake', '_protocol',
-        '_server_hostname', '_server_side', '_session_established', '_ssl_context', '_ssl_pipe', '_transport',
+        '_server_host_name', '_server_side', '_session_established', '_ssl_context', '_ssl_pipe', '_transport',
         '_write_backlog')
     
-    def __new__(cls, loop, protocol, ssl_context, connection_made_waiter, server_side, server_hostname,
+    def __new__(cls, loop, protocol, ssl_context, connection_made_waiter, server_side, server_host_name,
             call_connection_made):
         """
         Creates a new ``SSLProtocol`` instance.
@@ -79,7 +79,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
             After the future's result or exception is set, the attribute is set as `None`.
         server_side : `bool`
             Whether the ssl protocol is server side.
-        server_hostname : `None` or `str`
+        server_host_name : `None` or `str`
             The ssl protocol's server hostname if applicable.
             
             If we are the `server_side`, then this parameter is forced to `None` (wont raise).
@@ -96,17 +96,17 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
                 raise ValueError('Server side SSL needs a valid `ssl.SSLContext`.')
             
             ssl_context = create_default_ssl_context()
-            if (server_hostname is None) or (not server_hostname):
+            if (server_host_name is None) or (not server_host_name):
                 ssl_context.check_hostname = False
         
         if server_side:
-            server_hostname = None
+            server_host_name = None
         
         extra = set_extra_info(None, EXTRA_INFO_NAME_SSL_CONTEXT, ssl_context)
         self = TransportLayerBase.__new__(cls, loop, extra)
         
         self._server_side = server_side
-        self._server_hostname = server_hostname
+        self._server_host_name = server_host_name
         self._ssl_context = ssl_context
         self._write_backlog = deque()
         self._connection_made_waiter = connection_made_waiter
@@ -182,7 +182,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
     @copy_docs(AbstractBidirectionalTransportLayerBase.connection_made)
     def connection_made(self, transport):
         self._transport = transport
-        self._ssl_pipe = SSLPipe(self._ssl_context, self._server_side, self._server_hostname)
+        self._ssl_pipe = SSLPipe(self._ssl_context, self._server_side, self._server_host_name)
         
         self._in_handshake = True
         # `(b'', 1)` is a special value in ``._process_write_backlog`` to do the SSL handshake

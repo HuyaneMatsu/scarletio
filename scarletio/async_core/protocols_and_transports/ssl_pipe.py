@@ -51,7 +51,7 @@ class SSLPipe:
         Whether more record level data is needed to complete a handshake that is currently in progress.
     _outgoing : `MemoryBIO`
         Does the outgoing data encryption/decryption.
-    _server_hostname : `None` or `str`
+    _server_host_name : `None` or `str`
         The ssl protocol's server hostname if applicable.
     _server_side : `bool`
         Whether the ssl protocol is server side.
@@ -82,10 +82,10 @@ class SSLPipe:
         
         Note, that ``.state`` is checked by memory address and not by value.
     """
-    __slots__ = ('_handshake_callback', '_incoming', '_need_ssl_data', '_outgoing', '_server_hostname', '_server_side',
+    __slots__ = ('_handshake_callback', '_incoming', '_need_ssl_data', '_outgoing', '_server_host_name', '_server_side',
         '_shutdown_callback', '_ssl_context', '_ssl_object', '_state')
     
-    def __init__(self, context, server_side, server_hostname):
+    def __init__(self, context, server_side, server_host_name):
         """
         Creates a new ``SSLPipe`` instance with the given parameters.
         
@@ -95,13 +95,13 @@ class SSLPipe:
             The SSL pipe's SSL type.
         server_side : `bool`
             Whether the ssl protocol is server side.
-        server_hostname : `None` or `str`
+        server_host_name : `None` or `str`
             The ssl protocol's server hostname if applicable.
 
         """
         self._ssl_context = context
         self._server_side = server_side
-        self._server_hostname = server_hostname
+        self._server_host_name = server_host_name
         self._state = SSL_PIPE_STATE_UNWRAPPED
         self._incoming = MemoryBIO()
         self._outgoing = MemoryBIO()
@@ -157,7 +157,7 @@ class SSLPipe:
             raise RuntimeError('Handshake in progress or completed.')
         
         self._ssl_object = self._ssl_context.wrap_bio(self._incoming, self._outgoing, server_side=self._server_side,
-            server_hostname=self._server_hostname)
+            server_host_name=self._server_host_name)
         
         self._state = SSL_PIPE_STATE_DO_HANDSHAKE
         self._handshake_callback = callback

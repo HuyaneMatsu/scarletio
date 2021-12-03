@@ -854,16 +854,16 @@ class TCPConnector(ConnectorBase):
         
         async for host_info in self.resolve_host_iterator(request):
             try:
-                protocol = await self.loop.create_connection(
+                protocol = await self.loop.create_connection_to(
                     partial_func(HttpReadWriteProtocol, self.loop),
                     host_info.host,
                     host_info.port,
                     ssl = ssl_context,
-                    family = host_info.family,
-                    protocol = host_info.protocol,
-                    flags = host_info.flags,
+                    socket_family = host_info.family,
+                    socket_protocol = host_info.protocol,
+                    socket_flags = host_info.flags,
                     local_address = self.local_address,
-                    server_hostname = (host_info.hostname if ssl_context else None),
+                    server_host_name = (host_info.hostname if ssl_context else None),
                 )
             except ssl_errors as err:
                 err.key = request.connection_key
@@ -954,11 +954,11 @@ class TCPConnector(ConnectorBase):
                     protocol.close_transport()
                 
                 try:
-                    protocol = await self.loop.create_connection(
+                    protocol = await self.loop.create_connection_with(
                         partial_func(HttpReadWriteProtocol, self.loop),
                         ssl = ssl_context,
                         socket = raw_socket,
-                        server_hostname = request.host,
+                        server_host_name = request.host,
                     )
                 except ssl_errors as err:
                     err.key = request.connection_key

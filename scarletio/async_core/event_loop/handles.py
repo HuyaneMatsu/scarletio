@@ -1,4 +1,4 @@
-__all__ = ()
+__all__ = ('Handle', 'TimerHandle', 'TimerWeakHandle',)
 
 from threading import current_thread
 from types import MethodType
@@ -226,6 +226,7 @@ class TimerHandle(Handle):
     def __lt__(self, other):
         """Returns whether this timer handle should be called earlier than the other."""
         return self.when < other.when
+
 
 class TimerWeakHandle(TimerHandle):
     """

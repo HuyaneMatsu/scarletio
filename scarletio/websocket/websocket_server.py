@@ -219,7 +219,7 @@ class WebSocketServer:
             extra_response_headers, request_processor, subprotocol_selector, websocket_kwargs)
         
         factory = partial_func(protocol, self,)
-        server = await loop.create_server(factory, host, port, ssl=ssl, **server_kwargs)
+        server = await loop.create_server_to(factory, host, port, ssl=ssl, **server_kwargs)
         
         self.server = server
         await server.start()
