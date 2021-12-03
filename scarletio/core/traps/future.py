@@ -2,7 +2,7 @@ __all__ = ('Future',)
 
 import sys, reprlib, warnings
 
-from ...utils import include, ignore_frame
+from ...utils import include, ignore_frame, set_docs
 from ...utils.trace import format_callback
 from ..exceptions import InvalidStateError, CancelledError
 from .handle_cancellers import _HandleCancellerBase

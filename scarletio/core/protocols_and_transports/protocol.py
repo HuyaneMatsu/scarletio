@@ -174,7 +174,7 @@ class ReadProtocolBase(AbstractProtocolBase):
         
         return result
     
-    @copy_docs()
+    
     def at_eof(self):
         """
         Returns whether the protocol is at eof. If at eof, but has content left, then returns `False` however.

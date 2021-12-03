@@ -1,11 +1,11 @@
-__all__ = ('BaseMethodDescriptor', 'base_method',)
+__all__ = ('BaseMethodDescriptor', 'BaseMethodType',)
 
 from .docs import has_docs
 from .properties import docs_property
 from .method_like import MethodLike
 
 @has_docs
-class base_method(MethodLike):
+class BaseMethodType(MethodLike):
     """
     A `method-like`, which always passes to it's function the respective type and an instance. The instance might be
     given as `None` if used as a classmethod.
@@ -22,7 +22,7 @@ class base_method(MethodLike):
     Class Attributes
     ----------------
     __reserved_argcount__ : `int` = `2`
-        The amount of reserved parameters by base_methods.
+        The amount of reserved parameters by BaseMethodTypes.
     """
     __slots__ = ('__base__', '__func__', '__self__', )
     __reserved_argcount__ = 2
@@ -30,7 +30,7 @@ class base_method(MethodLike):
     @has_docs
     def __init__(self, func, cls, base):
         """
-        Creates a new base_method with the given parameters.
+        Creates a new BaseMethodType with the given parameters.
         
         Parameters
         ----------
@@ -48,7 +48,7 @@ class base_method(MethodLike):
     @has_docs
     def __call__(self, *args, **kwargs):
         """
-        Calls the base_method with the given parameters.
+        Calls the BaseMethodType with the given parameters.
         
         Parameters
         ----------
@@ -78,7 +78,7 @@ class base_method(MethodLike):
     @has_docs
     def __instance__doc__(self):
         """
-        Returns the ``base_method``'s internal function's docstring.
+        Returns the ``BaseMethodType``'s internal function's docstring.
         
         Returns
         -------
@@ -91,7 +91,7 @@ class base_method(MethodLike):
 @has_docs
 class BaseMethodDescriptor:
     """
-    Descriptor, which can be used as a decorator to wrap a function to a base_method.
+    Descriptor, which can be used as a decorator to wrap a function to a BaseMethodType.
     
     Attributes
     ----------
@@ -113,7 +113,7 @@ class BaseMethodDescriptor:
         self.fget = fget
     
     def __get__(self, obj, type_):
-        return base_method(self.fget, type_, obj)
+        return BaseMethodType(self.fget, type_, obj)
     
     def __set__(self, obj, value):
         raise AttributeError('can\'t set attribute')

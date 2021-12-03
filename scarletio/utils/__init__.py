@@ -12,14 +12,14 @@ from .ignore_case_string import *
 from .json import *
 from .keep_type import *
 from .method_like import *
-from .methodize import *
-from .modulize import *
 from .multi_value_dictionary import *
 from .properties import *
 from .removed_descriptor import *
 from .sorted_list import *
 from .utils import *
 from .trace import *
+from .type_methodizer import *
+from .type_modulizer import *
 from .weak_core import *
 from .weak_item_dictionary import *
 from .weak_key_dictionary import *
@@ -41,14 +41,14 @@ __all__ = (
     *json.__all__,
     *keep_type.__all__,
     *method_like.__all__,
-    *methodize.__all__,
-    *modulize.__all__,
     *multi_value_dictionary.__all__,
     *properties.__all__,
     *removed_descriptor.__all__,
     *sorted_list.__all__,
     *utils.__all__,
     *trace.__all__,
+    *type_methodizer.__all__,
+    *type_modulizer.__all__,
     *weak_core.__all__,
     *weak_item_dictionary.__all__,
     *weak_key_dictionary.__all__,

@@ -12,7 +12,7 @@ __all__ = (
     *protocols_and_transports.__all__,
     *subprocess.__all__,
     *traps.__all__,
-    *exceptions.__all__
+    *exceptions.__all__,
     *ios.__all__,
     *time.__all__,
     *top_level.__all__,
