@@ -38,7 +38,7 @@ setup(
     long_description = README,
     long_description_content_type = 'text/markdown',
     classifiers = [
-        'Development Status :: 5 - Production/Stable',
+        'Development Status :: 4 - Beta',
         
         'License :: OSI Approved :: MIT License',
         
