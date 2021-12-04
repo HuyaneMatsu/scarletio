@@ -2125,7 +2125,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             future.add_done_callback(self._socket_connect_done(fd),)
             
         except BaseException as err:
-            future.set_exceptio_if_pending(err)
+            future.set_exception_if_pending(err)
         else:
             future.set_result_if_pending(None)
         
