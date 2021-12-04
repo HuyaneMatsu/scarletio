@@ -109,7 +109,47 @@ def is_coroutine_generator(obj):
     return False
 
 
-if sys.version_info >= (3, 8, 0):
+if sys.version_info >= (3, 11, 0):
+    def to_coroutine(function):
+        if not isinstance(function, FunctionType):
+            raise TypeError(f'`function` can only be `{FunctionType.__name__}`, got {function.__class__.__name__}; '
+                f'{function!r}.')
+        
+        code_object = function.__code__
+        code_flags = code_object.co_flags
+        if code_flags&CO_COROUTINE_ALL:
+            return function
+        
+        if not code_flags&CO_GENERATOR:
+            raise TypeError(f'`function` can only be given as generator or as coroutine type, got {function!r}, '
+                f'co_flags={code_flags!r}.')
+        
+        function.__code__ = type(code_object)(
+            code_object.co_argcount,
+            code_object.co_posonlyargcount,
+            code_object.co_kwonlyargcount,
+            code_object.co_nlocals,
+            code_object.co_stacksize,
+            code_flags | CO_ITERABLE_COROUTINE,
+            code_object.co_code,
+            code_object.co_consts,
+            code_object.co_names,
+            code_object.co_varnames,
+            code_object.co_filename,
+            code_object.co_name,
+            code_object.co_qualname,
+            code_object.co_firstlineno,
+            code_object.co_lnotab,
+            code_object.co_endlinetable,
+            code_object.co_columntable,
+            code_object.co_exceptiontable,
+            code_object.co_freevars,
+            code_object.co_cellvars,
+        )
+        
+        return function
+
+elif sys.version_info >= (3, 8, 0):
     def to_coroutine(function):
         if not isinstance(function, FunctionType):
             raise TypeError(f'`function` can only be `{FunctionType.__name__}`, got {function.__class__.__name__}; '
