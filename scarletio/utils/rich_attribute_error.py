@@ -95,12 +95,15 @@ class RichAttributeErrorBaseType:
     
     def __getattr__(self, attribute_name):
         """Drops a rich attribute error."""
-        key = (type(self).__module__, attribute_name)
-        
-        try:
-            exception_message = EXCEPTION_MESSAGE_CACHE[key]
-        except KeyError:
+        if type(self).__getattr__ is RichAttributeErrorBaseType.__getattr__:
+            key = (type(self).__module__, attribute_name)
+            
+            try:
+                exception_message = EXCEPTION_MESSAGE_CACHE[key]
+            except KeyError:
+                exception_message = _create_rich_exception_message(self, attribute_name)
+                EXCEPTION_MESSAGE_CACHE[key] = exception_message
+        else:
             exception_message = _create_rich_exception_message(self, attribute_name)
-            EXCEPTION_MESSAGE_CACHE[key] = exception_message
         
         raise AttributeError(exception_message)
