@@ -54,7 +54,7 @@ def _create_rich_exception_message(instance, attribute_name):
     
     exception_message_parts.append('`')
     exception_message_parts.append(type(instance).__name__)
-    exception_message_parts.append('` has not attribute `')
+    exception_message_parts.append('` has no attribute `')
     exception_message_parts.append(attribute_name)
     exception_message_parts.append('`')
     
