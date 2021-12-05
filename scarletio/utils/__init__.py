@@ -15,6 +15,7 @@ from .method_like import *
 from .multi_value_dictionary import *
 from .properties import *
 from .removed_descriptor import *
+from .rich_attribute_error import *
 from .sorted_list import *
 from .utils import *
 from .trace import *
@@ -44,6 +45,7 @@ __all__ = (
     *multi_value_dictionary.__all__,
     *properties.__all__,
     *removed_descriptor.__all__,
+    *rich_attribute_error.__all__,
     *sorted_list.__all__,
     *utils.__all__,
     *trace.__all__,
