@@ -10,7 +10,7 @@ from collections import deque
 from ssl import SSLContext, create_default_context
 from stat import S_ISSOCK
 
-from ...utils import alchemy_incendiary, DOCS_ENABLED, export, is_coroutine, IS_UNIX
+from ...utils import alchemy_incendiary, DOCS_ENABLED, export, is_coroutine, IS_UNIX, copy_docs
 from ...utils.trace import render_exception_into
 
 from ..traps import Future, Task, Gatherer, FutureAsyncWrapper, WaitTillFirst, WaitTillAll
