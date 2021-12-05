@@ -2349,7 +2349,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         """
         protocol = protocol_factory()
         waiter = Future(self)
-        transport = DatagramSocketTransportLayer(self, socket, protocol, address, waiter, None)
+        transport = DatagramSocketTransportLayer(self, None, socket, protocol, waiter, address)
         
         try:
             await waiter
