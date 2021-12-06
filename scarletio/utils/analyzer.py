@@ -721,6 +721,29 @@ class CallableAnalyzer:
         
         return count
     
+    
+    def get_non_reserved_keyword_only_parameters(self):
+        """
+        Returns the non reserved keyword only parameters of the analyzed callable.
+        
+        Returns
+        -------
+        non_default_keyword_only_parameters : `int`
+        """
+        result = []
+        for parameter in self.parameters:
+            if not parameter.is_keyword_only():
+                continue
+            
+            if parameter.reserved:
+                continue
+            
+            result.append(parameter)
+            continue
+        
+        return result
+    
+    
     def get_non_reserved_positional_parameters(self):
         """
         Returns the non reserved positional parameters of the analyzed callable.
@@ -741,6 +764,7 @@ class CallableAnalyzer:
             continue
         
         return result
+    
     
     def get_non_reserved_positional_parameter_count(self):
         """

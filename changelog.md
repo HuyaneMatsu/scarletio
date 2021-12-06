@@ -1,3 +1,9 @@
+## 1.0.4 *\[2021-12-??\]*
+
+#### Improvements
+
+- Add `CallableAnalyzer.get_non_reserved_keyword_only_parameters`.
+
 ## 1.0.3 *\[2021-12-05\]*
 
 #### Improvements
