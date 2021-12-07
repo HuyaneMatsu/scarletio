@@ -50,7 +50,7 @@ def _get_event_loop_is_current_thread():
     event_loop : ``EventThread``
         The local event loop.
     is_current_thread : `bool`
-        Whether the event loop is teh current thread.
+        Whether the event loop is the current thread.
     
     Raises
     ------
@@ -148,7 +148,7 @@ def create_task(coroutine):
 
 def create_future():
     """
-    Creates s future bound to teh local event loop.
+    Creates s future bound to the local event loop.
     
     Returns
     -------

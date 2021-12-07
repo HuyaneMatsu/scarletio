@@ -162,7 +162,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
     
     def _set_common_websocket_attributes(self, host, port, is_ssl, close_timeout=10.0, max_size=1<<26, max_queue=None):
         """
-        Sets the common websocket specific attributes for teh protocol.
+        Sets the common websocket specific attributes for the protocol.
         
         Parameters
         ----------
