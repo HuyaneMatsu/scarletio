@@ -5,6 +5,8 @@ from itertools import permutations as permutate
 
 EXCEPTION_MESSAGE_CACHE = {}
 
+LOCKS = set()
+
 def _iterate_alternative_attribute_names(attribute_name):
     """
     Tries to create alternative versions of the given `attribute_name`.
@@ -40,16 +42,6 @@ def _create_rich_exception_message(instance, attribute_name):
     attribute_name : `str`
         The evil variable name.
     """
-    diversity = 0.8-(20-min(len(attribute_name), 20))*0.01
-    directory = dir(instance)
-    collected_matches = set()
-    
-    for alternative_attribute_name in _iterate_alternative_attribute_names(attribute_name):
-        matches = get_close_matches(alternative_attribute_name, directory, n=10, cutoff=diversity)
-        collected_matches.update(matches)
-    
-    sorted_matches = sorted(collected_matches)
-    
     exception_message_parts = []
     
     exception_message_parts.append('`')
@@ -58,29 +50,49 @@ def _create_rich_exception_message(instance, attribute_name):
     exception_message_parts.append(attribute_name)
     exception_message_parts.append('`')
     
-    matches_count = len(sorted_matches)
-    if matches_count == 0:
-        pass
-    elif matches_count == 1:
-        exception_message_parts.append('; Did you mean: `')
-        exception_message_parts.append(sorted_matches[0])
-        exception_message_parts.append('`')
+    lock_key = (type(instance), attribute_name)
     
-    else:
-        exception_message_parts.append('; Did you mean any of: ')
+    if lock_key not in LOCKS:
+        try:
+            LOCKS.add(lock_key)
+            
+            diversity = 0.8-(20-min(len(attribute_name), 20))*0.01
+            directory = dir(instance)
+            collected_matches = set()
+            
+            for alternative_attribute_name in _iterate_alternative_attribute_names(attribute_name):
+                matches = get_close_matches(alternative_attribute_name, directory, n=10, cutoff=diversity)
+                collected_matches.update(matches)
+            
+            sorted_matches = sorted(collected_matches)
+            
         
-        index = 0
-        while True:
-            exception_message_parts.append('`')
-            exception_message_parts.append(sorted_matches[index])
-            exception_message_parts.append('`')
             
-            index += 1
-            if index == matches_count:
-                break
+            matches_count = len(sorted_matches)
+            if matches_count == 0:
+                pass
+            elif matches_count == 1:
+                exception_message_parts.append('; Did you mean: `')
+                exception_message_parts.append(sorted_matches[0])
+                exception_message_parts.append('`')
             
-            exception_message_parts.append(', ')
-            continue
+            else:
+                exception_message_parts.append('; Did you mean any of: ')
+                
+                index = 0
+                while True:
+                    exception_message_parts.append('`')
+                    exception_message_parts.append(sorted_matches[index])
+                    exception_message_parts.append('`')
+                    
+                    index += 1
+                    if index == matches_count:
+                        break
+                    
+                    exception_message_parts.append(', ')
+                    continue
+        finally:
+            LOCKS.discard(lock_key)
     
     exception_message_parts.append('.')
     
@@ -95,15 +107,24 @@ class RichAttributeErrorBaseType:
     
     def __getattr__(self, attribute_name):
         """Drops a rich attribute error."""
-        if type(self).__getattr__ is RichAttributeErrorBaseType.__getattr__:
-            key = (type(self).__module__, attribute_name)
+        
+        # Use goto to avoid putting `KeyError` on exception traceback context.
+        while True:
+            if type(self).__getattr__ is not RichAttributeErrorBaseType.__getattr__:
+                exception_message = _create_rich_exception_message(self, attribute_name)
+                break
             
+            key = (type(self).__module__, attribute_name)
+        
             try:
                 exception_message = EXCEPTION_MESSAGE_CACHE[key]
             except KeyError:
-                exception_message = _create_rich_exception_message(self, attribute_name)
-                EXCEPTION_MESSAGE_CACHE[key] = exception_message
-        else:
+                pass
+            else:
+                break
+            
             exception_message = _create_rich_exception_message(self, attribute_name)
+            EXCEPTION_MESSAGE_CACHE[key] = exception_message
+            break
         
         raise AttributeError(exception_message)

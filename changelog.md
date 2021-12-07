@@ -1,3 +1,9 @@
+## 1.0.05 *\[2021-12-07\]*
+
+#### Bug fixes
+
+- `RichAttributeErrorBaseType.__getattr__` now will not drop recursion error at some edge cases.
+
 ## 1.0.4 *\[2021-12-07\]*
 
 #### Improvements
