@@ -9,6 +9,8 @@ from heapq import heappop, heappush
 from collections import deque
 from ssl import SSLContext, create_default_context
 from stat import S_ISSOCK
+from itertools import chain
+from types import MethodType
 
 from ...utils import alchemy_incendiary, DOCS_ENABLED, export, is_coroutine, IS_UNIX, copy_docs
 from ...utils.trace import render_exception_into
@@ -904,6 +906,65 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                 ]
                 render_exception_into(exception, extend=extracted)
                 sys.stderr.write(''.join(extracted))
+    
+    
+    def get_tasks(self):
+        """
+        Collects all the scheduled tasks and returns them.
+        
+        Returns
+        -------
+        tasks : `list` of ``Task``
+        """
+        future_checks_pending = set()
+        
+        # Collect all futures
+        
+        task = self.current_task
+        if (task is not None):
+            future_checks_pending.add(task)
+        
+        for handle in chain(self._ready, self._scheduled):
+            func = handle.func
+            if isinstance(func, MethodType):
+                maybe_future = func.__self__
+                if isinstance(maybe_future, Future):
+                    future_checks_pending.add(maybe_future)
+            
+            elif isinstance(func, Future):
+                future_checks_pending.add(func)
+            
+            for parameter in handle.args:
+                if isinstance(parameter, MethodType):
+                    maybe_future = parameter.__self__
+                    if isinstance(maybe_future, Future):
+                        future_checks_pending.add(maybe_future)
+                
+                elif isinstance(parameter, Future):
+                    future_checks_pending.add(parameter)
+        
+        # Check callbacks
+        
+        future_checks_done = set()
+        
+        while future_checks_pending:
+            future = future_checks_pending.pop()
+            future_checks_done.add(future)
+            
+            for callback in future._callbacks:
+                if isinstance(callback, MethodType):
+                    maybe_future = callback.__self__
+                    if isinstance(maybe_future, Future):
+                        if (maybe_future not in future_checks_done):
+                            future_checks_pending.add(maybe_future)
+                
+                elif isinstance(callback, Future):
+                    if (callback not in future_checks_done):
+                        future_checks_pending.add(callback)
+        
+        # select tasks
+        
+        return [future for future in future_checks_done if isinstance(future, Task)]
     
     
     def _make_socket_transport(self, socket, protocol, waiter=None, *, extra=None, server=None):
