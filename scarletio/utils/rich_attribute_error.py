@@ -55,7 +55,7 @@ def _create_rich_exception_message(instance, attribute_name):
     
     lock_key = (type(instance), attribute_name)
     
-    if (lock_key not in LOCKS) or (len(LOCKS) < LOCK_MAX_DEEPNESS):
+    if (lock_key not in LOCKS) and (len(LOCKS) < LOCK_MAX_DEEPNESS):
         try:
             LOCKS.add(lock_key)
             
@@ -71,11 +71,11 @@ def _create_rich_exception_message(instance, attribute_name):
             
             sorted_matches = sorted(collected_matches)
             
-        
             
             matches_count = len(sorted_matches)
             if matches_count == 0:
                 pass
+            
             elif matches_count == 1:
                 exception_message_parts.append('; Did you mean: `')
                 exception_message_parts.append(sorted_matches[0])
