@@ -1,3 +1,10 @@
+## 1.0.7 *\[2021-12-26\]*
+
+#### Bug fixes
+
+- `RichAttributeErrorBaseType.__getattr__` now will not drop recursion error when python calls
+    `getattr(instance, '__dict__')` from `object.__dir__(instance)`.
+
 ## 1.0.6 *\[2021-12-10\]*
 
 #### Improvements

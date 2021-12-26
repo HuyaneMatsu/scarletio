@@ -7,6 +7,9 @@ EXCEPTION_MESSAGE_CACHE = {}
 
 LOCKS = set()
 
+# This will avoid recursion error when something goes really bad.
+LOCK_MAX_DEEPNESS = 10
+
 def _iterate_alternative_attribute_names(attribute_name):
     """
     Tries to create alternative versions of the given `attribute_name`.
@@ -52,12 +55,14 @@ def _create_rich_exception_message(instance, attribute_name):
     
     lock_key = (type(instance), attribute_name)
     
-    if lock_key not in LOCKS:
+    if (lock_key not in LOCKS) or (len(LOCKS) < LOCK_MAX_DEEPNESS):
         try:
             LOCKS.add(lock_key)
             
             diversity = 0.8-(20-min(len(attribute_name), 20))*0.01
+            
             directory = dir(instance)
+            
             collected_matches = set()
             
             for alternative_attribute_name in _iterate_alternative_attribute_names(attribute_name):
@@ -108,14 +113,19 @@ class RichAttributeErrorBaseType:
     def __getattr__(self, attribute_name):
         """Drops a rich attribute error."""
         
+        # Python tries to get `__dict__` even if there is no `__dict__` when calling `dir()`.
+        if (attribute_name == '__dict__') and ((type(self), attribute_name) in LOCKS):
+            raise AttributeError(attribute_name)
+        
         # Use goto to avoid putting `KeyError` on exception traceback context.
         while True:
             if type(self).__getattr__ is not RichAttributeErrorBaseType.__getattr__:
                 exception_message = _create_rich_exception_message(self, attribute_name)
                 break
             
-            key = (type(self).__module__, attribute_name)
-        
+            # module might be missing is the file is __main__, so we use `getattr` instead of normal `.__module__`
+            key = (getattr(type(self), '__module__', ''), attribute_name)
+            
             try:
                 exception_message = EXCEPTION_MESSAGE_CACHE[key]
             except KeyError:
