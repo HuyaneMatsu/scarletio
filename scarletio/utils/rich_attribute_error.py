@@ -123,7 +123,6 @@ class RichAttributeErrorBaseType:
                 exception_message = _create_rich_exception_message(self, attribute_name)
                 break
             
-            # module might be missing is the file is __main__, so we use `getattr` instead of normal `.__module__`
             key = (getattr(type(self), '__module__', ''), attribute_name)
             
             try:
