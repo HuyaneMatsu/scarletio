@@ -15,18 +15,18 @@ ignore_frame(__spec__.origin, 'wait', 'return self.result()', )
 @export
 class FutureSyncWrapper:
     """
-    Sync wrapper for ``Future`` instances enabling them to be waited from a sync threads.
+    Sync wrapper for ``Future``-s enabling them to be waited from a sync threads.
     
     Attributes
     ----------
-    _exception : `None` or `BaseException` instance
+    _exception : `None`, `BaseException`
         The exception set to the future as it's result. Defaults to `None`.
-    _future : `None` or ``Future`` instance
+    _future : `None`, ``Future``
         The waited future. If the future's state == modified by the sync wrapper, then ``._future`` is set as `None`,
         to not retrieve the result again.
     _lock : `threading.Lock`
         Threading lock to disable concurrent access to the future.
-    _result : `None` or `Any`
+    _result : `None`, `Any`
         The result of the future. Defaults to `None`.
     _state : `str`
         The state of the future.
@@ -54,11 +54,11 @@ class FutureSyncWrapper:
     
     def __new__(cls, future):
         """
-        Creates a new ``FutureSyncWrapper`` instance wrapping the given `future`
+        Creates a new ``FutureSyncWrapper`` wrapping the given `future`
         
         Parameters
         ----------
-        future : ``Future`` instance
+        future : ``Future``
             The future on what we would want to wait from a sync thread.
         """
         self = object.__new__(cls)
@@ -82,7 +82,7 @@ class FutureSyncWrapper:
         
         Parameters
         ----------
-        future : ``Future`` instance
+        future : ``Future``
             The future on what you would want to wait from a sync thread.
         
         Returns
@@ -317,7 +317,7 @@ class FutureSyncWrapper:
         
         Parameters
         ----------
-        future : ``Future`` instance
+        future : ``Future``
             The waited future.
         
         Notes
@@ -334,7 +334,7 @@ class FutureSyncWrapper:
         
         Parameters
         ----------
-        future : ``Future`` instance
+        future : ``Future``
             The future, from what's callbacks the own one will be removed.
         """
         callbacks = future._callbacks
@@ -352,17 +352,17 @@ class FutureSyncWrapper:
         
         If the future is cancelled, raises ``CancelledError``.
         
-        If the future has exception set with `.set_exception` or `.set_exception_if_pending` successfully, then raises
+        If the future has exception set with `.set_exception`, `.set_exception_if_pending` successfully, then raises
         the given exception.
         
-        If the future has result set with `.set_result` or `.set_result_if_pending` successfully, then returns the
+        If the future has result set with `.set_result`, `.set_result_if_pending` successfully, then returns the
         given object.
         
         If the future is not done yet, raises ``InvalidStateError``.
         
         Parameters
         ----------
-        timeout : `None` or `float`, Optional
+        timeout : `None`, `float`, Optional
             Timeout in seconds till the waited future's result should be set. Giving it as `None`, means no time limit.
         propagate_cancellation : `bool`, Optional
             Whether cancellation should be propagated towards the waited task.
@@ -376,7 +376,7 @@ class FutureSyncWrapper:
         InvalidStateError
             The futures is not done yet.
         TypeError
-            The future has non `BaseException` instance set as exception.
+            The future has non `BaseException` set as exception.
         BaseException
             The future's set exception.
         """
@@ -406,7 +406,7 @@ class FutureSyncWrapper:
         
         Parameters
         ----------
-        future : ``Future`` instance
+        future : ``Future``
             The future to set the result to.
         result : `Any`
             The result to set as the future's.
@@ -470,7 +470,7 @@ class FutureSyncWrapper:
         
         Parameters
         ----------
-        future : ``Future`` instance
+        future : ``Future``
             The future to set the exception to.
         exception : `Any`
             The exception to set as the future's.

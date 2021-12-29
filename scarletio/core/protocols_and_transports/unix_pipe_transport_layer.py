@@ -25,7 +25,7 @@ class UnixReadPipeTransportLayer(TransportLayerBase):
         Whether the transport ic closing.
     _file_descriptor : `int`
         The used socket's file descriptor number.
-    _pipe : `None` or `file-like` object
+    _pipe : `None`, `file-like`
         The pipe to connect to on read end.
         
         Is set to non-blocking mode.
@@ -40,7 +40,7 @@ class UnixReadPipeTransportLayer(TransportLayerBase):
     
     async def __new__(cls, loop, extra, pipe, protocol):
         """
-        Creates a new ``UnixReadPipeTransportLayer`` instance with the given parameters.
+        Creates a new ``UnixReadPipeTransportLayer`` with the given parameters.
         
         This method is a coroutine.
         
@@ -48,11 +48,11 @@ class UnixReadPipeTransportLayer(TransportLayerBase):
         ----------
         loop : ``EventThread``
             The respective event loop of the transport.
-        pipe : `file-like` object
+        pipe : `file-like`
             The pipe to connect to on read end.
-        protocol : ``SubprocessReadPipeProtocol`` or `Any`
+        protocol : ``SubprocessReadPipeProtocol``, `Any`
             Asynchronous protocol implementation used by the transport.
-        extra : `None` or `dict` of (`str`, `Any`) items, Optional
+        extra : `None`, `dict` of (`str`, `Any`) items, Optional
             Optional transport information.
         
         Raises
@@ -198,7 +198,7 @@ class UnixReadPipeTransportLayer(TransportLayerBase):
         
         Parameters
         ----------
-        exception : `None` or ``BaseException``
+        exception : `None`, ``BaseException``
             Defines whether the connection is closed, or an exception was received.
             
             If the connection was closed, then `exception` is given as `None`. This can happen at the case, when eof is
@@ -217,7 +217,7 @@ class UnixReadPipeTransportLayer(TransportLayerBase):
         
         Parameters
         ----------
-        exception : `None` or ``BaseException``
+        exception : `None`, ``BaseException``
             Exception to call the protocol's ``.connection_lost`` with.
             
             Defines whether the connection is closed, or an exception was received.
@@ -260,13 +260,13 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
         The used socket's file descriptor number.
     _loop : ``EventThread``
         The respective event loop of the transport.
-    _pipe : `None` or `file-like` object
+    _pipe : `None`, `file-like`
         The pipe to connect to on read end.
         
         Is set to non-blocking mode.
         
         After closing the transport is set to `None`.
-    _protocol : `None`, ``SubprocessWritePipeProtocol`` or `Any`
+    _protocol : `None`, ``SubprocessWritePipeProtocol``, `Any`
         Asynchronous protocol implementation used by the transport.
         
         After closing the transport is set to `None`.
@@ -278,7 +278,7 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
     
     async def __new__(cls, loop, pipe, protocol, extra=None):
         """
-        Creates a new ``UnixWritePipeTransportLayer`` instance with the given parameters.
+        Creates a new ``UnixWritePipeTransportLayer`` with the given parameters.
         
         This method is a coroutine.
         
@@ -288,9 +288,9 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
             The respective event loop of the transport.
         pipe `: file-like` object
             The pipe to connect to on read end.
-        protocol : ``SubprocessWritePipeProtocol`` or `Any`
+        protocol : ``SubprocessWritePipeProtocol``, `Any`
             Asynchronous protocol implementation used by the transport.
-        extra : `None` or `dict` of (`str`, `Any`) items, Optional
+        extra : `None`, `dict` of (`str`, `Any`) items, Optional
             Optional transport information.
 
         Raises
@@ -501,7 +501,7 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
         
         Parameters
         ----------
-        exception : `None` or ``BaseException``
+        exception : `None`, ``BaseException``
             Defines whether the connection is closed, or an exception was received.
             
             If the connection was closed, then `exception` is given as `None`. This can happen at the case, when eof is
@@ -526,7 +526,7 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
         
         Parameters
         ----------
-        exception : `None` or ``BaseException``
+        exception : `None`, ``BaseException``
             Exception to call the protocol's ``.connection_lost`` with.
             
             Defines whether the connection is closed, or an exception was received.
@@ -601,9 +601,9 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
         
         Parameters
         ----------
-        low : None` or `int`, Optional
+        low : None`, `int`, Optional
             The ``.protocol`` is paused writing when the buffer size passes the high water mark. Defaults to `65536`.
-        high : `None` or `int`, Optional
+        high : `None`, `int`, Optional
             The ``.protocol`` is resumed writing when the buffer size goes under the low water mark. Defaults to
             `16384`.
 

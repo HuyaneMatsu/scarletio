@@ -46,7 +46,7 @@ class ScarletExecutorCallback:
         
         Parameters
         ----------
-        future : ``Future`` instance
+        future : ``Future``
             A finished future or task.
         """
         parent = self._parent
@@ -213,17 +213,17 @@ class ScarletExecutor:
     
     Attributes
     ----------
-    _active : `set` of ``Future`` instances
+    _active : `set` of ``Future``
         The already running tasks.
-    _callback : `None` or ``ScarletExecutorCB``
+    _callback : `None`, ``ScarletExecutorCB``
         Callback set to the parallelly limited tasks.
-    _exception : `None` or `BaseException`
+    _exception : `None`, `BaseException`
         Any exception raised by an added task. ``CancelledError``-s are ignored.
     _limit : `int`
         The maximal amount of parallelism allowed by the Scarlet executor.
-    _loop : `None` or ``EventThread``
+    _loop : `None`, ``EventThread``
         The event loop to what the ScarletExecutor is bound to.
-    _waiter : `None` or ``Future``
+    _waiter : `None`, ``Future``
         A future which is used to block the main task's execution if the parallelly running tasks's amount is greater or
         equal to the ``._limit``.
     """
@@ -240,7 +240,7 @@ class ScarletExecutor:
         Raises
         ------
         TypeError
-            `size` is not given as `int` instance.
+            `size` is not given as `int`.
         ValueError
             `size` is given as non negative `int`.
         """
@@ -250,7 +250,7 @@ class ScarletExecutor:
         elif issubclass(limit_type, int):
             limit = int(limit)
         else:
-            raise TypeError(f'`limit` can be given as `int` instance, got {limit_type.__name__}.')
+            raise TypeError(f'`limit` can be given as `int`, got {limit_type.__name__}.')
         
         if limit < 1:
             raise ValueError(f'`limit` can be given only as positive, got {limit!r}.')

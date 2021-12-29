@@ -15,9 +15,9 @@ class WebSocketServer:
     ----------
     loop : ``EventThread``
         The event loop to what the websocket server is bound to.
-    websockets : `set` of (``WebSocketServerProtocol`` or `Any`)
+    websockets : `set` of (``WebSocketServerProtocol``, `Any`)
         Active server side asynchronous websocket protocol implementations.
-    close_connection_task : `None` or ``Task`` of ``_close``
+    close_connection_task : `None`, ``Task`` of ``_close``
         Close connection task, what's result is set, when closing of the websocket is done.
         
         Should not be cancelled.
@@ -28,21 +28,21 @@ class WebSocketServer:
         
         Should be given as an `async-callable` accepting `1` parameter the respective asynchronous server side websocket
         protocol implementations.
-    server : `None` or ``Server``
+    server : `None`, ``Server``
         Asynchronous server instance. Set meanwhile the websocket server is running.
     protocol_parameters : `tuple` of `Any`
         WebSocket protocol parameters.
         
         Contains the following elements:
             - `handler` : `async-callable` Same as ``.handler``.
-            - `host` : `None` or `str`, `iterable` of (`None` or `str`). To what network interfaces the server be bound.
-            - `port` :  `None` or `int`. The port used by the `host`(s).
+            - `host` : `None`, `str`, `iterable` of (`None`, `str`). To what network interfaces the server be bound.
+            - `port` :  `None`, `int`. The port used by the `host`(s).
             - `is_ssl` : `bool`
                 Whether the server is secure.
-            - `origin` : `None` or `str`. Value of the Origin header.
+            - `origin` : `None`, `str`. Value of the Origin header.
             - `available_extensions` : `None` or (`list` of `Any`).Available websocket extensions.
                 Each websocket extension should have the following `4` attributes / methods:
-                - `name`, type `str`. The extension's name.
+                - `name`: `str`. The extension's name.
                 - `request_params` : `list` of `tuple` (`str`, `str`). Additional header parameters of the extension.
                 - `decode` : `callable`. Decoder method, what processes a received websocket frame. Should accept `2`
                     parameters: The respective websocket ``Frame``, and the ˙max_size` as `int`, what describes the
@@ -53,14 +53,14 @@ class WebSocketServer:
                 decreasing preference.
             - `extra_response_headers` : `None` or (``IgnoreCaseMultiValueDictionary``, `dict-like`) of (`str`, `str`) items. Extra
                 headers to send with the http response.
-            - `request_processor` : `None` or `callable`. An optionally asynchronous callable, what processes the
+            - `request_processor` : `None`, `callable`. An optionally asynchronous callable, what processes the
                 initial requests from the potential clients. Should accept the following parameters:
                 - `path` : `str`. The requested path.
                 - `request_headers` : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`). The request's headers.
                 
                 The `request_processor` on accepted request should return `None`, otherwise a `tuple` of
                 ``AbortHandshake`` parameters.
-            - `subprotocol_selector` : `None` or `callable`. User hook to select subprotocols. Should accept the
+            - `subprotocol_selector` : `None`, `callable`. User hook to select subprotocols. Should accept the
                 following parameters:
                 - `parsed_header_subprotocols` : `list` of `str`. The subprotocols supported by the client.
                 - `available_subprotocols` : `list` of `str`. The subprotocols supported by the server.
@@ -71,7 +71,7 @@ class WebSocketServer:
                     frame is sent. Defaults to `10.0`.
                 - `max_size` : `int`.Max payload size to receive. If a payload exceeds it, ``PayloadError`` is raised.
                     Defaults to `67108864` bytes.
-                - `max_queue` : `None` or `int`.
+                - `max_queue` : `None`, `int`.
                     Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of
                     it is removed. Defaults to `None`.
     """
@@ -81,7 +81,7 @@ class WebSocketServer:
             extra_response_headers=None, origin=None, available_subprotocols=None, request_processor=None,
             subprotocol_selector=None, websocket_kwargs=None, ssl=None, **server_kwargs):
         """
-        Creates a new ``WebSocketServer`` instance with the given parameters.
+        Creates a new ``WebSocketServer`` with the given parameters.
         
         This method is a coroutine.
         
@@ -89,9 +89,9 @@ class WebSocketServer:
         ----------
         loop : ``EventThread``
             The event loop to what the websocket server is bound to.
-        host : `None` or `str`, `iterable` of (`None` or `str`)
+        host : `None`, `str`, `iterable` of (`None`, `str`)
             To what network interfaces should the server be bound.
-        port : `None` or `int`
+        port : `None`, `int`
             The port to use by the `host`(s).
         handler : `async-callable`
             An asynchronous callable, what will handle a websocket connection.
@@ -104,7 +104,7 @@ class WebSocketServer:
             Available websocket extensions.
             
             Each websocket extension should have the following `4` attributes / methods:
-            - `name`, type `str`. The extension's name.
+            - `name`: `str`. The extension's name.
             - `request_params` : `list` of `tuple` (`str`, `str`). Additional header parameters of the extension.
             - `decode` : `callable`. Decoder method, what processes a received websocket frame. Should accept `2`
                 parameters: The respective websocket ``Frame``, and the ˙max_size` as `int`, what decides the
@@ -113,11 +113,11 @@ class WebSocketServer:
                 parameter, the respective websocket ``Frame``.
         extra_response_headers : `None` or (``IgnoreCaseMultiValueDictionary``, `dict-like`) of (`str`, `str`) items, Optional (Keyword only)
             Extra headers to send with the http response.
-        origin : `None` or `str`, Optional (Keyword only)
+        origin : `None`, `str`, Optional (Keyword only)
             Value of the Origin header.
         available_subprotocols : `None` or (`list` of `str`), Optional (Keyword only)
             A list of supported subprotocols in order of decreasing preference.
-        request_processor : `None` or `callable`, Optional (Keyword only)
+        request_processor : `None`, `callable`, Optional (Keyword only)
             An optionally asynchronous callable, what processes the initial requests from the potential clients.
             
             Should accept the following parameters:
@@ -126,7 +126,7 @@ class WebSocketServer:
             
             The `request_processor` on accepted request should return `None`, otherwise a `tuple` of
             ``AbortHandshake`` parameters.
-        subprotocol_selector `None` or `callable`, Optional (Keyword only)
+        subprotocol_selector `None`, `callable`, Optional (Keyword only)
             User hook to select subprotocols. Should accept the following parameters:
             - `parsed_header_subprotocols` : `list` of `str`. The subprotocols supported by the client.
             - `available_subprotocols` : `list` of `str`. The subprotocols supported by the server.
@@ -138,18 +138,18 @@ class WebSocketServer:
                 frame is sent. Defaults to `10.0`.
             - `max_size` : `int`.Max payload size to receive. If a payload exceeds it, ``PayloadError`` is raised.
                 Defaults to `67108864` bytes.
-            - `max_queue` : `None` or `int`.
+            - `max_queue` : `None`, `int`.
                 Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of
                 it is removed. Defaults to `None`.
-        ssl : `None` or ``SSLContext``, Optional (Keyword only)
+        ssl : `None`, ``SSLContext``, Optional (Keyword only)
             Whether and what ssl is enabled for the connections.
         **server_kwargs : Keyword parameters
             Additional keyword parameters to create the websocket server with.
         
         Other Parameters
         ----------------
-        family : `AddressFamily` or `int`, Optional (Keyword only)
-            Can be given either as `socket.AF_INET` or `socket.AF_INET6` to force the socket to use `IPv4` or `IPv6`.
+        family : `AddressFamily`, `int`, Optional (Keyword only)
+            Can be given either as `socket.AF_INET`, `socket.AF_INET6` to force the socket to use `IPv4`, `IPv6`.
             If not given, then  will be determined from host name.
         backlog : `int`, Optional (Keyword only)
             The maximum number of queued connections passed to `listen()` (defaults to 100).
@@ -170,13 +170,13 @@ class WebSocketServer:
         ------
         TypeError
             - `extra_response_headers` is not given as `None`, neither as `dict-like`.
-            - If `ssl` is not given either as `None` or as `ssl.SSLContext` instance.
+            - If `ssl` is not given either as `None`, `ssl.SSLContext`.
             - If `reuse_port` is given as non `bool`.
             - If `reuse_address` is given as non `bool`.
             - If `reuse_port` is given as non `bool`.
-            - If `host` is not given as `None`, `str` and neither as `iterable` of `None` or `str`.
+            - If `host` is not given as `None`, `str` and neither as `iterable` of `None`, `str`.
         ValueError
-            - If `host` or `port` parameter is given, when `socket` is defined as well.
+            - If `host`, `port` parameter is given, when `socket` is defined as well.
             - If `reuse_port` is given as `True`, but not supported.
             - If neither `host`, `port nor `socket` were given.
             - If `socket` is given, but it's type is not `module_socket.SOCK_STREAM`.
@@ -203,8 +203,8 @@ class WebSocketServer:
             
             extra_response_headers = extra_response_headers_local
         else:
-            raise TypeError(f'`extra_response_headers` should be `None` or a dict-like with \'.items\' method, got '
-                f'{extra_response_headers.__class__.__name__} instance.')
+            raise TypeError(f'`extra_response_headers` can be `None` or a dict-like with \'.items\' method, got '
+                f'{extra_response_headers.__class__.__name__}.')
         
         if (extra_response_headers is not None) and (not extra_response_headers):
             extra_response_headers = None
@@ -232,7 +232,7 @@ class WebSocketServer:
         
         Parameters
         ----------
-        protocol : ``WebSocketServerProtocol`` or `Any`
+        protocol : ``WebSocketServerProtocol``, `Any`
             The connected server side websocket.
         """
         self.websockets.add(protocol)
@@ -244,7 +244,7 @@ class WebSocketServer:
         
         Parameters
         ----------
-        protocol : ``WebSocketServerProtocol`` or `Any`
+        protocol : ``WebSocketServerProtocol``, `Any`
             The disconnected server side websocket.
         """
         self.websockets.discard(protocol)

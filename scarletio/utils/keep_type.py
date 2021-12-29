@@ -18,7 +18,7 @@ class KeepType:
     
     Attributes
     ----------
-    old_class : `type` instance
+    old_class : `type`
         The old class to extend.
     
     Class Attributes
@@ -32,19 +32,19 @@ class KeepType:
     @has_docs
     def __new__(cls, old_class, *, new_class=None):
         """
-        Creates a new ``KeepType`` instance with given `old_class` to extend. Can be used as a decorator if `new_class`
+        Creates a new ``KeepType`` with given `old_class` to extend. Can be used as a decorator if `new_class`
         parameter is not given.
         
         Parameters
         ----------
-        old_class : `type` instance
+        old_class : `type`
             The old class to extend.
-        new_class : `None` or `type` instance, Optional (Keyword only)
+        new_class : `None`, `type`, Optional (Keyword only)
             The new class to extend the old class's functionality with.
         
         Returns
         -------
-        obj : ``KeepType`` or `type` instance
+        obj : ``KeepType``, `type`
             If only `old_class` attribute is given, then returns itself enabling using it as a decorator, but if
             `new_class` is given as well, then returns the extended `old_class`.
         """
@@ -63,12 +63,12 @@ class KeepType:
         
         Parameters
         ----------
-        new_class : `type` instance
+        new_class : `type`
             The new class to extend the old class's functionality with.
         
         Returns
         -------
-        old_class : `type` instance
+        old_class : `type`
             The extended old class.
         """
         old_class = self.old_class

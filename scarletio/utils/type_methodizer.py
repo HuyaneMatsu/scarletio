@@ -19,7 +19,7 @@ class methodize:
     @has_docs
     def __init__(self, klass):
         """
-        Creates a new ``methodize`` instance with the given class.
+        Creates a new ``methodize`` with the given class.
         
         Parameters
         ----------

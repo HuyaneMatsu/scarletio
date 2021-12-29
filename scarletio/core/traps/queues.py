@@ -18,7 +18,7 @@ class AsyncQueue:
     
     Attributes
     ----------
-    _exception : `None` or `BaseException` instance
+    _exception : `None`, `BaseException`
         The exception set as the queue's result to raise, when the queue gets empty.
     
     _loop : ``EventThread``
@@ -27,26 +27,26 @@ class AsyncQueue:
     _results : `deque`
         The results of the queue, which can be retrieved by ``.result``, ``.result_no_wait``, or by awaiting it.
     
-    _set_result_waiters : `None` or `list` of ``Future``
+    _set_result_waiters : `None`, `list` of ``Future``
         Result setter waiters for the queue to become empty.
     
-    _waiter : `None` or ``Future``
+    _waiter : `None`, ``Future``
         If the queue is empty and it's result is already waited, then this future is set. It's result is set, by the
-        first ``.set_result``, or ``.set_exception`` call.
+        first ``.set_result``, ``.set_exception`` call.
     """
     __slots__ = ('_exception', '_loop', '_results', '_set_result_waiters', '_waiter',)
     
     def __new__(cls, loop, iterable=None, max_length=None, exception=None):
         """
-        Creates a new ``AsyncQueue`` instance with the given parameter.
+        Creates a new ``AsyncQueue`` with the given parameter.
         
         Parameters
         ----------
         loop : ``EventThread``
             The loop to what the created queue will be bound to.
-        max_length : `None` or `int`, Optional
+        max_length : `None`, `int`, Optional
             The maximal length of the queue.
-        exception : `None` or `BaseException` instance
+        exception : `None`, `BaseException`
             Exception to raise when the queue is empty.
         
         Raises
@@ -177,7 +177,7 @@ class AsyncQueue:
         
         Parameters
         ----------
-        exception : `None` or `BaseException` instance
+        exception : `None`, `BaseException`
             Exception to raise when the queue is empty.
         
         Raises
@@ -464,15 +464,15 @@ class AsyncLifoQueue(AsyncQueue):
     
     Attributes
     ----------
-    _exception : `None` or `BaseException` instance
+    _exception : `None`, `BaseException`
         The exception set as the queue's result to raise, when the queue gets empty.
     _loop : ``EventThread``
         The loop to what the queue is bound to.
     _results : `deque`
         The results of the queue, which can be retrieved by ``.result``, ``.result_no_wait``, or by awaiting it.
-    _waiter : `None` or ``Future``
+    _waiter : `None`, ``Future``
         If the queue is empty and it's result is already waited, then this future is set. It's result is set, by the
-        first ``.set_result``, or ``.set_exception`` call.
+        first ``.set_result``, ``.set_exception`` call.
     """
     __slots__ = ()
     

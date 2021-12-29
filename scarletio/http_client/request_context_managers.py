@@ -6,7 +6,7 @@ class RequestContextManager:
     
     Examples
     --------
-    ``RequestContextManager`` instances are returned by ``HTTPClient`` request methods. Request context managers can be used as an
+    ``RequestContextManager`` are returned by ``HTTPClient`` request methods. Request context managers can be used as an
     asynchronous context manager or as a simple awaitable.
     
     ```py
@@ -21,9 +21,9 @@ class RequestContextManager:
     
     Attributes
     ----------
-    coroutine : `None` or `CoroutineType`
+    coroutine : `None`, `CoroutineType`
         The wrapped requester coroutine.
-    response : `None` or ``ClientResponse``
+    response : `None`, ``ClientResponse``
         Received client response if applicable.
     """
     __slots__ = ('coroutine', 'response', )
@@ -109,7 +109,7 @@ class WebSocketContextManager:
     
     Examples
     --------
-    ``WebSocketContextManager`` instances are returned by the ``HTTPClient.connect_websocket`` method. WebSocket
+    ``WebSocketContextManager``-s are returned by the ``HTTPClient.connect_websocket`` method. WebSocket
     context managers can be used as an asynchronous context manager or as a simple awaitable.
     
     ```py
@@ -126,7 +126,7 @@ class WebSocketContextManager:
     ----------
     coroutine : `CoroutineType`
         The wrapped requester coroutine.
-    websocket : `None` or ``WebSocketClient``
+    websocket : `None`, ``WebSocketClient``
         The connected websocket client if applicable
     """
     __slots__ = ('coroutine', 'websocket', )

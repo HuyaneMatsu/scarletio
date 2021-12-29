@@ -17,7 +17,7 @@ def future_or_timeout(future, timeout):
     
     Parameters
     ----------
-    future : ``Future`` instance
+    future : ``Future``
         The future to set the timeout to.
     timeout : `float`
         The time after the given `future`'s exception is set as `TimeoutError`.
@@ -37,7 +37,7 @@ def future_or_timeout(future, timeout):
     without any specific exception.
     
     At the case of ``WaitContinuously``, when the timeout occurs the next yielded result will be `None` instead of a
-    ``Future`` instance.
+    ``Future``.
     """
     loop = future._loop
     callback = _TimeoutHandleCanceller()
@@ -71,9 +71,9 @@ class repeat_timeout:
     
     Attributes
     ----------
-    _exception : `None` or ``CancelledError``
+    _exception : `None`, ``CancelledError``
         The dropped exception to the task.
-    _handle : `None` or ``TimerHandle``
+    _handle : `None`, ``TimerHandle``
         The handle to cancel when the loop is over.
     _last_set : `float`
         The last time when we repeated the timeout. Set as monotonic time. Defaults to `0.0` if was not set.

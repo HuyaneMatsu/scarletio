@@ -18,7 +18,7 @@ class Formdata:
     fields : `list` of `tuple` (`MultiValueDictionary` of (`str`, `str`) items, `MultiValueDictionary` of (`str`, `str`) items, `Any`)
         The fields of the formdata. Each element is a tuple, which contains the following elements:
         - `type_options` : `MultiValueDictionary` of (`str`, `str`) items;
-            Additional information used by the created ``PayloadBase`` instance when the field is generated.
+            Additional information used by the created ``PayloadBase`` when the field is generated.
         - `headers` : `MultiValueDictionary` of (`str`, `str`) items;
             The field specific headers.
         - value : `Any`;
@@ -49,11 +49,11 @@ class Formdata:
     @classmethod
     def from_fields(cls, fields):
         """
-        Creates a new ``Formdata`` instance from the given fields.
+        Creates a new ``Formdata`` from the given fields.
         
         Parameters
         ----------
-        fields : `dict` of (`str`, `Any`) items, `list` of `tuple` (`str`, `Any`), `IOBase` instance
+        fields : `dict` of (`str`, `Any`) items, `list` of `tuple` (`str`, `Any`), `IOBase`
             The fields to convert to ``Formdata``.
         
         Returns
@@ -98,20 +98,20 @@ class Formdata:
             The field's name.
         value : `Any`
             The field's value.
-        content_type : `None` or `str`, Optional
+        content_type : `None`, `str`, Optional
             The field's content type. Defaults to `None`.
-        filename : `None` or `str`, Optional
+        filename : `None`, `str`, Optional
             The field's name. If not given or given as `None` (so by the default), and the given `value` is an `IOBase`
             instance then tries to use that's name.
-        transfer_encoding : `None` or `str`, Optional
+        transfer_encoding : `None`, `str`, Optional
             The field's transfer encoding. Defaults to `None`.
         
         Raises
         ------
         AssertionError
-            - If `content_type` was not given as `None`, neither as `str` instance.
-            - If `filename` was not given as `None`, neither as `str` instance.
-            - If `transfer_encoding` was not given as `None`, neither as `str` instance.
+            - If `content_type` was not given as `None`, neither as `str`.
+            - If `filename` was not given as `None`, neither as `str`.
+            - If `transfer_encoding` was not given as `None`, neither as `str`.
         """
         if isinstance(value, IOBase):
             self.is_multipart = True
@@ -125,7 +125,7 @@ class Formdata:
         if (filename is not None):
             if __debug__:
                 if not isinstance(filename, str):
-                    raise AssertionError(f'`filename` can be given as `None` or `str` instance, got '
+                    raise AssertionError(f'`filename` can be `None`, `str`, got '
                         f'{filename.__class__.__name__}.')
         
         if (filename is None) and isinstance(value, IOBase):
@@ -139,7 +139,7 @@ class Formdata:
         if (content_type is not None):
             if __debug__:
                 if not isinstance(content_type, str):
-                    raise AssertionError('`content_type` can be `None` or `str` instance, got '
+                    raise AssertionError('`content_type` can be `None`, `str`, got '
                         f'{content_type.__class__.__name__}.')
             
             headers[CONTENT_TYPE] = content_type
@@ -148,7 +148,7 @@ class Formdata:
         if (transfer_encoding is not None):
             if __debug__:
                 if not isinstance(transfer_encoding, str):
-                    raise AssertionError('`transfer_encoding` can be `None` or `str` instance, got: '
+                    raise AssertionError('`transfer_encoding` can be `None`, `str`, got: '
                         f'{transfer_encoding.__class__.__name__}.')
             
             headers[CONTENT_TRANSFER_ENCODING] = transfer_encoding
@@ -248,7 +248,7 @@ class Formdata:
         
         Returns
         -------
-        payload : ``BytesPayload`` or ``MultipartWriter``
+        payload : ``BytesPayload``, ``MultipartWriter``
             The generated payload.
         
         Raises

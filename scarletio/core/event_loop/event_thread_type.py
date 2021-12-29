@@ -17,9 +17,9 @@ class EventThreadContextManager:
     
     Attributes
     ----------
-    thread : `None` or ``EventThread``
+    thread : `None`, ``EventThread``
         The wrapped event loop.
-    thread_waiter : `None` or `threading.Event`
+    thread_waiter : `None`, `threading.Event`
        Threading event, what is set, when the thread is started up. Set as `None` after set.
     """
     __slots__ = ('thread', 'thread_waiter',)
@@ -121,13 +121,13 @@ class EventThreadType(type):
     """
     def __call__(cls, daemon=False, name=None, start_later=True, **kwargs):
         """
-        Creates a new ``EventThread`` instance with the given parameters.
+        Creates a new ``EventThread`` with the given parameters.
         
         Parameters
         ----------
         daemon : `bool`, Optional
             Whether the created thread should be daemon. Defaults to `False`.
-        name : `None` or `str`, Optional
+        name : `None`, `str`, Optional
             The created thread's name. Defaults to `None`
         start_later : `bool`, Optional
             Whether the event loop should be started only later. Defaults to `True`.

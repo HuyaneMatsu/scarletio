@@ -15,7 +15,7 @@ class SubprocessWritePipeProtocol(AbstractProtocolBase):
         Whether the protocol is disconnected.
     _file_descriptor : `int`
         The used socket's file descriptor number.
-    _transport : ``UnixWritePipeTransport`` or `Any`
+    _transport : ``UnixWritePipeTransport``, `Any`
         Asynchronous transport implementation.
     _process : ``AsyncProcess``
         The parent process of the pipe protocol.
@@ -24,7 +24,7 @@ class SubprocessWritePipeProtocol(AbstractProtocolBase):
     
     def __new__(cls, process, file_descriptor):
         """
-        Creates a new ``SubprocessWritePipeProtocol`` instance with the given parameters.
+        Creates a new ``SubprocessWritePipeProtocol`` with the given parameters.
         
         Parameters
         ----------
@@ -85,7 +85,7 @@ class SubprocessReadPipeProtocol(SubprocessWritePipeProtocol):
         Whether the protocol is disconnected.
     _file_descriptor : `int`
         The used socket's file descriptor number.
-    _transport : ``UnixWritePipeTransport`` or `Any`
+    _transport : ``UnixWritePipeTransport``, `Any`
         Asynchronous transport implementation.
     _process : ``AsyncProcess``
         The parent process of the pipe protocol.

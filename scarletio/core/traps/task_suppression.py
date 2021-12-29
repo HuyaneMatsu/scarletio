@@ -28,7 +28,7 @@ def sleep(delay, loop=None):
     ----------
     delay : `float`
         The time to block sleep in seconds.
-    loop : `None` or ``EventThread``, Optional
+    loop : `None`, ``EventThread``, Optional
         The event loop to which the returned `future` will be bound to. If not given, or given as `None`, then the
         current event loop will be used.
     

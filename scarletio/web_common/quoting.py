@@ -25,7 +25,7 @@ def quote(value, safe=None, protected=None, query_string=False):
         return None
     
     if not isinstance(value, str):
-        raise TypeError(f'`value` should be `str` instance, got {value.__class__.__name__}.')
+        raise TypeError(f'`value` ca be `None`, `str`, got {value.__class__.__name__}.')
     
     if not value:
         return ''
@@ -99,7 +99,7 @@ def unquote(value, unsafe=None, query_string=False):
     
     Parameters
     ----------
-    value : `None` or `str`
+    value : `None`, `str`
         The value to quote.
     unsafe : `str`, Optional
         Additional not percentage encoding safe characters, which should not be contained by potentially percent
@@ -107,19 +107,19 @@ def unquote(value, unsafe=None, query_string=False):
     
     Returns
     -------
-    unquoted : `None` or `str`
+    unquoted : `None`, `str`
         The unquoted value. Returns `None` of `value` was given as `None` as well.
     
     Raises
     ------
     TypeError
-        If `value` was not given neither as `None`, nor `str` instance.
+        If `value` was not given neither as `None`, nor `str`.
     """
     if value is None:
         return None
     
     if not isinstance(value, str):
-        raise TypeError(f'`value` can be `None` or `str` instance, got {value.__class__.__name__}.')
+        raise TypeError(f'`value` can be `None`, `str`, got {value.__class__.__name__}.')
     
     if not value:
         return ''

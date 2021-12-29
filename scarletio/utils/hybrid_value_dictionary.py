@@ -19,7 +19,7 @@ class _HybridValueDictionaryKeyIterator:
     @has_docs
     def __init__(self, parent):
         """
-        Creates a new ``_HybridValueDictionaryKeyIterator`` instance bound to the given ``HybridValueDictionary``.
+        Creates a new ``_HybridValueDictionaryKeyIterator`` bound to the given ``HybridValueDictionary``.
         
         Parameters
         ----------
@@ -81,7 +81,7 @@ class _HybridValueDictionaryValueIterator:
     @has_docs
     def __init__(self, parent):
         """
-        Creates a new ``_HybridValueDictionaryValueIterator`` instance bound to the given ``HybridValueDictionary``.
+        Creates a new ``_HybridValueDictionaryValueIterator`` bound to the given ``HybridValueDictionary``.
         
         Parameters
         ----------
@@ -165,7 +165,7 @@ class _HybridValueDictionaryItemIterator:
     @has_docs
     def __init__(self, parent):
         """
-        Creates a new ``_HybridValueDictionaryItemIterator`` instance bound to the given ``HybridValueDictionary``.
+        Creates a new ``_HybridValueDictionaryItemIterator`` bound to the given ``HybridValueDictionary``.
         
         Parameters
         ----------
@@ -249,7 +249,7 @@ class HybridValueDictionary(dict):
     
     Attributes
     ----------
-    _pending_removals : `None` or `set` of (``KeyedReferer`` or ``WeakHasher``)
+    _pending_removals : `None`, `set` of (``KeyedReferer``, ``WeakHasher``)
         Pending removals of the hybrid value dictionary if applicable.
     _iterating : `int`
         Whether the hybrid value dictionary is iterating and how much times.
@@ -263,7 +263,7 @@ class HybridValueDictionary(dict):
     
     Notes
     -----
-    ``HybridValueDictionary`` instances are weakreferable.
+    ``HybridValueDictionary``-s are weakreferable.
     """
     __slots__ = ('__weakref__', '_pending_removals', '_iterating', '_callback')
     
@@ -357,7 +357,7 @@ class HybridValueDictionary(dict):
     @has_docs
     def __init__(self, iterable=None):
         """
-        Creates a new ``HybridValueDictionary`` instance from the given iterable.
+        Creates a new ``HybridValueDictionary`` from the given iterable.
         
         Parameters
         ----------
@@ -510,7 +510,7 @@ class HybridValueDictionary(dict):
         
         Returns
         -------
-        value : `Any` or `default`
+        value : `Any`, `default`
             The key's matched value. If no value was matched returns the `default` value.
         """
         value_pair = dict.get(self, key, default)
@@ -570,7 +570,7 @@ class HybridValueDictionary(dict):
         
         Returns
         -------
-        value : `Any` or `default`
+        value : `Any`, `default`
             The key's matched value. If no value was matched and `default` value is given, then returns that.
         
         Raises
@@ -638,7 +638,7 @@ class HybridValueDictionary(dict):
         
         Returns
         -------
-        value : `default` or `Any`
+        value : `default`, `Any`
             The matched value, or `default` if none.
         """
         value_pair = dict.get(self, key, None)

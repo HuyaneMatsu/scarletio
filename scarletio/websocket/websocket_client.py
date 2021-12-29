@@ -29,7 +29,7 @@ class WebSocketClient(WebSocketCommonProtocol):
         Whether the protocol received end of file.
     _chunks : `deque` of `bytes`
         Right feed, left pop queue, used to store the received data chunks.
-    _exception : `None` or `BaseException`
+    _exception : `None`, `BaseException`
         Exception set by ``.set_exception``, when an unexpected exception occur meanwhile reading from socket.
     _loop : ``EventThread``
         The event loop to what the protocol is bound to.
@@ -39,25 +39,25 @@ class WebSocketClient(WebSocketCommonProtocol):
         Whether the protocol's respective transport's reading is paused. Defaults to `False`.
         
         Also note, that not every transport supports pausing.
-    _payload_reader : `None` or `GeneratorType`
+    _payload_reader : `None`, `GeneratorType`
         Payload reader generator, what gets the control back, when data, eof or any exception is received.
     _payload_waiter : `None` of ``Future``
         Payload waiter of the protocol, what's result is set, when the ``.payload_reader`` generator returns.
         
         If cancelled or marked by done or any other methods, the payload reader will not be cancelled.
-    _transport : `None` or `Any`
+    _transport : `None`, `Any`
         Asynchronous transport implementation. Is set meanwhile the protocol is alive.
-    _drain_waiter : `None` or ``Future``
+    _drain_waiter : `None`, ``Future``
         A future, what is used to block the writing task, till it's writen data is drained.
     _drain_lock : ``Lock``
         Asynchronous lock to ensure, that only `1` frame is written in `1` time.
     close_code : `int`
         The websocket's close code if applicable. Defaults to `0`.
-    close_connection_task : `None` or ``Task`` of ``.close_connection``
+    close_connection_task : `None`, ``Task`` of ``.close_connection``
         A task, what is present meanwhile the websocket is closing to avoid race condition.
     close_timeout : `float`
         The maximal duration in seconds what is waited for response after close frame is sent. Defaults to `10.0`.
-    close_reason : `None` or `str`
+    close_reason : `None`, `str`
         The reason, why the websocket was closed. Set only after the websocket is closed. Close reason might not be
         received tho.
     connection_lost_waiter : ``Future``
@@ -68,7 +68,7 @@ class WebSocketClient(WebSocketCommonProtocol):
         WebSocket extensions. Defaults to `None`, if there is not any.
     host : `str`
         The respective server's address to connect to.
-    max_queue : `None` or `int`
+    max_queue : `None`, `int`
         Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of it is removed.
          Defaults to `None`.
     max_size : `int`
@@ -102,9 +102,9 @@ class WebSocketClient(WebSocketCommonProtocol):
     subprotocol : `None`, `str`
         Chosen subprotocol at handshake. Defaults to `None` and might be set as `str`. Chosen from the available
         subprotocols by their priority order.
-    transfer_data_exception : `None` or `BaseException``
+    transfer_data_exception : `None`, `BaseException``
         Exception catched meanwhile processing received data.
-    transfer_data_task : `None` or ``Task`` of ``.transfer_data``
+    transfer_data_task : `None`, ``Task`` of ``.transfer_data``
         Data receiving task.
     
     Class Attributes
@@ -127,15 +127,15 @@ class WebSocketClient(WebSocketCommonProtocol):
         ----------
         loop : ``EventThread``
             The respective event loop, what the protocol uses for it's asynchronous tasks.
-        url : `str` or ``URL``
+        url : `str`, ``URL``
             The url to connect to.
-        origin : `None` or `str`, Optional (Keyword only)
+        origin : `None`, `str`, Optional (Keyword only)
             Value of the Origin header.
         available_extensions : `None` or (`list` of `Any`), Optional (Keyword only)
             Available websocket extensions. Defaults to `None`.
             
             Each websocket extension should have the following `4` attributes / methods:
-            - `name`, type `str`. The extension's name.
+            - `name`: `str`. The extension's name.
             - `request_params` : `list` of `tuple` (`str`, `str`). Additional header parameters of the extension.
             - `decode` : `callable`. Decoder method, what processes a received websocket frame. Should accept `2`
                 parameters: The respective websocket ``WebSocketFrame``, and the ˙max_size` as `int`, what describes the
@@ -144,9 +144,9 @@ class WebSocketClient(WebSocketCommonProtocol):
                 parameter, the respective websocket ``WebSocketFrame``.
         available_subprotocols : `None` or (`list` of `str`), Optional (Keyword only)
             A list of supported subprotocols in order of decreasing preference.
-        headers : ``IgnoreCaseMultiValueDictionary`` or `dict-like` with (`str`, `str`) items, Optional (Keyword only)
+        headers : ``IgnoreCaseMultiValueDictionary``, `dict-like` with (`str`, `str`) items, Optional (Keyword only)
             Extra request headers.
-        http_client : `None` or ``HTTPClient`` instance, Optional (Keyword only)
+        http_client : `None`, ``HTTPClient``, Optional (Keyword only)
             Http client to use to connect the websocket.
         **websocket_kwargs : Keyword parameters
             Additional keyword parameters to create the websocket with.
@@ -158,7 +158,7 @@ class WebSocketClient(WebSocketCommonProtocol):
         max_size : `int`, Optional (Keyword only)
             Max payload size to receive. If a payload exceeds it, ``PayloadError`` is raised. Defaults to `67108864`
             bytes.
-        max_queue : `None` or `int`, Optional (Keyword only)
+        max_queue : `None`, `int`, Optional (Keyword only)
             Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of it is
             removed. Defaults to `None`.
         
@@ -170,7 +170,7 @@ class WebSocketClient(WebSocketCommonProtocol):
         ------
         ConnectionError
             - Too many redirects.
-            - Would be redirected to not `http` or `https`.
+            - Would be redirected to not `http`, `https`.
             - Connector closed.
         TypeError
             If `extra_response_headers` is not given as `None`, neither as `dict-like`.
@@ -236,8 +236,8 @@ class WebSocketClient(WebSocketCommonProtocol):
                 for name, value in headers.items():
                     request_headers[name] = value
             else:
-                raise TypeError('`extra_response_headers` should be `dict-like` with `.items` method, got '
-                    f'{headers.__class__.__name__} instance.')
+                raise TypeError('`extra_response_headers` can be `dict-like` with `.items` method, got '
+                    f'{headers.__class__.__name__}.')
         
         async with http_client.request(METHOD_GET, url, request_headers) as response:
            

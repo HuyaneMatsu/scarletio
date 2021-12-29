@@ -49,7 +49,7 @@ def get_decompressor_for(content_encoding):
     
     Parameters
     ----------
-    content_encoding : `None` or `str`
+    content_encoding : `None`, `str`
         Content encoding of a respective http message.
     
     Returns

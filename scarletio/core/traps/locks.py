@@ -175,7 +175,7 @@ class ScarletLock(Lock):
         Raises
         ------
         TypeError
-            `size` is not given as `int` instance.
+            `size` is not given as `int`.
         ValueError
             `size` is given as non negative `int`.
         """
@@ -185,7 +185,7 @@ class ScarletLock(Lock):
         elif issubclass(size_type, int):
             size = int(size)
         else:
-            raise TypeError(f'`size` can be given as `int` instance, got {size_type.__name__}.')
+            raise TypeError(f'`size` can be `int`, got {size_type.__name__}.')
         
         if size < 1:
             raise ValueError(f'`size` can be given only as positive, got {size!r}.')

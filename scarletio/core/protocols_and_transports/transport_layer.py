@@ -30,7 +30,7 @@ class TransportLayerBase(AbstractTransportLayerBase):
     
     Attributes
     ----------
-    _extra : `None` or `dict` of (`str`, `Any`) items
+    _extra : `None`, `dict` of (`str`, `Any`) items
         Optional transport information.
     _loop : ``EventThread``
         The event loop to what the transport is bound to.
@@ -45,7 +45,7 @@ class TransportLayerBase(AbstractTransportLayerBase):
         ----------
         loop : ``EventThread``
             The event loop to what the transport is bound to.
-        extra : `None` or `dict` of (`str`, `Any`) items
+        extra : `None`, `dict` of (`str`, `Any`) items
             Optional transport information.
         """
         self = object.__new__(cls)
@@ -101,7 +101,7 @@ class SocketTransportLayerBase(TransportLayerBase):
         The ``.protocol`` is resumed writing when the buffer size goes under the low water mark. Defaults to `16384`.
     _paused : `bool`
         Whether the transport's reading is paused by the protocol.
-    _protocol : `None`, ``SSLProtocol, ``ReadProtocolBase`` or `Any`
+    _protocol : `None`, ``SSLProtocol, ``ReadProtocolBase``, `Any`
         Asynchronous protocol implementation used by the transport.
         
         After closing the transport is set to `None`.
@@ -123,13 +123,13 @@ class SocketTransportLayerBase(TransportLayerBase):
         ----------
         loop : ``EventThread``
             The event loop to what the transport is bound to.
-        extra : `None` or `dict` of (`str`, `Any`) items
+        extra : `None`, `dict` of (`str`, `Any`) items
             Optional transport information.
         socket : `socket.socket`
             The socket used by the transport.
         protocol : ``ProtocolBase``
             Asynchronous protocol implementation used by the transport.
-        waiter : `None` or ``Future`
+        waiter : `None`, ``Future`
             Waiter, what's result is set, when the transport connected. Defaults to `None`.
         """
         extra = set_extra_info(extra, EXTRA_INFO_NAME_SOCKET, socket)
@@ -278,7 +278,7 @@ class SocketTransportLayerBase(TransportLayerBase):
         
         Parameters
         ----------
-        exception : `None` or ``BaseException``
+        exception : `None`, ``BaseException``
             Defines whether the connection is closed, or an exception was received.
             
             If the connection was closed, then `exception` is given as `None`. This can happen at the case, when eof is
@@ -336,9 +336,9 @@ class SocketTransportLayerBase(TransportLayerBase):
         
         Parameters
         ----------
-        low : None` or `int`, Optional
+        low : None`, `int`, Optional
             The ``.protocol`` is paused writing when the buffer size passes the high water mark. Defaults to `65536`.
-        high : `None` or `int`, Optional
+        high : `None`, `int`, Optional
             The ``.protocol`` is resumed writing when the buffer size goes under the low water mark. Defaults to
             `16384`.
 
@@ -373,7 +373,7 @@ class SocketTransportLayerBase(TransportLayerBase):
         
         Parameters
         ----------
-        exception : `None` or ``BaseException``
+        exception : `None`, ``BaseException``
             Defines whether the connection is closed, or an exception was received.
             
             If the connection was closed, then `exception` is given as `None`. This can happen at the case, when eof is
@@ -447,7 +447,7 @@ class SocketTransportLayer(SocketTransportLayerBase):
         The ``.protocol`` is resumed writing when the buffer size goes under the low water mark. Defaults to `16384`.
     _paused : `bool`
         Whether the transport's reading is paused by the protocol.
-    _protocol : `None`, ``SSLProtocol, ``ReadProtocolBase`` or `Any`
+    _protocol : `None`, ``SSLProtocol, ``ReadProtocolBase``, `Any`
         Asynchronous protocol implementation used by the transport.
         
         After closing the transport is set to `None`.
@@ -461,7 +461,7 @@ class SocketTransportLayer(SocketTransportLayerBase):
         Whether ``.write_eof`` was called.
     _buffer : `bytearray`
         Transport's buffer.
-    _server : `None` or ``Server``
+    _server : `None`, ``Server``
         If the transport is server side, it's server is set as this attribute.
     """
     __slots__ = ('_at_eof', '_buffer', '_server')
@@ -474,15 +474,15 @@ class SocketTransportLayer(SocketTransportLayerBase):
         ----------
         loop : ``EventThread``
             The event loop to what the transport is bound to.
-        extra : `None` or `dict` of (`str`, `Any`) items
+        extra : `None`, `dict` of (`str`, `Any`) items
             Optional transport information.
         socket : `socket.socket`
             The socket used by the transport.
         protocol : ``ProtocolBase``
             Asynchronous protocol implementation used by the transport.
-        waiter : `None` or ``Future`
+        waiter : `None`, ``Future`
             Waiter, what's result is set, when the transport connected. Defaults to `None`.
-        server : `None` or ``Server``
+        server : `None`, ``Server``
             If the transport is server side, it's server is set as this attribute. Defaults to `None`.
         """
         self = SocketTransportLayerBase.__new__(cls, loop, extra, socket, protocol, waiter)
@@ -682,7 +682,7 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
         The ``.protocol`` is resumed writing when the buffer size goes under the low water mark. Defaults to `16384`.
     _paused : `bool`
         Whether the transport's reading is paused by the protocol.
-    _protocol : `None`, ``SSLProtocol, ``ReadProtocolBase`` or `Any`
+    _protocol : `None`, ``SSLProtocol, ``ReadProtocolBase``, `Any`
         Asynchronous protocol implementation used by the transport.
         
         After closing the transport is set to `None`.
@@ -706,15 +706,15 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
         ----------
         loop : ``EventThread``
             The event loop to what the transport is bound to.
-        extra : `None` or `dict` of (`str`, `Any`) items
+        extra : `None`, `dict` of (`str`, `Any`) items
             Optional transport information.
         socket : `socket.socket`
             The socket used by the transport.
         protocol : ``ProtocolBase``
             Asynchronous protocol implementation used by the transport.
-        waiter : `None` or ``Future`
+        waiter : `None`, ``Future`
             Waiter, what's result is set, when the transport connected. Defaults to `None`.
-        address : `None` or `tuple` (`str`, `int`), Optional
+        address : `None`, `tuple` (`str`, `int`), Optional
             The last address, where the transport sent data. Defaults to `None`. The send target address should not
             differ from the last, where the transport sent data.
         """
@@ -813,7 +813,7 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
         ----------
         data : `bytes-like`
             The data to send.
-        maybe_address : `None` or `tuple` (`str`, `int`), Optional
+        maybe_address : `None`, `tuple` (`str`, `int`), Optional
             The address to send the data to.
         
         Raises
@@ -832,7 +832,7 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
         address = self._address
         if (address is not None):
             if (maybe_address is not None) or (maybe_address != address):
-                raise ValueError(f'Invalid address: must be `None` or `{address!r}`, got {maybe_address!r}.')
+                raise ValueError(f'Invalid address: must be `None`, `{address!r}`, got {maybe_address!r}.')
             
             maybe_address = address
         

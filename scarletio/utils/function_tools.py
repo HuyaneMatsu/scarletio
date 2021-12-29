@@ -48,7 +48,7 @@ class alchemy_incendiary:
     @has_docs
     def __init__(self, func, args, kwargs=None):
         """
-        Creates a new `alchemy_incendiary` instance with the given parameters.
+        Creates a new `alchemy_incendiary` with the given parameters.
         
         Parameters
         ----------

@@ -30,7 +30,7 @@ class Fingerprint:
     
     def __new__(cls, fingerprint):
         """
-        Creates a new ``Fingerprint`` instance with the given parameters.
+        Creates a new ``Fingerprint`` with the given parameters.
         
         Parameters
         ----------
@@ -41,7 +41,7 @@ class Fingerprint:
         ------
         ValueError
             - If `fingerprint`'s length is not any of the expected ones.
-            - If the detected `hash_function` is `md5` or `sha1`.
+            - If the detected `hash_function` is `md5` / `sha1`.
         """
         fingerprint_length = len(fingerprint)
         

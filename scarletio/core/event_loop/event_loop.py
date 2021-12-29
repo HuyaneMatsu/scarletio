@@ -54,16 +54,16 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         Whether the event loop's asynchronous generators where shut down.
     _self_write_socket : `socket.socket`
         Socket, which can be used to wake up the thread by writing into it.
-    _ready : `deque` of ``Handle`` instances
+    _ready : `deque` of ``Handle``
         Ready to run handles of the event loop.
-    _scheduled : `list` of ``TimerHandle`` instances
+    _scheduled : `list` of ``TimerHandle``
         Scheduled timer handles, which will be moved to ``._ready`` when their `when` becomes lower or equal to the
         respective loop time.
     _self_read_socket : `socket.socket`
         Socket, which reads from ``._self_write_socket``.
     context : ``EventThreadContextManager``
         Context of the event loop to ensure it's safe startup and closing.
-    current_task : `None` or ``Task``
+    current_task : `None`, ``Task``
         The actually running task of the event thread. Set only meanwhile a task is executed.
     running : `bool`
         Whether the event loop is running.
@@ -233,7 +233,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Returns
         -------
-        handle : `None` or ``TimerHandle``
+        handle : `None`, ``TimerHandle``
             The created handle is returned, what can be used to cancel it. If the event loop is stopped, returns `None`.
         """
         if not self.running:
@@ -260,7 +260,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Returns
         -------
-        handle : `None` or ``TimerHandle``
+        handle : `None`, ``TimerHandle``
             The created handle is returned, what can be used to cancel it. If the event loop is stopped, returns `None`.
         """
         if not self.running:
@@ -287,7 +287,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Returns
         -------
-        handle : `None` or ``TimerWeakHandle``
+        handle : `None`, ``TimerWeakHandle``
             The created handle is returned, what can be used to cancel it. If the event loop is stopped, returns `None`.
         
         Raises
@@ -319,7 +319,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Returns
         -------
-        handle : `None` or ``TimerWeakHandle``
+        handle : `None`, ``TimerWeakHandle``
             The created handle is returned, what can be used to cancel it. If the event loop is stopped, returns `None`.
         
         Raises
@@ -349,7 +349,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Returns
         -------
-        handle : `None` or ``Handle``
+        handle : `None`, ``Handle``
             The created handle is returned, what can be used to cancel it. If the event loop is stopped, returns `None`.
         """
         if not self.running:
@@ -375,7 +375,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Returns
         -------
-        handle : `None` or ``Handle``
+        handle : `None`, ``Handle``
             The created handle is returned, what can be used to cancel it. If the event loop is stopped, returns `None`.
         """
         if not self.running:
@@ -402,7 +402,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Returns
         -------
-        handle : `None` or ``Handle``
+        handle : `None`, ``Handle``
             The created handle is returned, what can be used to cancel it. If the event loop is stopped, returns `None`.
         """
         if self.running:
@@ -452,7 +452,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Parameters
         ----------
-        future : ``Future`` instance
+        future : ``Future``
             The future instance, what's callbacks should be ensured.
         
         Notes
@@ -488,7 +488,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Parameters
         ----------
-        coroutine : `CoroutineType` or `GeneratorType`
+        coroutine : `CoroutineType`, `GeneratorType`
             The coroutine, to wrap.
         
         Returns
@@ -506,7 +506,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Parameters
         ----------
-        coroutine : `CoroutineType` or `GeneratorType`
+        coroutine : `CoroutineType`, `GeneratorType`
             The coroutine, to wrap.
         
         Returns
@@ -532,7 +532,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
     
     def ensure_future(self, coroutine_or_future):
         """
-        Ensures the given coroutine or future on the event loop. Returns an awaitable ``Future`` instance.
+        Ensures the given coroutine or future on the event loop. Returns an awaitable ``Future``.
         
         Parameters
         ----------
@@ -541,14 +541,14 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Returns
         -------
-        future : ``Future`` instance.
+        future : ``Future``.
             The return type depends on `coroutine_or_future`'s type.
             
-            - If `coroutine_or_future` is given as `CoroutineType` or as `GeneratorType`, returns a ``Task`` instance.
-            - If `coroutine_or_future` is given as ``Future`` instance, bound to the current event loop, returns it.
-            - If `coroutine_or_future`is given as ``Future`` instance, bound to an other event loop, returns a
+            - If `coroutine_or_future` is given as `CoroutineType`, `GeneratorType`, returns a ``Task``.
+            - If `coroutine_or_future` is given as ``Future``, bound to the current event loop, returns it.
+            - If `coroutine_or_future`is given as ``Future``, bound to an other event loop, returns a
                 ``FutureAsyncWrapper``.
-            - If `coroutine_or_future` defines an `__await__` method, then returns a ``Task`` instance.
+            - If `coroutine_or_future` defines an `__await__` method, then returns a ``Task``.
         
         Raises
         ------
@@ -572,7 +572,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
     
     def ensure_future_thread_safe(self, coroutine_or_future):
         """
-        Ensures the given coroutine or future on the event loop. Returns an awaitable ``Future`` instance. Wakes up
+        Ensures the given coroutine or future on the event loop. Returns an awaitable ``Future``. Wakes up
         the event loop if sleeping, what means it is safe to use from other threads as well.
         
         Parameters
@@ -582,14 +582,14 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Returns
         -------
-        future : ``Future`` instance.
+        future : ``Future``.
             The return type depends on `coroutine_or_future`'s type.
             
-            - If `coroutine_or_future` is given as `CoroutineType` or as `GeneratorType`, returns a ``Task`` instance.
-            - If `coroutine_or_future` is given as ``Future`` instance, bound to the current event loop, returns it.
-            - If `coroutine_or_future`is given as ``Future`` instance, bound to an other event loop, returns a
+            - If `coroutine_or_future` is given as `CoroutineType`, `GeneratorType`, returns a ``Task``.
+            - If `coroutine_or_future` is given as ``Future``, bound to the current event loop, returns it.
+            - If `coroutine_or_future`is given as ``Future``, bound to an other event loop, returns a
                 ``FutureAsyncWrapper``.
-            - If `coroutine_or_future` defines an `__await__` method, then returns a ``Task`` instance.
+            - If `coroutine_or_future` defines an `__await__` method, then returns a ``Task``.
         
         Raises
         ------
@@ -694,7 +694,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ----------
         awaitable : `awaitable`
             The awaitable to run.
-        timeout : `None` or `float`, Optional
+        timeout : `None`, `float`, Optional
             Timeout after the awaitable should be cancelled. Defaults to `None`.
 
         Returns
@@ -756,16 +756,16 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ----------
         exception : ``BaseException``
             The exception to render.
-        before : `None` or `str`, `list` of `str`, Optional
+        before : `None`, `str`, `list` of `str`, Optional
             Any content, what should go before the exception's traceback.
             
             If given as `str`, or if `list`, then the last element of it should end with linebreak.
-        after : `None` or `str`, `list` of `str`, Optional
+        after : `None`, `str`, `list` of `str`, Optional
             Any content, what should go after the exception's traceback.
             
             If given as `str`, or if `list`, then the last element of it should end with linebreak.
 
-        file : `None` or `I/O stream`, Optional
+        file : `None`, `I/O stream`, Optional
             The file to print the stack to. Defaults to `sys.stderr`.
         
         Returns
@@ -777,7 +777,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
     if DOCS_ENABLED:
         render_exception_maybe_async.__doc__ = (
         """
-        Renders the given exception's traceback. If called from an ``EventThread`` instance, then will not block it.
+        Renders the given exception's traceback. If called from an ``EventThread``, then will not block it.
         
         This method is called from function or methods, where being on an ``EventThread`` is not guaranteed.
         
@@ -785,16 +785,16 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ----------
         exception : ``BaseException``
             The exception to render.
-        before : `None` or `str`, `list` of `str`, Optional
+        before : `None`, `str`, `list` of `str`, Optional
             Any content, what should go before the exception's traceback.
             
             If given as `str`, or if `list`, then the last element of it should end with linebreak.
-        after : `None` or `str`, `list` of `str`, Optional
+        after : `None`, `str`, `list` of `str`, Optional
             Any content, what should go after the exception's traceback.
             
             If given as `str`, or if `list`, then the last element of it should end with linebreak.
 
-        file : `None` or `I/O stream`, Optional
+        file : `None`, `I/O stream`, Optional
             The file to print the stack to. Defaults to `sys.stderr`.
         """)
     
@@ -815,7 +815,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Any content, what should go after the exception's traceback.
             
             If given as `str`, or if `list`, then the last element of it should end with linebreak.
-        file : `None` or `I/O stream`
+        file : `None`, `I/O stream`
             The file to print the stack to. Defaults to `sys.stderr`.
         """
         extracted = []
@@ -977,11 +977,11 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             The socket, what the transport will use.
         protocol : ``AbstractProtocolBase``
             The protocol of the transport.
-        waiter : `None` or ``Future``, Optional
+        waiter : `None`, ``Future``, Optional
             Waiter, what's result should be set, when the transport is ready to use.
-        extra : `None` or `dict` of (`str`, `Any`) item, Optional (Keyword only)
+        extra : `None`, `dict` of (`str`, `Any`) item, Optional (Keyword only)
             Optional transport information.
-        server : `None` or ``Server``, Optional (Keyword only)
+        server : `None`, ``Server``, Optional (Keyword only)
             The server to what the created socket will be attached to.
         
         Returns
@@ -1005,18 +1005,18 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             ``SSLBidirectionalTransportLayer``
         ssl : `SSLContext`
             Ssl context of the respective connection.
-        waiter : `None` or ``Future``, Optional
+        waiter : `None`, ``Future``, Optional
             Waiter, what's result should be set, when the transport is ready to use.
         server_side : `bool`, Optional (Keyword only)
             Whether the created ssl transport is a server side. Defaults to `False`.
-        server_host_name : `None` or `str`, Optional (Keyword only)
+        server_host_name : `None`, `str`, Optional (Keyword only)
             Overwrites the hostname that the target server’s certificate will be matched against.
             By default the value of the host parameter is used. If host is empty, there is no default and you must pass
             a value for `server_host_name`. If `server_host_name` is an empty string, hostname matching is disabled
             (which is a serious security risk, allowing for potential man-in-the-middle attacks).
-        extra : `None` or `dict` of (`str`, `Any`) items, Optional (Keyword only)
+        extra : `None`, `dict` of (`str`, `Any`) items, Optional (Keyword only)
             Optional transport information.
-        server : `None` or ``Server``, Optional (Keyword only)
+        server : `None`, ``Server``, Optional (Keyword only)
             The server to what the created socket will be attached to.
         
         Returns
@@ -1079,9 +1079,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Factory function for creating an asynchronous compatible protocol.
         socket : `socket.socket`
             The sockets to serve by the respective server if applicable.
-        ssl : `None` or `SSLContext`
+        ssl : `None`, `SSLContext`
             To enable ssl for the connections, give it as  `SSLContext`.
-        server : `None` or ``Server``
+        server : `None`, ``Server``
             The respective server, what started to serve if applicable.
         backlog : `int`, Optional
             The maximum number of queued connections passed to `listen()` (defaults to 100).
@@ -1114,9 +1114,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Factory function for creating an asynchronous compatible protocol.
         socket : `socket.socket`
             The sockets to serve by the respective server if applicable.
-        ssl : `None` or `SSLContext`
+        ssl : `None`, `SSLContext`
             The ssl type of the connection if any.
-        server : `None` or ``Server``
+        server : `None`, ``Server``
             The respective server if applicable.
         backlog : `int`, Optional
             The maximum number of queued connections passed to `listen()`.
@@ -1166,11 +1166,11 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Factory function for creating an asynchronous compatible protocol.
         connection_socket : `socket.socket`
             The accepted connection.
-        extra : `None` or `dict` of (`str`, `Any`) item
+        extra : `None`, `dict` of (`str`, `Any`) item
             Optional transport information.
-        ssl : `None` or `SSLContext`
+        ssl : `None`, `SSLContext`
             The ssl type of the connection if any.
-        server : `None` or ``Server``
+        server : `None`, ``Server``
             The respective server if applicable.
         """
         try:
@@ -1354,12 +1354,12 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Callable returning an asynchronous protocol implementation.
         socket : `socket.socket`
             A preexisting socket object returned from `socket.accept`.
-        ssl : `None` or `SSLContext`, Optional (Keyword only)
+        ssl : `None`, `SSLContext`, Optional (Keyword only)
             Whether ssl should be enabled.
         
         Returns
         -------
-        transport : ``SSLBidirectionalTransportLayerTransport`` or ``SocketTransportLayer``
+        transport : ``SSLBidirectionalTransportLayerTransport``, ``SocketTransportLayer``
             The created transport. If `ssl` is enabled, creates ``SSLBidirectionalTransportLayerTransport``, else
             ``SocketTransportLayer``.
         protocol : ``AbstractProtocolBase``
@@ -1382,21 +1382,21 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Parameters
         ----------
-        ssl : `None`, `bool` or `SSLContext`
+        ssl : `None`, `bool`, `SSLContext`
             Whether ssl should be enabled.
-        server_host_name : `None` or `str`
+        server_host_name : `None`, `str`
             Overwrites the host name that the target server’s certificate will be matched against.
             Should only be passed if `ssl` is not `None`. By default the value of the host parameter is used. If host
             is empty, there is no default and you must pass a value for `server_host_name`. If `server_host_name` is an
             empty string, host name matching is disabled (which is a serious security risk, allowing for potential
             man-in-the-middle attacks).
-        host : `None` or `str`
+        host : `None`, `str`
             To what network interfaces should the connection be bound.
         
         Returns
         -------
-        ssl : ``None` or `SSLContext`
-        server_host_name : `None` or `str`
+        ssl : ``None`, `SSLContext`
+        server_host_name : `None`, `str`
         
         Raises
         ------
@@ -1435,19 +1435,19 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ----------
         protocol_factory : `callable`.
             Callable returning an asynchronous protocol implementation.
-        host : `None` or `str`, Optional
+        host : `None`, `str`, Optional
             To what network interfaces should the connection be bound.
-        port : `None` or `int`, Optional
+        port : `None`, `int`, Optional
             The port of the `host`.
-        ssl : `None`, `bool` or `SSLContext`, Optional (Keyword only)
+        ssl : `None`, `bool`, `SSLContext`, Optional (Keyword only)
             Whether ssl should be enabled.
-        socket_family : `AddressFamily` or `int`, Optional (Keyword only)
-            Can be either `AF_INET`, `AF_INET6` or `AF_UNIX`.
+        socket_family : `AddressFamily`, `int`, Optional (Keyword only)
+            Can be either `AF_INET`, `AF_INET6`, `AF_UNIX`.
         socket_protocol : `int`, Optional (Keyword only)
             Can be used to narrow host resolution. Is passed to ``.get_address_info``.
         socket_flags : `int`, Optional (Keyword only)
             Can be used to narrow host resolution. Is passed to ``.get_address_info``.
-        local_address : `tuple` of (`None` or  `str`, `None` or `int`), Optional (Keyword only)
+        local_address : `tuple` of (`None` or  `str`, `None`, `int`), Optional (Keyword only)
             Can be given as a `tuple` (`local_host`, `local_port`) to bind the socket locally. The `local_host` and
             `local_port` are looked up by ``.get_address_info``.
         
@@ -1555,9 +1555,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ----------
         socket : `socket.socket`
             Whether should use an existing, already connected socket.
-        ssl : `None`, `bool` or `SSLContext`, Optional (Keyword only)
+        ssl : `None`, `bool`, `SSLContext`, Optional (Keyword only)
             Whether ssl should be enabled.
-        server_host_name : `None` or `str`
+        server_host_name : `None`, `str`
             Overwrites the host name that the target server’s certificate will be matched against.
             Should only be passed if `ssl` is not `None`. By default the value of the host parameter is used. If host
             is empty, there is no default and you must pass a value for `server_host_name`. If `server_host_name` is an
@@ -1601,7 +1601,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Whether ssl should be enabled.
         socket : `socket.socket`
             The socket to what the created transport should be connected to.
-        server_host_name : `None` or `str`
+        server_host_name : `None`, `str`
             Overwrites the hostname that the target server’s certificate will be matched against.
             Should only be passed if `ssl` is not `None`. By default the value of the host parameter is used. If host
             is empty, there is no default and you must pass a value for `server_host_name`. If `server_host_name` is an
@@ -1641,16 +1641,16 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Parameters
         ----------
-        ssl : `None`, `bool` or `SSLContext`
+        ssl : `None`, `bool`, `SSLContext`
             Whether ssl should be enabled.
-        server_host_name : `None` or `str`
+        server_host_name : `None`, `str`
             Overwrites the host name that the target server’s certificate will be matched against.
             Should only be passed if `ssl` is not `None`.
         
         Returns
         -------
-        ssl : ``None` or `SSLContext`
-        server_host_name : `None` or `str`
+        ssl : ``None`, `SSLContext`
+        server_host_name : `None`, `str`
         
         Raises
         ------
@@ -1683,11 +1683,11 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ----------
         protocol_factory : `callable`.
             Callable returning an asynchronous protocol implementation.
-        path : `None` or `str`
+        path : `None`, `str`
             The path to open connection to.
-        ssl : `None` or `SSLContext`, Optional (Keyword only)
+        ssl : `None`, `SSLContext`, Optional (Keyword only)
             Whether ssl should be enabled.
-        server_host_name : `None` or `str`
+        server_host_name : `None`, `str`
             Overwrites the hostname that the target server’s certificate will be matched against.
             Should only be passed if `ssl` is not `None`. By default the value of the host parameter is used. If hos
             is empty, there is no default and you must pass a value for `server_host_name`. If `server_host_name` is an
@@ -1696,7 +1696,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Returns
         -------
-        transport : ``SSLBidirectionalTransportLayerTransport`` or ``SocketTransportLayer``
+        transport : ``SSLBidirectionalTransportLayerTransport``, ``SocketTransportLayer``
             The created transport. If `ssl` is enabled, creates ``SSLBidirectionalTransportLayerTransport``, else
             ``SocketTransportLayer``.
         protocol : ``AbstractProtocolBase``
@@ -1737,15 +1737,15 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Callable returning an asynchronous protocol implementation.
         socket : `socket.socket`
             A preexisting socket object to use up.
-        ssl : `None` or `SSLContext`, Optional (Keyword only)
+        ssl : `None`, `SSLContext`, Optional (Keyword only)
             Whether ssl should be enabled.
-        server_host_name : `None` or `str`, Optional (Keyword only)
+        server_host_name : `None`, `str`, Optional (Keyword only)
             Overwrites the hostname that the target server’s certificate will be matched against.
             Should only be passed if `ssl` is not `None`.
         
         Returns
         -------
-        transport : ``SSLBidirectionalTransportLayerTransport`` or ``SocketTransportLayer``
+        transport : ``SSLBidirectionalTransportLayerTransport``, ``SocketTransportLayer``
             The created transport. If `ssl` is enabled, creates ``SSLBidirectionalTransportLayerTransport``, else
             ``SocketTransportLayer``.
         protocol : ``AbstractProtocolBase``
@@ -1780,9 +1780,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ----------
         path : `str`
             The path to open connection to.
-        ssl : `None` or `SSLContext`, Optional (Keyword only)
+        ssl : `None`, `SSLContext`, Optional (Keyword only)
             Whether ssl should be enabled.
-        server_host_name : `None` or `str`, Optional (Keyword only)
+        server_host_name : `None`, `str`, Optional (Keyword only)
             Overwrites the hostname that the target server’s certificate will be matched against.
             Should only be passed if `ssl` is not `None`.
         
@@ -1816,9 +1816,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ----------
         socket : `socket.socket`
             A preexisting socket object to use up.
-        ssl : `None` or `SSLContext`, Optional (Keyword only)
+        ssl : `None`, `SSLContext`, Optional (Keyword only)
             Whether ssl should be enabled.
-        server_host_name : `None` or `str`, Optional (Keyword only)
+        server_host_name : `None`, `str`, Optional (Keyword only)
             Overwrites the hostname that the target server’s certificate will be matched against.
             Should only be passed if `ssl` is not `None`.
         
@@ -1850,15 +1850,15 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Parameters
         ----------
-        ssl : `None` or `SSLContext`
+        ssl : `None`, `SSLContext`
             Whether ssl should be enabled.
         
         Returns
         -------
-        ssl : ``None` or `SSLContext`
+        ssl : ``None`, `SSLContext`
         """
         if (ssl is not None) and (not isinstance(ssl, SSLContext)):
-            raise TypeError(f'`ssl` can be given as `None` or as `SSLContext`, got {ssl.__class__.__name__}.')
+            raise TypeError(f'`ssl` can be `None`, `SSLContext`, got {ssl.__class__.__name__}.')
         
         return ssl
     
@@ -1877,7 +1877,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             The path to open connection to.
         backlog : `int`, Optional (Keyword only)
             The maximum number of queued connections passed to `listen()` (defaults to 100).
-        ssl : `None` or `SSLContext`, Optional (Keyword only)
+        ssl : `None`, `SSLContext`, Optional (Keyword only)
             Whether and what ssl is enabled for the connections.
         
         Returns
@@ -1888,7 +1888,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         Raises
         ------
         TypeError
-            - If `ssl` is not given neither as `None` nor as `SSLContext` instance.
+            - If `ssl` is not given neither as `None` nor as `SSLContext`.
         FileNotFoundError:
             The given `path` do not exists.
         OsError
@@ -1943,7 +1943,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Can be specified in order to use a preexisting socket object.
         backlog : `int`, Optional (Keyword only)
             The maximum number of queued connections passed to `listen()` (defaults to 100).
-        ssl : `None` or `SSLContext`, Optional (Keyword only)
+        ssl : `None`, `SSLContext`, Optional (Keyword only)
             Whether and what ssl is enabled for the connections.
         
         Returns
@@ -1954,7 +1954,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         Raises
         ------
         TypeError
-            - If `ssl` is not given neither as `None` nor as `SSLContext` instance.
+            - If `ssl` is not given neither as `None` nor as `SSLContext`.
         ValueError
             - If `socket` is given, but it's type is not `module_socket.SOCK_STREAM`.
         NotImplementedError
@@ -2003,13 +2003,13 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Parameters
         ----------
-        host : `None` or `str`
+        host : `None`, `str`
             To respective network interface.
-        port : `None` or `int`
+        port : `None`, `int`
             The port of the `host`.
-        family :  `AddressFamily` or `int`, Optional (Keyword only)
+        family :  `AddressFamily`, `int`, Optional (Keyword only)
             The address family.
-        type : `SocketKind` or `int`, Optional (Keyword only)
+        type : `SocketKind`, `int`, Optional (Keyword only)
             Socket type.
         protocol : `int`, Optional (Keyword only)
             Protocol type. Can be used to narrow host resolution.
@@ -2022,8 +2022,8 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             An awaitable future, what will yield the lookup's result.
             
             Might raise `OSError` or return a `list` of `tuple`-s with the following elements:
-            - `family` : `AddressFamily` or `int`. Address family.
-            - `type` : `SocketKind` or `int`. Socket type.
+            - `family` : `AddressFamily`, `int`. Address family.
+            - `type` : `SocketKind`, `int`. Socket type.
             - `protocol` : `int`. Protocol type.
             - `canonical_name` : `str`. Represents the canonical name of the host.
             - `socket_address` : `tuple` (`str, `int`). Socket address containing the `host` and the `port`.
@@ -2057,9 +2057,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Parameters
         ----------
-        address : `tuple` (`None` or `str`, `None` or `int`)
+        address : `tuple` (`None`, `str`, `None`, `int`)
             Address as a tuple of `host` and `port`.
-        type : `SocketKind` or `int`, Optional
+        type : `SocketKind`, `int`, Optional
             Socket type.
         protocol : `int`, Optional
             Protocol type. Can be used to narrow host resolution.
@@ -2071,8 +2071,8 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         future : ``Future``
             An awaitable future, what returns a `list` of `tuples` with the following elements:
             
-            - `family` : `AddressFamily` or `int`. Address family.
-            - `type` : `SocketKind` or `int`. Socket type.
+            - `family` : `AddressFamily`, `int`. Address family.
+            - `type` : `SocketKind`, `int`. Socket type.
             - `protocol` : `int`. Protocol type.
             - `canonical_name` : `str`. Represents the canonical name of the host.
             - `socket_address` : `tuple` (`str, `int`). Socket address containing the `host` and the `port`.
@@ -2207,7 +2207,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         def __init__(self, fd):
             """
-            Creates a new ``_socket_connect_done`` instance with the given fd.
+            Creates a new ``_socket_connect_done`` with the given fd.
             
             Parameters
             ----------
@@ -2399,7 +2399,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Factory function for creating a protocols.
         socket : `socket.socket`
             Socket to bind the datagram transport to.
-        address : `None` or `tuple` (`str`, `int`)
+        address : `None`, `tuple` (`str`, `int`)
             The last address, where the transport sent data. Defaults to `None`. The send target address should not
             differ from the last, where the transport sent data.
         
@@ -2433,18 +2433,18 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         protocol_factory : `callable`
             Factory function for creating a protocols.
         
-        local_address : `None`, `tuple` of (`None` or  `str`, `None` or `int`), `str`, `bytes`
+        local_address : `None`, `tuple` of (`None` or  `str`, `None`, `int`), `str`, `bytes`
             Can be given as a `tuple` (`local_host`, `local_port`) to bind the socket locally. The `local_host` and
             `local_port` are looked up by ``.get_address_info``.
             
-            If `socket_family` is given as `AF_UNIX`, then also can be given as path of a file or a file descriptor.
-        remote_address : `None`, `tuple` of (`None` or  `str`, `None` or `int`), `str`, `bytes`
+            If `socket_family` is given as `AF_UNIX`, then also can bepath of a file or a file descriptor.
+        remote_address : `None`, `tuple` of (`None` or  `str`, `None`, `int`), `str`, `bytes`
             Can be given as a `tuple` (`remote_host`, `remote_port`) to connect the socket to remove address. The
             `remote_host` and `remote_port` are looked up by ``.get_address_info``.
             
-            If `socket_family` is given as `AF_UNIX`, then also can be given as path of a file or a file descriptor.
-        socket_family : `AddressFamily` or `int`, Optional (Keyword only)
-            Can be either `AF_INET`, `AF_INET6` or `AF_UNIX`.
+            If `socket_family` is given as `AF_UNIX`, then also can bepath of a file or a file descriptor.
+        socket_family : `AddressFamily`, `int`, Optional (Keyword only)
+            Can be either `AF_INET`, `AF_INET6`, `AF_UNIX`.
         socket_protocol : `int`, Optional (Keyword only)
             Can be used to narrow host resolution. Is passed to ``.get_address_info``.
         socket_flags : `int`, Optional (Keyword only)
@@ -2474,14 +2474,14 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             if __debug__:
                 if (local_address is not None):
                     if not isinstance(local_address, (str, bytes)):
-                        raise TypeError('`local_address` should be given as `None` or as `str` or `bytes` '
-                            f'instance, if `socket_family` is given as `AF_UNIX`, got '
+                        raise TypeError('`local_address` should be given as `None`, `str`, `bytes` '
+                            f', if `socket_family` is given as `AF_UNIX`, got '
                             f'{local_address.__class__.__name__}')
                 
                 if (remote_address is not None):
                     if not isinstance(remote_address, (str, bytes)):
-                        raise TypeError('`remote_address` should be given as `None` or as `str` or `bytes` '
-                            f'instance, if `socket_family` is given as `AF_UNIX`, got '
+                        raise TypeError('`remote_address` should be given as `None`, `str`, `bytes` '
+                            f', if `socket_family` is given as `AF_UNIX`, got '
                             f'{remote_address.__class__.__name__}')
             
             if (local_address is not None) and local_address and \
@@ -2631,11 +2631,11 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Parameters
         ----------
-        host : `None` or `str`, (`None` or `str`)
+        host : `None`, `str`, (`None`, `str`)
             Network interfaces should the server be bound.
-        port : `None` or `int`
+        port : `None`, `int`
             The port to use by the `host`.
-        socket_family : `AddressFamily` or `int`
+        socket_family : `AddressFamily`, `int`
             The family of the address.
         socket_flags : `int`
             Bit-mask for `get_address_info`.
@@ -2655,16 +2655,16 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Parameters
         ----------
-        ssl : `None` or `SSLContext`
+        ssl : `None`, `SSLContext`
             Whether and what ssl is enabled for the connections.
         
         Raises
         ------
         TypeError
-            - If `ssl` is not given either as `None` or as `SSLContext` instance.
+            - If `ssl` is not given either as `None`, `SSLContext`.
         """
         if (ssl is not None) and (not isinstance(ssl, SSLContext)):
-            raise TypeError(f'`ssl` can be given as `None` or as `SSLContext`, got {ssl.__class__.__name__}.')
+            raise TypeError(f'`ssl` can be `None`, `SSLContext`, got {ssl.__class__.__name__}.')
         
         return ssl
     
@@ -2681,18 +2681,18 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ----------
         protocol_factory : `callable`
             Factory function for creating a protocols.
-        host : `None` or `str`, `iterable` of (`None` or `str`)
+        host : `None`, `str`, `iterable` of (`None`, `str`)
             To what network interfaces should the server be bound.
-        port : `None` or `int`
+        port : `None`, `int`
             The port to use by the `host`(s).
-        socket_family : `AddressFamily` or `int`, Optional (Keyword only)
-            Can be given either as `socket.AF_INET` or `socket.AF_INET6` to force the socket to use `IPv4` or `IPv6`.
+        socket_family : `AddressFamily`, `int`, Optional (Keyword only)
+            Can be given either as `socket.AF_INET`, `socket.AF_INET6` to force the socket to use `IPv4`, `IPv6`.
             If not given, then  will be determined from host name.
         socket_flags : `int`, Optional (Keyword only)
             Bit-mask for `get_address_info`.
         backlog : `int`, Optional (Keyword only)
             The maximum number of queued connections passed to `listen()` (defaults to 100).
-        ssl : `None` or `SSLContext`, Optional (Keyword only)
+        ssl : `None`, `SSLContext`, Optional (Keyword only)
             Whether and what ssl is enabled for the connections.
         reuse_address : `bool`, Optional (Keyword only)
             Tells the kernel to reuse a local socket in `TIME_WAIT` state, without waiting for its natural timeout to
@@ -2711,11 +2711,11 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         Raises
         ------
         TypeError
-            - If `ssl` is not given either as `None` or as `SSLContext` instance.
+            - If `ssl` is not given either as `None`, `SSLContext`.
             - If `reuse_port` is given as non `bool`.
             - If `reuse_address` is given as non `bool`.
             - If `reuse_port` is given as non `bool`.
-            - If `host` is not given as `None`, `str` and neither as `iterable` of `None` or `str`.
+            - If `host` is not given as `None`, `str` and neither as `iterable` of `None`, `str`.
         ValueError
             - If `reuse_port` is given as `True`, but not supported.
         OsError
@@ -2749,10 +2749,10 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                     hosts.append(host)
                     continue
                 
-                raise TypeError('`host` is passed as iterable, but it yielded at least 1 not `None`, or `str` '
-                    f'instance; `{host!r}`')
+                raise TypeError('`host` is passed as `iterable`, but it yielded at least 1 not `None`, `str` '
+                    f'; `{host!r}`')
         else:
-            raise TypeError('`host` should be `None`, `str` instance or iterable of `None` or of `str` instances, '
+            raise TypeError('`host` can be `None`, `str`, `iterable` of (`None`, `str`), '
                 f'got {host!r}')
         
         sockets = []
@@ -2829,11 +2829,11 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ----------
         protocol_factory : `callable`
             Factory function for creating a protocols.
-        socket : `None` or `socket.socket`
+        socket : `None`, `socket.socket`
             Can be specified in order to use a preexisting socket object.
         backlog : `int`, Optional (Keyword only)
             The maximum number of queued connections passed to `listen()` (defaults to 100).
-        ssl : `None` or `SSLContext`, Optional (Keyword only)
+        ssl : `None`, `SSLContext`, Optional (Keyword only)
             Whether and what ssl is enabled for the connections.
         
         Returns
@@ -2844,7 +2844,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         Raises
         ------
         TypeError
-            - If `ssl` is not given either as `None` or as `SSLContext` instance.
+            - If `ssl` is not given either as `None`, `SSLContext`.
         ValueError
             - If `socket` is given, but it's type is not `module_socket.SOCK_STREAM`.
         OsError
@@ -2872,7 +2872,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ----------
         protocol : ``AbstractProtocolBase``
             An async-io protocol implementation to use as the transport's protocol.
-        pipe : `file-like` object
+        pipe : `file-like`
             The pipe to connect to on read end.
             
             Is set to non-blocking mode.
@@ -2902,7 +2902,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ----------
         protocol : ``AbstractProtocolBase``
             An async-io protocol implementation to use as the transport's protocol.
-        pipe : `file-like` object
+        pipe : `file-like`
             The pipe to connect to on write end.
             
             Is set to non-blocking mode.
@@ -2934,7 +2934,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         Parameters
         ----------
-        cmd : `str` or `bytes`
+        cmd : `str`, `bytes`
             The command to execute. Should use the platform’s “shell” syntax.
         stdin : `file-like`, `subprocess.PIPE`, `subprocess.DEVNULL`, Optional
             Standard input for the created shell. Defaults to `subprocess.PIPE`.
@@ -2942,9 +2942,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Standard output for the created shell. Defaults to `subprocess.PIPE`.
         stderr : `file-like`, `subprocess.PIPE`, `subprocess.DEVNULL`, `subprocess.STDOUT`, Optional
             Standard error for the created shell. Defaults to `subprocess.PIPE`.
-        extra : `None` or `dict` of (`str`, `Any`) items, Optional (Keyword only)
+        extra : `None`, `dict` of (`str`, `Any`) items, Optional (Keyword only)
             Optional transport information.
-        preexecution_function : `None` or `callable`, Optional (Keyword only)
+        preexecution_function : `None`, `callable`, Optional (Keyword only)
             This object is called in the child process just before the child is executed. POSIX only, defaults to
             `None`.
         close_fds : `bool`, Optional (Keyword only)
@@ -2953,10 +2953,10 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             If `close_fds` is True, all file descriptors except `0`, `1` and `2` will be closed before the child
             process is executed. Otherwise when `close_fds` is False, file descriptors obey their inheritable flag as
             described in Inheritance of File Descriptors.
-        cwd : `str`, `bytes`, `path-like` or `None`, Optional (Keyword only)
+        cwd : `str`, `bytes`, `path-like`, `None`, Optional (Keyword only)
             If `cwd` is not `None`, the function changes the working directory to cwd before executing the child.
             Defaults to `None`
-        startup_info : `subprocess.STARTUPINFO` or `None`, Optional (Keyword only)
+        startup_info : `subprocess.STARTUPINFO`, `None`, Optional (Keyword only)
             Is passed to the underlying `CreateProcess` function.
         creation_flags : `int`, Optional (Keyword only)
             Can be given as 1 of the following flags:
@@ -3000,7 +3000,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Not supported on windows by the library.
         """
         if not isinstance(command, (bytes, str)):
-            raise TypeError(f'`cmd` must be `bytes` or `str` instance, got {command.__class__.__name__}.')
+            raise TypeError(f'`cmd` must be `bytes`, `str`, got {command.__class__.__name__}.')
         
         process_open_kwargs = {
             'preexec_fn' : preexecution_function,
@@ -3040,9 +3040,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Standard output for the created shell. Defaults to `subprocess.PIPE`.
         stderr : `file-like`, `subprocess.PIPE`, `subprocess.DEVNULL`, `subprocess.STDOUT`, Optional (Keyword only)
             Standard error for the created shell. Defaults to `subprocess.PIPE`.
-        extra : `None` or `dict` of (`str`, `Any`) items, Optional (Keyword only)
+        extra : `None`, `dict` of (`str`, `Any`) items, Optional (Keyword only)
             Optional transport information.
-        preexecution_function : `None` or `callable`, Optional (Keyword only)
+        preexecution_function : `None`, `callable`, Optional (Keyword only)
             This object is called in the child process just before the child is executed. POSIX only, defaults to
             `None`.
         close_fds : `bool`, Optional (Keyword only)
@@ -3051,10 +3051,10 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             If `close_fds` is True, all file descriptors except `0`, `1` and `2` will be closed before the child
             process is executed. Otherwise when `close_fds` is False, file descriptors obey their inheritable flag as
             described in Inheritance of File Descriptors.
-        cwd : `str`, `bytes`, `path-like` or `None`, Optional (Keyword only)
+        cwd : `str`, `bytes`, `path-like`, `None`, Optional (Keyword only)
             If `cwd` is not `None`, the function changes the working directory to cwd before executing the child.
             Defaults to `None`
-        startup_info : `subprocess.STARTUPINFO` or `None`, Optional (Keyword only)
+        startup_info : `subprocess.STARTUPINFO`, `None`, Optional (Keyword only)
             Is passed to the underlying `CreateProcess` function.
         creation_flags : `int`, Optional (Keyword only)
             Can be given as 1 of the following flags:

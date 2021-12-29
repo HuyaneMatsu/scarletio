@@ -23,7 +23,7 @@ def build_extensions(available_extensions):
     ----------
     available_extensions : `list` of `Any`
         Each websocket extension should have the following `4` attributes / methods:
-        - `name`, type `str`. The extension's name.
+        - `name`: `str`. The extension's name.
         - `request_params` : `list` of `tuple` (`str`, `str`). Additional header parameters of the extension.
         - `decode` : `callable`. Decoder method, what processes a received websocket frame. Should accept `2`
             parameters: The respective websocket ``Frame``, and the ˙max_size` as `int`, what decides the

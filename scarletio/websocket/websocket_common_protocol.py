@@ -44,7 +44,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         Whether the protocol received end of file.
     _chunks : `deque` of `bytes`
         Right feed, left pop queue, used to store the received data chunks.
-    _exception : `None` or `BaseException`
+    _exception : `None`, `BaseException`
         Exception set by ``.set_exception``, when an unexpected exception occur meanwhile reading from socket.
     _loop : ``EventThread``
         The event loop to what the protocol is bound to.
@@ -54,25 +54,25 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         Whether the protocol's respective transport's reading is paused. Defaults to `False`.
         
         Also note, that not every transport supports pausing.
-    _payload_reader : `None` or `GeneratorType`
+    _payload_reader : `None`, `GeneratorType`
         Payload reader generator, what gets the control back, when data, eof or any exception is received.
     _payload_waiter : `None` of ``Future``
         Payload waiter of the protocol, what's result is set, when the ``.payload_reader`` generator returns.
         
         If cancelled or marked by done or any other methods, the payload reader will not be cancelled.
-    _transport : `None` or `Any`
+    _transport : `None`, `Any`
         Asynchronous transport implementation. Is set meanwhile the protocol is alive.
-    _drain_waiter : `None` or ``Future``
+    _drain_waiter : `None`, ``Future``
         A future, what is used to block the writing task, till it's writen data is drained.
     _drain_lock : ``Lock``
         Asynchronous lock to ensure, that only `1` frame is written in `1` time.
     close_code : `int`
         The websocket's close code if applicable. Defaults to `0`.
-    close_connection_task : `None` or ``Task`` of ``.close_connection``
+    close_connection_task : `None`, ``Task`` of ``.close_connection``
         A task, what is present meanwhile the websocket is closing to avoid race condition.
     close_timeout : `float`
         The maximal duration in seconds what is waited for response after close frame is sent. Defaults to `10.0`.
-    close_reason : `None` or `str`
+    close_reason : `None`, `str`
         The reason, why the websocket was closed. Set only after the websocket is closed. Close reason might not be
         received tho.
     connection_lost_waiter : ``Future``
@@ -83,7 +83,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         WebSocket extensions. Defaults to `None`, if there is not any.
     host : `str`
         The respective server's address to connect to.
-    max_queue : `None` or `int`
+    max_queue : `None`, `int`
         Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of it is removed.
          Defaults to `None`.
     max_size : `int`
@@ -117,9 +117,9 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
     subprotocol : `None`, `str`
         Chosen subprotocol at handshake. Defaults to `None` and might be set as `str`. Chosen from the available
         subprotocols by their priority order.
-    transfer_data_exception : `None` or `BaseException``
+    transfer_data_exception : `None`, `BaseException``
         Exception catched meanwhile processing received data.
-    transfer_data_task : `None` or ``Task`` of ``.transfer_data``
+    transfer_data_task : `None`, ``Task`` of ``.transfer_data``
         Data receiving task.
     
     Class Attributes
@@ -152,7 +152,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         max_size : `int`, Optional (Keyword only)
             Max payload size to receive. If a payload exceeds it, ``PayloadError`` is raised. Defaults to `67108864`
             bytes.
-        max_queue : `None` or `int`, Optional (Keyword only)
+        max_queue : `None`, `int`, Optional (Keyword only)
             Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of it is
             removed. Defaults to `None`.
         """
@@ -177,7 +177,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         max_size : `int`, Optional
             Max payload size to receive. If a payload exceeds it, ``PayloadError`` is raised. Defaults to `67108864`
             bytes.
-        max_queue : `None` or `int`, Optional
+        max_queue : `None`, `int`, Optional
             Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of it is
             removed. Defaults to `None`.
         """
@@ -228,7 +228,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         
         Returns
         -------
-        local_address : `None` or `tuple` of (`str`, `int`)
+        local_address : `None`, `tuple` of (`str`, `int`)
         """
         return self.get_extra_info('socket_name')
     
@@ -241,7 +241,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         
         Returns
         -------
-        remote_address : `None` or `tuple` of (`str`, `int`)
+        remote_address : `None`, `tuple` of (`str`, `int`)
         """
         return self.get_extra_info('peer_name')
     
@@ -291,7 +291,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         Returns
         -------
         future : ``Future``
-            The future returns `bytes` or `str` instance respective to the received payload's type. If the websocket
+            The future returns `bytes`, `str` respective to the received payload's type. If the websocket
             is closed, ``ConnectionClosed`` is raised.
         """
         return self.messages.result()
@@ -302,7 +302,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         
         Returns
         -------
-        message : `bytes` or `str`
+        message : `bytes`, `str`
             The received payload.
         
         Raises
@@ -322,7 +322,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         
         Parameters
         ----------
-        data : `bytes-like` or `str`
+        data : `bytes-like`, `str`
             The data to send
         
         Raises
@@ -342,7 +342,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             operation_code = WEBSOCKET_OPERATION_TEXT
             data = data.encode('utf-8')
         else:
-            raise TypeError(f'Data must be `bytes-like` or `str`, got: {data.__class__.__name__}.')
+            raise TypeError(f'Data must be `bytes-like`, `str`, got: {data.__class__.__name__}.')
 
         await self.write_frame(operation_code, data)
 
@@ -432,7 +432,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         Raises
         ------
         TypeError
-            `data` is not given neither as `None`, `bytes-like`, or `str` instance.
+            `data` is not given neither as `None`, `bytes-like`, `str`.
         ConnectionClosed
             WebSocket connection closed.
         Exception
@@ -447,7 +447,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         elif isinstance(data, str):
             data = data.encode('utf-8')
         else:
-            raise TypeError(f'Data must be `bytes-like` or `str`, got: {data.__class__.__name__}.')
+            raise TypeError(f'Data must be `bytes-like`, `str`, got: {data.__class__.__name__}.')
         
         pings = self.pings
         while data in pings:
@@ -474,7 +474,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         Raises
         ------
         TypeError
-            `data` is not given neither as `None`, `bytes-like`, or `str` instance.
+            `data` is not given neither as `None`, `bytes-like`, `str`.
         ConnectionClosed
             WebSocket connection closed.
         Exception
@@ -489,7 +489,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         elif isinstance(data, str):
             data = data.encode('utf-8')
         else:
-            raise TypeError(f'Data must be `bytes-like` or `str`, got: {data.__class__.__name__}.')
+            raise TypeError(f'Data must be `bytes-like`, `str`, got: {data.__class__.__name__}.')
         
         await self.write_frame(WEBSOCKET_OPERATION_PONG, data)
     
@@ -596,7 +596,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         
         Returns
         -------
-        message : `None`, `bytes` or `str`
+        message : `None`, `bytes`, `str`
             A received message. It's type depend on the frame's type. returns `None` if close frame was received.
         
         Raises
@@ -676,7 +676,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         
         Returns
         -------
-        frame : ``WebSocketFrame`` or `None`
+        frame : ``WebSocketFrame``, `None`
             The read websocket frame. Returns `None` if close frame was received.
         
         Raises
@@ -799,7 +799,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             The data to send.
         
         _expected_state : `str`
-            Expected state of the websocket. If the websocket is in other state, an `Exception` instance it raised.
+            Expected state of the websocket. If the websocket is in other state, an `Exception` it raised.
             Defaults to `'WEBSOCKET_STATE_OPEN'`.
             
             Can be set as one of the following values:
@@ -1026,7 +1026,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         
         Parameters
         ----------
-        exception : `None` or `BaseException` instance
+        exception : `None`, `BaseException`
             Defines whether the connection is closed, or an exception was received.
             
             If the connection was closed, then `exception` is given as `None`. This can happen at the case, when eof is

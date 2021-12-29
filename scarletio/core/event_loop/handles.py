@@ -319,7 +319,7 @@ class _TimerWeakHandleCallback:
         
         Parameters
         ----------
-        reference : ``WeakReferer`` instance
+        reference : ``WeakReferer``
             Weakreference to the dead `func`.
         """
         handle = self.handle()

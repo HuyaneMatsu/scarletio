@@ -22,14 +22,14 @@ INVALID_QDTEXT_CHAR_RP = re.compile(br'[\x00-\x08\x0A-\x1F\x7F]')
 
 def create_payload(data, kwargs):
     """
-    Creates a new ``PayloadBase`` instance with the given parameters.
+    Creates a new ``PayloadBase`` with the given parameters.
     
     Parameters
     ----------
-    data : (`list` of ``PayloadBase`` instances), ``BodyPartReader``, `bytes`, `bytearray`, `memoryview`, `str`, \
+    data : (`list` of ``PayloadBase``), ``BodyPartReader``, `bytes`, `bytearray`, `memoryview`, `str`, \
             `BytesIO`, `StringIO`, `TextIOBase`, `BufferedReader`, `BufferedRandom`, `IOBase`, ``AsyncIO``, \
-            `async-iterable` instance
-    kwargs : `dict` of (`str`, (`None` or `str`)) items
+            `async-iterable`
+    kwargs : `dict` of (`str`, (`None`, `str`)) items
         Keyword parameters for the payload.
     
     Returns
@@ -74,31 +74,31 @@ class PayloadBase:
     
     Attributes
     ----------
-    content_type : `None` or `str`
+    content_type : `None`, `str`
         The payload's content type.
-    data : (`list` of ``PayloadBase`` instances), ``BodyPartReader``, `bytes`, `bytearray`, `memoryview`, `str`, \
+    data : (`list` of ``PayloadBase``), ``BodyPartReader``, `bytes`, `bytearray`, `memoryview`, `str`, \
             `BytesIO`, `StringIO`, `TextIOBase`, `BufferedReader`, `BufferedRandom`, `IOBase`, ``AsyncIO``, \
-            `async-iterable` instance
+            `async-iterable`
         The payload itself.
-    filename : `None` or `str`
+    filename : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
     headers : `IgnoreCaseMultiValueDictionary` of (`str`, `str`) items
         Payload specific headers.
-    size : `None` or `int`
+    size : `None`, `int`
         The payload's size if applicable.
     """
     __slots__ = ('content_type', 'data', 'encoding', 'filename', 'headers', 'size', )
     def __init__(self, data, kwargs):
         """
-        Creates a new ``PayloadBase`` instance.
+        Creates a new ``PayloadBase``.
         
         Parameters
         ----------
-        data : (`list` of ``PayloadBase`` instances), ``BodyPartReader``, `bytes`, `bytearray`, `memoryview`, `str`, \
+        data : (`list` of ``PayloadBase``), ``BodyPartReader``, `bytes`, `bytearray`, `memoryview`, `str`, \
                 `BytesIO`, `StringIO`, `TextIOBase`, `BufferedReader`, `BufferedRandom`, `IOBase`, ``AsyncIO``, \
-                `async-iterable` instance
+                `async-iterable`
             The payload's data.
         kwargs : `dict` of (`str`, `Any`) items
             Additional keyword parameters.
@@ -166,28 +166,28 @@ class BytesPayload(PayloadBase):
     
     Attributes
     ----------
-    content_type : `None` or `str`
+    content_type : `None`, `str`
         The payload's content type.
-    data : `bytes`, `bytearray`, `memoryview` instance
+    data : `bytes`, `bytearray`, `memoryview`
         The payload itself.
-    filename : `None` or `str`
+    filename : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
     headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
-    size : `None` or `int`
+    size : `None`, `int`
         The payload's size if applicable.
     """
     __slots__ = ()
     
     def __init__(self, data, kwargs):
         """
-        Creates a new ``BytesPayload`` instance.
+        Creates a new ``BytesPayload``.
         
         Parameters
         ----------
-        data : `bytes`, `bytearray`, `memoryview` instance
+        data : `bytes`, `bytearray`, `memoryview`
             The payload's data.
         kwargs : `dict` of (`str`, `Any`) items
             Additional keyword parameters.
@@ -218,28 +218,28 @@ class StringPayload(BytesPayload):
     
     Attributes
     ----------
-    content_type : `None` or `str`
+    content_type : `None`, `str`
         The payload's content type.
     data : `bytes`
         The payload itself.
-    filename : `None` or `str`
+    filename : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
     headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
-    size : `None` or `int`
+    size : `None`, `int`
         The payload's size if applicable.
     """
     __slots__ = ()
     
     def __init__(self, data, kwargs):
         """
-        Creates a new ``StringPayload`` instance.
+        Creates a new ``StringPayload``.
         
         Parameters
         ----------
-        data : `str` instance
+        data : `str`
             The payload's data.
         kwargs : `dict` of (`str`, `Any`) items
             Additional keyword parameters.
@@ -274,28 +274,28 @@ class StringIOPayload(StringPayload):
     
     Attributes
     ----------
-    content_type : `None` or `str`
+    content_type : `None`, `str`
         The payload's content type.
     data : `bytes`
         The payload itself.
-    filename : `None` or `str`
+    filename : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
     headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
-    size : `None` or `int`
+    size : `None`, `int`
         The payload's size if applicable.
     """
     __slots__ = ()
     
     def __init__(self, data, kwargs):
         """
-        Creates a new ``StringIOPayload`` instance.
+        Creates a new ``StringIOPayload``.
         
         Parameters
         ----------
-        data : `StringIO` instance
+        data : `StringIO`
             The payload's data.
         kwargs : `dict` of (`str`, `Any`) items
             Additional keyword parameters.
@@ -306,31 +306,31 @@ class StringIOPayload(StringPayload):
 
 class IOBasePayload(PayloadBase):
     """
-    Payload class for `IOBase` instances.
+    Payload class for `IOBase`-s.
     
     Attributes
     ----------
-    content_type : `None` or `str`
+    content_type : `None`, `str`
         The payload's content type.
-    data : `IOBase` instance
+    data : `IOBase`
         The payload itself.
-    filename : `None` or `str`
+    filename : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
     headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
-    size : `None` or `int`
+    size : `None`, `int`
         The payload's size if applicable.
     """
     __slots__ = ()
     def __init__(self, data, kwargs):
         """
-        Creates a new ``IOBasePayload`` instance.
+        Creates a new ``IOBasePayload``.
         
         Parameters
         ----------
-        data : `IOBase` instance
+        data : `IOBase`
             The payload's data.
         kwargs : `dict` of (`str`, `Any`) items
             Additional keyword parameters.
@@ -375,32 +375,32 @@ class IOBasePayload(PayloadBase):
 
 class TextIOPayload(IOBasePayload):
     """
-    Payload class for `TextIOBase` instances.
+    Payload class for `TextIOBase`-s.
     
     Attributes
     ----------
-    content_type : `None` or `str`
+    content_type : `None`, `str`
         The payload's content type.
-    data : `TextIOBase` instance
+    data : `TextIOBase`
         The payload itself.
-    filename : `None` or `str`
+    filename : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
     headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
-    size : `None` or `int`
+    size : `None`, `int`
         The payload's size if applicable.
     """
     __slots__ = ()
     
     def __init__(self, data, kwargs):
         """
-        Creates a new ``TextIOPayload`` instance.
+        Creates a new ``TextIOPayload``.
         
         Parameters
         ----------
-        data : `TextIOBase` instance
+        data : `TextIOBase`
             The payload's data.
         kwargs : `dict` of (`str`, `Any`) items
             Additional keyword parameters.
@@ -458,30 +458,30 @@ class TextIOPayload(IOBasePayload):
 
 class BytesIOPayload(IOBasePayload):
     """
-    Payload class for `BytesIO` instances.
+    Payload class for `BytesIO`-s.
     
     Attributes
     ----------
-    content_type : `None` or `str`
+    content_type : `None`, `str`
         The payload's content type.
-    data : `BytesIO` instance
+    data : `BytesIO`
         The payload itself.
-    filename : `None` or `str`
+    filename : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
     headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
-    size : `None` or `int`
+    size : `None`, `int`
         The payload's size if applicable.
     """
     def __init__(self, data, kwargs):
         """
-        Creates a new ``BytesIOPayload`` instance.
+        Creates a new ``BytesIOPayload``.
         
         Parameters
         ----------
-        data : `BytesIO` instance
+        data : `BytesIO`
             The payload's data.
         kwargs : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
             Additional keyword parameters.
@@ -496,32 +496,32 @@ class BytesIOPayload(IOBasePayload):
 
 class BufferedReaderPayload(IOBasePayload):
     """
-    Payload class for `BufferedReader` and for `BufferedRandom` instances.
+    Payload class for `BufferedReader` and for `BufferedRandom`-s.
     
     Attributes
     ----------
-    content_type : `None` or `str`
+    content_type : `None`, `str`
         The payload's content type.
-    data : `BufferedReader`, `BufferedRandom` instance
+    data : `BufferedReader`, `BufferedRandom`
         The payload itself.
-    filename : `None` or `str`
+    filename : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
     headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
-    size : `None` or `int`
+    size : `None`, `int`
         The payload's size if applicable.
     """
     __slots__ = ()
     
     def __init__(self, data, kwargs):
         """
-        Creates a new ``BufferedReaderPayload`` instance.
+        Creates a new ``BufferedReaderPayload``.
         
         Parameters
         ----------
-        data : `BufferedReader`, `BufferedRandom` instance
+        data : `BufferedReader`, `BufferedRandom`
             The payload's data.
         kwargs : `dict` of (`str`, `Any`) items
             Additional keyword parameters.
@@ -542,24 +542,24 @@ class JsonPayload(BytesPayload):
     
     Attributes
     ----------
-    content_type : `None` or `str`
+    content_type : `None`, `str`
         The payload's content type.
     data :`bytes`
         The payload itself.
-    filename : `None` or `str`
+    filename : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
     headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
-    size : `None` or `int`
+    size : `None`, `int`
         The payload's size if applicable.
     """
     __slots__ = ()
     
     def __init__(self, data, kwargs):
         """
-        Creates a new ``AsyncIterablePayload`` instance.
+        Creates a new ``AsyncIterablePayload``.
         
         Parameters
         ----------
@@ -584,24 +584,24 @@ class AsyncIterablePayload(PayloadBase):
     
     Attributes
     ----------
-    content_type : `None` or `str`
+    content_type : `None`, `str`
         The payload's content type.
     data :`async-iterable`
         The payload itself.
-    filename : `None` or `str`
+    filename : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
     headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
-    size : `None` or `int`
+    size : `None`, `int`
         The payload's size if applicable.
     """
     __slots__ = ('_iterator')
     
     def __init__(self, data, kwargs):
         """
-        Creates a new ``AsyncIterablePayload`` instance.
+        Creates a new ``AsyncIterablePayload``.
         
         Parameters
         ----------
@@ -639,21 +639,21 @@ class AsyncIterablePayload(PayloadBase):
 
 class AsyncIOPayload(IOBasePayload):
     """
-    Payload class for ``AsyncIO`` instances.
+    Payload class for ``AsyncIO``-s.
     
     Attributes
     ----------
-    content_type : `None` or `str`
+    content_type : `None`, `str`
         The payload's content type.
     data :`async-iterable`
         The payload itself.
-    filename : `None` or `str`
+    filename : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
     headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
-    size : `None` or `int`
+    size : `None`, `int`
         The payload's size if applicable.
     """
     async def write(self, writer):
@@ -684,22 +684,22 @@ class BodyPartReaderPayload(PayloadBase):
     
     Attributes
     ----------
-    content_type : `None` or `str`
+    content_type : `None`, `str`
         The payload's content type.
     data :``BodyPartReader``
         The payload itself.
-    filename : `None` or `str`
+    filename : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
     headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
-    size : `None` or `int`
+    size : `None`, `int`
         The payload's size if applicable.
     """
     def __init__(self, data, kwargs):
         """
-        Creates a new ``BodyPartReaderPayload`` instance.
+        Creates a new ``BodyPartReaderPayload``.
         
         Parameters
         ----------
@@ -871,7 +871,7 @@ def parse_content_disposition(header):
 
     Returns
     -------
-    disposition_type : `None` or `str`
+    disposition_type : `None`, `str`
         The disposition's type if anything found.
     parameters : `dict` of (`str`, `str`) items
         The parsed out parameters.
@@ -954,7 +954,7 @@ def get_content_disposition_filename(parameters, name='filename'):
 
     Returns
     -------
-    filename : `None` or `str`
+    filename : `None`, `str`
         The file's name if any.
     """
     if not parameters:
@@ -1001,17 +1001,17 @@ class MultipartWriter(PayloadBase):
     
     Attributes
     ----------
-    content_type : `None` or `str`
+    content_type : `None`, `str`
         The payload's content type.
-    data : `list` of ``PayloadBase`` instances
+    data : `list` of ``PayloadBase``
         The contained payloads.
-    filename : `None` or `str`
+    filename : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
     headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
-    size : `None` or `int`
+    size : `None`, `int`
         The payload's size if applicable.
     _boundary : `bytes`
         Boundary to mark the payload's start and end.
@@ -1020,13 +1020,13 @@ class MultipartWriter(PayloadBase):
     
     def __init__(self, subtype='mixed', boundary=None):
         """
-        Creates a new ``MultipartWriter`` instance with the given parameters.
+        Creates a new ``MultipartWriter`` with the given parameters.
         
         Parameters
         ----------
         subtype : `str`, Optional
             The subtype of the multipart writer. Defaults to `'mixed'`, but also can `'form-data'` for example.
-        boundary : `Nome` or `str`, Optional
+        boundary : `Nome`, `str`, Optional
             Boundary to mark the payload's start and end. If not given or given as `None`, then is autogenerated.
         
         Raises
@@ -1097,8 +1097,8 @@ class MultipartWriter(PayloadBase):
         Parameters
         ----------
         body_part : ``PayloadBase``, ``BodyPartReader``, `bytes`, `bytearray`, `memoryview`, `BytesIO`, `StringIO`, \
-            `TextIOBase`, `BufferedReader`, `BufferedRandom`, `IOBase`, ``AsyncIO``, `async-iterable` instance
-        headers : `None` or ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items, Optional
+            `TextIOBase`, `BufferedReader`, `BufferedRandom`, `IOBase`, ``AsyncIO``, `async-iterable`
+        headers : `None`, ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items, Optional
             Optional headers for the field.
         
         Returns
@@ -1142,7 +1142,7 @@ class MultipartWriter(PayloadBase):
         
         Parameters
         ----------
-        payload : ``PayloadBase`` instance
+        payload : ``PayloadBase``
             The payload to add to the body.
         
         Raises
@@ -1228,7 +1228,7 @@ class MultipartWriter(PayloadBase):
         ----------
         obj : `None`, `str`, `int`, `float`, `list` of repeat, `dict` of (`str`, repeat) items
             The payload's data.
-        headers : `None` or ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items, Optional
+        headers : `None`, ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items, Optional
             Optional headers for the json field.
 
         Returns
@@ -1259,7 +1259,7 @@ class MultipartWriter(PayloadBase):
         ----------
         obj : `mapping` of (`str`, `Any`) items, `sequence` of `tuple` (`str`, `Any`) items
             The object, what should be percent encoded for a post request.
-        headers : `None` or ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items, Optional
+        headers : `None`, ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items, Optional
             Optional headers for the url_encoded field.
         
         Returns
@@ -1331,7 +1331,7 @@ class MultipartPayloadWriter:
     compressor : `None`, `ZLIB_COMPRESSOR`, `BROTLI_COMPRESSOR`
         The compressor matching the respective payload's content-encoding.
          used by the respective payload
-    encoding_buffer : `None` or `bytearray`
+    encoding_buffer : `None`, `bytearray`
         Buffer used when transfer-encoding is base64.
     transfer_encoding : `int`
         The transfer encoding's identifier used by the multipart writer.
@@ -1354,13 +1354,13 @@ class MultipartPayloadWriter:
     
     def __new__(cls, writer, content_encoding, transfer_encoding):
         """
-        Creates a new ``MultipartPayloadWriter`` instance with the given parameters.
+        Creates a new ``MultipartPayloadWriter`` with the given parameters.
         
         Parameters
         ----------
         writer : ``HTTPStreamWriter``
             HTTP writer to write the encoded data into.
-        content_encoding : `None` or `str`
+        content_encoding : `None`, `str`
             Content encoding to write the data with.
             
             Can be any of the following:
@@ -1381,7 +1381,7 @@ class MultipartPayloadWriter:
             
             You need to have `brotlipy` installed to handle `'br'` encoding.
         
-        transfer_encoding : `None` or `str`
+        transfer_encoding : `None`, `str`
             Transfer encoding to write the data with.
             
             Can be given as any of:

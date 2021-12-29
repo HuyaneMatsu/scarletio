@@ -82,7 +82,7 @@ class BaseMethodType(MethodLike):
         
         Returns
         -------
-        docstring : `None` or `str`
+        docstring : `None`, `str`
         """
         return self.__func__.__doc__
     
@@ -103,7 +103,7 @@ class BaseMethodDescriptor:
     @has_docs
     def __init__(self, fget):
         """
-        Creates a new ``BaseMethodDescriptor`` instance with the given parameter.
+        Creates a new ``BaseMethodDescriptor`` with the given parameter.
         
         Parameters
         ----------

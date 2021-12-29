@@ -16,11 +16,11 @@ class HTTPStreamWriter:
         The amount of written data in bytes. If reaches a limit, drain lock is awaited.
     chunked : `bool`
         Whether the http message's content is chunked.
-    compressor : `None`, `ZLIB_COMPRESSOR` or `BROTLI_COMPRESSOR`
+    compressor : `None`, `ZLIB_COMPRESSOR`, `BROTLI_COMPRESSOR`
         Decompressor used to compress the sent data. Defaults to `None` if no compression is given.
     protocol : `ProtocolBase`
         Asynchronous transport implementation.
-    transport : `None` or `AbstractTransportLayerBase`
+    transport : `None`, `AbstractTransportLayerBase`
         Asynchronous transport implementation. Set as `None` if at eof.
     """
     __slots__ = ('_at_eof', 'size', 'chunked', 'compressor', 'protocol', 'transport', )
@@ -33,7 +33,7 @@ class HTTPStreamWriter:
         ----------
         protocol : `Any`
             Asynchronous transport implementation.
-        compression : `None` or `str`
+        compression : `None`, `str`
             The compression's type to encode the written content with.
         chunked : `bool`
             Whether the given data should be written with chunking.

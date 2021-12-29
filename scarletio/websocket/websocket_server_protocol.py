@@ -27,7 +27,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
         Whether the protocol received end of file.
     _chunks : `deque` of `bytes`
         Right feed, left pop queue, used to store the received data chunks.
-    _exception : `None` or `BaseException`
+    _exception : `None`, `BaseException`
         Exception set by ``.set_exception``, when an unexpected exception occur meanwhile reading from socket.
     _loop : ``EventThread``
         The event loop to what the protocol is bound to.
@@ -37,25 +37,25 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
         Whether the protocol's respective transport's reading is paused. Defaults to `False`.
         
         Also note, that not every transport supports pausing.
-    _payload_reader : `None` or `GeneratorType`
+    _payload_reader : `None`, `GeneratorType`
         Payload reader generator, what gets the control back, when data, eof or any exception is received.
     _payload_waiter : `None` of ``Future``
         Payload waiter of the protocol, what's result is set, when the ``.payload_reader`` generator returns.
         
         If cancelled or marked by done or any other methods, the payload reader will not be cancelled.
-    _transport : `None` or `Any`
+    _transport : `None`, `Any`
         Asynchronous transport implementation. Is set meanwhile the protocol is alive.
-    _drain_waiter : `None` or ``Future``
+    _drain_waiter : `None`, ``Future``
         A future, what is used to block the writing task, till it's writen data is drained.
     _drain_lock : ``Lock``
         Asynchronous lock to ensure, that only `1` frame is written in `1` time.
     close_code : `int`
         The websocket's close code if applicable. Defaults to `0`.
-    close_connection_task : `None` or ``Task`` of ``.close_connection``
+    close_connection_task : `None`, ``Task`` of ``.close_connection``
         A task, what is present meanwhile the websocket is closing to avoid race condition.
     close_timeout : `float`
         The maximal duration in seconds what is waited for response after close frame is sent. Defaults to `10.0`.
-    close_reason : `None` or `str`
+    close_reason : `None`, `str`
         The reason, why the websocket was closed. Set only after the websocket is closed. Close reason might not be
         received tho.
     connection_lost_waiter : ``Future``
@@ -66,7 +66,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
         Web socket extensions. Defaults to `None`, if there is not any.
     host : `str`
         The respective server's address to connect to.
-    max_queue : `None` or `int`
+    max_queue : `None`, `int`
         Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of it is removed.
          Defaults to `None`.
     max_size : `int`
@@ -100,15 +100,15 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
     subprotocol : `None`, `str`
         Chosen subprotocol at handshake. Defaults to `None` and might be set as `str`. Chosen from the available
         subprotocols by their priority order.
-    transfer_data_exception : `None` or `BaseException``
+    transfer_data_exception : `None`, `BaseException``
         Exception catched meanwhile processing received data.
-    transfer_data_task : `None` or ``Task`` of ``.transfer_data``
+    transfer_data_task : `None`, ``Task`` of ``.transfer_data``
         Data receiving task.
     available_extensions : `None` or (`list` of `Any`)
         Available websocket extensions. Defaults to `None`.
         
         Each websocket extension should have the following `4` attributes / methods:
-        - `name`, type `str`. The extension's name.
+        - `name`: `str`. The extension's name.
         - `request_params` : `list` of `tuple` (`str`, `str`). Additional header parameters of the extension.
         - `decode` : `callable`. Decoder method, what processes a received websocket frame. Should accept `2`
             parameters: The respective websocket ``WebSocketFrame``, and the ˙max_size` as `int`, what describes the
@@ -117,18 +117,18 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
             parameter, the respective websocket ``WebSocketFrame``.
     available_subprotocols : `None` or (`list` of `str`)
         A list of supported subprotocols in order of decreasing preference.
-    extra_response_headers : ``IgnoreCaseMultiValueDictionary`` or `dict-like` with (`str`, `str`) items
+    extra_response_headers : ``IgnoreCaseMultiValueDictionary``, `dict-like` with (`str`, `str`) items
         Extra response headers.
     handler : `async-callable`
         An asynchronous callable, what will handle a websocket connection.
         
         Should be given as an `async-callable` accepting `1` parameter the respective asynchronous server side
         websocket protocol implementations.
-    handler_task : `None` or ``Task`` of ``.lifetime_handler``
+    handler_task : `None`, ``Task`` of ``.lifetime_handler``
         Handles the connected websocket meanwhile it is alive.
-    origin : `None` or `str`
+    origin : `None`, `str`
         Value of the Origin header.
-    request_processor : `None` or `callable`
+    request_processor : `None`, `callable`
         An optionally asynchronous callable, what processes the initial requests from the potential clients.
         
         Should accept the following parameters:
@@ -139,13 +139,13 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
         ``AbortHandshake`` parameters.
     server : ``WSServer``
         The owner websocket server instance.
-    subprotocol_selector `None` or `callable`
+    subprotocol_selector `None`, `callable`
         User hook to select subprotocols. Should accept the following parameters:
         - `parsed_header_subprotocols` : `list` of `str`. The subprotocols supported by the client.
         - `available_subprotocols` : `list` of `str`. The subprotocols supported by the server.
-    request : `None` or ``RawRequestMessage``
+    request : `None`, ``RawRequestMessage``
         The received http request if applicable.
-    response_headers : `None` or `IgnoreCaseMultiValueDictionary` of (`str`, `str`) items
+    response_headers : `None`, `IgnoreCaseMultiValueDictionary` of (`str`, `str`) items
         The server websocket's response's headers if applicable.
     """
     is_client = False

@@ -53,7 +53,7 @@ class HttpReadProtocol(ReadProtocolBase):
         Whether the protocol received end of file.
     _chunks : `deque` of `bytes`
         Right feed, left pop queue, used to store the received data chunks.
-    _exception : `None` or `BaseException`
+    _exception : `None`, `BaseException`
         Exception set by ``.set_exception``, when an unexpected exception occur meanwhile reading from socket.
     _loop : ``EventThread``
         The event loop to what the protocol is bound to.
@@ -63,13 +63,13 @@ class HttpReadProtocol(ReadProtocolBase):
         Whether the protocol's respective transport's reading is paused. Defaults to `False`.
         
         Also note, that not every transport supports pausing.
-    _payload_reader : `None` or `GeneratorType`
+    _payload_reader : `None`, `GeneratorType`
         Payload reader generator, what gets the control back, when data, eof or any exception is received.
     _payload_waiter : `None` of ``Future``
         Payload waiter of the protocol, what's result is set, when the ``.payload_reader`` generator returns.
         
         If cancelled or marked by done or any other methods, the payload reader will not be cancelled.
-    _transport : `None` or `Any`
+    _transport : `None`, `Any`
         Asynchronous transport implementation. Is set meanwhile the protocol is alive.
     """
     __slots__ = ()
@@ -240,9 +240,9 @@ class HttpReadProtocol(ReadProtocolBase):
         -------
         is_more : `bool`
             Whether the payload contains more multipart field.
-        headers : `None` or ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`)
+        headers : `None`, ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`)
             Received response headers.
-        chunk : `None`, `bytes` or `bytearray`
+        chunk : `None`, `bytes`, `bytearray`
             The field content.
         
         Raises
@@ -338,7 +338,7 @@ class HttpReadProtocol(ReadProtocolBase):
         ------
         headers : `IgnoreCaseMultiValueDictionary`
             The multipart's headers.
-        data : `bytes` or `bytes-like`
+        data : `bytes`, `bytes-like`
             The multipart's data.
         
         Raises
@@ -902,12 +902,12 @@ class HttpReadProtocol(ReadProtocolBase):
         
         Parameters
         ----------
-        message : ``RawMessage`` instance
+        message : ``RawMessage``
             Raw http message. Can be either request or response.
         
         Returns
         -------
-        payload_reader_task : `None` or `GeneratorType`
+        payload_reader_task : `None`, `GeneratorType`
             Payload reader task if applicable.
         """
         length = message.headers.get(CONTENT_LENGTH, None)
@@ -1135,7 +1135,7 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
         Whether the protocol received end of file.
     _chunks : `deque` of `bytes`
         Right feed, left pop queue, used to store the received data chunks.
-    _exception : `None` or `BaseException`
+    _exception : `None`, `BaseException`
         Exception set by ``.set_exception``, when an unexpected exception occur meanwhile reading from socket.
     _loop : ``EventThread``
         The event loop to what the protocol is bound to.
@@ -1145,15 +1145,15 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
         Whether the protocol's respective transport's reading is paused. Defaults to `False`.
         
         Also note, that not every transport supports pausing.
-    _payload_reader : `None` or `GeneratorType`
+    _payload_reader : `None`, `GeneratorType`
         Payload reader generator, what gets the control back, when data, eof or any exception is received.
     _payload_waiter : `None` of ``Future``
         Payload waiter of the protocol, what's result is set, when the ``.payload_reader`` generator returns.
         
         If cancelled or marked by done or any other methods, the payload reader will not be cancelled.
-    _transport : `None` or `Any`
+    _transport : `None`, `Any`
         Asynchronous transport implementation. Is set meanwhile the protocol is alive.
-    _drain_waiter : `None` or ``Future``
+    _drain_waiter : `None`, ``Future``
         A future, what is used to block the writing task, till it's writen data is drained.
     """
     __slots__ = ()
@@ -1204,7 +1204,7 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
             Response headers.
         version : ``HttpVersion``, Optional
             Http version of the response. Defaults to `HttpVersion11`.
-        body : `None` or `bytes-like`, Optional
+        body : `None`, `bytes-like`, Optional
             Http response body.
         
         Raises

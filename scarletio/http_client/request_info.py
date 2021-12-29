@@ -19,7 +19,7 @@ class RequestInfo:
     
     def __init__(self, request):
         """
-        Creates a new ``RequestInfo`` instance representing the given request.
+        Creates a new ``RequestInfo`` representing the given request.
         
         Parameters
         ----------

@@ -100,7 +100,7 @@ class URL:
 
     def __new__(cls, value='', encoded=False):
         """
-        Creates a new ``URL`` instance from the given `value`
+        Creates a new ``URL`` from the given `value`
         
         Parameters
         ----------
@@ -112,10 +112,10 @@ class URL:
         Raises
         -------
         ValueError
-            - If `value` is given as `urllib.parse.SplitResult` instance, but `encoded` was given as `False`.
+            - If `value` is given as `urllib.parse.SplitResult`, but `encoded` was given as `False`.
             - If `value` is not `encoded` and the URL is absolute, but `host` is not given.
         TypeError
-            If `value` was not given neither as ``URL``, `str` nor `urllib.parse.SplitResult` instance.
+            If `value` was not given neither as ``URL``, `str` nor `urllib.parse.SplitResult`.
         """
         if isinstance(value, cls):
             return value
@@ -126,8 +126,8 @@ class URL:
             if not encoded:
                 raise ValueError(f'Cannot apply decoding to `{SplitResult.__name__}`.')
         else:
-            raise TypeError(f'`value` should have be given as `{cls.__name__}`, `str` or `{SplitResult.__name__}` '
-                f'instance, got {value.__class__.__name__}.')
+            raise TypeError(f'`value` can be `{cls.__name__}`, `str`, `{SplitResult.__name__}`, got '
+                f'{value.__class__.__name__}.')
         
         if not encoded:
             if value.netloc:
@@ -370,7 +370,7 @@ class URL:
         
         Returns
         -------
-        raw_user : `None` or `str`
+        raw_user : `None`, `str`
         """
         return self._value.username
     
@@ -381,7 +381,7 @@ class URL:
         
         Returns
         -------
-        user : `None` or `str`
+        user : `None`, `str`
         """
         return unquote(self.raw_user)
     
@@ -392,7 +392,7 @@ class URL:
         
         Returns
         -------
-        raw_password : `None` or `str`
+        raw_password : `None`, `str`
         """
         return self._value.password
     
@@ -403,7 +403,7 @@ class URL:
         
         Returns
         -------
-        password : `None` or `str`
+        password : `None`, `str`
         """
         return unquote(self.raw_password)
     
@@ -414,7 +414,7 @@ class URL:
         
         Returns
         -------
-        raw_host : `None` or `str`
+        raw_host : `None`, `str`
         """
         return self._value.hostname
     
@@ -425,7 +425,7 @@ class URL:
         
         Returns
         -------
-        host : `None` or `str`
+        host : `None`, `str`
         """
         raw_host = self.raw_host
         if raw_host is None:
@@ -443,7 +443,7 @@ class URL:
         
         Returns
         -------
-        raw_subdomain : `None` or `str`
+        raw_subdomain : `None`, `str`
         """
         host_name = self._value.hostname
         if host_name is None:
@@ -469,7 +469,7 @@ class URL:
         
         Returns
         -------
-        subdomain : `None` or `str`
+        subdomain : `None`, `str`
         """
         raw_subdomain = self.raw_subdomain
         if raw_subdomain is None:
@@ -487,7 +487,7 @@ class URL:
         
         Returns
         -------
-        port : `None` or `int`
+        port : `None`, `int`
         """
         value = self._value
         port = value.port
@@ -676,13 +676,13 @@ class URL:
         
         Parameters
         ----------
-        user : `None` or `str`
+        user : `None`, `str`
             User part of an URL.
-        password : `None` or `str`
+        password : `None`, `str`
             Password part of an URL.
-        host : `None` or `str`
+        host : `None`, `str`
             The host part of an URL.
-        port : `None` or `int`
+        port : `None`, `int`
             The ort part of an URL:
         
         Returns
@@ -729,7 +729,7 @@ class URL:
         Raises
         ------
         TypeError
-            If `scheme` was not given as `str` instance.
+            If `scheme` was not given as `str`.
         ValueError
             If the source URL is relative; Scheme replacement is not allowed for relative URL-s.
         
@@ -738,7 +738,7 @@ class URL:
         The returned URL's `query` and `fragment` will be same as the source one's.
         """
         if not isinstance(scheme, str):
-            raise TypeError(f'`scheme` can be given as `str` instance, got {scheme.__class__.__name__}.')
+            raise TypeError(f'`scheme` can be `str`, got {scheme.__class__.__name__}.')
         
         if not self.is_absolute():
             raise ValueError('`scheme` replacement is not allowed for relative URL-s.')
@@ -753,7 +753,7 @@ class URL:
         
         Parameters
         ----------
-        user : `None` or `str`
+        user : `None`, `str`
             User part for the new url.
 
         Returns
@@ -763,7 +763,7 @@ class URL:
         Raises
         ------
         TypeError
-            If `user` was not given neither as `None` nor `str` instance.
+            If `user` was not given neither as `None` nor `str`.
         ValueError
             If the source URL is relative; User replacement is not allowed for relative URL-s.
         
@@ -778,7 +778,7 @@ class URL:
             user = quote(user)
             password = value.password
         else:
-            raise TypeError(f'`user` can be given as `None` or `str` instance, got  {user.__class__.__name__}.')
+            raise TypeError(f'`user` can be `None`, `str`, got  {user.__class__.__name__}.')
         
         if not self.is_absolute():
             raise ValueError('`user` replacement is not allowed for relative URL-s.')
@@ -793,7 +793,7 @@ class URL:
         
         Parameters
         ----------
-        password : `None` or `str`
+        password : `None`, `str`
             Password part for the new url.
 
         Returns
@@ -803,7 +803,7 @@ class URL:
         Raises
         ------
         TypeError
-            If `password` was not given neither as `None` nor `str` instance.
+            If `password` was not given neither as `None` nor `str`.
         ValueError
             If the source URL is relative; Password replacement is not allowed for relative URL-s.
         
@@ -816,7 +816,7 @@ class URL:
         elif isinstance(password, str):
             password = quote(password)
         else:
-            raise TypeError(f'`password` can be given as `None` or `str` instance, got {password.__class__.__name__}.')
+            raise TypeError(f'`password` can be `None`, `str`, got {password.__class__.__name__}.')
         
         if not self.is_absolute():
             raise ValueError('Password replacement is not allowed for relative URL-s.')
@@ -841,7 +841,7 @@ class URL:
         Raises
         ------
         TypeError
-            If `host` was not given as `str` instance.
+            If `host` was not given as `str`.
         ValueError
             - If the source URL is relative; Host replacement is not allowed for relative URL-s.
             - If `host` was given as empty string; Removing `host` is not allowed.
@@ -851,7 +851,7 @@ class URL:
         The returned URL's `query` and `fragment` will be same as the source one's.
         """
         if not isinstance(host, str):
-            raise TypeError(f'`host` can be given as `str` instance, got {host.__class__.__name__}.')
+            raise TypeError(f'`host` can be `str`, got {host.__class__.__name__}.')
         
         if not self.is_absolute():
             raise ValueError('`host` replacement is not allowed for relative URL-s.')
@@ -877,7 +877,7 @@ class URL:
         
         Parameters
         ----------
-        port : `None` or `int`
+        port : `None`, `int`
             Port part of the new url.
 
         Returns
@@ -887,7 +887,7 @@ class URL:
         Raises
         ------
         TypeError
-            If `port` was not given neither as `None` nor `int` instance.
+            If `port` was not given neither as `None` nor `int`.
         ValueError
             If the source URL is relative; Port replacement is not allowed for relative URL-s.
         
@@ -896,7 +896,7 @@ class URL:
         The returned URL's `query` and `fragment` will be same as the source one's.
         """
         if (port is not None) and (not isinstance(port, int)):
-            raise TypeError(f'`port` can be given as `None` or `int` instance, got {port.__class__.__name__}.')
+            raise TypeError(f'`port` can be `None`, `int`, got {port.__class__.__name__}.')
         
         if not self.is_absolute():
             raise ValueError('`port` replacement is not allowed for relative URL-s.')
@@ -924,8 +924,8 @@ class URL:
         ------
         TypeError
             - If `query` was given as an invalid type.
-            - If `query` was given as `set` or `list`, but `1` of it's elements cannot be unpacked correctly.
-            - If a query key was not given as `str` instance.
+            - If `query` was given as `set`, `list`, but `1` of it's elements cannot be unpacked correctly.
+            - If a query key was not given as `str`.
             - If a query value was not given as any of the expected types.
         ValueError
             - If a query value was given as `float`, but as `inf`.
@@ -963,7 +963,7 @@ class URL:
         
         Parameters
         ----------
-        fragment : `None` or `str`
+        fragment : `None`, `str`
             Fragment part of the new url.
 
         Returns
@@ -973,7 +973,7 @@ class URL:
         Raises
         ------
         TypeError
-            If `fragment` was not given neither as `None` nor `str` instance.
+            If `fragment` was not given neither as `None` nor `str`.
         
         Notes
         -----
@@ -982,7 +982,7 @@ class URL:
         if fragment is None:
             fragment = ''
         elif not isinstance(fragment, str):
-            raise TypeError(f'`fragment` can be given as `None` or `str` instance, got {fragment.__class__.__name__}.')
+            raise TypeError(f'`fragment` can be `None`, `str`, got {fragment.__class__.__name__}.')
         
         return URL(self._value._replace(fragment=quote(fragment, safe='?/:@')), encoded=True)
     
@@ -1002,7 +1002,7 @@ class URL:
         Raises
         ------
         TypeError
-            If `name` was not given as `str` instance.
+            If `name` was not given as `str`.
         ValueError
             If `name` contains `'/'` character.
         
@@ -1011,7 +1011,7 @@ class URL:
         The returned URL's `fragment` and `query` will be REMOVED.
         """
         if not isinstance(name, str):
-            raise TypeError(f'`name` can be given as `str` instance, got {name.__class__.__name__}.')
+            raise TypeError(f'`name` can be `str`, got {name.__class__.__name__}.')
         
         if '/' in name:
             raise ValueError(f'`name` contains `\'/\'` character, got {name!r}.')
@@ -1049,14 +1049,14 @@ class URL:
         Raises
         ------
         TypeError
-            If `other` was not given as ``URL`` instance.
+            If `other` was not given as ``URL``.
         
         See Also
         -----
         `urllib.parse.url_join` for more information.
         """
         if not isinstance(other, URL):
-            raise TypeError(f'`url` can be given as `{URL.__name__}` instance, got {other.__class__.__name__}.')
+            raise TypeError(f'`url` can be `{URL.__name__}`, got {other.__class__.__name__}.')
         
         return URL(url_join(str(self), str(other)), encoded=True)
     
@@ -1091,8 +1091,8 @@ class URL:
         ------
         TypeError
             - If `query` was given as an invalid type.
-            - If `query` was given as `set` or `list`, but `1` of it's elements cannot be unpacked correctly.
-            - If a query key was not given as `str` instance.
+            - If `query` was given as `set`, `list`, but `1` of it's elements cannot be unpacked correctly.
+            - If a query key was not given as `str`.
             - If a query value was not given as any of the expected types.
         ValueError
             - If a query value was given as `float`, but as `inf`.
@@ -1133,7 +1133,7 @@ def build_query_from_dict(query):
     Raises
     ------
     TypeError
-        - If `1` of `query`'s keys is not `str` instance.
+        - If `1` of `query`'s keys is not `str`.
         - If a query value is not any of the expected types.
     ValueError
         - If a query value was given as `float` and it is `inf`.
@@ -1154,7 +1154,7 @@ def build_query_from_list(query):
     
     Parameters
     ----------
-    query : (`list` or `set`) of `tuple` \
+    query : (`list`, `set`) of `tuple` \
             (`str`, (`str`, `int`, `bool`, `NoneType`, `float`, (`list`, `tuple`, `set`) of repeat value))
         The query to serialize.
     
@@ -1167,7 +1167,7 @@ def build_query_from_list(query):
     ------
     TypeError
         - If `1` of `query`'s elements cannot be unpacked to a `key` - `value` pair.
-        - If `1` of `query`'s keys is not `str` instance.
+        - If `1` of `query`'s keys is not `str`.
         - If a query value is not any of the expected types.
     ValueError
         - If a query value was given as `float` and it is `inf`.
@@ -1241,7 +1241,7 @@ def build_query_element_to(build_to, query_key, value):
 
 def build_query_list_to(build_to, query_key, query_list):
     """
-    Builds a query element from a `list` or `set`.
+    Builds a query element from a `list`, `set`.
     
     Parameters
     ----------

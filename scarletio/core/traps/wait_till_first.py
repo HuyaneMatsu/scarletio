@@ -21,11 +21,11 @@ class WaitTillFirst(Future):
         Note, if the future is already done, then the newly added callbacks are queued up instantly on the respective
         event loop to be called.
     
-    _exception : `None` or `BaseException` instance
+    _exception : `None`, `BaseException`
         The exception set to the future as it's result. Defaults to `None`.
     _loop : ``EventThread``
         The loop to what the created future is bound.
-    _result : `tuple` (`set` of ``Future`` instances, `set` of ``Future`` instances)
+    _result : `tuple` (`set` of ``Future``, `set` of ``Future``)
         The result of the future. Defaults to `None`.
     _state : `str`
         The state of the future.
@@ -58,7 +58,7 @@ class WaitTillFirst(Future):
         
         Parameters
         ----------
-        futures : `iterable` of ``Future`` instances
+        futures : `iterable` of ``Future``
             The futures from which we will wait on the first to complete.
         loop : ``EventThread``
             The loop to what the created future will be bound to.
@@ -104,7 +104,7 @@ class WaitTillFirst(Future):
         
         def __init__(self, parent):
             """
-            Creates a new ``WaitTillFirst`` callback object with the given parent ``WaitTillFirst`` instance.
+            Creates a new ``WaitTillFirst`` callback object with the given parent ``WaitTillFirst``.
             
             Parameters
             ----------
@@ -119,11 +119,11 @@ class WaitTillFirst(Future):
             The callback, which runs when a waited future is done.
             
             Removes the done future from the parent's `pending` futures and puts it on the `done` ones. Also marks the
-            parent ``WaitTillFirst`` instance as finished.
+            parent ``WaitTillFirst`` as finished.
             
             Parameters
             ----------
-            future : ``Future`` instance
+            future : ``Future``
                 A done waited future.
             """
             parent = self._parent
@@ -160,7 +160,7 @@ class WaitTillFirst(Future):
         
         Returns
         -------
-        done : `set` of ``Future`` instances.
+        done : `set` of ``Future``-s.
         """
         return self._result[0]
     
@@ -172,7 +172,7 @@ class WaitTillFirst(Future):
         
         Returns
         -------
-        done : `set` of ``Future`` instances.
+        done : `set` of ``Future``-s.
         """
         return self._result[1]
     

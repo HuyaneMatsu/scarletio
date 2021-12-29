@@ -12,7 +12,7 @@ class Server:
         The amount of active connections bound to the server.
     backlog : `int`
         The maximum number of queued connections passed to `listen()` (defaults to 100).
-    close_waiters : `None` or `list` of ``Future``
+    close_waiters : `None`, `list` of ``Future``
         Futures, which are waiting for the server to close. If the server is already closed, set as `None`.
     loop : ``EventThread``
         The event loop to what the server is bound to.
@@ -20,9 +20,9 @@ class Server:
         Factory function for creating a protocols.
     serving : `bool`
         Whether the server is serving.
-    sockets : `None` or `list` of `socket.socket`
+    sockets : `None`, `list` of `socket.socket`
         The sockets served by the server. If the server is closed, then i set as `None`.
-    ssl_context : `None` or `ssl.SSLContext`
+    ssl_context : `None`, `ssl.SSLContext`
         If ssl is enabled for the connections, then set as `ssl.SSLContext`.
     """
     __slots__ = ('active_count', 'backlog', 'close_waiters', 'loop', 'protocol_factory', 'serving', 'sockets',
@@ -40,7 +40,7 @@ class Server:
             The sockets to serve by the server.
         protocol_factory : `callable`
             Factory function for creating a protocols.
-        ssl_context : `None` or `ssl.SSLContext`
+        ssl_context : `None`, `ssl.SSLContext`
             To enable ssl for the connections, give it as  `ssl.SSLContext`.
         backlog : `int`
             The maximum number of queued connections passed to `listen()` (defaults to 100).

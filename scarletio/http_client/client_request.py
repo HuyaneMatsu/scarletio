@@ -30,13 +30,13 @@ class ClientRequest:
     
     Attributes
     ----------
-    auth : `None` or ``BasicAuth``
+    auth : `None`, ``BasicAuth``
         Authorization sent with the request.
-    body : `None`, ``PayloadBase`` instance
+    body : `None`, ``PayloadBase``
         The request's body.
     chunked : `bool`
         Whether the request is sent chunked.
-    compression : `None` or `str`
+    compression : `None`, `str`
         Compression used when sending the request.
     headers : `IgnoreCaseMultiValueDictionary`
         The headers of the request.
@@ -46,17 +46,17 @@ class ClientRequest:
         The request's method.
     original_url : ``URL``
         The original url, what was asked to request.
-    proxy_auth : `None` or ``BasicAuth``
+    proxy_auth : `None`, ``BasicAuth``
         Proxy authorization sent with the request.
-    proxy_url : `None` or ``URL``
+    proxy_url : `None`, ``URL``
         Proxy url to use if applicable.
-    response : `None` or ``ClientResponse``
+    response : `None`, ``ClientResponse``
         Object representing the received response. Set as `None` till ``.send`` finishes.
     ssl : `None` `None`, ``SSLContext``, `bool`, ``Fingerprint``
         The connection's ssl type.
     url : ``URL``
         The url, what will be requested.
-    writer : `None` or ``Task`` of ``.write_bytes``
+    writer : `None`, ``Task`` of ``.write_bytes``
         Payload writer task, what is present meanwhile the request's payload is sending.
     """
     __slots__ = ('auth', 'body', 'chunked', 'compression', 'headers', 'loop', 'method', 'original_url', 'proxy_auth',
@@ -64,7 +64,7 @@ class ClientRequest:
     
     def __new__(cls, loop, method, url, headers, data, params, cookies, auth, proxy_url, proxy_auth, ssl):
         """
-        Creates a new ``ClientRequest`` instance with the given parameters.
+        Creates a new ``ClientRequest`` with the given parameters.
         
         Parameters
         ----------
@@ -74,19 +74,19 @@ class ClientRequest:
             The request's method.
         url : ``URL``
             The url to request.
-        headers : `None`, `dict` or ``IgnoreCaseMultiValueDictionary``
+        headers : `None`, `dict`, ``IgnoreCaseMultiValueDictionary``
             Headers of the request.
         data : `None`, `bytes-like`, `io-like`, ``Formdata`
             Data to send as the request's body.
         params : `dict` of (`str`, (`str`, `int`, `float`, `bool`)) items
             Query string parameters.
-        cookies : `None` or ``CookieJar``
+        cookies : `None`, ``CookieJar``
             Cookies OwO.
-        auth : `None` or ``BasicAuth``
+        auth : `None`, ``BasicAuth``
             Authorization sent with the request.
-        proxy_url : `None` or ``URL``
+        proxy_url : `None`, ``URL``
             Proxy url to use if applicable.
-        proxy_auth : `None` or ``BasicAuth``
+        proxy_auth : `None`, ``BasicAuth``
             Proxy authorization sent with the request.
         ssl : `None` `None`, ``SSLContext``, `bool`, ``Fingerprint``
             The connection's ssl type.
@@ -173,7 +173,7 @@ class ClientRequest:
             if (proxy_auth is not None):
                 proxy_auth_type = proxy_auth.__class__
                 if proxy_auth_type is not BasicAuth:
-                    raise TypeError(f'`proxy_auth` must be `None` or `{BasicAuth.__name__}`, got '
+                    raise TypeError(f'`proxy_auth` must be `None`, `{BasicAuth.__name__}`, got '
                         f'{proxy_auth_type.__name__}.')
         
         # Needed for transfer data checks

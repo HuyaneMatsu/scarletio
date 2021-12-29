@@ -160,9 +160,9 @@ def format_callback(func, args=None, kwargs=None):
     ----------
     func : `callable`
         The callback to format.
-    args : `None` or `iterable` of `Any`, Optional
+    args : `None`, `iterable` of `Any`, Optional
         Additional parameters to call the `func` with.
-    kwargs : `None` or `dict` of (`str`, `Any`) items, Optional
+    kwargs : `None`, `dict` of (`str`, `Any`) items, Optional
         Additional keyword parameters to call the `func` with.
     
     Returns
@@ -227,7 +227,7 @@ def format_coroutine(coroutine):
     
     Parameters
     ----------
-    coroutine : `CoroutineType` or `GeneratorType` (or any compatible cyi or builtin)
+    coroutine : `CoroutineType`, `GeneratorType` (or any compatible cyi or builtin)
         The coroutine to get representation of.
     
     Returns
@@ -284,9 +284,9 @@ def render_frames_into(frames, extend=None):
     
     Parameters
     ----------
-    frames : `list` of (`frame` or ``ExceptionFrameProxy``)
+    frames : `list` of (`frame`, ``ExceptionFrameProxy``)
         The frames to render.
-    extend : `None` or `list` of `str`
+    extend : `None`, `list` of `str`
         Whether the frames should be rendered into an already existing list.
     
     Returns
@@ -369,7 +369,7 @@ class ExceptionFrameProxy:
     
     def __init__(self, tb):
         """
-        Creates a new ``ExceptionFrameProxy`` instance with the given traceback.
+        Creates a new ``ExceptionFrameProxy`` with the given traceback.
         
         tb : `traceback`
             The traceback to wrap.
@@ -460,7 +460,7 @@ def _get_exception_frames(exception):
     
     Parameters
     ----------
-    exception : `BaseException` instance
+    exception : `BaseException`
         The exception to trace back.
     
     Returns
@@ -486,9 +486,9 @@ def render_exception_into(exception, extend=None):
     
     Parameters
     ----------
-    exception : `BaseException` instance
+    exception : `BaseException`
         The exception to render.
-    extend : `None` or `list` of `str`
+    extend : `None`, `list` of `str`
         Whether the frames should be rendered into an already existing list.
     
     Returns

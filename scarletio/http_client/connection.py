@@ -9,11 +9,11 @@ class Connection:
     callbacks : `list` of `callable`
         Callable-s to run when the connection is ``.close``-d, ``.release``-d or ``.detach``-ed. They should accept no
         parameters.
-    connector : ``ConnectorBase`` instance
+    connector : ``ConnectorBase``
         The respective connector of the connection.
     key : ``ConnectionKey``
         A key which contains information about the host.
-    protocol : `None` or ``HttpReadWriteProtocol`` instance
+    protocol : `None`, ``HttpReadWriteProtocol``
         The connection's actual protocol. Set as `None` if the connection is ``.close``-d, ``.release``-d or
         ``.detach``-ed.
     """
@@ -21,13 +21,13 @@ class Connection:
     
     def __init__(self, connector, key, protocol):
         """
-        Creates a new ``Connection`` instance with the given parameters.
+        Creates a new ``Connection`` with the given parameters.
         
-        connector : ``ConnectorBase`` instance
+        connector : ``ConnectorBase``
             The respective connector of the connection.
         key : `tuple` (`str`, `int`)
             The host and the port to what the connection is connected too.
-        protocol : ``HttpReadWriteProtocol`` instance
+        protocol : ``HttpReadWriteProtocol``
             The connection's actual protocol.
         """
         self.connector = connector

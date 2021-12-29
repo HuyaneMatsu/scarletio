@@ -18,11 +18,11 @@ class WaitTillAll(WaitTillFirst):
         Note, if the future is already done, then the newly added callbacks are queued up instantly on the respective
         event loop to be called.
     
-    _exception : `None` or `BaseException` instance
+    _exception : `None`, `BaseException`
         The exception set to the future as it's result. Defaults to `None`.
     _loop : ``EventThread``
         The loop to what the created future is bound.
-    _result : `tuple` (`set` of ``Future`` instances, `set` of ``Future`` instances)
+    _result : `tuple` (`set` of ``Future``, `set` of ``Future``)
         The result of the future. Defaults to `None`.
     _state : `str`
         The state of the future.
@@ -64,7 +64,7 @@ class WaitTillAll(WaitTillFirst):
         
         def __init__(self, parent):
             """
-            Creates a new ``WaitTillAll`` callback object with the given parent ``WaitTillAll`` instance.
+            Creates a new ``WaitTillAll`` callback object with the given parent ``WaitTillAll``.
             
             Parameters
             ----------
@@ -82,7 +82,7 @@ class WaitTillAll(WaitTillFirst):
             
             Parameters
             ----------
-            future : ``Future`` instance
+            future : ``Future``
                 A done waited future.
             """
             parent = self._parent

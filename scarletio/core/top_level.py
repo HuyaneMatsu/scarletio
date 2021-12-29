@@ -15,7 +15,7 @@ def _try_detect_event_loop(local_thread):
     
     Returns
     -------
-    event_loop : `None` or ``EventThread``
+    event_loop : `None`, ``EventThread``
     """
     try:
         thread = THREAD_TO_EVENT_LOOP_REFERENCE[local_thread]
@@ -106,7 +106,7 @@ def create_event_loop(**kwargs):
     ----------------
     daemon : `bool`, Optional (Keyword only)
         Whether the event loop should be daemon. Defaults to `False`
-    name : `None` or `str`, Optional (Keyword only)
+    name : `None`, `str`, Optional (Keyword only)
         The event loop's name. Defaults ot `None`.
     start_later : `bool`, Optional (Keyword only)
         Whether the event loop should be started only later. Defaults to `True`
@@ -126,7 +126,7 @@ def create_task(coroutine):
     
     Parameters
     ----------
-    coroutine : `GeneratorType` or `CoroutineType`
+    coroutine : `GeneratorType`, `CoroutineType`
         The coroutine to create task from.
     
     Returns
@@ -175,7 +175,7 @@ def run(awaitable, timeout=None):
     ----------
     awaitable : `awaitable`
         The awaitable to run.
-    timeout : `None` or `float`, Optional
+    timeout : `None`, `float`, Optional
         Timeout after the awaitable should be cancelled. Defaults to `None`.
     
     Raises

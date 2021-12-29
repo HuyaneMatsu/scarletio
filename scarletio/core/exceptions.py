@@ -9,20 +9,20 @@ class InvalidStateError(Exception):
     
     Attributes
     ----------
-    future : ``Future`` instance.
+    future : ``Future``.
         The future, from what's method the exception was raised.
     func_name : `str`
         The future's function's name, from where the exception was raised.
-    _message : `None` or `str`
+    _message : `None`, `str`
         Internal cache for the ``.message`` property.
     """
     def __init__(self, future, func_name, message=None):
         """
-        Creates a new ``InvalidStateError`` instance.
+        Creates a new ``InvalidStateError``.
         
         Parameters
         ----------
-        future : ``Future`` instance.
+        future : ``Future``.
             The future, from what's method the exception was raised.
         func_name : `str`
             The future's function's name, from where the exception was raised.

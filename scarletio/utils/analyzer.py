@@ -217,7 +217,7 @@ class CallableAnalyzer:
     
     Attributes
     ----------
-    args_parameter : `None` or ``Parameter``
+    args_parameter : `None`, ``Parameter``
         If the analyzed callable has `*args` parameter, then this attribute is set to it. Defaults to `None`.
     parameters : `list` of ``Parameter``
         The analyzed callable's parameters.
@@ -236,7 +236,7 @@ class CallableAnalyzer:
         +---------------------------+-----------+-------------------------------------------+
         | INSTANCE_TO_ASYNC_CANNOT  | 3         | Whether the object is not async.          |
         +---------------------------+-----------+-------------------------------------------+
-    kwargs_parameter : `None` or ``Parameter``
+    kwargs_parameter : `None`, ``Parameter``
         If the analyzed callable has `**kwargs`, then this attribute is set to it. Defaults to `None`.
     method_allocation : `int`
         How much parameter is allocated if the analyzed callable is method if applicable.
@@ -687,7 +687,7 @@ class CallableAnalyzer:
         
         return True
     
-    # call `.can_instance_async_callable` or `.can_instance_to_async_generator` before
+    # call `.can_instance_async_callable`, `.can_instance_to_async_generator` before
     def instance(self):
         """
         Instances the analyzed callable.

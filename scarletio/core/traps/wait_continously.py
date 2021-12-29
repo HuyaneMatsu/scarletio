@@ -22,11 +22,11 @@ class WaitContinuously(WaitTillFirst):
         Note, if the future is already done, then the newly added callbacks are queued up instantly on the respective
         event loop to be called.
     
-    _exception : `None` or `BaseException` instance
+    _exception : `None`, `BaseException`
         The exception set to the future as it's result. Defaults to `None`.
     _loop : ``EventThread``
         The loop to what the created future is bound.
-    _result : `tuple` (`set` of ``Future`` instances, `set` of ``Future`` instances)
+    _result : `tuple` (`set` of ``Future``, `set` of ``Future``)
         The result of the future. Defaults to `None`.
     _state : `str`
         The state of the future.
@@ -50,8 +50,8 @@ class WaitContinuously(WaitTillFirst):
     
     _callback : ``._wait_callback``
         Callback added to the waited futures.
-    _last_done : `None` or ``Future`` instance
-        The last done future or task of the ``WaitContinuously`` instance.
+    _last_done : `None`, ``Future``
+        The last done future or task of the ``WaitContinuously``.
     """
     __slots__ = ('_last_done')
     
@@ -61,8 +61,8 @@ class WaitContinuously(WaitTillFirst):
         
         Parameters
         ----------
-        futures : `None` or `iterable` of ``Future`` instances
-            The futures from which the ``WaitContinuously`` instance will yield the done ones. Can be given as `None`.
+        futures : `None`, `iterable` of ``Future``
+            The futures from which the ``WaitContinuously`` will yield the done ones. Can be given as `None`.
         loop : ``EventThread``
             The loop to what the created future will be bound to.
         """
@@ -113,7 +113,7 @@ class WaitContinuously(WaitTillFirst):
         
         def __init__(self, parent):
             """
-            Creates a new ``WaitContinuously`` callback object with the given parent ``WaitContinuously`` instance.
+            Creates a new ``WaitContinuously`` callback object with the given parent ``WaitContinuously``.
             
             Parameters
             ----------
@@ -127,11 +127,11 @@ class WaitContinuously(WaitTillFirst):
             The callback, which runs when a waited future is done.
             
             Removes the done future from the parent's `pending` futures and puts it on the `done` ones. Also marks the
-            parent ``WaitContinuously`` instance as finished if it is pending.
+            parent ``WaitContinuously`` as finished if it is pending.
             
             Parameters
             ----------
-            future : ``Future`` instance
+            future : ``Future``
                 A done waited future.
             """
             parent = self._parent
@@ -154,13 +154,13 @@ class WaitContinuously(WaitTillFirst):
         
         Parameters
         ----------
-        future : ``Future`` instance
+        future : ``Future``
             A task or future to the ``WaitContinuously`` to wait for.
         
         Raises
         ------
         RuntimeError
-            If the ``WaitContinuously`` instance has exception set, or if it is cancelled already. At this case the
+            If the ``WaitContinuously`` has exception set, or if it is cancelled already. At this case the
             added `future` is cancelled instantly.
         """
         state = self._state
@@ -255,7 +255,7 @@ class WaitContinuously(WaitTillFirst):
     
     def cancel(self):
         """
-        Cancels the ``WaitContinuously`` instance.
+        Cancels the ``WaitContinuously``.
         
         By calling it, also cancels all the waited futures as well.
         
@@ -321,7 +321,7 @@ class WaitContinuously(WaitTillFirst):
         
         Returns
         -------
-        last_done : `None` or ``Future`` instance.
+        last_done : `None`, ``Future``.
             The last future, what finished. Defaults to `None`.
         
         Raises
@@ -331,7 +331,7 @@ class WaitContinuously(WaitTillFirst):
         InvalidStateError
             The futures is not done yet.
         TypeError
-            The future has non `BaseException` instance set as exception.
+            The future has non `BaseException` set as exception.
         BaseException
             The future's set exception.
         """

@@ -19,7 +19,7 @@ class _WeakMapCallback:
     @has_docs
     def __new__(cls, parent):
         """
-        Creates a new ``_WeakMapCallback`` instance bound to the given ``WeakMap`` instance.
+        Creates a new ``_WeakMapCallback`` bound to the given ``WeakMap``.
         
         Parameters
         ----------
@@ -69,7 +69,7 @@ class _WeakMapIterator:
     @has_docs
     def __init__(self, parent):
         """
-        Creates a new ``_WeakMapIterator`` instance bound to the given ``WeakMap``.
+        Creates a new ``_WeakMapIterator`` bound to the given ``WeakMap``.
         
         Parameters
         ----------
@@ -125,7 +125,7 @@ class WeakMap(dict):
     
     Attributes
     ----------
-    _pending_removals : `None` or `set` of ``WeakReferer``
+    _pending_removals : `None`, `set` of ``WeakReferer``
         Pending removals of the weak map if applicable.
     _iterating : `int`
         Whether the weak map is iterating and how much times.
@@ -139,7 +139,7 @@ class WeakMap(dict):
     
     Notes
     -----
-    ``WeakMap`` instances are weakreferable.
+    ``WeakMap``-s are weakreferable.
     """
     __slots__ = ('__weakref__', '_pending_removals', '_iterating', '_callback')
     
@@ -216,7 +216,7 @@ class WeakMap(dict):
     @has_docs
     def __init__(self, iterable=None):
         """
-        Creates a new ``WeakMap`` instance from the given iterable.
+        Creates a new ``WeakMap`` from the given iterable.
         
         Parameters
         ----------
@@ -350,7 +350,7 @@ class WeakMap(dict):
         
         Returns
         -------
-        real_key : `Any` or `default`
+        real_key : `Any`, `default`
             The matched key. If no key was matched returns the `default` value.
         """
         try:
@@ -390,7 +390,7 @@ class WeakMap(dict):
         
         Returns
         -------
-        real_key : `Any` or `default`
+        real_key : `Any`, `default`
             The matched key. If no key was matched and `default` value is given, then returns that.
         
         Raises

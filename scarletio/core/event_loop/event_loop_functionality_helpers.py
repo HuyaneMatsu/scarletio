@@ -17,20 +17,20 @@ def _ip_address_info(host, port, family, type_, protocol):
     
     Parameters
     ----------
-    host : `str` or `bytes`
+    host : `str`, `bytes`
         The host ip address.
     port : `int`
         The host port.
-    family : `AddressFamily` or `int`
+    family : `AddressFamily`, `int`
         Address family.
-    type_ : `SocketKind` or `int`
+    type_ : `SocketKind`, `int`
         Socket type.
     protocol : `int`
         Protocol type.
     
     Returns
     -------
-    result : `None` or `tuple` (`AddressFamily` or `int`, `SocketKind` or `int`, `int`, `str`, `tuple` (`str, `int`))
+    result : `None`, `tuple` ((`AddressFamily`, `int`), (`SocketKind`, `int`), `int`, `str`, `tuple` (`str, `int`))
         If everything is correct, returns a `tuple` of 5 elements:
         - `family` : Address family.
         - `type_` : Socket type.

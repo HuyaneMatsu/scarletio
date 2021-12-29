@@ -178,9 +178,9 @@ class AbstractTransportLayerBase:
         
         Parameters
         ----------
-        high : `None` or `int`, Optional
+        high : `None`, `int`, Optional
             High limit to stop reading if reached.
-        low : `None` or `int`, Optional
+        low : `None`, `int`, Optional
             Low limit to start reading if reached.
         
         Raises
@@ -273,7 +273,7 @@ class AbstractProtocolBase:
         
         Parameters
         ----------
-        exception : `None` or `BaseException` instance
+        exception : `None`, `BaseException`
             Defines whether the connection is closed, or an exception was received.
             
             If the connection was closed, then `exception` is given as `None`. This can happen at the case, when eof is
@@ -312,7 +312,7 @@ class AbstractProtocolBase:
         
         Returns
         -------
-        transport : `None` or ``AbstractTransportLayerBase``
+        transport : `None`, ``AbstractTransportLayerBase``
         """
         pass
     
@@ -342,7 +342,7 @@ class AbstractProtocolBase:
         
         Parameters
         ----------
-        exception : `BaseException` instance
+        exception : `BaseException`
         """
         pass
     

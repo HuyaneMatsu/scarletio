@@ -52,7 +52,7 @@ class ConnectorBase:
     alive_protocols_per_host : `dict` of (``ConnectionKey``, `list` of `tuple` (``HttpReadWriteProtocol``, `float`)) items
         Alive, not used protocols for each host. Each element of the values stores when the connection was last used
         as well.
-    cleanup_handle : `None` or ``TimerWeakHandle``
+    cleanup_handle : `None`, ``TimerWeakHandle``
         Weak handle, which cleans up the timed out connections of the connector.
     closed : `bool`
         Whether the connector is closed.
@@ -220,7 +220,7 @@ class ConnectorBase:
 
         Returns
         -------
-        protocol : `None` or ``HttpReadWriteProtocol`` instance
+        protocol : `None`, ``HttpReadWriteProtocol``
             Protocol connected to the respective host. Defaults to `None` if there is not any.
         """
         try:
@@ -256,7 +256,7 @@ class ConnectorBase:
         ----------
         key : ``ConnectionKey``
             A key which contains information about the host.
-        protocol : ``HttpReadWriteProtocol`` instance
+        protocol : ``HttpReadWriteProtocol``
             The connected protocol to the respective host.
         """
         if self.closed:
@@ -328,7 +328,7 @@ class ConnectorBase:
         
         Returns
         -------
-        protocol : ``HttpReadWriteProtocol`` instance
+        protocol : ``HttpReadWriteProtocol``
             The created protocol connected to the respective host.
         
         Raises
@@ -351,7 +351,7 @@ class HostInfo:
         The host's ip address.
     port : `int`
         Port to connect to the host.
-    family : `AddressFamily` or `int`
+    family : `AddressFamily`, `int`
         Address family.
     protocol : `int`
         Protocol type.
@@ -376,7 +376,7 @@ class HostInfo:
             The host's ip address.
         port : `int`
             Port to connect to the host.
-        family : `AddressFamily` or `int`
+        family : `AddressFamily`, `int`
             Address family.
         """
         self = object.__new__(cls)
@@ -398,7 +398,7 @@ class HostInfo:
         ----------
         host : `str`
             The host's ip address.
-        address_info : `tuple` (`AddressFamily` or `int`, `SocketKind` or `int`, `int`, `str`, `tuple` (`str, `int`))
+        address_info : `tuple` (`AddressFamily`, `int`, `SocketKind`, `int`, `int`, `str`, `tuple` (`str, `int`))
             An address info returned by `get_address_info`.
         """
         self = object.__new__(cls)
@@ -467,7 +467,7 @@ class HostInfoCont:
         host : `str`
             The host's name.
         address_infos : `list` of tuple` \
-                (`AddressFamily` or `int`, `SocketKind` or `int`, `int`, `str`, `tuple` (`str, `int`))
+                (`AddressFamily`, `int`, `SocketKind`, `int`, `int`, `str`, `tuple` (`str, `int`))
             Address infos returned by `get_address_info`.
         """
         self = object.__new__(cls)
@@ -540,7 +540,7 @@ class TCPConnector(ConnectorBase):
     alive_protocols_per_host : `dict` of (``ConnectionKey``, `list` of `tuple` (``HttpReadWriteProtocol``, `float`)) items
         Alive, not used protocols for each host. Each element of the values stores when the connection was last used
         as well.
-    cleanup_handle : `None` or ``TimerWeakHandle``
+    cleanup_handle : `None`, ``TimerWeakHandle``
         Weak handle, which cleans up the timed out connections of the connector.
     closed : `bool`
         Whether the connector is closed.
@@ -554,9 +554,9 @@ class TCPConnector(ConnectorBase):
         Cached resolved host information.
     dns_events : `dict` of (`tuple` (`str`, `int`), ``Task`` of ``.resolve``) items
         Active host info resolving events of the connector.
-    family : `AddressFamily` or `int`
+    family : `AddressFamily`, `int`
         Address family of the created socket if any.
-    local_address : `None` or `tuple` of (`None` or  `str`, `None` or `int`)
+    local_address : `None`, `tuple` of (`None` or  `str`, `None`, `int`)
         Can be given as a `tuple` (`local_host`, `local_port`) to bind created sockets locally.
     ssl : `ssl.SSLContext`, `bool`, ``Fingerprint``, `NoneType`
         Whether and what type of ssl should the connector use.
@@ -569,17 +569,17 @@ class TCPConnector(ConnectorBase):
 
     def __new__(cls, loop, family=0, ssl=None, local_address=None, force_close=False, ):
         """
-        Creates a new ``TCPConnector`` instance with the given parameters.
+        Creates a new ``TCPConnector`` with the given parameters.
         
         Parameters
         ----------
         loop : ``EventThread``
             The event loop to what the connector is bound to.
-        family : `AddressFamily` or `int`
+        family : `AddressFamily`, `int`
             Address family of the created socket if any. Defaults to `0`.
         ssl : `ssl.SSLContext`, `bool`, ``Fingerprint``, `NoneType`, Optional
             Whether and what type of ssl should the connector use. Defaults to `None`.
-        local_address : `None` or `tuple` of (`None` or  `str`, `None` or `int`), Optional
+        local_address : `None`, `tuple` of (`None` or  `str`, `None`, `int`), Optional
             Can be given as a `tuple` (`local_host`, `local_port`) to bind created sockets locally. Defaults to `None`.
         force_close : `bool`, Optional
             Whether after each request (and between redirects) the connections should be closed. Defaults to `False`.
@@ -614,14 +614,14 @@ class TCPConnector(ConnectorBase):
         
         Parameters
         ----------
-        host : `None` or `str`
+        host : `None`, `str`
             To what network interfaces should the connection be bound.
-        port : `None` or `int`
+        port : `None`, `int`
             The port of the `host`.
         
         Returns
         -------
-        result : ``HostInfoCont`` or ``BaseException``
+        result : ``HostInfoCont``, ``BaseException``
             A host info container containing the resolved addresses or the cached exception.
         """
         try:
@@ -642,12 +642,12 @@ class TCPConnector(ConnectorBase):
         
         Parameters
         ----------
-        key : `tuple`, (`None` or `str`, `None` or `int`)
+        key : `tuple`, (`None`, `str`, `None`, `int`)
             A tuple containing a `host`, `port` par to resolve.
         
         Returns
         -------
-        result : ``HostInfoCont`` or ``BaseException``
+        result : ``HostInfoCont``, ``BaseException``
             A host info container containing the resolved addresses or the cached exception.
         """
         try:
@@ -779,7 +779,7 @@ class TCPConnector(ConnectorBase):
         
         Returns
         -------
-        ssl_context : `None` or `ssl.SSLContext`
+        ssl_context : `None`, `ssl.SSLContext`
             Returns `None` if the request is not `ssl`.
         """
         if not request.is_ssl():
@@ -815,7 +815,7 @@ class TCPConnector(ConnectorBase):
         
         Returns
         -------
-        fingerprint : `None` or ``Fingerprint``
+        fingerprint : `None`, ``Fingerprint``
         """
         maybe_fingerprint = request.ssl
         if isinstance(maybe_fingerprint, Fingerprint):

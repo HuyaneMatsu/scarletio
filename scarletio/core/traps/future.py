@@ -65,11 +65,11 @@ class Future:
         Note, if the future is already done, then the newly added callbacks are queued up instantly on the respective
         event loop to be called.
     
-    _exception : `None` or `BaseException` instance
+    _exception : `None`, `BaseException`
         The exception set to the future as it's result. Defaults to `None`.
     _loop : ``EventThread``
         The loop to what the created future is bound.
-    _result : `None` or `Any`
+    _result : `None`, `Any`
         The result of the future. Defaults to `None`.
     _state : `int`
         The state of the future.
@@ -284,10 +284,10 @@ class Future:
         
         If the future is cancelled, raises ``CancelledError``.
         
-        If the future has exception set with `.set_exception` or `.set_exception_if_pending` successfully, then raises
+        If the future has exception set with `.set_exception`, `.set_exception_if_pending` successfully, then raises
         the given exception.
         
-        If the future has result set with `.set_result` or `.set_result_if_pending` successfully, then returns the
+        If the future has result set with `.set_result`, `.set_result_if_pending` successfully, then returns the
         given object.
         
         If the future is not done yet, raises ``InvalidStateError``.
@@ -303,7 +303,7 @@ class Future:
         InvalidStateError
             The futures is not done yet.
         TypeError
-            The future has non `BaseException` instance set as exception.
+            The future has non `BaseException` set as exception.
         BaseException
             The future's set exception.
         """
@@ -607,7 +607,7 @@ class Future:
     
     def cancel_handles(self):
         """
-        Cancels the handles (``_HandleCancellerBase`` instances) added as callbacks to the future.
+        Cancels the handles (``_HandleCancellerBase``) added as callbacks to the future.
         """
         callbacks = self._callbacks
         if callbacks:

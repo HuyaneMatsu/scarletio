@@ -15,7 +15,7 @@ ignore_frame(__spec__.origin, '__iter__', 'yield self',)
 @export
 class FutureAsyncWrapper(Future):
     """
-    Async wrapper for ``Future`` instances enabling them to be awaited from an another event loop.
+    Async wrapper for ``Future``-s enabling them to be awaited from an another event loop.
     
     Attributes
     ----------
@@ -28,14 +28,14 @@ class FutureAsyncWrapper(Future):
         Note, if the future is already done, then the newly added callbacks are queued up instantly on the respective
         event loop to be called.
     
-    _exception : `None` or `BaseException` instance
+    _exception : `None`, `BaseException`
         The exception set to the future as it's result. Defaults to `None`.
-    _future : `None` or ``Future`` instance
+    _future : `None`, ``Future``
         The waited future. If the future's state == modified by the sync wrapper, then ``._future`` is set as `None`,
         to not retrieve the result again.
     _loop : ``EventThread``
         The loop to what the async future wrapper is bound to.
-    _result : `None` or `Any`
+    _result : `None`, `Any`
         The result of the future. Defaults to `None`.
     _state : `str`
         The state of the future.
@@ -63,18 +63,18 @@ class FutureAsyncWrapper(Future):
         """
         Creates a new ``FutureAsyncWrapper`` object bound to the given `loop` and `future`.
         
-        If the given `future` is an ``FutureAsyncWrapper`` instance, then will wrap it's future instead.
+        If the given `future` is an ``FutureAsyncWrapper``, then will wrap it's future instead.
         
         Parameters
         ----------
         loop : ``EventThread``
             The loop from where the created wrapper futures can be awaited.
-        future : ``Future`` or ``FutureAsyncWrapper`` instance
+        future : ``Future``, ``FutureAsyncWrapper``
             The future to wrap.
         
         Returns
         -------
-        self : ``Future`` or ``FutureAsyncWrapper`` instance
+        self : ``Future``, ``FutureAsyncWrapper``
             If the given `future` is bound to the given loop, returns the `future` itself instead of async wrapping it.
         """
         if future._loop is loop:
@@ -108,7 +108,7 @@ class FutureAsyncWrapper(Future):
         
         Parameters
         ----------
-        future : ``Future`` instance
+        future : ``Future``
             The future on what you would want to wait from the other event loop.
         
         Returns
@@ -246,7 +246,7 @@ class FutureAsyncWrapper(Future):
         
         Parameters
         ----------
-        future : ``Future`` instance
+        future : ``Future``
             The waited future.
         
         Notes
@@ -283,7 +283,7 @@ class FutureAsyncWrapper(Future):
         
         Parameters
         ----------
-        future : ``Future`` instance
+        future : ``Future``
             The future, from what's callbacks the own one will be removed.
         """
         callbacks = future._callbacks
@@ -304,7 +304,7 @@ class FutureAsyncWrapper(Future):
         
         Parameters
         ----------
-        future : ``Future`` instance
+        future : ``Future``
             The future to set the result to.
         result : `Any`
             The result to set as the future's.
@@ -326,7 +326,7 @@ class FutureAsyncWrapper(Future):
         
         Parameters
         ----------
-        future : ``Future`` instance.
+        future : ``Future``.
         """
         if self._future is future:
             self._state = FUTURE_STATE_RETRIEVED
@@ -379,7 +379,7 @@ class FutureAsyncWrapper(Future):
         
         Parameters
         ----------
-        future : ``Future`` instance
+        future : ``Future``
             The future to set the result to.
         exception : `Any`
             The exception to set as the future's.

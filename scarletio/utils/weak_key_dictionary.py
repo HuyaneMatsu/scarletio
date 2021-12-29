@@ -19,7 +19,7 @@ class _WeakKeyDictionaryCallback:
     @has_docs
     def __new__(cls, parent):
         """
-        Creates a new ``_WeakKeyDictionaryCallback`` instance bound to the given ``WeakKeyDictionary`` instance.
+        Creates a new ``_WeakKeyDictionaryCallback`` bound to the given ``WeakKeyDictionary``.
         
         Parameters
         ----------
@@ -70,7 +70,7 @@ class _WeakKeyDictionaryKeyIterator:
     @has_docs
     def __init__(self, parent):
         """
-        Creates a new ``_WeakKeyDictionaryKeyIterator`` instance bound to the given ``WeakKeyDictionary``.
+        Creates a new ``_WeakKeyDictionaryKeyIterator`` bound to the given ``WeakKeyDictionary``.
         
         Parameters
         ----------
@@ -133,7 +133,7 @@ class _WeakKeyDictionaryValueIterator:
     @has_docs
     def __init__(self, parent):
         """
-        Creates a new ``_WeakKeyDictionaryValueIterator`` instance bound to the given ``WeakKeyDictionary``.
+        Creates a new ``_WeakKeyDictionaryValueIterator`` bound to the given ``WeakKeyDictionary``.
         
         Parameters
         ----------
@@ -212,7 +212,7 @@ class _WeakKeyDictionaryItemIterator:
     @has_docs
     def __init__(self, parent):
         """
-        Creates a new ``_WeakKeyDictionaryItemIterator`` instance bound to the given ``WeakKeyDictionary``.
+        Creates a new ``_WeakKeyDictionaryItemIterator`` bound to the given ``WeakKeyDictionary``.
         
         Parameters
         ----------
@@ -287,7 +287,7 @@ class WeakKeyDictionary(dict):
     
     Attributes
     ----------
-    _pending_removals : `None` or `set` of ``WeakReferer``
+    _pending_removals : `None`, `set` of ``WeakReferer``
         Pending removals of the weak key dictionary if applicable.
     _iterating : `int`
         Whether the weak key dictionary is iterating and how much times.
@@ -301,7 +301,7 @@ class WeakKeyDictionary(dict):
     
     Notes
     -----
-    ``WeakKeyDictionary`` instances are weakreferable.
+    ``WeakKeyDictionary``-s are weakreferable.
     """
     __slots__ = ('__weakref__', '_pending_removals', '_iterating', '_callback')
     
@@ -364,7 +364,7 @@ class WeakKeyDictionary(dict):
     @has_docs
     def __init__(self, iterable=None):
         """
-        Creates a new ``WeakKeyDictionary`` instance from the given iterable.
+        Creates a new ``WeakKeyDictionary`` from the given iterable.
         
         Parameters
         ----------
@@ -505,7 +505,7 @@ class WeakKeyDictionary(dict):
         
         Returns
         -------
-        value : `Any` or `default`
+        value : `Any`, `default`
             The key's matched value. If no value was matched returns the `default` value.
         """
         return dict.get(self, WeakReferer(key), default)
@@ -546,7 +546,7 @@ class WeakKeyDictionary(dict):
         
         Returns
         -------
-        value : `Any` or `default`
+        value : `Any`, `default`
             The key's matched value. If no value was matched and `default` value is given, then returns that.
         
         Raises
@@ -611,7 +611,7 @@ class WeakKeyDictionary(dict):
         
         Returns
         -------
-        value : `default` or `Any`
+        value : `default`, `Any`
             The matched value, or `default` if none.
         """
         value = dict.get(self, WeakReferer(key), ...)

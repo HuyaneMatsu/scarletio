@@ -43,7 +43,7 @@ def parse_cookie_date(date_str):
     
     Returns
     -------
-    date : `None` or `datetime`
+    date : `None`, `datetime`
         The parsed date. If no date is given or if the `date_str` is invalid, returns `None`,
     """
     if not date_str:

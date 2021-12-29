@@ -3,14 +3,14 @@ __all__ = ()
 
 class _HandleCancellerBase:
     """
-    ``Future`` callback-base to cancel a respective ``Handle`` instance when the future is marked as done before the
+    ``Future`` callback-base to cancel a respective ``Handle`` when the future is marked as done before the
     handle, or if the handle runs first, then sets the future result or exception.
     
     This class do not implements ``.__call__`. Subclasses should implement that.
     
     Attributes
     ----------
-    _handle : `None` or ``Handle``
+    _handle : `None`, ``Handle``
         The handle to cancel, when the future is marked as done before the respective handle ran.
     """
     __slots__ = ('_handle',)
@@ -26,13 +26,13 @@ class _HandleCancellerBase:
     
     def __call__(self, future):
         """
-        Called by the respective ``Future`` instance as callback, or by the respective handle.
+        Called by the respective ``Future`` as callback, or by the respective handle.
         
         Subclasses should overwrite this method.
         
         Parameters
         ----------
-        future : ``Future`` instance
+        future : ``Future``
             The respective future to what the handle canceller was added as callback.
         """
         pass
@@ -53,26 +53,26 @@ class _HandleCancellerBase:
 
 class _SleepHandleCanceller(_HandleCancellerBase):
     """
-    ``Future`` callback to cancel a respective ``Handle`` instance when the future is marked as done before the
+    ``Future`` callback to cancel a respective ``Handle`` when the future is marked as done before the
     handle, or if the handle runs first, then sets the future result as `None˛.
     
     Attributes
     ----------
-    _handle : `None` or ``Handle``
+    _handle : `None`, ``Handle``
         The handle to cancel, when the future is marked as done before the respective handle ran.
     """
     __slots__ = ()
     
     def __call__(self, future):
         """
-        Called by the respective ``Future`` instance as callback, or by the respective handle. Sets the given
+        Called by the respective ``Future`` as callback, or by the respective handle. Sets the given
         `future`'s result as `None` if applicable.
         
         Sets ``._handle`` as `None`, marking the canceller as it ran already.
         
         Parameters
         ----------
-        future : ``Future`` instance
+        future : ``Future``
             The respective future to what the handle canceller was added as callback.
         """
         handle = self._handle
@@ -86,26 +86,26 @@ class _SleepHandleCanceller(_HandleCancellerBase):
 
 class _TimeoutHandleCanceller(_HandleCancellerBase):
     """
-    ``Future`` callback to cancel a respective ``Handle`` instance when the future is marked as done before the
+    ``Future`` callback to cancel a respective ``Handle`` when the future is marked as done before the
     handle, or if the handle runs first, then sets the future's exception to `TimeoutError`.
     
     Attributes
     ----------
-    _handle : `None` or ``Handle``
+    _handle : `None`, ``Handle``
         The handle to cancel, when the future is marked as done before the respective handle ran.
     """
     __slots__ = ('_handle',)
     
     def __call__(self, future):
         """
-        Called by the respective ``Future`` instance as callback, or by the respective handle. Sets the given
+        Called by the respective ``Future`` as callback, or by the respective handle. Sets the given
         `future`'s exception to `TimeoutError` if applicable.
         
         Sets ``._handle`` as `None`, marking the canceller as it ran already.
         
         Parameters
         ----------
-        future : ``Future`` instance
+        future : ``Future``
             The respective future to what the handle canceller was added as callback.
         """
         handle = self._handle

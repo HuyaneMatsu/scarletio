@@ -24,7 +24,7 @@ class ResultGatheringFuture(Future):
         Note, if the future is already done, then the newly added callbacks are queued up instantly on the respective
         event loop to be called.
     
-    _exception : `None` or `BaseException` instance
+    _exception : `None`, `BaseException`
         The exception set to the future as it's result. Defaults to `None`.
     _loop : ``EventThread``
         The loop to what the created future is bound.

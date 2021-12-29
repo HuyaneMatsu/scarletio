@@ -16,16 +16,16 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
     @has_docs
     def __init__(self, iterable=None):
         """
-        Creates a new ``IgnoreCaseMultiValueDictionary`` instance.
+        Creates a new ``IgnoreCaseMultiValueDictionary``.
         
         Parameters
         ----------
-        iterable : `None` or `iterable`, Optional
+        iterable : `None`, `iterable`, Optional
             Iterable to update the created MultiValueDictionary initially.
             
             Can be given as one of the following:
-                - ``MultiValueDictionary`` instance.
-                - `dict` instance.
+                - ``MultiValueDictionary``.
+                - `dict`.
                 - `iterable` of `key` - `value` pairs.
         """
         dict.__init__(self)
@@ -139,7 +139,7 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
         
         Returns
         -------
-        value : `default` or `Any`
+        value : `default`, `Any`
             The value for the given key if present.
         """
         key = IgnoreCaseString(key)
@@ -163,7 +163,7 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
         
         Returns
         -------
-        value : `default` or `Any`
+        value : `default`, `Any`
             The first value for which `key` matched, or `default` if none.
         """
         key = IgnoreCaseString(key)
@@ -183,7 +183,7 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
         
         Returns
         -------
-        values : `default` or `list` of `Any`
+        values : `default`, `list` of `Any`
             The matched values. If `key` is not present, but `default` value is given, then returns that.
         
         Raises
@@ -208,7 +208,7 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
         
         Returns
         -------
-        value : `default` or `list` of `Any`
+        value : `default`, `list` of `Any`
             The 0th matched value. If `key` is not present, but `default` value is given, then returns that.
         
         Raises

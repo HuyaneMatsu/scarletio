@@ -126,7 +126,7 @@ def change_on_switch(list_, value, new_position, key=None):
         The object, what would be moved.
     new_position : `int`
         The new position of the value.
-    key : `None` or `callable`
+    key : `None`, `callable`
         A special callable what would be used to used to build each element of the result.
     
     Returns
@@ -214,7 +214,7 @@ def list_difference(list1, list2):
     
     Notes
     -----
-    `list1` and `list2` should be given as sorted lists, but `None` and `set` instances are also accepted.
+    `list1` and `list2` should be given as sorted lists, but `None` and `set`-s are also accepted.
     """
     difference = ([], [])
     

@@ -123,7 +123,7 @@ def modulize(klass):
     Raises
     ------
     TypeError
-        If `klass` is not given as `type` instance.
+        If `klass` is not given as `type`.
     """
     if not isinstance(klass, type):
         raise TypeError('Only types can be modulized.')

@@ -16,7 +16,7 @@ class _FutureChainer:
     
     def __init__(self, target):
         """
-        Creates a new ``_FutureChainer`` instance with the given target future.
+        Creates a new ``_FutureChainer`` with the given target future.
         
         Parameters
         ----------
@@ -85,7 +85,7 @@ class _FutureChainer:
         
         Parameters
         ----------
-        future : ``Future`` instance
+        future : ``Future``
             The source future to chain it's result from.
         """
     )
@@ -96,7 +96,7 @@ class _ChainRemover:
     
     Parameters
     -------
-    target : ``Future`` instance
+    target : ``Future``
         The source future.
     """
     __slots__ = ('target',)
@@ -129,7 +129,7 @@ def shield(awaitable, loop):
     
     Returns
     -------
-    un_protected : ``Future`` instance
+    un_protected : ``Future``
         If the given `awaitable` is a finished task, returns it, else returns a ``Future``, to what the original
         awaitable's result will be chained to.
     

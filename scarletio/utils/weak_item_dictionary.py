@@ -19,7 +19,7 @@ class _WeakItemDictionaryValueCallback:
     @has_docs
     def __new__(cls, parent):
         """
-        Creates a new ``_WeakItemDictionaryValueCallback`` instance.
+        Creates a new ``_WeakItemDictionaryValueCallback``.
         
         Parameters
         ----------
@@ -73,7 +73,7 @@ class _WeakItemDictionaryValueIterator:
     @has_docs
     def __init__(self, parent):
         """
-        Creates a new ``_WeakValueDictionaryValueIterator`` instance bound to the given ``WeakValueDictionary``.
+        Creates a new ``_WeakValueDictionaryValueIterator`` bound to the given ``WeakValueDictionary``.
         
         Parameters
         ----------
@@ -156,7 +156,7 @@ class _WeakItemDictionaryItemIterator:
     @has_docs
     def __init__(self, parent):
         """
-        Creates a new ``_WeakItemDictionaryItemIterator`` instance bound to the given ``WeakItemDictionary``.
+        Creates a new ``_WeakItemDictionaryItemIterator`` bound to the given ``WeakItemDictionary``.
         
         Parameters
         ----------
@@ -248,7 +248,7 @@ class WeakItemDictionary(dict):
     
     Attributes
     ----------
-    _pending_removals : `None` or `set` of (``KeyedReferer`` or ``WeakHasher``)
+    _pending_removals : `None`, `set` of (``KeyedReferer``, ``WeakHasher``)
         Pending removals of the weak item dictionary if applicable.
     _iterating : `int`
         Whether the weak item dictionary is iterating and how much times.
@@ -264,7 +264,7 @@ class WeakItemDictionary(dict):
     
     Notes
     -----
-    ``WeakItemDictionary`` instances are weakreferable.
+    ``WeakItemDictionary``-s are weakreferable.
     """
     __slots__ = ('__weakref__', '_pending_removals', '_iterating', '_key_callback', '_value_callback')
     
@@ -360,7 +360,7 @@ class WeakItemDictionary(dict):
     @has_docs
     def __init__(self, iterable=None):
         """
-        Creates a new ``WeakItemDictionary`` instance from the given iterable.
+        Creates a new ``WeakItemDictionary`` from the given iterable.
         
         Parameters
         ----------
@@ -520,7 +520,7 @@ class WeakItemDictionary(dict):
         
         Returns
         -------
-        value : `Any` or `default`
+        value : `Any`, `default`
             The key's matched value. If no value was matched returns the `default` value.
         """
         try:
@@ -582,7 +582,7 @@ class WeakItemDictionary(dict):
         
         Returns
         -------
-        value : `Any` or `default`
+        value : `Any`, `default`
             The key's matched value. If no value was matched and `default` value is given, then returns that.
         
         Raises
@@ -659,7 +659,7 @@ class WeakItemDictionary(dict):
         
         Returns
         -------
-        value : `default` or `Any`
+        value : `default`, `Any`
             The matched value, or `default` if none.
         """
         value_reference = dict.get(self, WeakReferer(key), ...)

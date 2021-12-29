@@ -42,7 +42,7 @@ class WeakHasher:
     ----------
     _hash : `int`
         The hash of the respective reference.
-    reference : ``WeakReferer`` instance
+    reference : ``WeakReferer``
         A dead reference to hash.
     """
     __slots__ = ('_hash', 'reference',)
@@ -50,11 +50,11 @@ class WeakHasher:
     @has_docs
     def __init__(self, reference):
         """
-        Creates a new ``WeakHasher`` instance from the given reference.
+        Creates a new ``WeakHasher`` from the given reference.
         
         Parameters
         ----------
-        reference : ``WeakReferer`` instance
+        reference : ``WeakReferer``
             A dead reference to hash.
         """
         self._hash = object.__hash__(reference)
@@ -97,7 +97,7 @@ def add_to_pending_removals(container, reference):
     ----------
     container : `Any`
         The parent object, which is iterating right now, so it's items cannot be removed.
-    reference : ``WeakReferer`` instance
+    reference : ``WeakReferer``
         The weakreference to add to the set.
     """
     try:
@@ -145,7 +145,7 @@ class KeyedReferer(WeakReferer):
     @has_docs
     def __new__(cls, obj, callback, key, ):
         """
-        Creates a new ``KeyedReferer`` instance with the given parameters.
+        Creates a new ``KeyedReferer`` with the given parameters.
         
         Parameters
         ----------
@@ -231,7 +231,7 @@ class weak_method(WeakReferer, MethodLike):
     @has_docs
     def __new__(cls, obj, func, callback=None):
         """
-        Creates a new ``weak_method`` instance with the given parameter.
+        Creates a new ``weak_method`` with the given parameter.
         
         Parameters
         ----------
@@ -250,7 +250,7 @@ class weak_method(WeakReferer, MethodLike):
     @has_docs
     def __self__(self):
         """
-        Returns the weakreferenced object by the ``weak_method`` or `None`if it was already garbage collected.
+        Returns the weakreferenced object by the ``weak_method``. `None` if it was already garbage collected.
         
         Returns
         -------
@@ -305,7 +305,7 @@ class weak_method(WeakReferer, MethodLike):
     @has_docs
     def from_method(cls, method_, callback=None):
         """
-        Creates a new ``weak_method`` instance from the given `method`.
+        Creates a new ``weak_method`` from the given `method`.
         
         Parameters
         ----------

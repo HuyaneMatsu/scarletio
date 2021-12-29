@@ -17,7 +17,7 @@ class GathererElement:
     ----------
     result : `Any`
         The result of a gathered future.
-    exception : `None` or `BaseException`
+    exception : `None`, `BaseException`
         The exception of a gathered exception.
     """
     __slots__ = ('exception', 'result',)
@@ -30,7 +30,7 @@ class GathererElement:
         ----------
         result : `Any`
             The result of a gathered future.
-        exception : `None` or `BaseException`
+        exception : `None`, `BaseException`
             The exception of a gathered exception.
         """
         self.result = result
@@ -84,7 +84,7 @@ class GathererCallback:
         
         Parameters
         ----------
-        future : ``Future`` instance
+        future : ``Future``
             A waited future.
         """
         parent = self._parent
@@ -111,7 +111,7 @@ class Gatherer(ResultGatheringFuture):
         Note, if the future is already done, then the newly added callbacks are queued up instantly on the respective
         event loop to be called.
     
-    _exception : `None` or `BaseException` instance
+    _exception : `None`, `BaseException`
         The exception set to the future as it's result. Defaults to `None`.
     _loop : ``EventThread``
         The loop to what the created future is bound.

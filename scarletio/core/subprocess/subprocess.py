@@ -39,9 +39,9 @@ class AsyncProcess:
     
     _connection_lost : `bool`
         Whether all the pipes of the ``AsyncProcess`` lost connection.
-    _drain_waiter : `None` or ``Future``
+    _drain_waiter : `None`, ``Future``
         A future, what is used to block the writing task, till it's writen data is drained.
-    _exit_waiters : `None` or `set of ``Future``
+    _exit_waiters : `None`, `set of ``Future``
         Waiter futures which wait for the subprocess to shutdown.
     _extra : `dict` of (`str`, `Any`) items
         Optional transport information.
@@ -49,14 +49,14 @@ class AsyncProcess:
         the respective event loop of the async subprocess to what is bound to.
     _paused : `bool`
         Whether the subprocess is paused writing because it hit's the high water mark.
-    _pending_calls : `None` or `list` of (`callable`, `tuple` of `Any`)
+    _pending_calls : `None`, `list` of (`callable`, `tuple` of `Any`)
         Meanwhile the subprocess connection is established, this attribute is set as a list to put connection lost
         and related calls it to with their parameters.
-    _subprocess_stderr_protocol : `None` or ``SubprocessReadPipeProtocol``
+    _subprocess_stderr_protocol : `None`, ``SubprocessReadPipeProtocol``
         Protocol of the stderr pipe if applicable.
-    _subprocess_stdin_protocol : `None` or ``SubprocessWritePipeProtocol``
+    _subprocess_stdin_protocol : `None`, ``SubprocessWritePipeProtocol``
         Protocol of the stdin pipe if applicable.
-    _subprocess_stdout_protocol : `None` or ``SubprocessReadPipeProtocol``
+    _subprocess_stdout_protocol : `None`, ``SubprocessReadPipeProtocol``
         Protocol of the stdout pipe if applicable.
     _closed : `bool`
         Whether subprocess is closed.
@@ -64,7 +64,7 @@ class AsyncProcess:
         The internal blocking subprocess object.
     process_id : `int`
         The subprocess identifier.
-    return_code : `None` or `int`
+    return_code : `None`, `int`
         The returned exit code of the subprocess. Set as `None` if not yet applicable.
     stderr : ``ReadProtocolBase``
         Asynchronous stderr implementation.
@@ -80,7 +80,7 @@ class AsyncProcess:
     async def __new__(cls, loop, process_parameters, shell, stdin, stdout, stderr, buffer_size, extra,
             process_open_kwargs):
         """
-        Creates a new ``AsyncProcess`` instance.
+        Creates a new ``AsyncProcess``.
         
         This method is a coroutine.
         
@@ -116,7 +116,7 @@ class AsyncProcess:
             | default       | `<0`      | use the system default: `io.DEFAULT_BUFFER_SIZE`.                     |
             +---------------+-----------+-----------------------------------------------------------------------+
             
-        extra : `None` or `dict` of (`str`, `Any`) items
+        extra : `None`, `dict` of (`str`, `Any`) items
             Optional transport information.
         process_open_kwargs : `dict` of (`str`, `Any`) items
             Additional parameters to open the process with.
@@ -413,7 +413,7 @@ class AsyncProcess:
             | stderr            | `2`   |
             +-------------------+-------+
         
-        exception : `None` or `BaseException` instance
+        exception : `None`, `BaseException`
             Defines whether the connection is closed, or an exception was received.
             
             If the connection was closed, then `exception` is given as `None`. This can happen at the case, when eof is
@@ -449,7 +449,7 @@ class AsyncProcess:
             | stderr            | `2`   |
             +-------------------+-------+
         
-        exception : `None` or `BaseException` instance
+        exception : `None`, `BaseException`
             Defines whether the connection is closed, or an exception was received.
             
             If the connection was closed, then `exception` is given as `None`. This can happen at the case, when eof is
@@ -594,7 +594,7 @@ class AsyncProcess:
         
         Parameters
         ----------
-        timeout : `None` or `float`
+        timeout : `None`, `float`
             The maximal amount of time to wait for the process to close in seconds.
 
         Returns
@@ -672,7 +672,7 @@ class AsyncProcess:
         
         Parameters
         ----------
-        input_ : `None` or `bytes-like`
+        input_ : `None`, `bytes-like`
             Optional data to be sent to the sub-process.
         """
         stdin = self.stdin
@@ -701,7 +701,7 @@ class AsyncProcess:
         
         Returns
         -------
-        result :`None` or `bytes`
+        result :`None`, `bytes`
         """
         stream = self.stdout
         if stream is None:
@@ -723,7 +723,7 @@ class AsyncProcess:
         
         Returns
         -------
-        result : `None` or `bytes`
+        result : `None`, `bytes`
         """
         stream = self.stderr
         if stream is None:
@@ -745,16 +745,16 @@ class AsyncProcess:
         
         Parameters
         ----------
-        input_ : `None` or `bytes-like`, Optional
+        input_ : `None`, `bytes-like`, Optional
             Optional data to be sent to the sub-process.
-        timeout : `None` or `float`, Optional
+        timeout : `None`, `float`, Optional
             The maximal amount of time to wait for the process to close in seconds.
         
         Returns
         -------
-        stdout : `None` or `bytes`
+        stdout : `None`, `bytes`
             The read data from stdout.
-        stderr : `None` or `bytes`
+        stderr : `None`, `bytes`
             The read data from stderr.
         
         Raises
@@ -830,7 +830,7 @@ class AsyncProcess:
         
         Returns
         -------
-        return_code : `None` or `int`
+        return_code : `None`, `int`
         """
         return self.return_code
     
@@ -867,7 +867,7 @@ class AsyncProcess:
         
         Parameters
         ----------
-        exception : `None` or `BaseException` instance
+        exception : `None`, `BaseException`
             Defines whether the connection is closed, or an exception was received.
             
             If the connection was closed, then `exception` is given as `None`. This can happen at the case, when eof is

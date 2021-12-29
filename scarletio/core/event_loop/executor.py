@@ -21,7 +21,7 @@ class SyncWait:
     
     Attributes
     ----------
-    _exception : `None` or `BaseException` instance
+    _exception : `None`, `BaseException`
         The waiter's exception if applicable. defaults to `None`.
     _result : `Any`
         The waiter's result if applicable. Defaults to `None`.
@@ -31,7 +31,7 @@ class SyncWait:
     __slots__ = ('_exception', '_result', '_waiter',)
     def __init__(self):
         """
-        Creates a new ``SyncWait`` instance.
+        Creates a new ``SyncWait``.
         """
         self._exception = None
         self._result = None
@@ -90,7 +90,7 @@ class SyncWait:
         Raises
         ------
         TypeError
-            The set exception is not a  `BaseException` instance.
+            The set exception is not a  `BaseException`.
         BaseException
             The set exception.
         """
@@ -127,14 +127,14 @@ class SyncQueue:
         Threading lock to grant exclusive access to the queue.
     _results : `deque`
         A deque of the results set to the queue.
-    _waiter : `None` or ``SyncWait``
+    _waiter : `None`, ``SyncWait``
         Result waiter of the queue.
     """
     __slots__ = ('_cancelled', '_lock', '_results', '_waiter',)
     
     def __init__(self, iterable=None, max_length=None, cancelled=False):
         """
-        Creates a new ``SyncQueue`` instance with the given parameters.
+        Creates a new ``SyncQueue`` with the given parameters.
         
         Parameters
         ----------
@@ -289,7 +289,7 @@ class SyncQueue:
         
         Returns
         -------
-        max_length : `None` or `int`
+        max_length : `None`, `int`
         """
         return self._results.maxlen
     
@@ -435,7 +435,7 @@ class ExecutorThread(Thread):
         ----------
         func : `callable`
             The function to execute.
-        future : `None` or ``Future``, Optional
+        future : `None`, ``Future``, Optional
             A future, what's result is set, when the `func` finishes it's execution.
             
             If not given a new future is created. Defaults to `None`
@@ -515,7 +515,7 @@ class ExecutionPair:
     
     def __init__(self,func,future):
         """
-        Creates a new ``ExecutionPair`` instance.
+        Creates a new ``ExecutionPair``.
         
         Parameters
         ----------
@@ -540,7 +540,7 @@ class _ClaimEndedCallback:
     
     Parameters
     ----------
-    parent : ``Executor`` instance
+    parent : ``Executor``
         The parent executor
     executor : ``ExecutorThread``
         The executor thread, what is given to the parent executor when all of it's tasks are done.
@@ -548,11 +548,11 @@ class _ClaimEndedCallback:
     __slots__ = ('executor', 'parent',)
     def __init__(self, parent, executor):
         """
-        Creates a new ``_ClaimEndedCallback`` instance with the given parameters.
+        Creates a new ``_ClaimEndedCallback`` with the given parameters.
         
         Parameters
         ----------
-        parent : ``Executor`` instance
+        parent : ``Executor``
             The parent executor
         executor : ``ExecutorThread``
             The executor thread, what is given to the parent executor when all of it's tasks are done.
@@ -676,7 +676,7 @@ class _execution_ended_cb:
     
     Parameters
     ----------
-    parent : ``Executor`` instance
+    parent : ``Executor``
         The parent executor
     executor : ``ExecutorThread``
         The executor thread, what is given to the parent executor when it's current task is done.
@@ -685,11 +685,11 @@ class _execution_ended_cb:
     
     def __init__(self, parent, executor):
         """
-        Creates a new ``_execution_ended_cb`` instance with the given parameters.
+        Creates a new ``_execution_ended_cb`` with the given parameters.
         
         Parameters
         ----------
-        parent : ``Executor`` instance
+        parent : ``Executor``
             The parent executor
         executor : ``ExecutorThread``
             The executor thread, what is given to the parent executor when it's current task is done.

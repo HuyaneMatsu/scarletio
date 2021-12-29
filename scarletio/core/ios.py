@@ -76,7 +76,7 @@ class ReuBytesIO(BytesIO):
         
         Parameters
         ----------
-        amount : `None` or `int`, Optional
+        amount : `None`, `int`, Optional
             The amount of data to read from the buffer. If given as `None`, so by the default, then reads all the data
             out from it.
         
@@ -166,7 +166,7 @@ def get_executor():
     
     Returns
     -------
-    executor : ``ExecutorThread`` or ``ClaimedExecutor``
+    executor : ``ExecutorThread``, ``ClaimedExecutor``
     """
     loop = current_thread()
     if isinstance(loop, EventThread):
@@ -190,7 +190,7 @@ class _AsyncIOIterator:
     
     def __init__(self, wrapped):
         """
-        Creates a mew ``_AsyncIOIterator`` instance with the given parameter.
+        Creates a mew ``_AsyncIOIterator`` with the given parameter.
         
         Parameters
         ----------
@@ -224,7 +224,7 @@ class AsyncIO:
     
     Attributes
     ----------
-    _executor : `None`, ``ExecutorThread`` or ``ClaimedExecutor``
+    _executor : `None`, ``ExecutorThread``, ``ClaimedExecutor``
         The executor what executes the io waiting. Set as `None` if the respective `file-io` is closed.
     _io : `file-io`
         The wrapped `file-io`.
@@ -233,7 +233,7 @@ class AsyncIO:
     
     async def __new__(cls, *args, **kwargs):
         """
-        Creates a new ``AsyncIO`` instance with the given parameters.
+        Creates a new ``AsyncIO`` with the given parameters.
         
         This method is a coroutine.
         
@@ -285,7 +285,7 @@ class AsyncIO:
         
         Returns
         -------
-        buffer : ``_io.BufferedWriter`` or ``_io.BufferedReader``
+        buffer : ``_io.BufferedWriter``, ``_io.BufferedReader``
         """
         return self._io.buffer
     
@@ -305,7 +305,7 @@ class AsyncIO:
     @property
     def closed(self):
         """
-        Returns whether the ``AsyncIO`` instance is closed.
+        Returns whether the ``AsyncIO`` is closed.
         
         Returns
         -------
@@ -324,7 +324,7 @@ class AsyncIO:
         
         Returns
         -------
-        buffer : ``_io.BufferedWriter`` or ``_io.BufferedReader``
+        buffer : ``_io.BufferedWriter``, ``_io.BufferedReader``
         
         Raises
         ------
@@ -467,7 +467,7 @@ class AsyncIO:
         
         Returns
         -------
-        newlines : `None`, `str` or `tuple` of `str`
+        newlines : `None`, `str`, `tuple` of `str`
         """
         return self._io.newlines
     
@@ -488,7 +488,7 @@ class AsyncIO:
         
         Returns
         -------
-        data : `bytes` or `str`
+        data : `bytes`, `str`
             The read data.
         
         Raises
@@ -523,7 +523,7 @@ class AsyncIO:
         
         Returns
         -------
-        data : `bytes` or `str`
+        data : `bytes`, `str`
             The read data.
         
         Raises
@@ -618,7 +618,7 @@ class AsyncIO:
         
         Returns
         -------
-        line : `bytes` or `str`
+        line : `bytes`, `str`
             The red line.
         
         Raises
@@ -753,7 +753,7 @@ class AsyncIO:
         
         Parameters
         ----------
-        size : `None` or `int`, Optional
+        size : `None`, `int`, Optional
             The stream's new size in bytes.
         
         Returns
@@ -798,7 +798,7 @@ class AsyncIO:
         
         Parameters
         ----------
-        b : `bytes-like` or `str`
+        b : `bytes-like`, `str`
             The object to write into the underlying stream.
         
         Returns
@@ -830,7 +830,7 @@ class AsyncIO:
         
         Parameters
         ----------
-        b : `list` of (`bytes-like` or `str`)
+        b : `list` of (`bytes-like`, `str`)
             The lines to write into the underlying stream.
         
         Raises
@@ -911,7 +911,7 @@ class _ReuAsyncIOIterator:
     
     def __init__(self,wrapped):
         """
-        Creates a mew ``_ReuAsyncIOIterator`` instance with the given parameter.
+        Creates a mew ``_ReuAsyncIOIterator`` with the given parameter.
         
         Parameters
         ----------
@@ -949,7 +949,7 @@ class ReuAsyncIO(AsyncIO):
     
     Attributes
     ----------
-    _executor : `None`, ``ExecutorThread`` or ``ClaimedExecutor``
+    _executor : `None`, ``ExecutorThread``, ``ClaimedExecutor``
         The executor what executes the io waiting. Set as `None` if the respective `file-io` is closed.
     _io : `file-io`
         The wrapped `file-io`.
@@ -960,13 +960,13 @@ class ReuAsyncIO(AsyncIO):
     
     async def __new__(cls, path, mode='rb', *args, **kwargs):
         """
-        Creates a new ``AsyncIO`` instance with the given parameters.
+        Creates a new ``AsyncIO`` with the given parameters.
         
         This method is a coroutine.
         
         Parameters
         ----------
-        path : `bytes` or `str`
+        path : `bytes`, `str`
             The file's path to open.
         mode : `str`
             The mode to open with the file. Defaults to `'rb'`.
@@ -1040,7 +1040,7 @@ class ReuAsyncIO(AsyncIO):
         
         Returns
         -------
-        buffer : ``_io.BufferedWriter`` or ``_io.BufferedReader``
+        buffer : ``_io.BufferedWriter``, ``_io.BufferedReader``
         
         Raises
         ------
@@ -1098,7 +1098,7 @@ class ReuAsyncIO(AsyncIO):
         
         Returns
         -------
-        data : `bytes` or `str`
+        data : `bytes`, `str`
             The read data.
         
         Raises
@@ -1139,7 +1139,7 @@ class ReuAsyncIO(AsyncIO):
         
         Returns
         -------
-        data : `bytes` or `str`
+        data : `bytes`, `str`
             The read data.
         
         Raises
@@ -1240,7 +1240,7 @@ class ReuAsyncIO(AsyncIO):
         
         Returns
         -------
-        line : `bytes` or `str`
+        line : `bytes`, `str`
             The red line.
         
         Raises
@@ -1278,7 +1278,7 @@ class ReuAsyncIO(AsyncIO):
         
         Returns
         -------
-        lines : `list` of (`bytes` or `str`)
+        lines : `list` of (`bytes`, `str`)
             The red lines.
         
         Raises

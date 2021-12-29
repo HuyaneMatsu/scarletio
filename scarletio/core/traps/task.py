@@ -38,11 +38,11 @@ class Task(Future):
         Note, if the task is already done, then the newly added callbacks are queued up instantly on the respective
         event loop to be called.
     
-    _exception : `None` or `BaseException` instance
+    _exception : `None`, `BaseException`
         The exception raised by task's internal coroutine. Defaults to `None`.
     _loop : ``EventThread``
         The loop to what the created task is bound.
-    _result : `None` or `Any`
+    _result : `None`, `Any`
         The result of the task. Defaults to `None`.
     _state : `str`
         The state of the task.
@@ -64,11 +64,11 @@ class Task(Future):
         Note, that states are checked by memory address and not by equality. Also ``FUTURE_STATE_RETRIEVED`` is used
         only if `__debug__` is set as `True`.
     
-    _coroutine : `CoroutineType` or `GeneratorType`
+    _coroutine : `CoroutineType`, `GeneratorType`
         The wrapped coroutine.
     _must_cancel : `bool`
         Whether the task is cancelled, and at it's next step a ``CancelledError`` would be raised into it's coroutine.
-    _waited_future : `None` or ``Future`` instance
+    _waited_future : `None`, ``Future``
         The future on what's result the future is waiting right now.
     """
     __slots__ = ('_coroutine', '_must_cancel', '_waited_future')
@@ -79,7 +79,7 @@ class Task(Future):
         
         Parameters
         ----------
-        coroutine : `CoroutineType` or `GeneratorType`
+        coroutine : `CoroutineType`, `GeneratorType`
             The coroutine, what the task will on the respective event loop.
         loop : ``EventThread``
             The event loop on what the coroutine will run.
@@ -242,7 +242,7 @@ class Task(Future):
         limit : `int`, Optional
             The maximal amount of stacks to print. By giving it as negative integer, there will be no stack limit
             to print out, Defaults to `-1`.
-        file : `None` or `I/O stream`, Optional
+        file : `None`, `I/O stream`, Optional
             The file to print the stack to. Defaults to `sys.stderr`.
         
         Notes
@@ -266,7 +266,7 @@ class Task(Future):
         limit : `int`, Optional
             The maximal amount of stacks to print. By giving it as negative integer, there will be no stack limit
             to print out,
-        file : `None` or `I/O stream`
+        file : `None`, `I/O stream`
             The file to print the stack to. Defaults to `sys.stderr`.
         
         Notes
@@ -454,7 +454,7 @@ class Task(Future):
         
         Parameters
         ----------
-        exception : `None` or `BaseException`
+        exception : `None`, `BaseException`
             Exception to raise into the wrapped coroutine.
         
         Raises
@@ -503,7 +503,7 @@ class Task(Future):
                 self._loop.call_soon(self._step)
         finally:
             self._loop.current_task = None
-            self = None # Need to set `self` as `None`, or `self` might never get garbage collected.
+            self = None # Need to set `self` as `None`. Else `self` might never get garbage collected.
     
     
     def _wake_up(self, future):
@@ -512,7 +512,7 @@ class Task(Future):
         
         Parameters
         ----------
-        future : ``Future`` instance
+        future : ``Future``
             The future for what's completion the task is waiting for.
         """
         try:
@@ -531,14 +531,14 @@ class Task(Future):
         
         Parameters
         ----------
-        exception : `None` or `BaseException`
+        exception : `None`, `BaseException`
             The exception, what would be preferable raised into the task.
         
         Returns
         -------
         exception : `BaseException`
             If task has already `˙._exception`˙ set, returns that. If `exception` is given as `None`, or as non
-            ``CancelledError`` instance, will create a new ``CancelledError`` instance and return that.
+            ``CancelledError``, will create a new ``CancelledError`` and return that.
         """
         self_exception = self._exception
         if self_exception is None:

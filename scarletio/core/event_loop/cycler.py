@@ -25,7 +25,7 @@ class CyclerCallable:
     
     def __new__(cls, func, priority):
         """
-        Creates a new ``CyclerCallable`` instance with the given parameters.
+        Creates a new ``CyclerCallable`` with the given parameters.
         
         Parameters
         ----------
@@ -37,7 +37,7 @@ class CyclerCallable:
         Raises
         ------
         TypeError
-            - `priority` is not `int` instance, neither other numeric convertible to it.
+            - `priority` is not `int`, neither other numeric convertible to it.
             - `func` is not `callable`.
             - `func` accepts less or more reserved positional parameters than `1`.
         """
@@ -175,8 +175,8 @@ class Cycler:
         RuntimeError
             Event loop closed.
         TypeError
-            - `cycle_time` is not `float` instance, neither other numeric convertible to it.
-            - `priority` is not `int` instance, neither other numeric convertible to it.
+            - `cycle_time` is not `float`, neither other numeric convertible to it.
+            - `priority` is not `int`, neither other numeric convertible to it.
             - Any `func` is not `callable`.
             - Any `func` accepts less or more reserved positional parameters than `1`.
         ValueError
@@ -391,7 +391,7 @@ class Cycler:
         Raises
         ------
         TypeError
-            `cycle_time` is not `float` instance, neither other numeric convertible to it.
+            `cycle_time` is not `float`, neither other numeric convertible to it.
         ValueError
             If `cycle_time` is negative or `0`.
         """
@@ -426,7 +426,7 @@ class Cycler:
         Raises
         ------
         TypeError
-            - `priority` is not `int` instance, neither other numeric convertible to it.
+            - `priority` is not `int`, neither other numeric convertible to it.
             - Any `func` is not `callable`.
             - Any `func` accepts less or more reserved positional parameters than `1`.
         """

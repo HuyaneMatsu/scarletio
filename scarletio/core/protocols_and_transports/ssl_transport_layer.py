@@ -13,12 +13,12 @@ from .extra_info import EXTRA_INFO_NAME_SSL_CONTEXT, EXTRA_INFO_NAME_SSL_OBJECT,
 
 class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTransportLayerBase):
     """
-    Asynchronous SSL protocol implementation on top of a `socket`. Uses `MemoryBIO` instances for incoming and
+    Asynchronous SSL protocol implementation on top of a `socket`. Uses `MemoryBIO`-s for incoming and
     outgoing data.
     
     Attributes
     ----------
-    _extra : `None` or `dict` of (`str`, `Any`) items
+    _extra : `None`, `dict` of (`str`, `Any`) items
         Optional transport information.
     _loop : ``EventThread``
         The event loop to what the transport is bound to.
@@ -26,7 +26,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
         Whether the the ``.app_protocol``'s `.connection_made` should be called when handshake is completed.
     _closing : `bool`
         Whether the ssl protocol is shut or shutting down.
-    _connection_made_waiter : `None` or ``Future``
+    _connection_made_waiter : `None`, ``Future``
         A waiter future, what's result is set when connection is made, aka handshake is completed, or if when the
         connection is lost, depending which happens first.
         
@@ -35,7 +35,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
         Whether the ssl transport is in handshaking.
     _protocol : ``AbstractTransportLayerBase``
         Asynchronous protocol implementation.
-    _server_host_name : `None` or `str`
+    _server_host_name : `None`, `str`
         The ssl protocol's server hostname if applicable.
     _server_side : `bool`
         Whether the ssl protocol is server side.
@@ -44,9 +44,9 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
         lost.
     _ssl_context : `ssl.SSLContext`
         The connection's ssl type.
-    _ssl_pipe : `None` or ``SSLPipe``
+    _ssl_pipe : `None`, ``SSLPipe``
         Ssl pipe set meanwhile the protocol is connected to feed the ssl data to.
-    _transport : `None` or ``AbstractTransportLayerBase``
+    _transport : `None`, ``AbstractTransportLayerBase``
         Asynchronous transport implementation.
     _write_backlog : `deque` of `tuple` (`bytes-like`, `int`)
         Ensured data queued up to be written. Each element contains a tuple of the data to write and an offset till
@@ -59,7 +59,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
     def __new__(cls, loop, protocol, ssl_context, connection_made_waiter, server_side, server_host_name,
             call_connection_made):
         """
-        Creates a new ``SSLProtocol`` instance.
+        Creates a new ``SSLProtocol``.
         
         Parameters
         ----------
@@ -67,19 +67,19 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
             The respective event loop of the protocol.
         protocol : ``AbstractTransportLayerBase``
             Asynchronous protocol implementation.
-        ssl_context : `None` or `ssl.SSLContext`
+        ssl_context : `None`, `ssl.SSLContext`
             The connection ssl type. If SSl was given as `True` when creating a connection at this point we get it as
             `None`, so we create a default ssl context.
             
             Note, that if the connection is server side, a valid `ssl_context` should be given.
-        connection_made_waiter : `None` or ``Future``
+        connection_made_waiter : `None`, ``Future``
             A waiter future, what's result is set when connection is made, aka handshake is completed, or if when the
             connection is lost, depending which happens first.
             
             After the future's result or exception is set, the attribute is set as `None`.
         server_side : `bool`
             Whether the ssl protocol is server side.
-        server_host_name : `None` or `str`
+        server_host_name : `None`, `str`
             The ssl protocol's server hostname if applicable.
             
             If we are the `server_side`, then this parameter is forced to `None` (wont raise).
@@ -166,7 +166,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
         
         Parameters
         ----------
-        exception : `None` or ``BaseException``, Optional
+        exception : `None`, ``BaseException``, Optional
             Exception to throw into ``._connection_made_waiter`` if any.
         """
         connection_made_waiter = self._connection_made_waiter
@@ -276,7 +276,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
         
         Parameters
         ----------
-        handshake_exception : `None` or `BaseException` instance
+        handshake_exception : `None`, `BaseException`
             Exception occurred when processing backlog meanwhile handshaking.
         """
         self._in_handshake = False

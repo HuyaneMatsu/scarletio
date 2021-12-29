@@ -138,19 +138,19 @@ class class_property:
     
     def __new__(cls, fget=None, fset=None, fdel=None, doc=None):
         """
-        Creates a new ``class_property`` instance from the given parameters.
+        Creates a new ``class_property`` from the given parameters.
         
         If `doc` is not given or given as `None`, it will default to `fget`'s if applicable.
         
         Parameters
         ----------
-        fget : `None` or `callable`, Optional
+        fget : `None`, `callable`, Optional
             getter method.
-        fset : `None` or `callable`, Optional
+        fset : `None`, `callable`, Optional
             Setter method.
-        fdel : `None` or `callable`, Optional
+        fdel : `None`, `callable`, Optional
             Deleter method.
-        doc : `None` or `Any`, Optional
+        doc : `None`, `Any`, Optional
             Documentation for the property.
         """
         if (doc is None) and (fget is not None):
@@ -259,7 +259,7 @@ class cached_property:
         Raises
         ------
         TypeError
-            If `fget` has no name or it's name is not `str` instance.
+            If `fget` has no name or it's name is not `str`.
         """
         name = getattr(fget, '__name__', None)
         

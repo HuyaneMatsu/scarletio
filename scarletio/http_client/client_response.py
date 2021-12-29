@@ -27,33 +27,33 @@ class ClientResponse:
     ----------
     _released : `bool`
         Whether the connection is released.
-    body : `None` or `bytes`
+    body : `None`, `bytes`
         The received response body. Set as `None` if the response body is not yet received, or if it is empty.
     closed : `bool`
         Whether the response is closed.
-    connection : `None` or ``Connection``
+    connection : `None`, ``Connection``
         Connection used to receive the request response. Set as `None` if the response is ``.close``-d or
         ``.release``-d.
-    payload_waiter : `None` or ``Future``
+    payload_waiter : `None`, ``Future``
         Future used to retrieve the response's body. It's result is set, when the respective protocol's reader task
         finished.
     cookies : `http.cookies.SimpleCookie`
         Received cookies with the response.
-    headers : `None` or ``IgnoreCaseMultiValueDictionary``
+    headers : `None`, ``IgnoreCaseMultiValueDictionary``
         Headers of the response. Set when the http response is successfully received.
-    history : `None` or `tuple` of ``ClientResponse``
+    history : `None`, `tuple` of ``ClientResponse``
         Response history. Set as `tuple` of responses from outside.
     loop : ``EventThread``
         The event loop, trough what the request is executed.
     method : `str`
         Method of the respective request.
-    status : `None` or `int`
+    status : `None`, `int`
         Received status code. Set as `0` by default.
     url : ``URL``
         The requested url.
     writer : ``Task`` of ``ClientRequest.write_bytes``
         Payload writer task of the respective request.
-    raw_message : `None` or ``RawResponseMessage``
+    raw_message : `None`, ``RawResponseMessage``
         Raw received http response.
     """
     __slots__ = ('_released', 'body', 'closed', 'connection', 'payload_waiter', 'cookies', 'headers', 'history', 'loop',
@@ -61,7 +61,7 @@ class ClientResponse:
        
     def __new__(cls, request, connection):
         """
-        Crates a new ``ClientResponse`` instance from the given request and connection.
+        Crates a new ``ClientResponse`` from the given request and connection.
         
         Parameters
         ----------
@@ -99,7 +99,7 @@ class ClientResponse:
         
         Returns
         -------
-        reason : `None` or `str`
+        reason : `None`, `str`
         """
         message = self.raw_message
         if (message is not None):
@@ -308,7 +308,7 @@ class ClientResponse:
         
         Parameters
         ----------
-        encoding : `None` or `str`, Optional
+        encoding : `None`, `str`, Optional
             If no encoding is given, then detects it from the payload-
         errors : `str`, Optional
             May be given to set a different error handling scheme. The default `errors` value is `'strict'`, meaning
@@ -337,12 +337,12 @@ class ClientResponse:
         
         Parameters
         ----------
-        encoding : None` or `str`, Optional
+        encoding : None`, `str`, Optional
             Encoding to use instead of the response's. If given as `None` (so by default), then will use the response's
             own encoding.
         loader : `callable`, Optional
             Json loader. Defaults to json.loads`.
-        content_type : `None` or `str`, Optional
+        content_type : `None`, `str`, Optional
             Content type to use instead of the default one. Defaults to `'application/json'`.
         
         Returns

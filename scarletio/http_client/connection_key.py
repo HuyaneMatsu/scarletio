@@ -12,9 +12,9 @@ class ConnectionKey:
         Whether the connection is secure.
     port : `int`
         The host's port.
-    proxy_auth : `None` or ``BasicAuth``
+    proxy_auth : `None`, ``BasicAuth``
         Proxy authorization.
-    proxy_url : `None` or ``URL``
+    proxy_url : `None`, ``URL``
         Proxy's url.
     ssl : `None`, ``SSLContext``, `bool`, ``Fingerprint``
         The connection's ssl type.

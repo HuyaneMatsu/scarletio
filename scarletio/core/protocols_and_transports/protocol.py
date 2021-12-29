@@ -22,7 +22,7 @@ class ReadProtocolBase(AbstractProtocolBase):
         Whether the protocol received end of file.
     _chunks : `deque` of `bytes`
         Right feed, left pop queue, used to store the received data chunks.
-    _exception : `None` or `BaseException`
+    _exception : `None`, `BaseException`
         Exception set by ``.set_exception``, when an unexpected exception occur meanwhile reading from socket.
     _loop : ``EventThread``
         The event loop to what the protocol is bound to.
@@ -32,13 +32,13 @@ class ReadProtocolBase(AbstractProtocolBase):
         Whether the protocol's respective transport's reading is paused. Defaults to `False`.
         
         Also note, that not every transport supports pausing.
-    _payload_reader : `None` or `GeneratorType`
+    _payload_reader : `None`, `GeneratorType`
         Payload reader generator, what gets the control back, when data, eof or any exception is received.
     _payload_waiter : `None` of ``Future``
         Payload waiter of the protocol, what's result is set, when the ``.payload_reader`` generator returns.
         
         If cancelled or marked by done or any other methods, the payload reader will not be cancelled.
-    _transport : `None` or `Any`
+    _transport : `None`, `Any`
         Asynchronous transport implementation. Is set meanwhile the protocol is alive.
     """
     __slots__ = ('_at_eof', '_chunks', '_exception', '_loop', '_offset', '_paused', '_payload_reader',
@@ -123,7 +123,7 @@ class ReadProtocolBase(AbstractProtocolBase):
         
         Parameters
         ----------
-        exception : `None` or `BaseException` instance
+        exception : `None`, `BaseException`
             Defines whether the connection is closed, or an exception was received.
             
             If the connection was closed, then `exception` is given as `None`. This can happen at the case, when eof is
@@ -628,7 +628,7 @@ class ReadProtocolBase(AbstractProtocolBase):
         
         Returns
         -------
-        collected : `bytes` or `bytearray`
+        collected : `bytes`, `bytearray`
         
         Raises
         ------
@@ -778,7 +778,7 @@ class ReadWriteProtocolBase(ReadProtocolBase):
         Whether the protocol received end of file.
     _chunks : `deque` of `bytes`
         Right feed, left pop queue, used to store the received data chunks.
-    _exception : `None` or `BaseException`
+    _exception : `None`, `BaseException`
         Exception set by ``.set_exception``, when an unexpected exception occur meanwhile reading from socket.
     _loop : ``EventThread``
         The event loop to what the protocol is bound to.
@@ -788,15 +788,15 @@ class ReadWriteProtocolBase(ReadProtocolBase):
         Whether the protocol's respective transport's reading is paused. Defaults to `False`.
         
         Also note, that not every transport supports pausing.
-    _payload_reader : `None` or `GeneratorType`
+    _payload_reader : `None`, `GeneratorType`
         Payload reader generator, what gets the control back, when data, eof or any exception is received.
     _payload_waiter : `None` of ``Future``
         Payload waiter of the protocol, what's result is set, when the ``.payload_reader`` generator returns.
         
         If cancelled or marked by done or any other methods, the payload reader will not be cancelled.
-    _transport : `None` or `Any`
+    _transport : `None`, `Any`
         Asynchronous transport implementation. Is set meanwhile the protocol is alive.
-    _drain_waiter : `None` or ``Future``
+    _drain_waiter : `None`, ``Future``
         A future, what is used to block the writing task, till it's writen data is drained.
     """
     __slots__ = ('_drain_waiter', )
@@ -1017,11 +1017,11 @@ class DatagramAddressedReadProtocol(AbstractProtocolBase):
         ----------
         address : `None`, `tuple` (`str`, `int`), Optional
             The address of which payload is waiter for.
-        timeout : `None` or `
+        timeout : `None`, `
         
         Returns
         -------
-        result : `None` or ``ReadProtocolBase`` or (`tuple` (`str`, `int`), ``ReadProtocolBase``)
+        result : `None`, ``ReadProtocolBase`` or (`tuple` (`str`, `int`), ``ReadProtocolBase``)
             - If `timeout` is given and timeout occur, then returns `None`.
             - if `address` is given and data is received from ir, then returns the respective ``ReadProtocolBase``.
             - If `address` is not given, then returns a `tuple` of the respective `address` and protocol.
@@ -1088,7 +1088,7 @@ class DatagramMergerReadProtocol(ReadProtocolBase):
         Whether the protocol received end of file.
     _chunks : `deque` of `bytes`
         Right feed, left pop queue, used to store the received data chunks.
-    _exception : `None` or `BaseException`
+    _exception : `None`, `BaseException`
         Exception set by ``.set_exception``, when an unexpected exception occur meanwhile reading from socket.
     _loop : ``EventThread``
         The event loop to what the protocol is bound to.
@@ -1098,13 +1098,13 @@ class DatagramMergerReadProtocol(ReadProtocolBase):
         Whether the protocol's respective transport's reading is paused. Defaults to `False`.
         
         Also note, that not every transport supports pausing.
-    _payload_reader : `None` or `GeneratorType`
+    _payload_reader : `None`, `GeneratorType`
         Payload reader generator, what gets the control back, when data, eof or any exception is received.
     _payload_waiter : `None` of ``Future``
         Payload waiter of the protocol, what's result is set, when the ``.payload_reader`` generator returns.
         
         If cancelled or marked by done or any other methods, the payload reader will not be cancelled.
-    _transport : `None` or `Any`
+    _transport : `None`, `Any`
         Asynchronous transport implementation. Is set meanwhile the protocol is alive.
     """
     __slots__ = ()

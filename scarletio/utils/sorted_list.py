@@ -29,11 +29,11 @@ class SortedList(list):
     @has_docs
     def __init__(self, iterable=None, reverse=False):
         """
-        Creates a new ``SortedList`` instance with the given parameters.
+        Creates a new ``SortedList`` with the given parameters.
         
         Parameters
         ----------
-        it : `None` or `iterable`, Optional
+        it : `None`, `iterable`, Optional
             An iterable to extend the created list with.
         reverse : `bool`, Optional
             Whether the created list should be reversed sorted.
@@ -345,7 +345,7 @@ class SortedList(list):
         
         Returns
         -------
-        element : `Any` or `default`
+        element : `Any`, `default`
             The matched element or the `default` value if not found.
         """
         index = self.keyed_relative_index(value, key)
@@ -375,7 +375,7 @@ class SortedList(list):
         
         Returns
         -------
-        element : `Any` or `default`
+        element : `Any`, `default`
             The matched element or the `default` value if not found.
         """
         index = self.keyed_relative_index(value, key)

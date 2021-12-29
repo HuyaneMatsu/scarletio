@@ -11,7 +11,7 @@ class _WeakValueDictionaryCallback:
     
     Attributes
     ----------
-    _parent : ``WeakReferer`` to (``WeakValueDictionary`` or ``HybridValueDictionary``)
+    _parent : ``WeakReferer`` to (``WeakValueDictionary``, ``HybridValueDictionary``)
         The parent weak or hybrid value dictionary.
     """
     __slots__ = ('_parent', )
@@ -19,12 +19,12 @@ class _WeakValueDictionaryCallback:
     @has_docs
     def __new__(cls, parent):
         """
-        Creates a new ``_WeakValueDictionaryCallback`` instance bound to the given ``WeakValueDictionary`` or
-        ``HybridValueDictionary`` instance.
+        Creates a new ``_WeakValueDictionaryCallback`` bound to the given ``WeakValueDictionary`` or
+        ``HybridValueDictionary``.
         
         Parameters
         ----------
-        parent : ``WeakValueDictionary`` or ``HybridValueDictionary``
+        parent : ``WeakValueDictionary``, ``HybridValueDictionary``
             The parent weak or hybrid value dictionary.
         """
         parent = WeakReferer(parent)
@@ -71,7 +71,7 @@ class _WeakValueDictionaryKeyIterator:
     @has_docs
     def __init__(self, parent):
         """
-        Creates a new ``_WeakValueDictionaryKeyIterator`` instance bound to the given ``WeakValueDictionary``.
+        Creates a new ``_WeakValueDictionaryKeyIterator`` bound to the given ``WeakValueDictionary``.
         
         Parameters
         ----------
@@ -136,7 +136,7 @@ class _WeakValueDictionaryValueIterator:
     @has_docs
     def __init__(self, parent):
         """
-        Creates a new ``_WeakValueDictionaryValueIterator`` instance bound to the given ``WeakValueDictionary``.
+        Creates a new ``_WeakValueDictionaryValueIterator`` bound to the given ``WeakValueDictionary``.
         
         Parameters
         ----------
@@ -218,7 +218,7 @@ class _WeakValueDictionaryItemIterator:
     @has_docs
     def __init__(self, parent):
         """
-        Creates a new ``_WeakValueDictionaryItemIterator`` instance bound to the given ``WeakValueDictionary``.
+        Creates a new ``_WeakValueDictionaryItemIterator`` bound to the given ``WeakValueDictionary``.
         
         Parameters
         ----------
@@ -296,7 +296,7 @@ class WeakValueDictionary(dict):
     
     Attributes
     ----------
-    _pending_removals : `None` or `set` of (``KeyedReferer`` or ``WeakHasher``)
+    _pending_removals : `None`, `set` of (``KeyedReferer``, ``WeakHasher``)
         Pending removals of the weak value dictionary if applicable.
     _iterating : `int`
         Whether the weak value dictionary is iterating and how much times.
@@ -310,7 +310,7 @@ class WeakValueDictionary(dict):
     
     Notes
     -----
-    ``WeakValueDictionary`` instances are weakreferable.
+    ``WeakValueDictionary``-s are weakreferable.
     """
     __slots__ = ('__weakref__', '_pending_removals', '_iterating', '_callback')
     
@@ -395,7 +395,7 @@ class WeakValueDictionary(dict):
     @has_docs
     def __init__(self, iterable=None):
         """
-        Creates a new ``WeakValueDictionary`` instance from the given iterable.
+        Creates a new ``WeakValueDictionary`` from the given iterable.
         
         Parameters
         ----------
@@ -535,7 +535,7 @@ class WeakValueDictionary(dict):
         
         Returns
         -------
-        value : `Any` or `default`
+        value : `Any`, `default`
             The key's matched value. If no value was matched returns the `default` value.
         """
         value_reference = dict.get(self, key, default)
@@ -589,7 +589,7 @@ class WeakValueDictionary(dict):
         
         Returns
         -------
-        value : `Any` or `default`
+        value : `Any`, `default`
             The key's matched value. If no value was matched and `default` value is given, then returns that.
         
         Raises
@@ -649,7 +649,7 @@ class WeakValueDictionary(dict):
         
         Returns
         -------
-        value : `default` or `Any`
+        value : `default`, `Any`
             The matched value, or `default` if none.
         """
         value_reference = dict.get(self, key, ...)

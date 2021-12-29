@@ -31,7 +31,7 @@ class BasicAuth:
     
     def __new__(cls, username, password='', encoding=BASIC_AUTH_DEFAULT_ENCODING):
         """
-        Creates a new ``BasicAuth`` instance with the given parameters.
+        Creates a new ``BasicAuth`` with the given parameters.
         
         Attributes
         ----------
@@ -69,7 +69,7 @@ class BasicAuth:
     @classmethod
     def decode(cls, auth_header, encoding=BASIC_AUTH_DEFAULT_ENCODING):
         """
-        Creates a new ``BasicAuth`` instance from the given HTTP header value and.
+        Creates a new ``BasicAuth`` from the given HTTP header value and.
         
         Parameters
         ----------
@@ -168,7 +168,7 @@ def is_ip_address(host):
     
     Parameters
     ----------
-    host : `str` or `bytes-like`
+    host : `str`, `bytes-like`
         Host value.
     
     Returns
@@ -178,7 +178,7 @@ def is_ip_address(host):
     Raises
     ------
     TypeError
-        If `host` was not given neither as `str`, or as `bytes-like`.
+        If `host` was not given neither as `str`, `bytes-like`.
     """
     if host is None:
         return False
@@ -201,7 +201,7 @@ def is_ip_address(host):
         
         return False
     
-    raise TypeError(f'`host` should be given as `str` or as `bytes-like`, got {host.__class__.__name__}.')
+    raise TypeError(f'`host` should be given as `str`, `bytes-like`, got {host.__class__.__name__}.')
 
 
 TIMEOUT_STATE_NONE = 0
@@ -215,12 +215,12 @@ class Timeout:
     
     Attributes
     ----------
-    _handle : `None` or ``TimerHandle``
+    _handle : `None`, ``TimerHandle``
         Timer handle to cancel the respective task when it occurs. After timeout occurs, or the timeouter is
         cancelled, set as `None`.
     _loop : ``EventThread``
         The event loop to what the timeouter is bound to.
-    _task : `None` or ``Task``
+    _task : `None`, ``Task``
         The respective task what will be cancelled. Set as `None` at creation and when cancelled or exited.
     _state : `int`
         The timeouter's state.

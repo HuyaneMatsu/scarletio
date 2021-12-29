@@ -33,14 +33,14 @@ class SSLPipe:
     
     Attributes
     ----------
-    _handshake_callback : `None` or `callable`
+    _handshake_callback : `None`, `callable`
         A Callback which will be called when handshake is completed. Set by ``.do_handshake``.
         
         Should accept the following parameters:
         +-----------------------+---------------------------+
         | Respective name       | Value                     |
         +=======================+===========================+
-        | handshake_exception   | `None` or `BaseException` |
+        | handshake_exception   | `None`, `BaseException` |
         +-----------------------+---------------------------+
         
         If the handshake is successful, then the `handshake_exception` is given as `None`, else as an exception
@@ -51,17 +51,17 @@ class SSLPipe:
         Whether more record level data is needed to complete a handshake that is currently in progress.
     _outgoing : `MemoryBIO`
         Does the outgoing data encryption/decryption.
-    _server_host_name : `None` or `str`
+    _server_host_name : `None`, `str`
         The ssl protocol's server hostname if applicable.
     _server_side : `bool`
         Whether the ssl protocol is server side.
-    _shutdown_callback : `None` or `callable`
+    _shutdown_callback : `None`, `callable`
         A callback which will be called when the shutdown is completed. Set by ``.shutdown``.
         
         Should accept no parameters.
     _ssl_context : `SSLContext`
         The SSL pipe's SSL type.
-    _ssl_object : `None` or `ssl.SSLObject`
+    _ssl_object : `None`, `ssl.SSLObject`
         SSL object connecting ``._incoming`` and ``._outgoing`` memory bios set at ``.do_handshake``.
     _state : `int`
         The state of the ``SSLPipe``.
@@ -87,7 +87,7 @@ class SSLPipe:
     
     def __init__(self, context, server_side, server_host_name):
         """
-        Creates a new ``SSLPipe`` instance with the given parameters.
+        Creates a new ``SSLPipe`` with the given parameters.
         
         Parameters
         ----------
@@ -95,7 +95,7 @@ class SSLPipe:
             The SSL pipe's SSL type.
         server_side : `bool`
             Whether the ssl protocol is server side.
-        server_host_name : `None` or `str`
+        server_host_name : `None`, `str`
             The ssl protocol's server hostname if applicable.
 
         """
@@ -130,14 +130,14 @@ class SSLPipe:
         
         Parameters
         ----------
-        callback : `None` or `callable`, Optional
+        callback : `None`, `callable`, Optional
             A Callback which will be called when handshake is completed.
             
             Should accept the following parameters:
             +-----------------------+---------------------------+
             | Respective name       | Value                     |
             +=======================+===========================+
-            | handshake_exception   | `None` or `BaseException` |
+            | handshake_exception   | `None`, `BaseException` |
             +-----------------------+---------------------------+
             
             If the handshake is successful, then the `handshake_exception` is given as `None`, else as an exception
@@ -172,7 +172,7 @@ class SSLPipe:
         
         Parameters
         ----------
-        callback : `None` or `callable`, Optional
+        callback : `None`, `callable`, Optional
             A callback which will be called when the shutdown is completed.
             
             Should accept no parameters.

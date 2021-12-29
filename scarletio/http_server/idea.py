@@ -27,13 +27,13 @@ class TaskLocal:
     ----------
     _kwargs : `dict` of (`str`, `Any`) items
         `name` - `object` pairs to add as task local.
-    _task : `None` or ``Task``
+    _task : `None`, ``Task``
         The entered task.
     """
     __slots__ = ('_kwargs', '_task', )
     def __new__(cls, **kwargs):
         """
-        Creates a new ``TaskLocal`` instance.
+        Creates a new ``TaskLocal``.
         
         Parameters
         ----------
@@ -131,21 +131,21 @@ class HTTPRequestHandler(HttpReadWriteProtocol):
         Whether the protocol's respective transport's reading is paused. Defaults to `False`.
         
         Also note, that not every transport supports pausing.
-    exception : `None` or `BaseException`
+    exception : `None`, `BaseException`
         Exception set by ``.set_exception``, when an unexpected exception occur meanwhile reading from socket.
     loop : ``EventThread``
         The event loop to what the protocol is bound to.
-    payload_reader : `None` or `GeneratorType`
+    payload_reader : `None`, `GeneratorType`
         Payload reader generator, what gets the control back, when data, eof or any exception is received.
     payload_waiter : `None` of ``Future``
         Payload waiter of the protocol, what's result is set, when the ``.payload_reader`` generator returns.
         
         If cancelled or marked by done or any other methods, the payload reader will not be cancelled.
-    transport : `None` or `Any`
+    transport : `None`, `Any`
         Asynchronous transport implementation. Is set meanwhile the protocol is alive.
-    _drain_waiter : `None` or ``Future``
+    _drain_waiter : `None`, ``Future``
         A future, what is used to block the writing task, till it's writen data is drained.
-    handler_task : `None` or ``Task`` of ``.lifetime_handler``
+    handler_task : `None`, ``Task`` of ``.lifetime_handler``
         Handles the connected http request meanwhile it is alive.
     server : ``HTTPServer``
         The http server of the handler.
@@ -154,7 +154,7 @@ class HTTPRequestHandler(HttpReadWriteProtocol):
     
     def __new__(cls, server):
         """
-        Creates a new ``HTTPRequestHandler`` instance bound to it's server.
+        Creates a new ``HTTPRequestHandler`` bound to it's server.
         
         Parameters
         ----------
@@ -204,7 +204,7 @@ class HTTPRequestHandler(HttpReadWriteProtocol):
         
         Returns
         -------
-        request_message : ``RawRequestMessage`` or `None`
+        request_message : ``RawRequestMessage``, `None`
             Returns `None` if reading the request fails.
         """
         try:
@@ -252,23 +252,23 @@ class HTTPServer:
     
     Attributes
     ----------
-    close_connection_task : `None` or ``Task`` of ``_close``
+    close_connection_task : `None`, ``Task`` of ``_close``
         Close connection task, what's result is set, when closing of the websocket is done.
         
         Should not be cancelled.
         
         Set, when ``.close`` is called.
-    handlers : `set` of ``HTTPRequestHandler`` instances
+    handlers : `set` of ``HTTPRequestHandler``
         Active request handlers of the server.
     loop : ``EventThread``
         The event loop of the http server.
-    server : `None` or ``Server``
+    server : `None`, ``Server``
         Asynchronous server instance. Set meanwhile the websocket server is running.
     """
     __slots__ = ('close_connection_task', 'handlers', 'loop', 'server')
     async def __new__(cls, loop, host, port, *, ssl=None, **server_kwargs):
         """
-        Creates a new ``HTTPServer`` instance with the given parameters.
+        Creates a new ``HTTPServer`` with the given parameters.
         
         This method is a coroutine.
         
@@ -276,19 +276,19 @@ class HTTPServer:
         ----------
         loop : ``EventThread``
             The event loop to what the http server server is bound to.
-        host : `None` or `str`, `iterable` of (`None` or `str`), Optional
+        host : `None`, `str`, `iterable` of (`None`, `str`), Optional
             To what network interfaces should the server be bound.
-        port : `None` or `int`, Optional
+        port : `None`, `int`, Optional
             The port to use by the `host`(s).
-        ssl : `None` or ``SSLContext``, Optional (Keyword only)
+        ssl : `None`, ``SSLContext``, Optional (Keyword only)
             Whether and what ssl is enabled for the connections.
         **server_kwargs : Keyword parameters
             Additional keyword parameters to create the websocket server with.
         
         Other Parameters
         ----------------
-        family : `AddressFamily` or `int`, Optional (Keyword only)
-            Can be given either as `socket.AF_INET` or `socket.AF_INET6` to force the socket to use `IPv4` or `IPv6`.
+        family : `AddressFamily`, `int`, Optional (Keyword only)
+            Can be given either as `socket.AF_INET`, `socket.AF_INET6` to force the socket to use `IPv4`, `IPv6`.
             If not given, then  will be determined from host name.
         backlog : `int`, Optional (Keyword only)
             The maximum number of queued connections passed to `listen()` (defaults to 100).
@@ -322,7 +322,7 @@ class HTTPServer:
         
         Parameters
         ----------
-        protocol : ``HTTPRequestHandler`` or `Any`
+        protocol : ``HTTPRequestHandler``, `Any`
             The connected server side http request handler.
         """
         self.handlers.add(protocol)
@@ -333,7 +333,7 @@ class HTTPServer:
         
         Parameters
         ----------
-        protocol : ``HTTPRequestHandler`` or `Any`
+        protocol : ``HTTPRequestHandler``, `Any`
             The connected server side http request handler.
         """
         self.handlers.discard(protocol)
@@ -427,13 +427,13 @@ class Route:
     ----------
     rule : ``Rule``
         Rule object found by a route.
-    parameters : `None` or `dict` of (`str`, `str`) items
+    parameters : `None`, `dict` of (`str`, `str`) items
         Dynamic parameter queried from the urls.
     """
     __slots__ = ('parameters', 'rule', )
     def __init__(self, rule):
         """
-        Creates a new ``Route`` instance with the given `func`.
+        Creates a new ``Route`` with the given `func`.
         
         Parameters
         ----------
@@ -486,7 +486,7 @@ class Route:
         
         Returns
         -------
-        coroutine : `CoroutineType` or `GeneratorType`
+        coroutine : `CoroutineType`, `GeneratorType`
             The ``.rule``'s `view_func`.
         """
         rule = self.rule
@@ -609,7 +609,7 @@ def validate_int(value):
     
     Returns
     -------
-    value : `None` or `int`
+    value : `None`, `int`
     """
     if value.isdigit:
         return int(value)
@@ -625,7 +625,7 @@ def validate_float(value):
     
     Returns
     -------
-    value : `None` or `float`
+    value : `None`, `float`
     """
     if value.isnumeric():
         return float(value)
@@ -641,7 +641,7 @@ def validate_uuid(value):
     
     Returns
     -------
-    value : `None` or `uuid.UUID`
+    value : `None`, `uuid.UUID`
     """
     try:
         value = UUID(value)
@@ -712,7 +712,7 @@ class ParameterValidatorPathStep:
     __slots__ = ('path_routers', 'parameter_type', 'validator',)
     def __new__(cls, parameter_type, parameter_name):
         """
-        Creates a new ``ParameterValidatorPathStep`` instance with the given parameters.
+        Creates a new ``ParameterValidatorPathStep`` with the given parameters.
         
         Parameters
         ----------
@@ -911,26 +911,26 @@ class PathRouter:
     
     Attributes
     ----------
-    route_step_paths : `None` or `dict` of (`str`, ``PathRouter``) items
+    route_step_paths : `None`, `dict` of (`str`, ``PathRouter``) items
         Generic string paths to route to. Set as `None` if empty.
-    route_step_validated : `None` or `list` of ``ParameterValidatorPathStep``
+    route_step_validated : `None`, `list` of ``ParameterValidatorPathStep``
         Contains `parameter-name`, `validator`, `router` elements to route dynamic names.
-    route_end : `None` or `dict` of (`str`, ``Rule``) items
+    route_end : `None`, `dict` of (`str`, ``Rule``) items
         If the url ends at the point of this router, then the handler function from ``.route_ends`` is chosen if
         applicable. The functions are stored in `method` - `handler` relation.
-    route_end_all : `None` or ``Rule``
+    route_end_all : `None`, ``Rule``
         If the url ends at this point of the router and non of the `route-end`-s were matched, the the view function
         of this slot is chosen.
-    route_end_path : `None` or `dict` of (`str`, `tuple` (``Rule``, `str`)) items
+    route_end_path : `None`, `dict` of (`str`, `tuple` (``Rule``, `str`)) items
         Paths, which have dynamic route ends.
-    route_end_path_all : `None` or `tuple` (``Rule``, `str`)
+    route_end_path_all : `None`, `tuple` (``Rule``, `str`)
         ``.route_end_path`` version, what accepts accepts all type of request methods.
     """
     __slots__ = ('route_end', 'route_end_all', 'route_end_path', 'route_end_path_all', 'route_step_paths',
         'route_step_validated')
     def __init__(self):
         """
-        Creates a new ``PathRouter`` instance.
+        Creates a new ``PathRouter``.
         """
         self.route_step_paths = None
         self.route_step_validated = None
@@ -954,7 +954,7 @@ class PathRouter:
         
         Returns
         -------
-        route : `None` or ``Route``
+        route : `None`, ``Route``
             The found route if any.
         """
         if index == len(path):
@@ -1231,7 +1231,7 @@ class AbortRequest(BaseException):
     ----------
     response_code : `int`
         The request abortion code.
-    reason : `None` or `str`
+    reason : `None`, `str`
         Abortion reason to send.
     """
     def __init__(self, response_code, reason=None):
@@ -1248,7 +1248,7 @@ def abort(response_code, reason=None):
     ----------
     response_code : `int`
         The request abortion code.
-    reason : `None` or `str`
+    reason : `None`, `str`
         Abortion reason to send.
     """
     raise AbortRequest(response_code, reason)
@@ -1287,7 +1287,7 @@ class _RouteAdder:
     
     Attributes
     ----------
-    endpoint  : `None` or `str`
+    endpoint  : `None`, `str`
         The internal endpoint of the url. Defaults to the name of the added function.
     options : `dict` of (`str`, `Any`) items.
         Additional options to be forward to the underlying ``Rule`` object.
@@ -1307,7 +1307,7 @@ class _RouteAdder:
             The parent webapp.
         rule : `str`
             The url rule as string.
-        endpoint  : `None` or `str`
+        endpoint  : `None`, `str`
             The internal endpoint of the url. Defaults to the name of the added function.
         options : `dict` of (`str`, `Any`) items.
             Additional options to be forward to the underlying ``Rule`` object.
@@ -1353,7 +1353,7 @@ class _ErrorHandlerAdder:
     
     def __new__(cls, parent, error_code):
         """
-        Creates a new ``_ErrorHandlerAdder`` instance with the given parameters.
+        Creates a new ``_ErrorHandlerAdder`` with the given parameters.
         
         Parameters
         ----------
@@ -1395,18 +1395,18 @@ def _validate_subdomain(subdomain):
     
     Parameters
     ----------
-    subdomain : `None` or `str`
+    subdomain : `None`, `str`
         Subdomain value.
     
     Returns
     -------
-    subdomain : `None` or `str`
+    subdomain : `None`, `str`
         The validated subdomain.
     
     Raises
     ------
     TypeError
-        If `subdomain` was not given neither as `None` or `str` instance.
+        If `subdomain` was not given neither as `None`, `str`.
     """
     if (subdomain is not None):
         if type(subdomain) is str:
@@ -1414,7 +1414,7 @@ def _validate_subdomain(subdomain):
         elif isinstance(subdomain, str):
             subdomain = str(subdomain)
         else:
-            raise TypeError(f'`subdomain` can be as `None` or as `str` instance, got {subdomain.__class__.__name__}.')
+            raise TypeError(f'`subdomain` can be as `None`, `str`, got {subdomain.__class__.__name__}.')
         
         if not subdomain:
             subdomain = None
@@ -1427,18 +1427,18 @@ def _validate_parameters(parameters, parameters_name):
     
     Parameters
     ----------
-    parameters : `None` or `dict` of (`str`, `Any`) items or (`set`, `tuple`, `list`) of `tuple` (`str`, `Any`)
+    parameters : `None`, `dict` of (`str`, `Any`) items or (`set`, `tuple`, `list`) of `tuple` (`str`, `Any`)
         Initial parameters to add to the route.
     
     Returns
     -------
-    parameters : `None` or `tuple` of `tuple` (`str`, `int`)
+    parameters : `None`, `tuple` of `tuple` (`str`, `int`)
         The validated parameters.
     
     Raises
     ------
     TypeError
-        - If `parameters` is neither `None`, `dict`, `list`, `set` or `tuple`.
+        - If `parameters` is neither `None`, `dict`, `list`, `set`, `tuple`.
         - If `parameters` contains a non `tuple` element.
     ValueError
         If `parameters` contains an element with length of not `2`.
@@ -1453,14 +1453,14 @@ def _validate_parameters(parameters, parameters_name):
         elif isinstance(parameters, (list, set, tuple)):
             parameters = list(parameters)
         else:
-            raise TypeError(f'`{parameters_name}` should have be given as `dict`, `list`, `set` or `tuple`, got '
+            raise TypeError(f'`{parameters_name}` can be `dict`, `list`, `set`, `tuple`, got '
                 f'{parameters.__class__.__name__}.')
         
         parameters_validated = []
         
         for index, item in enumerate(parameters):
             if not isinstance(item, tuple):
-                raise TypeError(f'`{parameters_name}` element `{index}` should have be `tuple` instance, got '
+                raise TypeError(f'`{parameters_name}` element `{index}` should have be `tuple`, got '
                     f'{item.__class__.__name__}.')
             
             item_length = len(item)
@@ -1475,7 +1475,7 @@ def _validate_parameters(parameters, parameters_name):
             elif isinstance(parameter_name, str):
                 parameter_name = str(parameter_name)
             else:
-                raise TypeError(f'`{parameters_name}` element `{index}`\'s 0th element can be only `str` instance, '
+                raise TypeError(f'`{parameters_name}` element `{index}`\'s 0th element can be only `str`, '
                     f'got {parameter_name.__class__.__name__}.')
             
             parameters_validated.append((parameter_name, parameter_value))
@@ -1513,12 +1513,12 @@ def _validate_method(method):
     
     Parameters
     ----------
-    method : `None` or `str`
+    method : `None`, `str`
         Request method to validate.
     
     Returns
     -------
-    method : `None` or `str`
+    method : `None`, `str`
         The validated request method.
     
     Raises
@@ -1534,7 +1534,7 @@ def _validate_method(method):
         elif isinstance(method, str):
             method = str(method)
         else:
-            raise TypeError(f'`method` can be given as `None` or `str` instance, got {method.__class__.__name__}.')
+            raise TypeError(f'`method` can be `None`, `str`, got {method.__class__.__name__}.')
         
         method = method.upper()
         if method not in METHOD_ALL:
@@ -1553,7 +1553,7 @@ def _validate_methods(methods):
     
     Returns
     -------
-    methods : `None` or `list`
+    methods : `None`, `list`
         The validated request methods.
     
     Raises
@@ -1570,7 +1570,7 @@ def _validate_methods(methods):
         methods_validated = []
         
         if not isinstance(methods, (list, tuple, set)):
-            raise TypeError(f'`methods` can be either given as `None`, `list`, `tuple`, `set` instance, got '
+            raise TypeError(f'`methods` can be `None`, `list`, `tuple`, `set`, got '
                 f'{methods.__class__.__name__}.')
         
         for index, method in enumerate(methods):
@@ -1579,7 +1579,7 @@ def _validate_methods(methods):
             elif isinstance(method, str):
                 method = str(method)
             else:
-                raise TypeError(f'`methods` element `{index}` should have be given as `None` or `str` instance, got '
+                raise TypeError(f'`methods` element `{index}` can be `None`, `str`, got '
                     f'{method.__class__.__name__}.')
             
             method = method.upper()
@@ -1608,22 +1608,22 @@ def _validate_options(options):
     -------
     request_methods : `set` of `str`
         A set of the validated http methods. If none is given, `'GET'` is auto added to it.
-    parameters : `None` or `list` of `tuple` (`str`, `Any`)
+    parameters : `None`, `list` of `tuple` (`str`, `Any`)
         Defaults parameters to the dispatched router.
-    subdomain : `None` or `str`
+    subdomain : `None`, `str`
         Whether the respective route should match the specified subdomain.
     
     Raises
     ------
     TypeError
-        - If `method` element is neither `None` or `str` instance.
+        - If `method` element is neither `None`, `str`.
         - Extra option was given.
-        - If `methods` is neither `None`, `list`, `tuple` or `set` instance.
+        - If `methods` is neither `None`, `list`, `tuple`, `set`.
         - If `methods` contains a non `str` element.
-        - If `defaults` is neither `None`, `dict`, `list`, `set` or `tuple`.
+        - If `defaults` is neither `None`, `dict`, `list`, `set`, `tuple`.
         - If `defaults` contains a non `tuple` element.
-        - If 0th element of an element of `defaults` is not `str` instance.
-        - If `subdomain` was not given neither as `None` or `str` instance.
+        - If 0th element of an element of `defaults` is not `str`.
+        - If `subdomain` was not given neither as `None`, `str`.
     ValueError
         - If `method` is not an http request method.
         - If `methods` contains a non http request method element.
@@ -1675,7 +1675,7 @@ def _validate_import_name(import_name):
     Raises
     ------
     TypeError
-        If `import_name` was not given as `str` instance.
+        If `import_name` was not given as `str`.
     ValueError
         If `import_name` is an empty string.
     """
@@ -1684,7 +1684,7 @@ def _validate_import_name(import_name):
     elif isinstance(import_name, str):
         import_name = str(import_name)
     else:
-        raise TypeError(f'`import_name` can be given as `str` instance, got {import_name.__class__.__name__}.')
+        raise TypeError(f'`import_name` can be `str`, got {import_name.__class__.__name__}.')
     
     if not import_name:
         raise ValueError(f'`import_name` cannot be given as empty string.')
@@ -1697,18 +1697,18 @@ def _validate_template_folder(template_folder):
     
     Parameters
     ----------
-    template_folder : `None` or `str`
+    template_folder : `None`, `str`
         The template folder's value.
     
     Returns
     -------
-    template_folder : `None` or `str`
+    template_folder : `None`, `str`
         The template folder's validated value.
     
     Raises
     ------
     TypeError
-        If `template_folder` was not given neither as `None` or `str` instance.
+        If `template_folder` was not given neither as `None`, `str`.
     """
     if (template_folder is not None):
         if type(template_folder) is str:
@@ -1716,7 +1716,7 @@ def _validate_template_folder(template_folder):
         elif isinstance(template_folder, str):
             template_folder = str(template_folder)
         else:
-            raise TypeError(f'`template_folder` can be given as `str` instance, got '
+            raise TypeError(f'`template_folder` can be `str`, got '
                 f'{template_folder.__class__.__name__}.')
         
         if not template_folder:
@@ -1730,12 +1730,12 @@ def _validate_root_path(root_path, import_name):
     
     Parameters
     ----------
-    root_path : `None` or `str`
+    root_path : `None`, `str`
         The given root path.
     
     Returns
     -------
-    root_path : `None` or `str`
+    root_path : `None`, `str`
         The validated root path.
     
     Raises
@@ -1743,7 +1743,7 @@ def _validate_root_path(root_path, import_name):
     ImportError
         If `route_path` refers to a module, but error occurred meanwhile importing it.
     TypeError
-        If `root_path` was not given neither as `None` or `str` instance.
+        If `root_path` was not given neither as `None`, `str`.
     ValueError
         If `root_path` was given as empty string.
     """
@@ -1783,7 +1783,7 @@ def _validate_root_path(root_path, import_name):
         elif isinstance(root_path, str):
             root_path = str(root_path)
         else:
-            raise TypeError(f'`root_path` can be given as `str` instance, got {root_path.__class__.__name__}.')
+            raise TypeError(f'`root_path` can be `str`, got {root_path.__class__.__name__}.')
         
         if not root_path:
             raise ValueError(f'`root_path` cannot be given as empty string.')
@@ -1796,18 +1796,18 @@ def _validate_static_folder(static_folder):
     
     Parameters
     ----------
-    static_folder : `None` or `str`
+    static_folder : `None`, `str`
         Static folder value to validate.
     
     Returns
     -------
-    static_folder : `None` or `str`
+    static_folder : `None`, `str`
         The validated static folder value.
     
     Raises
     ------
     TypeError
-        If `static_folder` was not given neither as `None` nor `str` instance.
+        If `static_folder` was not given neither as `None` nor `str`.
     ValueError
         If `static_folder` was given as empty string.
     """
@@ -1817,7 +1817,7 @@ def _validate_static_folder(static_folder):
         elif isinstance(static_folder, str):
             static_folder = str(static_folder)
         else:
-            raise TypeError(f'`static_folder` can be given as `str` instance, got {static_folder.__class__.__name__}.')
+            raise TypeError(f'`static_folder` can be `str`, got {static_folder.__class__.__name__}.')
         
         if not static_folder:
             raise ValueError(f'`static_folder` cannot be given as empty string.')
@@ -1835,13 +1835,13 @@ def _validate_static_url_path(static_url_path):
     
     Returns
     -------
-    static_url_path : `None` or `str`
+    static_url_path : `None`, `str`
         The validated static url path value.
     
     Raises
     ------
     TypeError
-        If `static_url_path` was not given either as `None` or `str` instance.
+        If `static_url_path` was not given either as `None`, `str`.
     """
     if (static_url_path is not None):
         if type(static_url_path) is str:
@@ -1849,7 +1849,7 @@ def _validate_static_url_path(static_url_path):
         elif isinstance(static_url_path, str):
             static_url_path = str(static_url_path)
         else:
-            raise TypeError(f'`static_url_path` can be given as `str` instance, got '
+            raise TypeError(f'`static_url_path` can be `str`, got '
                 f'{static_url_path.__class__.__name__}.')
     
     return static_url_path
@@ -1860,18 +1860,18 @@ def _validate_url_prefix(url_prefix):
     
     Parameters
     ---------
-    url_prefix : `None` or `str`
+    url_prefix : `None`, `str`
         Url prefix for a blueprint.
     
     Returns
     -------
-    url_prefix_processed : `None` or `tuple` of `tuple` (`str`, `int`)
+    url_prefix_processed : `None`, `tuple` of `tuple` (`str`, `int`)
         The processed url prefix.
     
     Raises
     ------
     TypeError
-        - If `url_prefix` was neither given as `None` or as `str` instance.
+        - If `url_prefix` was neither given as `None`, `str`.
         - If `url_prefix` contains a `path` rule part.
     """
     if url_prefix is None:
@@ -1882,7 +1882,7 @@ def _validate_url_prefix(url_prefix):
         elif isinstance(url_prefix, str):
             url_prefix = str(url_prefix)
         else:
-            raise TypeError(f'`url_prefix` can be given as `str` instance, got {url_prefix.__class__.__name__}.')
+            raise TypeError(f'`url_prefix` can be `str`, got {url_prefix.__class__.__name__}.')
         
         url_prefix_processed = tuple(maybe_typed_rule_part(rule_part) for rule_part in URL(url_prefix).path)
         if url_prefix_processed:
@@ -1902,14 +1902,14 @@ def _merge_url_rule(rule_before, rule_after):
     
     Parameters
     ----------
-    rule_before : `None` or `tuple` of `tuple` (`int`, `str`)
+    rule_before : `None`, `tuple` of `tuple` (`int`, `str`)
         First url part if any to join `rule_after` to.
-    rule_after : `None` or `tuple` of `tuple` (`int`, `str`)
+    rule_after : `None`, `tuple` of `tuple` (`int`, `str`)
         Second url part what's start is extended by `rule_before`.
     
     Returns
     -------
-    merged_rule : `None` or `tuple` of `tuple` (`int`, `str`)
+    merged_rule : `None`, `tuple` of `tuple` (`int`, `str`)
         The merged rule.
     """
     if rule_before is None:
@@ -1929,14 +1929,14 @@ def _merge_parameters(primary_parameters, secondary_parameters):
     
     Parameters
     ----------
-    primary_parameters : `None` or `tuple` of `tuple` (`str`, `Any`)
+    primary_parameters : `None`, `tuple` of `tuple` (`str`, `Any`)
         Priority parameters, which element's wont be removed.
-    secondary_parameters : `None` or `tuple` of `tuple` (`str`, `Any`)
+    secondary_parameters : `None`, `tuple` of `tuple` (`str`, `Any`)
         Secondary parameters, which will be merged to `primary_parameters`.
     
     Returns
     -------
-    merged_parameters : `None` or `tuple` of `tuple` (`str`, `Any`)
+    merged_parameters : `None`, `tuple` of `tuple` (`str`, `Any`)
         The merged parameters.
     """
     if primary_parameters is None:
@@ -1967,11 +1967,11 @@ class RuleFolder:
     ----------
     endpoint : `str`
         The endpoint's internal name.
-    keyword_parameter_names : `None` or `tuple` of `str`
+    keyword_parameter_names : `None`, `tuple` of `str`
         Keyword only parameter names accepted by `view_func`.
     kwargs_parameter_supported : `bool`
         Whether `view_func` accepts `**kwargs` parameter.
-    positional_parameter_names : `None` or `tuple` of `str`
+    positional_parameter_names : `None`, `tuple` of `str`
         Positional only parameter names accepted by `view_func`.
     rules : `list` of ``Rule``
         Rules added.
@@ -1983,15 +1983,15 @@ class RuleFolder:
     def __init__(self, view_func, positional_parameter_names, keyword_parameter_names, kwargs_parameter_supported,
             endpoint):
         """
-        Creates a new ``RuleFolder`` instance.
+        Creates a new ``RuleFolder``.
         
         Parameters
         ----------
         view_func : `async-callable`
             The function to call when serving a request to the provided endpoint.
-        positional_parameter_names : `None` or `tuple` of `str`
+        positional_parameter_names : `None`, `tuple` of `str`
             Positional only parameter names accepted by `view_func`.
-        keyword_parameter_names : `None` or `tuple` of `str`
+        keyword_parameter_names : `None`, `tuple` of `str`
             Keyword only parameter names accepted by `view_func`.
         kwargs_parameter_supported : `bool`
             Whether `view_func` accepts `**kwargs` parameter.
@@ -2038,11 +2038,11 @@ class RuleFolder:
         ----------
         rule : `tuple` of `tuple` (`int`, `str`)
             The url rule to register.
-        request_methods : `None` or `set` of `str`
+        request_methods : `None`, `set` of `str`
             Request methods to call `view_func` when received.
-        parameters : `None` or `tuple` of `tuple` (`str`, `Any`)
+        parameters : `None`, `tuple` of `tuple` (`str`, `Any`)
             Default parameters to pass to the `view_func`.
-        subdomain : `None` or `str`
+        subdomain : `None`, `str`
             Whether the route should match the specified subdomain.
         """
         self.rules.append(Rule(rule, self.view_func, self.positional_parameter_names, self.keyword_parameter_names,
@@ -2073,7 +2073,7 @@ class RuleFolder:
         
         Parameters
         ----------
-        subdomain : `None` or `str`
+        subdomain : `None`, `str`
             Subdomain, what the rule of the blueprint gonna match.
         """
         for rule in self.rules:
@@ -2085,7 +2085,7 @@ class RuleFolder:
         
         Parameters
         ----------
-        parameters : `None` or `tuple` of `tuple` (`str`, `Any`)
+        parameters : `None`, `tuple` of `tuple` (`str`, `Any`)
         """
         for rule in self.rules:
             rule.set_parameters(parameters)
@@ -2096,7 +2096,7 @@ class RuleFolder:
         
         Parameters
         ----------
-        rule : `None` or `tuple` of `tuple` (`str`, `int`)
+        rule : `None`, `tuple` of `tuple` (`str`, `int`)
             The rule parts to extend the ``Rule``'s with.
         """
         for rule in self.rules:
@@ -2119,7 +2119,7 @@ class RuleFolder:
         
         Parameters
         ----------
-        blueprint_state_stack : `None` or `tuple` of ``BlueprintState``
+        blueprint_state_stack : `None`, `tuple` of ``BlueprintState``
         """
         for rule in self.rules:
             rule.set_blueprint_state_stack(blueprint_state_stack)
@@ -2148,29 +2148,29 @@ class Rule:
     
     Attributes
     ----------
-    application : `None` or ``WebApp``
+    application : `None`, ``WebApp``
         The parent application.
         
         Only added when the rule is registered.
-    blueprint_state_stack : `None` or `tuple` of ``Blueprint``
+    blueprint_state_stack : `None`, `tuple` of ``Blueprint``
         Blueprint stack for the rule.
         
         Only added when the rule is registered.
     endpoint : `str`
         The endpoint's internal name.
-    keyword_parameter_names : `None` or `tuple` of `str`
+    keyword_parameter_names : `None`, `tuple` of `str`
         Keyword only parameter names accepted by `view_func`.
     kwargs_parameter_supported : `bool`
         Whether `view_func` accepts `**kwargs` parameter.
-    parameters : `None` or `tuple` of `tuple` (`str`, `Any`)
+    parameters : `None`, `tuple` of `tuple` (`str`, `Any`)
         Default parameters to pass to the `view_func`.
-    positional_parameter_names : `None` or `tuple` of `str`
+    positional_parameter_names : `None`, `tuple` of `str`
         Positional only parameter names accepted by `view_func`.
-    request_methods : `None` or `set` of `str`
+    request_methods : `None`, `set` of `str`
         Request methods to call `view_func` when received.
-    rule : `tuple` or `tuple` of (`int`, `str`)
+    rule : `tuple`, `tuple` of (`int`, `str`)
         The url's path part.
-    subdomain : `None` or `str`
+    subdomain : `None`, `str`
         Whether the route should match the specified subdomain.
     view_func : `async-callable`
         The function to call when serving a request to the provided endpoint.
@@ -2182,7 +2182,7 @@ class Rule:
     def __init__(self, rule, view_func, positional_parameter_names, keyword_parameter_names,
             kwargs_parameter_supported, endpoint, request_methods, parameters, subdomain):
         """
-        Creates a new ``Rule`` instance.
+        Creates a new ``Rule``.
         
         Parameters
         ----------
@@ -2190,19 +2190,19 @@ class Rule:
             The url rule to register.
         view_func : `async-callable`
             The function to call when serving a request to the provided endpoint.
-        positional_parameter_names : `None` or `tuple` of `str`
+        positional_parameter_names : `None`, `tuple` of `str`
             Positional only parameter names accepted by `view_func`.
-        keyword_parameter_names : `None` or `tuple` of `str`
+        keyword_parameter_names : `None`, `tuple` of `str`
             Keyword only parameter names accepted by `view_func`.
         kwargs_parameter_supported : `bool`
             Whether `view_func` accepts `**kwargs` parameter.
         endpoint : `str`
             The endpoint's internal name.
-        request_methods : `None` or `set` of `str`
+        request_methods : `None`, `set` of `str`
             Request methods to call `view_func` when received.
-        parameters : `None` or `tuple` of `tuple` (`str`, `Any`)
+        parameters : `None`, `tuple` of `tuple` (`str`, `Any`)
             Default parameters to pass to the `view_func`.
-        subdomain : `None` or `str`
+        subdomain : `None`, `str`
             Whether the route should match the specified subdomain.
         """
         self.rule = rule
@@ -2278,7 +2278,7 @@ class Rule:
         
         Parameters
         ----------
-        subdomain : `None` or `str`
+        subdomain : `None`, `str`
             Subdomain, what the rule of the blueprint gonna match.
         """
         if (subdomain is not None) and (self.subdomain is None):
@@ -2290,7 +2290,7 @@ class Rule:
         
         Parameters
         ----------
-        parameters : `None` or `tuple` of `tuple` (`str`, `Any`)
+        parameters : `None`, `tuple` of `tuple` (`str`, `Any`)
         """
         self.parameters = _merge_parameters(self.parameters, parameters)
     
@@ -2300,7 +2300,7 @@ class Rule:
         
         Parameters
         ----------
-        rule : `None` or `tuple` of `tuple` (`str`, `int`)
+        rule : `None`, `tuple` of `tuple` (`str`, `int`)
             The rule parts to extend the ``Rule``'s with.
         """
         self.rule = _merge_url_rule(rule, self.rule)
@@ -2321,7 +2321,7 @@ class Rule:
         
         Parameters
         ----------
-        blueprint_state_stack : `None` or `tuple` of ``BlueprintState``
+        blueprint_state_stack : `None`, `tuple` of ``BlueprintState``
         """
         self.blueprint_state_stack = blueprint_state_stack
     
@@ -2387,7 +2387,7 @@ class Rule:
         
         Returns
         -------
-        before_request_functions : `None` or `list` of `async-callable`
+        before_request_functions : `None`, `list` of `async-callable`
         """
         before_request_functions = None
         blueprint_state_stack = self.blueprint_state_stack
@@ -2418,7 +2418,7 @@ class Rule:
          
         Returns
         -------
-        after_request_functions : `None` or `list` of `async-callable`
+        after_request_functions : `None`, `list` of `async-callable`
         """
         after_request_functions = None
         blueprint_state_stack = self.blueprint_state_stack
@@ -2449,7 +2449,7 @@ class Rule:
         
         Returns
         -------
-        teardown_request_functions : `None` or `list` of `async-callable`
+        teardown_request_functions : `None`, `list` of `async-callable`
         """
         teardown_request_functions = None
         blueprint_state_stack = self.blueprint_state_stack
@@ -2501,7 +2501,7 @@ def _analyze_handler(handler, handler_name, expected_parameter_count):
     """
     analyzed = CallableAnalyzer(handler)
     if not analyzed.is_async():
-        raise TypeError(f'`{handler_name}` can be given as `async-callable`, got {analyzed.__class__.__name__}; '
+        raise TypeError(f'`{handler_name}` can be `async-callable`, got {analyzed.__class__.__name__}; '
             f'{analyzed!r}.')
     
     non_reserved_positional_parameter_count = analyzed.get_non_reserved_positional_parameter_count()
@@ -2527,7 +2527,7 @@ class AppBase:
     
     Attributes
     ----------
-    after_request_functions : `None` or `list` of `async-callable`
+    after_request_functions : `None`, `list` of `async-callable`
         Functions which are ensured to modify the response object.
         
         To register an after request function use the ``.after_request`` decorator.
@@ -2539,7 +2539,7 @@ class AppBase:
         | response          | ``ServerResponse``    | The response object.  |
         +-------------------+-----------------------+-----------------------+
     
-    before_request_functions : `None` or `list` of `async-callable`
+    before_request_functions : `None`, `list` of `async-callable`
         Functions which should run before a request' view-func  is started.
         
         To register a before request function use the ``.before_request`` decorator.
@@ -2549,10 +2549,10 @@ class AppBase:
         
         No parameters are passed to before request functions.
     
-    blueprints : `None` or `dict` of (`str`, `tuple` (``BlueprintState``, ``Blueprint``)
+    blueprints : `None`, `dict` of (`str`, `tuple` (``BlueprintState``, ``Blueprint``)
         Registered blueprints to the app.
     
-    error_handler_functions : `None` or `dict` of (`int`, `async-callable`) items
+    error_handler_functions : `None`, `dict` of (`int`, `async-callable`) items
         Error handlers which run when an http exception is raised from a view.
         
         To register an error handler use the ``.error_handler`` decorator.
@@ -2570,12 +2570,12 @@ class AppBase:
         Absolute path to the package on the filesystem.
     rules : `dict` of (`str`, `Any`)
         The added rules to the application or blueprint. The keys are their endpoint name.
-    static_folder : `None` or `str`
+    static_folder : `None`, `str`
         Absolute path to the static file's folder.
-    static_url_path : `None` or `str`
+    static_url_path : `None`, `str`
         Url path to static files. By defaults relates to `static_folder`.
     
-    teardown_request_functions : `None` or `list` of `async-callable`
+    teardown_request_functions : `None`, `list` of `async-callable`
         Functions which should run after a request's view func is done, even if exception occurs.
         
         To register a teardown request function use the ``.teardown_request`` decorator.
@@ -2584,10 +2584,10 @@ class AppBase:
         +-------------------+---------------------------+-----------------------------------+
         | Respective name   | Type                      | Description                       |
         +===================+===========================+===================================+
-        | exception         | `None` or `BaseException` | The occurred exception if any.    |
+        | exception         | `None`, `BaseException` | The occurred exception if any.    |
         +-------------------+---------------------------+-----------------------------------+
         
-    template_context_processors : `None` or `list of `async-callable`
+    template_context_processors : `None`, `list of `async-callable`
         Functions which are called to populate template context. Each should return a dictionary with what the template
         dictionary is updated with.
         
@@ -2595,10 +2595,10 @@ class AppBase:
         
         No parameters are passed to template context processors.
     
-    template_folder : `None` or `str`
+    template_folder : `None`, `str`
         The folder from where the templates should be loaded from.
     
-    url_default_functions : `None` or `list` of `async-callable`
+    url_default_functions : `None`, `list` of `async-callable`
         Keyword parameter preprocessors for ``url_for``.
         
         To register them use the ``.url_defaults`` method.
@@ -2607,12 +2607,12 @@ class AppBase:
         +-------------------+---------------------------+-------------------------------------------------------+
         | Respective name   | type                      | Description                                           |
         +===================+===========================+=======================================================+
-        | endpoint          | `None` or `str`           | The endpoint what matched the request url.            |
+        | endpoint          | `None`, `str`           | The endpoint what matched the request url.            |
         +-------------------+---------------------------+-------------------------------------------------------+
         | kwargs            | `dict` of (`str`, `Any`)  | Additional keyword parameters passed to ``url_for``.  |
         +-------------------+---------------------------+-------------------------------------------------------+
     
-    url_value_preprocessors : `None` or `list` of `async-callable`
+    url_value_preprocessors : `None`, `list` of `async-callable`
         Preprocessors which can modify the parameters matched from the url.
         
         To registered them use the ``.url_value_preprocessor`` decorator.
@@ -2621,7 +2621,7 @@ class AppBase:
         +-------------------+---------------------------+-----------------------------------------------+
         | Respective name   | Type                      | Description                                   |
         +===================+===========================+===============================================+
-        | endpoint          | `None` or `str`           | The endpoint what matched the request url.    |
+        | endpoint          | `None`, `str`           | The endpoint what matched the request url.    |
         |                   |                           | Set as `None` if exception occurred.          |
         +-------------------+---------------------------+-----------------------------------------------+
         | parameters        | `dict` of (`str`, `Any`)  | Parameters parsed from the request url.       |
@@ -2637,14 +2637,14 @@ class AppBase:
         ----------
         import_name : `str`
             The name of the package or module that this app belongs to.
-        template_folder : `None` or `str`
+        template_folder : `None`, `str`
             The folder from where the templates should be loaded from.
-        root_path : `None` or `str`
+        root_path : `None`, `str`
             Absolute path to the package on the filesystem.
-        static_folder : `None` or `str`
+        static_folder : `None`, `str`
             Path on top of the application route path for static files, which can be accessed trough the
             `static_url_path`.
-        static_url_path : `None` or `str`
+        static_url_path : `None`, `str`
             Url path to static files. Defaults to `static_folder`'s value.
         
         Raises
@@ -2652,11 +2652,11 @@ class AppBase:
         ImportError
             Exception occurred meanwhile finding route path from import name.
         TypeError
-            - If `import_name` was not given as `st` instance.
-            - If `template_folder` was not given neither as `None` or `str` instance.
-            - If `root_path` was not given neither as `None` or `str` instance.
-            - If `static_folder` was not given neither as `None` nor `str` instance.
-            - If `static_url_path` was not given either as `None` or `str` instance.
+            - If `import_name` was not given as `str`.
+            - If `template_folder` was not given neither as `None`, `str`.
+            - If `root_path` was not given neither as `None`, `str`.
+            - If `static_folder` was not given neither as `None` nor `str`.
+            - If `static_url_path` was not given either as `None`, `str`.
         ValueError
             - If `import_name` was given as an empty string.
             - If `root_path` was given as an empty string.
@@ -2712,7 +2712,7 @@ class AppBase:
         ----------
         rule : `str`
             The url rule as string.
-        endpoint  : `None` or `str`, Optional
+        endpoint  : `None`, `str`, Optional
             The internal endpoint of the url. Defaults to the name of the added function.
         **options : keyword parameters
             Additional options to be forward to the underlying ``Rule`` object.
@@ -2735,11 +2735,11 @@ class AppBase:
             The url rule as string.
         *args : parameters
             `endpoint` and `view_func` depending 1 or 2 parameters were given.
-        endpoint  : `None` or `str`, Optional
+        endpoint  : `None`, `str`, Optional
             The internal endpoint of the url. Defaults to the name of the added function.
         view_func : `async-callable`
             The function to call when serving a request to the provided endpoint.
-        provide_automatic_options : `None` or `bool`, Optional (Keyword only)
+        provide_automatic_options : `None`, `bool`, Optional (Keyword only)
             Controls whether `options` should be handled manually.
         **options : keyword parameters
             Additional options to be forward to the underlying ``Rule`` object.
@@ -2752,21 +2752,21 @@ class AppBase:
         Raises
         ------
         TypeError
-            - If `provide_automatic_options` was not given neither as `None` or `bool`.
+            - If `provide_automatic_options` was not given neither as `None`, `bool`.
             - If `view_func` was not given as `async-callable`
-            - If `rule` was not given as `str` instance.
-            - If `endpoint` was not given as `str` instance.
+            - If `rule` was not given as `str`.
+            - If `endpoint` was not given as `str`.
             - If `view_func` parameter is missing from `*args`.
             - Extra positional only parameter.
-            - If `method` element is neither `None` or `str` instance.
+            - If `method` element is neither `None`, `str`.
             - Extra option was given.
-            - If `methods` is neither `None`, `list`, `tuple` or `set` instance.
+            - If `methods` is neither `None`, `list`, `tuple`, `set`.
             - If `methods` contains a non `str` element.
-            - If `defaults` is neither `None`, `dict`, `list`, `set` or `tuple`.
+            - If `defaults` is neither `None`, `dict`, `list`, `set`, `tuple`.
             - If `defaults` contains a non `tuple` element.
-            - If 0th element of an element of `defaults` is not `str` instance.
-            - If `subdomain` was not given neither as `None` or `str` instance.
-            - If `view_func` is not ``Rule``, ``RuleFolder``, neither `async-callable` instance.
+            - If 0th element of an element of `defaults` is not `str`.
+            - If `subdomain` was not given neither as `None`, `str`.
+            - If `view_func` is not ``Rule``, ``RuleFolder``, neither `async-callable`.
         ValueError
             - If `method` is not an http request method.
             - If `methods` contains a non http request method element.
@@ -2785,8 +2785,8 @@ class AppBase:
             raise TypeError(f'`Extra positional parameters: {args[2:]!r}.')
         
         if view_func is None:
-            raise TypeError(f'`view_func` can be `async-callable`, `{Rule.__name__}` or `{RuleFolder.__name__}` '
-                f'instance, got `None`.')
+            raise TypeError(f'`view_func` can be `async-callable`, `{Rule.__name__}`, `{RuleFolder.__name__}`, got '
+                f'`None`.')
         
         if isinstance(view_func, (Rule, RuleFolder)):
             real_func = view_func.view_func
@@ -2799,7 +2799,7 @@ class AppBase:
             real_func = view_func
             analyzed = CallableAnalyzer(view_func)
             if not analyzed.is_async():
-                raise TypeError(f'`view_func` can be given as `async-callable`, got {view_func.__class__.__name__}; '
+                raise TypeError(f'`view_func` can be `async-callable`, got {view_func.__class__.__name__}; '
                     f'{view_func!r}.')
             
             if analyzed.accepts_args():
@@ -2855,7 +2855,7 @@ class AppBase:
             provide_automatic_options = True
         else:
             if not isinstance(provide_automatic_options, bool):
-                raise TypeError(f'`provide_automatic_options` can be given either as `None` or `bool` instance, got '
+                raise TypeError(f'`provide_automatic_options` can be `None`, `bool`, got '
                     f'{provide_automatic_options.__class__.__name__}.`')
         
         if endpoint is None:
@@ -2872,14 +2872,14 @@ class AppBase:
         elif isinstance(endpoint, str):
             endpoint = str(endpoint)
         else:
-            raise TypeError(f'`endpoint` can be given as `str` instance, got {endpoint.__class__.__name__}.')
+            raise TypeError(f'`endpoint` can be `str`, got {endpoint.__class__.__name__}.')
         
         if type(rule) is str:
             pass
         elif isinstance(rule, str):
             rule = str(rule)
         else:
-            raise TypeError(f'`rule` can be given as `str` instance, got {rule.__class__.__name__}.')
+            raise TypeError(f'`rule` can be `str`, got {rule.__class__.__name__}.')
         
         rule_processed = tuple(maybe_typed_rule_part(rule_part) for rule_part in URL(rule).parts)
         if rule_processed and (rule_processed[0] == DUMMY_RULE_PART):
@@ -3000,7 +3000,7 @@ class AppBase:
         Raises
         ------
         TypeError
-            If `error_code` was not given as `int` instance.
+            If `error_code` was not given as `int`.
         
         Returns
         -------
@@ -3011,7 +3011,7 @@ class AppBase:
         elif isinstance(error_code, int):
             error_code = int(error_code)
         else:
-            raise TypeError(f'`error_code` can be given as `int` instance, got {error_code.__class__.__name__}.')
+            raise TypeError(f'`error_code` can be `int`, got {error_code.__class__.__name__}.')
         
         return _ErrorHandlerAdder(self, error_code)
     
@@ -3065,7 +3065,7 @@ class AppBase:
             +-------------------+---------------------------+-------------------------------------------------------+
             | Respective name   | type                      | Description                                           |
             +===================+===========================+=======================================================+
-            | endpoint          | `None` or `str`           | The endpoint what matched the request url.            |
+            | endpoint          | `None`, `str`           | The endpoint what matched the request url.            |
             +-------------------+---------------------------+-------------------------------------------------------+
             | kwargs            | `dict` of (`str`, `Any`)  | Additional keyword parameters passed to ``url_for``.  |
             +-------------------+---------------------------+-------------------------------------------------------+
@@ -3101,7 +3101,7 @@ class AppBase:
             +-------------------+---------------------------+-----------------------------------------------+
             | Respective name   | Type                      | Description                                   |
             +===================+===========================+===============================================+
-            | endpoint          | `None` or `str`           | The endpoint what matched the request url.    |
+            | endpoint          | `None`, `str`           | The endpoint what matched the request url.    |
             |                   |                           | Set as `None` if exception occurred.          |
             +-------------------+---------------------------+-----------------------------------------------+
             | parameters        | `dict` of (`str`, `Any`)  | Parameters parsed from the request url.       |
@@ -3140,9 +3140,9 @@ class AppBase:
         
         Other Parameters
         ----------------
-        url_prefix : `None` or `str`
+        url_prefix : `None`, `str`
             Url prefix for a blueprint.
-        subdomain : `None` or `str`
+        subdomain : `None`, `str`
             Subdomain for the blueprint.
         url_defaults : `None`, `dict` of (`str`, `Any`) items or (`set`, `list`, `tuple`) of (`str`, `Any`) items
             Parameters which the routes of the blueprint will get by default.
@@ -3150,11 +3150,11 @@ class AppBase:
         Raises
         ------
         TypeError
-            - If `blueprint was not given as ``Blueprint`` instance.
-            - If `url_prefix` was neither given as `None` or as `str` instance.
+            - If `blueprint was not given as ``Blueprint``.
+            - If `url_prefix` was neither given as `None`, `str`.
             - If `url_prefix` contains a `path` rule part.
-            - If `subdomain` was not given neither as `None` or `str` instance.
-            - If `parameters` is neither `None`, `dict`, `list`, `set` or `tuple`.
+            - If `subdomain` was not given neither as `None`, `str`.
+            - If `parameters` is neither `None`, `dict`, `list`, `set`, `tuple`.
             - If `parameters` contains a non `tuple` element.
             - If `options` contains extra parameters.
         ValueError
@@ -3177,11 +3177,11 @@ class BlueprintState:
     ----------
     blueprint : ``blueprint``
         The wrapped blueprint.
-    url_prefix : `None` or `tuple` of `tuple` (`str`, `int`)
+    url_prefix : `None`, `tuple` of `tuple` (`str`, `int`)
         Url prefix for all the routes of the blueprint. Set as `None` if not applicable.
-    subdomain : `None` or `str`
+    subdomain : `None`, `str`
         Subdomain, what the routes of the blueprint gonna match.
-    parameters : `None` or `tuple` of `tuple` (`str`, `Any`)
+    parameters : `None`, `tuple` of `tuple` (`str`, `Any`)
         Parameters which the routes of the blueprint will get by default.
     """
     __slots__ = ('blueprint', 'url_prefix', 'subdomain', 'parameters')
@@ -3193,24 +3193,24 @@ class BlueprintState:
         ----------
         blueprint : ``AppBase``
             The blueprint create overwrite state from.
-        options : `None` or `dict` of (`str`, `Any`) items
+        options : `None`, `dict` of (`str`, `Any`) items
             Extra options
         
         Raises
         ------
         TypeError
-            - If `blueprint was not given as ``Blueprint`` instance.
-            - If `url_prefix` was neither given as `None` or as `str` instance.
+            - If `blueprint was not given as ``Blueprint``.
+            - If `url_prefix` was neither given as `None`, `str`.
             - If `url_prefix` contains a `path` rule part.
-            - If `subdomain` was not given neither as `None` or `str` instance.
-            - If `parameters` is neither `None`, `dict`, `list`, `set` or `tuple`.
+            - If `subdomain` was not given neither as `None`, `str`.
+            - If `parameters` is neither `None`, `dict`, `list`, `set`, `tuple`.
             - If `parameters` contains a non `tuple` element.
             - If `options` contains extra parameters.
         ValueError
             If `parameters` contains an element with length of not `2`.
         """
         if not isinstance(blueprint, Blueprint):
-            raise TypeError(f'`blueprint` can be only as `{Blueprint.__name__}` instance, got '
+            raise TypeError(f'`blueprint` can be only as `{Blueprint.__name__}`, got '
                 f'{blueprint.__class__.__name__}.')
         
         if options is None:
@@ -3245,7 +3245,7 @@ class Blueprint(AppBase):
     
     Attributes
     ----------
-    after_request_functions : `None` or `list` of `async-callable`
+    after_request_functions : `None`, `list` of `async-callable`
         Functions which are ensured to modify the response object.
         
         To register a after request function use the ``.after_request`` decorator.
@@ -3257,7 +3257,7 @@ class Blueprint(AppBase):
         | response          | ``ServerResponse``    | The response object.  |
         +-------------------+-----------------------+-----------------------+
     
-    before_request_functions : `None` or `list` of `async-callable`
+    before_request_functions : `None`, `list` of `async-callable`
         Functions which should run before a request is done.
         
         To register a before request function use the ``.before_request`` decorator.
@@ -3267,10 +3267,10 @@ class Blueprint(AppBase):
         
         No parameters are passed to before request functions.
     
-    blueprints : `None` or `list` of ``BlueprintState``
+    blueprints : `None`, `list` of ``BlueprintState``
         Registered blueprints to the app.
     
-    error_handler_functions : `None` or `dict` of (`int`, `async-callable`) items
+    error_handler_functions : `None`, `dict` of (`int`, `async-callable`) items
         Error handlers which run when an http exception is raised from a view.
         
         To register an error handler use the ``.error_handler`` decorator.
@@ -3288,12 +3288,12 @@ class Blueprint(AppBase):
         Absolute path to the package on the filesystem.
     rules : `dict` of (`str`, `Any`)
         The added rules to the application or blueprint. The keys are their endpoint name.
-    static_folder : `None` or `str`
+    static_folder : `None`, `str`
         Absolute path to the static file's folder.
-    static_url_path : `None` or `str`
+    static_url_path : `None`, `str`
         Url path to static files. By defaults relates to `static_folder`.
     
-    teardown_request_functions : `None` or `list` of `async-callable`
+    teardown_request_functions : `None`, `list` of `async-callable`
         Functions which should run after a request is done even if exception occurs.
         
         To register a teardown request function use the ``.teardown_request`` decorator.
@@ -3302,10 +3302,10 @@ class Blueprint(AppBase):
         +-------------------+---------------------------+-----------------------------------+
         | Respective name   | Type                      | Description                       |
         +===================+===========================+===================================+
-        | exception         | `None` or `BaseException` | The occurred exception if any.    |
+        | exception         | `None`, `BaseException` | The occurred exception if any.    |
         +-------------------+---------------------------+-----------------------------------+
         
-    template_context_processors : `None` or `list of `async-callable`
+    template_context_processors : `None`, `list of `async-callable`
         Functions which are called to populate template context. Each should return a dictionary with what the template
         dictionary is updated with.
         
@@ -3313,10 +3313,10 @@ class Blueprint(AppBase):
         
         No parameters are passed to template context processors.
     
-    template_folder : `None` or `str`
+    template_folder : `None`, `str`
         The folder from where the templates should be loaded from.
     
-    url_default_functions : `None` or `list` of `async-callable`
+    url_default_functions : `None`, `list` of `async-callable`
         Keyword parameter preprocessors for ``url_for``.
         
         To register them use the ``.url_defaults`` method.
@@ -3325,12 +3325,12 @@ class Blueprint(AppBase):
         +-------------------+---------------------------+-------------------------------------------------------+
         | Respective name   | type                      | Description                                           |
         +===================+===========================+=======================================================+
-        | endpoint          | `None` or `str`           | The endpoint what matched the request url.            |
+        | endpoint          | `None`, `str`           | The endpoint what matched the request url.            |
         +-------------------+---------------------------+-------------------------------------------------------+
         | kwargs            | `dict` of (`str`, `Any`)  | Additional keyword parameters passed to ``url_for``.  |
         +-------------------+---------------------------+-------------------------------------------------------+
     
-    url_value_preprocessors : `None` or `list` of `async-callable`
+    url_value_preprocessors : `None`, `list` of `async-callable`
         Preprocessors which can modify the parameters matched from the url.
         
         To registered them use the ``.url_value_preprocessor`` decorator.
@@ -3339,41 +3339,41 @@ class Blueprint(AppBase):
         +-------------------+---------------------------+-----------------------------------------------+
         | Respective name   | Type                      | Description                                   |
         +===================+===========================+===============================================+
-        | endpoint          | `None` or `str`           | The endpoint what matched the request url.    |
+        | endpoint          | `None`, `str`           | The endpoint what matched the request url.    |
         |                   |                           | Set as `None` if exception occurred.          |
         +-------------------+---------------------------+-----------------------------------------------+
         | parameters        | `dict` of (`str`, `Any`)  | Parameters parsed from the request url.       |
         +-------------------+---------------------------+-----------------------------------------------+
     
-    url_prefix : `None` or `tuple` of `tuple` (`str`, `int`)
+    url_prefix : `None`, `tuple` of `tuple` (`str`, `int`)
         Url prefix for all the routes of the blueprint. Set as `None` if not applicable.
-    subdomain : `None` or `str`
+    subdomain : `None`, `str`
         Subdomain, what the routes of the blueprint gonna match.
-    parameters : `None` or `tuple` of `tuple` (`str`, `Any`)
+    parameters : `None`, `tuple` of `tuple` (`str`, `Any`)
         Parameters which the routes of the blueprint will get by default.
     """
     __slots__ = ('url_prefix', 'subdomain', 'parameters')
     def __new__(cls, import_name, *, template_folder=None, root_path=None, static_folder=None,
             static_url_path=None, url_prefix=None, subdomain=None, url_defaults=None):
         """
-        Creates a new ``Blueprint`` instance.
+        Creates a new ``Blueprint``.
         
         Parameters
         ----------
         import_name : `str`
             The name of the package or module that this app belongs to.
-        template_folder : `None` or `str`, Optional (Keyword only)
+        template_folder : `None`, `str`, Optional (Keyword only)
             The folder from where the templates should be loaded from.
-        root_path : `None` or `str`, Optional (Keyword only)
+        root_path : `None`, `str`, Optional (Keyword only)
             Absolute path to the package on the filesystem.
-        static_folder : `None` or `str`, Optional (Keyword only)
+        static_folder : `None`, `str`, Optional (Keyword only)
             Path on top of the application route path for static files, which can be accessed trough the
             `static_url_path`. Defaults to `None`.
-        static_url_path : `None` or `str`, Optional (Keyword only)
+        static_url_path : `None`, `str`, Optional (Keyword only)
             Url path to static files. Defaults to `static_folder`'s value.
-        url_prefix : `None` or `str`, Optional (Keyword only)
+        url_prefix : `None`, `str`, Optional (Keyword only)
             Url prefix for all the routes registered to the blueprint.
-        subdomain : `None` or `str`, Optional (Keyword only)
+        subdomain : `None`, `str`, Optional (Keyword only)
             Subdomain, what the routes of the blueprint gonna match.
         url_defaults : `None`, `dict` of (`str`, `Any`) items or (`set`, `list`, `tuple`) of (`str`, `Any`) items
                 , Optional (Keyword only)
@@ -3384,15 +3384,15 @@ class Blueprint(AppBase):
         ImportError
             Exception occurred meanwhile finding route path from import name.
         TypeError
-            - If `import_name` was not given as `st` instance.
-            - If `template_folder` was not given neither as `None` or `str` instance.
-            - If `root_path` was not given neither as `None` or `str` instance.
-            - If `static_folder` was not given neither as `None` nor `str` instance.
-            - If `static_url_path` was not given either as `None` or `str` instance.
-            - If `url_prefix` was neither given as `None` or as `str` instance.
+            - If `import_name` was not given as `str`.
+            - If `template_folder` was not given neither as `None`, `str`.
+            - If `root_path` was not given neither as `None`, `str`.
+            - If `static_folder` was not given neither as `None` nor `str`.
+            - If `static_url_path` was not given either as `None`, `str`.
+            - If `url_prefix` was neither given as `None`, `str`.
             - If `url_prefix` contains a `path` rule part.
-            - If `subdomain` was not given neither as `None` or `str` instance.
-            - If `defaults` is neither `None`, `dict`, `list`, `set` or `tuple`.
+            - If `subdomain` was not given neither as `None`, `str`.
+            - If `defaults` is neither `None`, `dict`, `list`, `set`, `tuple`.
             - If `defaults` contains a non `tuple` element.
         ValueError
             - If `import_name` was given as an empty string.
@@ -3416,7 +3416,7 @@ class WebApp(AppBase):
     
     Attributes
     ----------
-    after_request_functions : `None` or `list` of `async-callable`
+    after_request_functions : `None`, `list` of `async-callable`
         Functions which are ensured to modify the response object.
         
         To register a after request function use the ``.after_request`` decorator.
@@ -3428,7 +3428,7 @@ class WebApp(AppBase):
         | response          | ``ServerResponse``    | The response object.  |
         +-------------------+-----------------------+-----------------------+
     
-    before_request_functions : `None` or `list` of `async-callable`
+    before_request_functions : `None`, `list` of `async-callable`
         Functions which should run before a request is done.
         
         To register a before request function use the ``.before_request`` decorator.
@@ -3438,10 +3438,10 @@ class WebApp(AppBase):
         
         No parameters are passed to before request functions.
     
-    blueprints : `None` or `dict` of (`str`, `tuple` (``BlueprintState``, ``Blueprint``)
+    blueprints : `None`, `dict` of (`str`, `tuple` (``BlueprintState``, ``Blueprint``)
         Registered blueprints to the app.
     
-    error_handler_functions : `None` or `dict` of (`int`, `async-callable`) items
+    error_handler_functions : `None`, `dict` of (`int`, `async-callable`) items
         Error handlers which run when an http exception is raised from a view.
         
         To register an error handler use the ``.error_handler`` decorator.
@@ -3459,12 +3459,12 @@ class WebApp(AppBase):
         Absolute path to the package on the filesystem.
     rules : `dict` of (`str`, `Any`)
         The added rules to the application or blueprint. The keys are their endpoint name.
-    static_folder : `None` or `str`
+    static_folder : `None`, `str`
         Absolute path to the static file's folder.
-    static_url_path : `None` or `str`
+    static_url_path : `None`, `str`
         Url path to static files. By defaults relates to `static_folder`.
     
-    teardown_request_functions : `None` or `list` of `async-callable`
+    teardown_request_functions : `None`, `list` of `async-callable`
         Functions which should run after a request is done even if exception occurs.
         
         To register a teardown request function use the ``.teardown_request`` decorator.
@@ -3473,10 +3473,10 @@ class WebApp(AppBase):
         +-------------------+---------------------------+-----------------------------------+
         | Respective name   | Type                      | Description                       |
         +===================+===========================+===================================+
-        | exception         | `None` or `BaseException` | The occurred exception if any.    |
+        | exception         | `None`, `BaseException` | The occurred exception if any.    |
         +-------------------+---------------------------+-----------------------------------+
         
-    template_context_processors : `None` or `list of `async-callable`
+    template_context_processors : `None`, `list of `async-callable`
         Functions which are called to populate template context. Each should return a dictionary with what the template
         dictionary is updated with.
         
@@ -3484,10 +3484,10 @@ class WebApp(AppBase):
         
         No parameters are passed to template context processors.
     
-    template_folder : `None` or `str`
+    template_folder : `None`, `str`
         The folder from where the templates should be loaded from.
     
-    url_default_functions : `None` or `list` of `async-callable`
+    url_default_functions : `None`, `list` of `async-callable`
         Keyword parameter preprocessors for ``url_for``.
         
         To register them use the ``.url_defaults`` method.
@@ -3496,12 +3496,12 @@ class WebApp(AppBase):
         +-------------------+---------------------------+-------------------------------------------------------+
         | Respective name   | type                      | Description                                           |
         +===================+===========================+=======================================================+
-        | endpoint          | `None` or `str`           | The endpoint what matched the request url.            |
+        | endpoint          | `None`, `str`           | The endpoint what matched the request url.            |
         +-------------------+---------------------------+-------------------------------------------------------+
         | kwargs            | `dict` of (`str`, `Any`)  | Additional keyword parameters passed to ``url_for``.  |
         +-------------------+---------------------------+-------------------------------------------------------+
     
-    url_value_preprocessors : `None` or `list` of `async-callable`
+    url_value_preprocessors : `None`, `list` of `async-callable`
         Preprocessors which can modify the parameters matched from the url.
         
         To registered them use the ``.url_value_preprocessor`` decorator.
@@ -3510,33 +3510,33 @@ class WebApp(AppBase):
         +-------------------+---------------------------+-----------------------------------------------+
         | Respective name   | Type                      | Description                                   |
         +===================+===========================+===============================================+
-        | endpoint          | `None` or `str`           | The endpoint what matched the request url.    |
+        | endpoint          | `None`, `str`           | The endpoint what matched the request url.    |
         |                   |                           | Set as `None` if exception occurred.          |
         +-------------------+---------------------------+-----------------------------------------------+
         | parameters        | `dict` of (`str`, `Any`)  | Parameters parsed from the request url.       |
         +-------------------+---------------------------+-----------------------------------------------+
     
-    _server : `None` or ``WebServer``
+    _server : `None`, ``WebServer``
         The running web-server of the webapp.
     """
     __slots__ = ('_server',)
     def __new__(cls, import_name, *, template_folder=None, root_path=None, static_folder='static',
             static_url_path=None):
         """
-        Creates a new ``WebApp`` instance.
+        Creates a new ``WebApp``.
         
         Parameters
         ----------
         import_name : `str`
             The name of the package or module that this app belongs to.
-        template_folder : `None` or `str`, Optional (Keyword only)
+        template_folder : `None`, `str`, Optional (Keyword only)
             The folder from where the templates should be loaded from.
-        root_path : `None` or `str`, Optional (Keyword only)
+        root_path : `None`, `str`, Optional (Keyword only)
             Absolute path to the package on the filesystem.
-        static_folder : `None` or `str`, Optional (Keyword only)
+        static_folder : `None`, `str`, Optional (Keyword only)
             Path on top of the application route path for static files, which can be accessed trough the
             `static_url_path`. Defaults to `'static'`.
-        static_url_path : `None` or `str`, Optional (Keyword only)
+        static_url_path : `None`, `str`, Optional (Keyword only)
             Url path to static files. Defaults to `static_folder`'s value.
         
         Raises
@@ -3544,11 +3544,11 @@ class WebApp(AppBase):
         ImportError
             Exception occurred meanwhile finding route path from import name.
         TypeError
-            - If `import_name` was not given as `st` instance.
-            - If `template_folder` was not given neither as `None` or `str` instance.
-            - If `root_path` was not given neither as `None` or `str` instance.
-            - If `static_folder` was not given neither as `None` nor `str` instance.
-            - If `static_url_path` was not given either as `None` or `str` instance.
+            - If `import_name` was not given as `str`.
+            - If `template_folder` was not given neither as `None`, `str`.
+            - If `root_path` was not given neither as `None`, `str`.
+            - If `static_folder` was not given neither as `None` nor `str`.
+            - If `static_url_path` was not given either as `None`, `str`.
         ValueError
             - If `import_name` was given as an empty string.
             - If `root_path` was given as an empty string.
@@ -3569,7 +3569,7 @@ def _register_rules(application, blueprint_state_stack, rules, router, router_by
     ----------
     application : ``WebApp``
         The parent application.
-    blueprint_state_stack : `None` or `tuple` of ``BluePrintState``
+    blueprint_state_stack : `None`, `tuple` of ``BluePrintState``
         Blueprint stack of the rule.
     rules : `list` of (``Rule``, ``RuleFolder``)
         Rules of a blueprint or of an application to register.
@@ -3577,11 +3577,11 @@ def _register_rules(application, blueprint_state_stack, rules, router, router_by
         Router where rules are registered without subdomain
     router_by_subdomain : `dict` of (`str`, ``PathRouter``) items
         Routers by subdomain name.
-    subdomain : `None` or `str`
+    subdomain : `None`, `str`
         Subdomain to overwrite the rules'.
-    url_prefix : `None` or `tuple` of `None` or `tuple` of `tuple` (`str`, `int`)
+    url_prefix : `None`, `tuple` of `None`, `tuple` of `tuple` (`str`, `int`)
         Additional url prefix for the rules.
-    parameters : `None` or `tuple` of `tuple` (`str`, `Any`)
+    parameters : `None`, `tuple` of `tuple` (`str`, `Any`)
         Parameters which the routes of the blueprint will get by default.
     """
     for rule in rules:
@@ -3679,7 +3679,7 @@ class RequestHandler:
     __slots__ = ('_router', '_router_by_subdomain')
     def __new__(cls, application):
         """
-        Creates a new ``RequestHandler`` instance.
+        Creates a new ``RequestHandler``.
         
         Parameters
         ----------
@@ -3824,7 +3824,7 @@ class RequestHandler:
         
         Parameters
         ----------
-        url : ``URL`` instance
+        url : ``URL``
             The received request url.
         request_method : `str`
             The method to request.

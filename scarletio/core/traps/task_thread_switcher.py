@@ -31,13 +31,13 @@ class enter_executor:
     
     Attributes
     ----------
-    _enter_future : `None` or ``Future``
+    _enter_future : `None`, ``Future``
         The future, what blocks the task's the execution, meanwhile the thread switch is taking place.
-    _exit_future : `None` or ``Future``
+    _exit_future : `None`, ``Future``
         The future, what blocks the task's execution, meanwhile the thread is switching back.
-    _waited_future : `None` or ``Future`` instance
+    _waited_future : `None`, ``Future``
         Blocking future used inside of the task, meanwhile it is in executor.
-    _task : `None` or ``Task``
+    _task : `None`, ``Task``
     """
     __slots__ = ('_enter_future', '_exit_future', '_waited_future', '_task')
     

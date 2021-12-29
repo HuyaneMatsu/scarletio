@@ -16,7 +16,7 @@ class InvalidHandshake(Exception):
     ----------
     message : `str`
         Error message.
-    response : `None` or ``ClientResponse``
+    response : `None`, ``ClientResponse``
         Received http answer.
     request : ``RawRequestMessage``
         Received raw http request.
@@ -38,7 +38,7 @@ class HttpProcessingError(Exception):
         Http error code. Defaults to `0`.
     message : `str`
         Error message. Defaults to empty string.
-    headers : `None` or ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
+    headers : `None`, ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Respective headers.
     """
     def __init__(self, message='', code=0, headers=None):
@@ -59,9 +59,9 @@ class AbortHandshake(HttpProcessingError, InvalidHandshake):
         Http error code. Defaults to `0`.
     message : `str`
         Error message. Defaults to empty string.
-    headers : `None` or ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
+    headers : `None`, ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Respective headers.
-    response : `None` or ``ClientResponse``
+    response : `None`, ``ClientResponse``
         Received http answer.
     request : ``RawRequestMessage``
         Received raw http request.
@@ -86,7 +86,7 @@ class ProxyError(HttpProcessingError):
         Http error code. Defaults to `0`.
     message : `str`
         Error message. Defaults to empty string.
-    headers : `None` or ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
+    headers : `None`, ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Respective headers.
     """
     pass
@@ -116,7 +116,7 @@ class ContentEncodingError(HttpProcessingError, PayloadError):
         Http error code. Defaults to `0`.
     message : `str`
         Error message. Defaults to empty string.
-    headers : `None` or ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
+    headers : `None`, ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Respective headers.
     """
     def __init__(self, message='Bad Request', headers=None):
@@ -180,7 +180,7 @@ class ConnectionClosed(Exception):
     ----------
     code : `int`
         Web socket close code.
-    exception : `None` or `BaseException`
+    exception : `None`, `BaseException`
         Source exception if applicable.
     reason : `None or `str`
         Web socket close reason if any.
@@ -194,7 +194,7 @@ class ConnectionClosed(Exception):
         ----------
         code : `int`
             The websocket close code.
-        exception : `None` or `BaseException`
+        exception : `None`, `BaseException`
             Source exception if applicable.
         reason : `None or `str`, Optional
             Web socket close reason if any. Defaults to `None`.

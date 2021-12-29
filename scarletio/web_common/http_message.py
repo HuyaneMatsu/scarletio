@@ -11,7 +11,7 @@ class RawMessage:
     _upgraded : `int`
         Whether the connection is upgraded.
         
-        Is only set when the ``.upgraded`` property is accessed as `0` or `1`. Till is set as `2`.
+        Is only set when the ``.upgraded`` property is accessed as `0`, `1`. Till is set as `2`.
     headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         The headers of the http message.
     """
@@ -66,7 +66,7 @@ class RawMessage:
         
         Returns
         -------
-        encoding : `None` or `str`
+        encoding : `None`, `str`
             If no encoding is set, defaults to `None`.
         """
         try:
@@ -88,7 +88,7 @@ class RawResponseMessage(RawMessage):
     _upgraded : `int`
         Whether the connection is upgraded.
         
-        Is only set when the ``.upgraded`` property is accessed as `0` or `1`. Till is set as `2`.
+        Is only set when the ``.upgraded`` property is accessed as `0`, `1`. Till is set as `2`.
     headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         The headers of the http message.
     version : ``HttpVersion``
@@ -102,7 +102,7 @@ class RawResponseMessage(RawMessage):
     
     def __init__(self, version, status, reason, headers):
         """
-        Creates a new ``RawResponseMessage`` instance with the given parameters.
+        Creates a new ``RawResponseMessage`` with the given parameters.
         
         Parameters
         ----------
@@ -131,7 +131,7 @@ class RawRequestMessage(RawMessage):
     _upgraded : `int`
         Whether the connection is upgraded.
         
-        Is only set when the ``.upgraded`` property is accessed as `0` or `1`. Till is set as `2`.
+        Is only set when the ``.upgraded`` property is accessed as `0`, `1`. Till is set as `2`.
     headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         The headers of the http message.
     version : ``HttpVersion``
@@ -145,7 +145,7 @@ class RawRequestMessage(RawMessage):
     
     def __init__(self, version, method, path, headers):
         """
-        Creates a new ``RawRequestMessage`` instance with the given parameters.
+        Creates a new ``RawRequestMessage`` with the given parameters.
         
         Parameters
         ----------
