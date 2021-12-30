@@ -43,7 +43,9 @@ def future_or_timeout(future, timeout):
     callback = _TimeoutHandleCanceller()
     handle = loop.call_later(timeout, callback, future)
     if handle is None:
-        raise RuntimeError(f'`future_or_timeout` was called with future with a stopped loop {loop!r}')
+        raise RuntimeError(
+            f'`future_or_timeout` was called on future with a stopped loop; loop={loop!r}.'
+        )
     
     callback._handle = handle
     future.add_done_callback(callback)
@@ -97,11 +99,15 @@ class repeat_timeout:
         """
         thread = current_thread()
         if not isinstance(thread, EventThread):
-            raise RuntimeError(f'`repeat_timeout used outside of {EventThread.__name__}, at {thread!r}.')
+            raise RuntimeError(
+                f'`repeat_timeout used outside of `{EventThread.__name__}`, at {thread!r}.'
+            )
         
         task = thread.current_task
         if task is None:
-            raise RuntimeError(f'`repeat_timeout` used outside of a {Task.__name__}.')
+            raise RuntimeError(
+                f'`repeat_timeout` used outside of a `{Task.__name__}`.'
+            )
         
         self = object.__new__(cls)
         self._last_set = 0.0

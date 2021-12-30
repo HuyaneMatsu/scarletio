@@ -45,8 +45,9 @@ def sleep(delay, loop=None):
     if loop is None:
         loop = current_thread()
         if not isinstance(loop, EventThread):
-            raise RuntimeError(f'`sleep` called without passing `loop` parameter from a non {EventThread.__name__}: '
-                f'{loop!r}.')
+            raise RuntimeError(
+                f'`sleep` called without passing `loop` parameter from a non `{EventThread.__name__}`; thread={loop!r}.'
+            )
     
     future = Future(loop)
     if delay <= 0.:
@@ -56,7 +57,9 @@ def sleep(delay, loop=None):
     callback = object.__new__(_SleepHandleCanceller)
     handle = loop.call_later(delay, callback, future)
     if handle is None:
-        raise RuntimeError(f'`sleep` was called with future with a stopped loop {loop!r}')
+        raise RuntimeError(
+            f'`sleep` was called inside of a stopped loop; loop={loop!r}.'
+        )
     
     future._callbacks.append(callback)
     callback._handle = handle

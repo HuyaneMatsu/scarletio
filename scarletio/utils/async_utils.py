@@ -112,8 +112,10 @@ def is_coroutine_generator(obj):
 if sys.version_info >= (3, 11, 0):
     def to_coroutine(function):
         if not isinstance(function, FunctionType):
-            raise TypeError(f'`function` can only be `{FunctionType.__name__}`, got {function.__class__.__name__}; '
-                f'{function!r}.')
+            raise TypeError(
+                f'`function` can only be `{FunctionType.__name__}`, got {function.__class__.__name__}; '
+                f'{function!r}.'
+            )
         
         code_object = function.__code__
         code_flags = code_object.co_flags
@@ -121,8 +123,10 @@ if sys.version_info >= (3, 11, 0):
             return function
         
         if not code_flags&CO_GENERATOR:
-            raise TypeError(f'`function` can only be given as generator or as coroutine type, got {function!r}, '
-                f'co_flags={code_flags!r}.')
+            raise TypeError(
+                f'`function` can only be given as generator or as coroutine type, got {function!r}, '
+                f'co_flags={code_flags!r}.'
+            )
         
         function.__code__ = type(code_object)(
             code_object.co_argcount,
@@ -152,8 +156,10 @@ if sys.version_info >= (3, 11, 0):
 elif sys.version_info >= (3, 8, 0):
     def to_coroutine(function):
         if not isinstance(function, FunctionType):
-            raise TypeError(f'`function` can only be `{FunctionType.__name__}`, got {function.__class__.__name__}; '
-                f'{function!r}.')
+            raise TypeError(
+                f'`function` can only be `{FunctionType.__name__}`, got {function.__class__.__name__}; '
+                f'{function!r}.'
+            )
         
         code_object = function.__code__
         code_flags = code_object.co_flags
@@ -161,8 +167,10 @@ elif sys.version_info >= (3, 8, 0):
             return function
         
         if not code_flags&CO_GENERATOR:
-            raise TypeError(f'`function` can only be given as generator or as coroutine type, got {function!r}, '
-                f'co_flags={code_flags!r}.')
+            raise TypeError(
+                f'`function` can only be given as generator or as coroutine type, got {function!r}, '
+                f'co_flags={code_flags!r}.'
+            )
         
         function.__code__ = type(code_object)(
             code_object.co_argcount,
@@ -187,8 +195,10 @@ elif sys.version_info >= (3, 8, 0):
 else:
     def to_coroutine(function):
         if not isinstance(function, FunctionType):
-            raise TypeError(f'`function` can only be `{FunctionType.__name__}`, got {function.__class__.__name__}; '
-                f'{function!r}.')
+            raise TypeError(
+                f'`function` can only be `{FunctionType.__name__}`, got {function.__class__.__name__}; '
+                f'{function!r}.'
+            )
         
         code_object = function.__code__
         code_flags = code_object.co_flags
@@ -196,8 +206,10 @@ else:
             return function
         
         if not code_flags&CO_GENERATOR:
-            raise TypeError(f'`function` can only be given as generator or as coroutine type, got {function!r}, '
-                f'co_flags={code_flags!r}.')
+            raise TypeError(
+                f'`function` can only be given as generator or as coroutine type, got {function!r}, '
+                f'co_flags={code_flags!r}.'
+            )
         
         function.__code__ = type(code_object)(
             code_object.co_argcount,

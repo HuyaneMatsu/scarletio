@@ -49,20 +49,25 @@ class CyclerCallable:
             try:
                 __int__ = getattr(priority, '__int__')
             except AttributeError:
-                raise TypeError(f'The given `priority` is not `int`, neither other numeric convertible to it, got '
-                    f'{priority_type.__name__}.') from None
+                raise TypeError(
+                    f'`priority` can be `int`, `numeric`, got {priority_type.__name__}; {priority!r}.'
+                ) from None
             
             priority = __int__(priority)
         
         analyzer = CallableAnalyzer(func)
         min_, max_ = analyzer.get_non_reserved_positional_parameter_range()
         if min_ > 1:
-            raise TypeError(f'`{func!r}` excepts at least `{min_!r}` non reserved parameters, meanwhile `1` would be '
-                'passed to it.')
+            raise TypeError(
+                f'`{func!r}` excepts at least `{min_!r}` non reserved parameters, meanwhile `1` would be '
+                'passed to it.'
+            )
         
         if not ((min_ == 1) or max_ >= 1 or analyzer.accepts_args()):
-            raise TypeError(f'`{func!r}` expects maximum `{max_!r}` non reserved parameters, meanwhile the event '
-                'expects to pass `1`.')
+            raise TypeError(
+                f'`{func!r}` expects maximum `{max_!r}` non reserved parameters, meanwhile the event '
+                'expects to pass `1`.'
+            )
         
         is_async = analyzer.is_async()
         
@@ -194,21 +199,25 @@ class Cycler:
             try:
                 __float__ = getattr(cycle_time_type, '__float__')
             except AttributeError:
-                raise TypeError(f'The given `cycle_time` is not `float`, neither other numeric convertible to it, got '
-                    f'{cycle_time_type.__name__}.') from None
+                raise TypeError(
+                    f'`cycle_time` can be `float`, `numeric`, got {cycle_time_type.__name__}; {cycle_time!r}.'
+                ) from None
             
             cycle_time = __float__(cycle_time)
         
         if cycle_time <= 0.0:
-            raise ValueError(f'{cycle_time} cannot be `0` or less, got `{cycle_time!r}`.')
+            raise ValueError(
+                f'{cycle_time} cannot be `0` or less, got {cycle_time!r}.'
+            )
         
         priority_type = type(priority)
         if (priority_type is not int):
             try:
                 __int__ = getattr(priority, '__int__')
             except AttributeError:
-                raise TypeError(f'The given `priority` is not `int`, neither other numeric convertible to it, got '
-                    f'{priority_type.__name__}.') from None
+                raise TypeError(
+                    f'`priority` can be `int`, `numeric`, got {priority_type.__name__}; {priority!r}.'
+                ) from None
             
             priority = __int__(priority)
         
@@ -244,12 +253,15 @@ class Cycler:
                 if func.is_async:
                     Task(result, self.loop)
             except BaseException as err:
-                self.loop.render_exception_async(err, [
-                    self.__class__.__name__,
-                    ' exception occurred\nat calling ',
-                    repr(func),
-                    '\n',
-                        ])
+                self.loop.render_exception_async(
+                    err,
+                    [
+                        self.__class__.__name__,
+                        ' exception occurred\nat calling ',
+                        repr(func),
+                        '\n',
+                    ],
+                )
         
         self.handle = self.loop.call_later(self.cycle_time, self.__class__._run, self)
     
@@ -288,6 +300,7 @@ class Cycler:
                 repr_parts.append(', priority=')
                 repr_parts.append(repr(priority))
         
+        repr_parts.append(')')
         return ''.join(repr_parts)
     
     
@@ -305,6 +318,7 @@ class Cycler:
         
         loop.call_soon_thread_safe_lazy(self.__class__._cancel, self)
     
+    
     def _cancel(self):
         """
         Cancels the cycler.
@@ -315,6 +329,7 @@ class Cycler:
         if (handle is not None):
             self.handle = None
             handle.cancel()
+    
     
     def call_now(self):
         """
@@ -330,6 +345,7 @@ class Cycler:
         
         loop.call_soon_thread_safe_lazy(self.__class__._call_now, self)
     
+    
     def _call_now(self):
         """
         Calls the cycler now, doing it's cycle.
@@ -341,6 +357,7 @@ class Cycler:
             handle.cancel()
         
         self._run()
+    
     
     def reschedule(self):
         """
@@ -356,6 +373,7 @@ class Cycler:
         
         loop.call_soon_thread_safe_lazy(self.__class__._reschedule, self)
     
+    
     def _reschedule(self):
         """
         Reschedules the cycler, making it's cycle to start since now. If the cycler is not running, also starts it.
@@ -368,6 +386,7 @@ class Cycler:
         
         self.handle = self.loop.call_later(self.cycle_time, self.__class__._run, self)
     
+    
     @property
     def running(self):
         """
@@ -378,6 +397,7 @@ class Cycler:
         running : `str`
         """
         return (self.handle is not None)
+    
     
     def set_cycle_time(self, cycle_time):
         """
@@ -400,15 +420,19 @@ class Cycler:
             try:
                 __float__ = getattr(cycle_time_type, '__float__')
             except AttributeError:
-                raise TypeError(f'The given `cycle_time` is not `float`, neither other numeric convertible to it, got '
-                    f'{cycle_time_type.__name__}.') from None
+                raise TypeError(
+                    f'`cycle_time` can be `float`, `numeric`, got {cycle_time_type.__name__}; {cycle_time!r}.'
+                ) from None
             
             cycle_time = __float__(cycle_time)
         
         if cycle_time <= 0.0:
-            raise ValueError(f'{cycle_time} cannot be `0` or less, got `{cycle_time!r}`.')
+            raise ValueError(
+                f'{cycle_time} cannot be `0` or less, got {cycle_time!r}.'
+            )
         
         self.cycle_time = cycle_time
+    
     
     def append(self, func, priority=0):
         """
@@ -439,6 +463,7 @@ class Cycler:
         
         loop.call_soon_thread_safe_lazy(self.__class__._append, self, validated_func)
     
+    
     def _append(self, validated_func):
         """
         Adds the given `func` to the cycler to call.
@@ -453,6 +478,7 @@ class Cycler:
         funcs = self.funcs
         funcs.append(validated_func)
         funcs.sort()
+    
     
     def remove(self, func):
         """
@@ -472,6 +498,7 @@ class Cycler:
             return
         
         loop.call_soon_thread_safe_lazy(self.__class__._remove, self, func)
+    
     
     def _remove(self, func):
         """
@@ -502,6 +529,7 @@ class Cycler:
             index += 1
             continue
     
+    
     def get_time_till_next_call(self):
         """
         Returns how much time is left till the next cycle call.
@@ -522,6 +550,7 @@ class Cycler:
             return 0.0 # right now
         
         return at
+    
     
     def get_time_of_next_call(self):
         """

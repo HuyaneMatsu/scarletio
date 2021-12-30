@@ -58,15 +58,21 @@ class TaskLocal:
         """
         task = self._task
         if task is not None:
-            raise RuntimeError(f'{self.__class__.__name__} is already entered inside of {task!r}.')
+            raise RuntimeError(
+                f'`{self.__class__.__name__}` is already entered inside of {task!r}.'
+            )
         
         thread = current_thread()
         if not isinstance(thread, EventThread):
-            raise RuntimeError(f'{self.__class__.__name__} used outside of {EventThread.__name__}, at {thread!r}.')
+            raise RuntimeError(
+                f'`{self.__class__.__name__}` used outside of `{EventThread.__name__}`, at {thread!r}.'
+            )
         
         task = thread.current_task
         if task is None:
-            raise RuntimeError(f'{self.__class__.__name__} used outside of a {Task.__name__}.')
+            raise RuntimeError(
+                f'`{self.__class__.__name__}` used outside of a `{Task.__name__}`.'
+            )
         
         self._task = task
         
@@ -131,17 +137,17 @@ class HTTPRequestHandler(HttpReadWriteProtocol):
         Whether the protocol's respective transport's reading is paused. Defaults to `False`.
         
         Also note, that not every transport supports pausing.
-    exception : `None`, `BaseException`
+    _exception : `None`, `BaseException`
         Exception set by ``.set_exception``, when an unexpected exception occur meanwhile reading from socket.
-    loop : ``EventThread``
+    _loop : ``EventThread``
         The event loop to what the protocol is bound to.
-    payload_reader : `None`, `GeneratorType`
+    _payload_reader : `None`, `GeneratorType`
         Payload reader generator, what gets the control back, when data, eof or any exception is received.
-    payload_waiter : `None` of ``Future``
+    _payload_waiter : `None` of ``Future``
         Payload waiter of the protocol, what's result is set, when the ``.payload_reader`` generator returns.
         
         If cancelled or marked by done or any other methods, the payload reader will not be cancelled.
-    transport : `None`, `Any`
+    _transport : `None`, `Any`
         Asynchronous transport implementation. Is set meanwhile the protocol is alive.
     _drain_waiter : `None`, ``Future``
         A future, what is used to block the writing task, till it's writen data is drained.
@@ -178,7 +184,7 @@ class HTTPRequestHandler(HttpReadWriteProtocol):
         """
         HttpReadWriteProtocol.connection_made(self, transport)
         self.server.register(self)
-        self.handler_task = Task(self.lifetime_handler(), self.loop)
+        self.handler_task = Task(self.lifetime_handler(), self._loop)
     
     async def lifetime_handler(self):
         try:
@@ -210,10 +216,14 @@ class HTTPRequestHandler(HttpReadWriteProtocol):
         try:
             request_message = await self.set_payload_reader(self._read_http_request())
         except (CancelledError, ConnectionError) as err:
-            await self.loop.render_exception_async(err, before = [
-                'Unhandled exception occurred at `',
-                self.__class__.__name__,
-                '._try_receive_request`, when reading request.:\n'])
+            await self._loop.render_exception_async(
+                err,
+                before = [
+                    'Unhandled exception occurred at `',
+                    self.__class__.__name__,
+                    '._try_receive_request`, when reading request.:\n'
+                ],
+            )
             return None
         except BaseException as err:
             if isinstance(err, PayloadError):
@@ -237,11 +247,16 @@ class HTTPRequestHandler(HttpReadWriteProtocol):
             self.write_http_response(status, headers, body=body)
             self.close_transport(force=True)
         except BaseException as err2:
-            await self.loop.render_exception_async(err2, before=[
-                'Unhandled exception occurred at `',
-                self.__class__.__name__,
-                '._try_receive_request`, when handling an other exception;',
-                repr(err2), ':'])
+            await self._loop.render_exception_async(
+                err2,
+                before = [
+                    'Unhandled exception occurred at `',
+                    self.__class__.__name__,
+                    '._try_receive_request`, when handling an other exception;',
+                    repr(err2),
+                    ':',
+                ],
+            )
         
         return None
 
@@ -667,19 +682,19 @@ def validate_string(value):
 
 
 PARAMETER_TYPE_TO_VALIDATOR = {
-    PARAMETER_TYPE_INT    : validate_int    ,
-    PARAMETER_TYPE_FLOAT  : validate_float  ,
-    PARAMETER_TYPE_UUID   : validate_uuid   ,
-    PARAMETER_TYPE_STRING : validate_string ,
-        }
+    PARAMETER_TYPE_INT: validate_int,
+    PARAMETER_TYPE_FLOAT: validate_float,
+    PARAMETER_TYPE_UUID: validate_uuid,
+    PARAMETER_TYPE_STRING: validate_string,
+}
 
 PARAMETER_TYPE_TO_NAME = {
-    PARAMETER_TYPE_PATH   : 'path'   ,
-    PARAMETER_TYPE_INT    : 'int'    ,
-    PARAMETER_TYPE_FLOAT  : 'float'  ,
-    PARAMETER_TYPE_UUID   : 'uuid'   ,
-    PARAMETER_TYPE_STRING : 'string' ,
-        }
+    PARAMETER_TYPE_PATH: 'path',
+    PARAMETER_TYPE_INT: 'int',
+    PARAMETER_TYPE_FLOAT: 'float',
+    PARAMETER_TYPE_UUID: 'uuid',
+    PARAMETER_TYPE_STRING: 'string',
+}
 
 class ParameterValidatorPathStep:
     """
@@ -710,6 +725,7 @@ class ParameterValidatorPathStep:
         The respective validator.
     """
     __slots__ = ('path_routers', 'parameter_type', 'validator',)
+    
     def __new__(cls, parameter_type, parameter_name):
         """
         Creates a new ``ParameterValidatorPathStep`` with the given parameters.
@@ -1297,6 +1313,7 @@ class _RouteAdder:
         The url rule as string.
     """
     __slots__ = ('endpoint', 'options', 'parent', 'rule')
+    
     def __new__(cls, parent, rule, endpoint, options):
         """
         Creates a new ``_RouteAdder object with the given parameters.
@@ -1414,7 +1431,9 @@ def _validate_subdomain(subdomain):
         elif isinstance(subdomain, str):
             subdomain = str(subdomain)
         else:
-            raise TypeError(f'`subdomain` can be as `None`, `str`, got {subdomain.__class__.__name__}.')
+            raise TypeError(
+                f'`subdomain` can be `None`, `str`, got {subdomain.__class__.__name__}; {subdomain!r}.'
+            )
         
         if not subdomain:
             subdomain = None
@@ -1453,20 +1472,25 @@ def _validate_parameters(parameters, parameters_name):
         elif isinstance(parameters, (list, set, tuple)):
             parameters = list(parameters)
         else:
-            raise TypeError(f'`{parameters_name}` can be `dict`, `list`, `set`, `tuple`, got '
-                f'{parameters.__class__.__name__}.')
+            raise TypeError(
+                f'`{parameters_name}` can be `dict`, `list`, `set`, `tuple`, got '
+                f'{parameters.__class__.__name__}; {parameters!r}.')
         
         parameters_validated = []
         
         for index, item in enumerate(parameters):
             if not isinstance(item, tuple):
-                raise TypeError(f'`{parameters_name}` element `{index}` should have be `tuple`, got '
-                    f'{item.__class__.__name__}.')
+                raise TypeError(
+                    f'`{parameters_name}[{index!r}]` element can be `tuple`, got '
+                    f'{item.__class__.__name__}; {item!r}; {parameters_name}={parameters!r}.'
+                )
             
             item_length = len(item)
             if item_length != 2:
-                raise ValueError(f'`{parameters_name}` element `{index}` length is not the expected `2`, got '
-                    f'{item_length}; {item!r}.')
+                raise ValueError(
+                    f'`{parameters_name}[{index!r}]` element length can be `2`, got '
+                    f'{item_length}; {item!r}; {parameters_name}={parameters!r}.'
+                )
             
             parameter_name, parameter_value = item
             
@@ -1475,8 +1499,11 @@ def _validate_parameters(parameters, parameters_name):
             elif isinstance(parameter_name, str):
                 parameter_name = str(parameter_name)
             else:
-                raise TypeError(f'`{parameters_name}` element `{index}`\'s 0th element can be only `str`, '
-                    f'got {parameter_name.__class__.__name__}.')
+                raise TypeError(
+                    f'`{parameters_name}[{index!r}][0]` can be `str`, got '
+                    f'{parameter_name.__class__.__name__}; {parameter_name!r}; '
+                    f'element={item}; {parameters_name}={parameters!r}.'
+                )
             
             parameters_validated.append((parameter_name, parameter_value))
         
@@ -1534,11 +1561,15 @@ def _validate_method(method):
         elif isinstance(method, str):
             method = str(method)
         else:
-            raise TypeError(f'`method` can be `None`, `str`, got {method.__class__.__name__}.')
+            raise TypeError(
+                f'`method` can be `None`, `str`, got {method.__class__.__name__}; {method!r}.'
+            )
         
         method = method.upper()
         if method not in METHOD_ALL:
-            raise ValueError(f'`method` can be given any of `{METHOD_ALL!r}`, got {method!r}.')
+            raise ValueError(
+                f'`method` can be any of `{METHOD_ALL!r}`, got {method!r}.'
+            )
     
     return method
 
@@ -1570,8 +1601,10 @@ def _validate_methods(methods):
         methods_validated = []
         
         if not isinstance(methods, (list, tuple, set)):
-            raise TypeError(f'`methods` can be `None`, `list`, `tuple`, `set`, got '
-                f'{methods.__class__.__name__}.')
+            raise TypeError(
+                f'`methods` can be `None`, `list`, `tuple`, `set`, got '
+                f'{methods.__class__.__name__}; {methods!r}.'
+            )
         
         for index, method in enumerate(methods):
             if type(method) is str:
@@ -1579,13 +1612,17 @@ def _validate_methods(methods):
             elif isinstance(method, str):
                 method = str(method)
             else:
-                raise TypeError(f'`methods` element `{index}` can be `None`, `str`, got '
-                    f'{method.__class__.__name__}.')
+                raise TypeError(
+                    f'`methods[{index}]` can be `None`, `str`, got '
+                    f'{method.__class__.__name__}; {method!r}; methods={methods!r}.'
+                )
             
             method = method.upper()
             if method not in METHOD_ALL:
-                raise ValueError(f'`method` element `{index}` should have be given any of `{METHOD_ALL!r}`, got '
-                    f'{method!r}.')
+                raise ValueError(
+                    f'`methods[{index}]` can be any of `{METHOD_ALL!r}`, got '
+                    f'{method!r}; methods={methods!r}.'
+                )
             
             methods_validated.append(method)
         
@@ -1651,7 +1688,9 @@ def _validate_options(options):
     subdomain = _validate_subdomain(subdomain)
     
     if options:
-        raise TypeError(f'`options` contains unused parameters: {options!r}.')
+        raise TypeError(
+            f'`options` contains unused parameters: {options!r}.'
+        )
     
     if request_methods:
         request_methods.add(METHOD_GET)
@@ -1684,10 +1723,14 @@ def _validate_import_name(import_name):
     elif isinstance(import_name, str):
         import_name = str(import_name)
     else:
-        raise TypeError(f'`import_name` can be `str`, got {import_name.__class__.__name__}.')
+        raise TypeError(
+            f'`import_name` can be `str`, got {import_name.__class__.__name__}; {import_name!r}.'
+        )
     
     if not import_name:
-        raise ValueError(f'`import_name` cannot be given as empty string.')
+        raise ValueError(
+            f'`import_name` cannot be empty string.'
+        )
     
     return import_name
 
@@ -1716,8 +1759,10 @@ def _validate_template_folder(template_folder):
         elif isinstance(template_folder, str):
             template_folder = str(template_folder)
         else:
-            raise TypeError(f'`template_folder` can be `str`, got '
-                f'{template_folder.__class__.__name__}.')
+            raise TypeError(
+                f'`template_folder` can be `str`, got '
+                f'{template_folder.__class__.__name__}; {template_folder!r}.'
+            )
         
         if not template_folder:
             template_folder = None
@@ -1761,8 +1806,9 @@ def _validate_root_path(root_path, import_name):
         try:
             spec = find_spec(import_name)
         except BaseException as err:
-            raise ImportError(f'Exception occurred while finding loader for {import_name!r} ({type(err)}{err})') \
-                from err
+            raise ImportError(
+                f'Exception occurred while finding loader for {import_name!r} ({type(err)}{err})'
+            ) from err
         
         if spec is None:
             loader = None
@@ -1783,12 +1829,17 @@ def _validate_root_path(root_path, import_name):
         elif isinstance(root_path, str):
             root_path = str(root_path)
         else:
-            raise TypeError(f'`root_path` can be `str`, got {root_path.__class__.__name__}.')
+            raise TypeError(
+                f'`root_path` can be `None`, `str`, got {root_path.__class__.__name__}; {root_path!r}.'
+            )
         
         if not root_path:
-            raise ValueError(f'`root_path` cannot be given as empty string.')
+            raise ValueError(
+                f'`root_path` cannot be empty string.'
+            )
     
     return root_path
+
 
 def _validate_static_folder(static_folder):
     """
@@ -1807,7 +1858,7 @@ def _validate_static_folder(static_folder):
     Raises
     ------
     TypeError
-        If `static_folder` was not given neither as `None` nor `str`.
+        If `static_folder` was not given neither as `None`, `str`.
     ValueError
         If `static_folder` was given as empty string.
     """
@@ -1817,12 +1868,17 @@ def _validate_static_folder(static_folder):
         elif isinstance(static_folder, str):
             static_folder = str(static_folder)
         else:
-            raise TypeError(f'`static_folder` can be `str`, got {static_folder.__class__.__name__}.')
+            raise TypeError(
+                f'`static_folder` can be `None`, `str`, got {static_folder.__class__.__name__}; {static_folder!r}.'
+            )
         
         if not static_folder:
-            raise ValueError(f'`static_folder` cannot be given as empty string.')
+            raise ValueError(
+                f'`static_folder` cannot be empty string.'
+            )
     
     return static_folder
+
 
 def _validate_static_url_path(static_url_path):
     """
@@ -1849,10 +1905,13 @@ def _validate_static_url_path(static_url_path):
         elif isinstance(static_url_path, str):
             static_url_path = str(static_url_path)
         else:
-            raise TypeError(f'`static_url_path` can be `str`, got '
-                f'{static_url_path.__class__.__name__}.')
+            raise TypeError(
+                f'`static_url_path` can be `None`, `str`, got '
+                f'{static_url_path.__class__.__name__}; {static_url_path!r}.'
+            )
     
     return static_url_path
+
 
 def _validate_url_prefix(url_prefix):
     """
@@ -1882,13 +1941,17 @@ def _validate_url_prefix(url_prefix):
         elif isinstance(url_prefix, str):
             url_prefix = str(url_prefix)
         else:
-            raise TypeError(f'`url_prefix` can be `str`, got {url_prefix.__class__.__name__}.')
+            raise TypeError(
+                f'`url_prefix` can be `None`, `str`, got {url_prefix.__class__.__name__}; {url_prefix!r}.'
+            )
         
         url_prefix_processed = tuple(maybe_typed_rule_part(rule_part) for rule_part in URL(url_prefix).path)
         if url_prefix_processed:
             for parameter_type, parameter_name in url_prefix_processed:
                 if parameter_type == PARAMETER_TYPE_PATH:
-                    raise TypeError(f'Only last rule part can be `path` type, got {url_prefix!r}.')
+                    raise TypeError(
+                        f'Only last rule part can be `path` type, got {url_prefix!r}.'
+                    )
         else:
             url_prefix_processed = None
     
@@ -2269,8 +2332,10 @@ class Rule:
                 excepted_parameter_names.discard(rule_part_name)
         
         if excepted_parameter_names:
-            raise RuntimeError(f'{self.__class__.__name__}: {self!r} might be called without all of it\'s expected '
-                f'parameters. The following might be missing: {", ".join(excepted_parameter_names)}')
+            raise RuntimeError(
+                f'`{self.__class__.__name__}`: {self!r} might be called without all of it\'s expected '
+                f'parameters. The following might be missing: {", ".join(excepted_parameter_names)}'
+            )
     
     def set_subdomain(self, subdomain):
         """
@@ -2501,24 +2566,34 @@ def _analyze_handler(handler, handler_name, expected_parameter_count):
     """
     analyzed = CallableAnalyzer(handler)
     if not analyzed.is_async():
-        raise TypeError(f'`{handler_name}` can be `async-callable`, got {analyzed.__class__.__name__}; '
-            f'{analyzed!r}.')
+        raise TypeError(
+            f'`{handler_name}` can be `async-callable`, got {handler.__class__.__name__}; '
+            f'{handler!r}.'
+        )
     
     non_reserved_positional_parameter_count = analyzed.get_non_reserved_positional_parameter_count()
     if non_reserved_positional_parameter_count != expected_parameter_count:
-        raise TypeError(f'`{handler_name}` should accept `{expected_parameter_count}` non reserved positional '
-            f'parameters, meanwhile it expects {non_reserved_positional_parameter_count}.')
+        raise TypeError(
+            f'`{handler_name}` should accept `{expected_parameter_count}` non reserved positional '
+            f'parameters, meanwhile it expects {non_reserved_positional_parameter_count}.'
+        )
     
     if analyzed.accepts_args():
-        raise TypeError(f'`{handler_name}` should accept not expect args, meanwhile it does.')
+        raise TypeError(
+            f'`{handler_name}` should accept not expect args, meanwhile it does.'
+        )
     
     if analyzed.accepts_kwargs():
-        raise TypeError(f'`{handler_name}` should accept not expect kwargs, meanwhile it does.')
+        raise TypeError(
+            f'`{handler_name}` should accept not expect kwargs, meanwhile it does.'
+        )
     
     non_default_keyword_only_parameter_count = analyzed.get_non_default_keyword_only_parameter_count()
     if non_default_keyword_only_parameter_count:
-        raise TypeError(f'`{handler_name}` should accept `0` keyword only parameters, meanwhile it expects '
-            f'{non_default_keyword_only_parameter_count}.')
+        raise TypeError(
+            f'`{handler_name}` should accept `0` keyword only parameters, meanwhile it expects '
+            f'{non_default_keyword_only_parameter_count}.'
+        )
 
 
 class AppBase:
@@ -2774,7 +2849,9 @@ class AppBase:
         """
         args_length = len(args)
         if args_length == 0:
-            raise TypeError(f'`view_func` positional only parameter is missing.')
+            raise TypeError(
+                f'`view_func` positional only parameter is missing.'
+            )
         elif args_length == 1:
             endpoint = None
             view_func = args[0]
@@ -2782,11 +2859,14 @@ class AppBase:
             endpoint = args[0]
             view_func = args[1]
         else:
-            raise TypeError(f'`Extra positional parameters: {args[2:]!r}.')
+            raise TypeError(
+                f'`Extra positional parameters: {args[2:]!r}.'
+            )
         
         if view_func is None:
-            raise TypeError(f'`view_func` can be `async-callable`, `{Rule.__name__}`, `{RuleFolder.__name__}`, got '
-                f'`None`.')
+            raise TypeError(
+                f'`view_func` can be `async-callable`, `{Rule.__name__}`, `{RuleFolder.__name__}`, got `None`.'
+            )
         
         if isinstance(view_func, (Rule, RuleFolder)):
             real_func = view_func.view_func
@@ -2799,11 +2879,15 @@ class AppBase:
             real_func = view_func
             analyzed = CallableAnalyzer(view_func)
             if not analyzed.is_async():
-                raise TypeError(f'`view_func` can be `async-callable`, got {view_func.__class__.__name__}; '
-                    f'{view_func!r}.')
+                raise TypeError(
+                    f'`view_func` can be `async-callable`, got {view_func.__class__.__name__}; '
+                    f'{view_func!r}.'
+                )
             
             if analyzed.accepts_args():
-                raise TypeError(f'`view_func` should not accept `*args` meanwhile it does, got {view_func!r}.')
+                raise TypeError(
+                    f'`view_func` should not accept `*args` meanwhile it does, got {view_func!r}.'
+                )
             
             view_func_positional_parameter_names = None
             view_func_keyword_parameter_names = None
@@ -2855,8 +2939,10 @@ class AppBase:
             provide_automatic_options = True
         else:
             if not isinstance(provide_automatic_options, bool):
-                raise TypeError(f'`provide_automatic_options` can be `None`, `bool`, got '
-                    f'{provide_automatic_options.__class__.__name__}.`')
+                raise TypeError(
+                    f'`provide_automatic_options` can be `None`, `bool`, got '
+                    f'{provide_automatic_options.__class__.__name__}; {provide_automatic_options!r}.'
+                )
         
         if endpoint is None:
             if isinstance(view_func, (Rule, RuleFolder)):
@@ -2872,14 +2958,18 @@ class AppBase:
         elif isinstance(endpoint, str):
             endpoint = str(endpoint)
         else:
-            raise TypeError(f'`endpoint` can be `str`, got {endpoint.__class__.__name__}.')
+            raise TypeError(
+                f'`endpoint` can be `str`, got {endpoint.__class__.__name__}; {endpoint!r}.'
+            )
         
         if type(rule) is str:
             pass
         elif isinstance(rule, str):
             rule = str(rule)
         else:
-            raise TypeError(f'`rule` can be `str`, got {rule.__class__.__name__}.')
+            raise TypeError(
+                f'`rule` can be `str`, got {rule.__class__.__name__}; {rule!r}.'
+            )
         
         rule_processed = tuple(maybe_typed_rule_part(rule_part) for rule_part in URL(rule).parts)
         if rule_processed and (rule_processed[0] == DUMMY_RULE_PART):
@@ -2887,7 +2977,9 @@ class AppBase:
         
         for parameter_type, parameter_name in rule_processed[:-1]:
             if parameter_type == PARAMETER_TYPE_PATH:
-                raise TypeError(f'Only last rule part can be `path` type, got {rule!r}.')
+                raise TypeError(
+                    f'Only last rule part can be `path` type, got {rule!r}.'
+                )
         
         if provide_automatic_options:
             request_methods, parameters, subdomain = _validate_options(options)
@@ -3011,7 +3103,9 @@ class AppBase:
         elif isinstance(error_code, int):
             error_code = int(error_code)
         else:
-            raise TypeError(f'`error_code` can be `int`, got {error_code.__class__.__name__}.')
+            raise TypeError(
+                f'`error_code` can be `int`, got {error_code.__class__.__name__}; {error_code!r}.'
+            )
         
         return _ErrorHandlerAdder(self, error_code)
     
@@ -3210,8 +3304,10 @@ class BlueprintState:
             If `parameters` contains an element with length of not `2`.
         """
         if not isinstance(blueprint, Blueprint):
-            raise TypeError(f'`blueprint` can be only as `{Blueprint.__name__}`, got '
-                f'{blueprint.__class__.__name__}.')
+            raise TypeError(
+                f'`blueprint` can be `{Blueprint.__name__}`, got '
+                f'{blueprint.__class__.__name__}; {blueprint!r}.'
+            )
         
         if options is None:
             subdomain = None
@@ -3228,7 +3324,9 @@ class BlueprintState:
             parameters = _validate_parameters(parameters, 'url_defaults')
             
             if options:
-                raise TypeError(f'`options` contains unexpected parameters: {options!r}.')
+                raise TypeError(
+                    f'`options` contains unexpected parameters: {options!r}.'
+                )
         
         self = object.__new__(cls)
         self.blueprint = blueprint
@@ -3712,7 +3810,9 @@ class RequestHandler:
             
             blueprint = blueprint_state.blueprint
             if blueprint in blueprint_stack:
-                raise RuntimeError(f'Recursive blueprint hook found: {blueprint_stack!r} is followed by {blueprint!r}.')
+                raise RuntimeError(
+                    f'Recursive blueprint hook found: {blueprint_stack!r} is followed by {blueprint!r}.'
+                )
             
             next_stack_blueprints = blueprint.blueprints
             if next_stack_blueprints is None:

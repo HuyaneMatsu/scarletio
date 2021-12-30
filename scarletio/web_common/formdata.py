@@ -83,7 +83,9 @@ class Formdata:
             elif issubclass(fiend_type, (tuple, list)) and len(field) == 2:
                 self.add_field(*field)
             else:
-                raise TypeError(f'`Formdata.from_fields` got unhandleable field: {fiend_type.__name__}; {field!r}.')
+                raise TypeError(
+                    f'`Formdata.from_fields` got unhandleable field: {fiend_type.__name__}; {field!r}.'
+                )
         
         return self
     

@@ -284,6 +284,7 @@ class TimerWeakHandle(TimerHandle):
             self.args = None
             self.cancelled = True
             raise
+        
         else:
             self.func = func
             self.args = args

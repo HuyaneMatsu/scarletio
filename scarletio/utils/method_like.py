@@ -69,4 +69,6 @@ class MethodLike(metaclass=SubCheckType):
         if instance_type in cls.__subclasses__:
             return cls.__reserved_parameter_count__
         
-        raise TypeError(f'Expected a method like, got {instance_type.__name__}.')
+        raise TypeError(
+            f'Expected a method like, got {instance_type.__name__}; {instance!r}.'
+        )

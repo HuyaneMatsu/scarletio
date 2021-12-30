@@ -1,5 +1,6 @@
 __all__ = ('SSLBidirectionalTransportLayer',)
 
+import reprlib
 from ssl import create_default_context as create_default_ssl_context, SSLError
 from collections import deque
 
@@ -93,7 +94,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
         """
         if ssl_context is None:
             if server_side:
-                raise ValueError('Server side SSL needs a valid `ssl.SSLContext`.')
+                raise ValueError('Server side SSL needs a valid `SSLContext`.')
             
             ssl_context = create_default_ssl_context()
             if (server_host_name is None) or (not server_host_name):
@@ -428,7 +429,9 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
     @copy_docs(TransportLayerBase.write)
     def write(self, data):
         if not isinstance(data, (bytes, bytearray, memoryview)):
-            raise TypeError(f'`data` expecting a `bytes-like`, got {data.__class__.__name__}.')
+            raise TypeError(
+                f'`data` can be `bytes-like`, got {data.__class__.__name__}; {reprlib.repr(data)}.'
+            )
         
         if data:
             self._write_application_data(data)

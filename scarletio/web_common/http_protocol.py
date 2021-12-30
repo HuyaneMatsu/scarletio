@@ -224,8 +224,9 @@ class HttpReadProtocol(ReadProtocolBase):
             del chunks[0]
             n -= len(chunk)
             if n < 0:
-                raise PayloadError(f'Header line exceeds max line length: {MAX_LINE_LENGTH!r} by {-n!r} and CRLF still '
-                    f'not found.')
+                raise PayloadError(
+                    f'Header line exceeds max line length: {MAX_LINE_LENGTH!r} by {-n!r} and CRLF still not found.'
+                )
             
             continue
 
@@ -274,11 +275,15 @@ class HttpReadProtocol(ReadProtocolBase):
                         if maybe_end_2 == b'\r\n':
                             return False, None, None
                         else:
-                            raise PayloadError(f'Multipart boundary not ended with b\'--\'+b\'\r\n\', got '
-                                f'b\'--\'+{maybe_end_2!r}')
+                            raise PayloadError(
+                                f'Multipart boundary not ended with b\'--\'+b\'\r\n\', got '
+                                f'b\'--\'+{maybe_end_2!r}.'
+                            )
                 else:
-                    raise PayloadError(f'Multipart boundary not ended either with b\'--\' or b\'\r\n\', got '
-                        f'{maybe_end_1!r}')
+                    raise PayloadError(
+                        f'Multipart boundary not ended either with b\'--\' or b\'\r\n\', got '
+                        f'{maybe_end_1!r}.'
+                    )
         
         chunk, offset = yield from self._read_http_helper()
         headers = yield from self._read_http_headers(chunk, offset)
@@ -295,8 +300,10 @@ class HttpReadProtocol(ReadProtocolBase):
                 return False, None, part
             
             if maybe_boundary != b'\r\n--'+boundary:
-                raise PayloadError(f'Multipart payload not ended with boundary, expected: b\'\r\n\' + b\'--\' + '
-                    f'{boundary!r}, got {maybe_boundary!r}.')
+                raise PayloadError(
+                    f'Multipart payload not ended with boundary, expected: b\'\r\n\' + b\'--\' + '
+                    f'{boundary!r}, got {maybe_boundary!r}.'
+                )
             
             
         try:
@@ -316,11 +323,15 @@ class HttpReadProtocol(ReadProtocolBase):
             if maybe_end_2 == b'\r\n':
                 return False, headers, part
             
-            raise PayloadError(f'Multipart boundary not ended with b\'--\'+b\'\r\n\', got '
-                f'b\'--\'+{maybe_end_2!r}')
+            raise PayloadError(
+                f'Multipart boundary not ended with b\'--\'+b\'\r\n\', got '
+                f'b\'--\'+{maybe_end_2!r}.'
+            )
         
-        raise PayloadError(f'Multipart boundary not ended either with  b\'--\' or b\'\r\n\', got '
-            f'{maybe_end_1!r}')
+        raise PayloadError(
+            f'Multipart boundary not ended either with  b\'--\' or b\'\r\n\', got '
+            f'{maybe_end_1!r}.'
+        )
     
     
     async def read_multipart(self, headers):
@@ -376,7 +387,7 @@ class HttpReadProtocol(ReadProtocolBase):
                     elif transfer_encoding in ('binary', '8bit', '7bit'):
                         pass
                     else:
-                        raise PayloadError(f'Unknown transfer encoding: {transfer_encoding!r}')
+                        raise PayloadError(f'Unknown transfer encoding: {transfer_encoding!r}.')
                 
                 try:
                     content_encoding = headers[CONTENT_ENCODING]
@@ -515,7 +526,7 @@ class HttpReadProtocol(ReadProtocolBase):
                 line = yield from self._read_until_CRLF()
                 parsed = HTTP_REQUEST_LINE_RP.fullmatch(line)
                 if parsed is None:
-                    raise PayloadError(f'invalid request line: {line!r}')
+                    raise PayloadError(f'invalid request line: {line!r}.')
                 
                 chunk, offset = yield from self._read_http_helper()
             else:
@@ -564,7 +575,7 @@ class HttpReadProtocol(ReadProtocolBase):
         if end > offset:
             middle = chunk.find(b':', offset, end)
             if middle <= offset:
-                raise PayloadError(f'Invalid header line: {chunk[offset:end]!r}')
+                raise PayloadError(f'Invalid header line: {chunk[offset:end]!r}.')
             
             name = chunk[offset:middle].lstrip()
             value = chunk[middle+1:end].strip()
@@ -600,7 +611,7 @@ class HttpReadProtocol(ReadProtocolBase):
             middle = line.find(b':')
             if middle <= 0:
                 # Nothing to do, no more case
-                raise PayloadError(f'Invalid header line: {line!r}')
+                raise PayloadError(f'Invalid header line: {line!r}.')
             
             name = line[:middle]
             value = line[middle+1:]
@@ -695,7 +706,7 @@ class HttpReadProtocol(ReadProtocolBase):
                 middle = chunk.find(b':', offset, end)
                 # New header line always must have b':', leave if not found, or if it is at the start.
                 if middle <= offset:
-                    raise PayloadError(f'Invalid header line: {chunk[offset:end]!r}')
+                    raise PayloadError(f'Invalid header line: {chunk[offset:end]!r}.')
                 
                 name = chunk[offset:middle].lstrip().decode('utf-8', 'surrogateescape')
                 value = chunk[middle+1:end].strip()
@@ -751,7 +762,7 @@ class HttpReadProtocol(ReadProtocolBase):
                     middle = chunk.find(b':', 0, end)
                     # middle must be found and cannot be first character either.
                     if middle <= 0:
-                        raise PayloadError(f'Invalid header line: {chunk[offset:end]!r}')
+                        raise PayloadError(f'Invalid header line: {chunk[offset:end]!r}.')
                     
                     name = chunk[:middle].lstrip().decode('utf-8', 'surrogateescape')
                     value = chunk[middle+1:end].strip()
@@ -798,7 +809,7 @@ class HttpReadProtocol(ReadProtocolBase):
                     middle = line.find(b':')
                     # if middle is not found or the first character is the middle, we have a bad line
                     if middle <= 0:
-                        raise PayloadError(f'Invalid header line: {line!r}')
+                        raise PayloadError(f'Invalid header line: {line!r}.')
                     
                     name = line[:middle].lstrip().decode('utf-8', 'surrogateescape')
                     value = line[middle+1:].strip()
@@ -980,18 +991,24 @@ class HttpReadProtocol(ReadProtocolBase):
             try:
                 chunk_length = int(chunk_length, 16)
             except ValueError:
-                raise PayloadError(f'Not hexadecimal chunk size: {chunk_length!r}.') from None
+                raise PayloadError(
+                    f'Not hexadecimal chunk size: {chunk_length!r}.'
+                ) from None
             
             if chunk_length == 0:
                 end = yield from self._read_exactly(2)
                 if end != b'\r\n':
-                    raise PayloadError(f'Received chunk does not end with b\'\\r\\n\', instead with: {end}.')
+                    raise PayloadError(
+                        f'Received chunk does not end with b\'\\r\\n\', instead with: {end}.'
+                    )
                 break
             
             chunk = yield from self._read_exactly(chunk_length)
             end = yield from self._read_exactly(2)
             if end != b'\r\n':
-                raise PayloadError(f'Received chunk does not end with b\'\\r\\n\', instead with: {end}.')
+                raise PayloadError(
+                    f'Received chunk does not end with b\'\\r\\n\', instead with: {end}.'
+                )
             
             collected.append(chunk)
         
@@ -1072,18 +1089,24 @@ class HttpReadProtocol(ReadProtocolBase):
             try:
                 chunk_length = int(chunk_length,16)
             except ValueError:
-                raise PayloadError(f'Not hexadecimal chunk size: {chunk_length!r}.') from None
+                raise PayloadError(
+                    f'Not hexadecimal chunk size: {chunk_length!r}.'
+                ) from None
             
             if chunk_length == 0:
                 end = yield from self._read_exactly(2)
                 if end != b'\r\n':
-                    raise PayloadError(f'Received chunk does not end with b\'\\r\\n\', instead with: {end}.')
+                    raise PayloadError(
+                        f'Received chunk does not end with b\'\\r\\n\', instead with: {end}.'
+                    )
                 break
             
             chunk = yield from self._read_exactly(chunk_length)
             end = yield from self._read_exactly(2)
             if end != b'\r\n':
-                raise PayloadError(f'Received chunk does not end with b\'\\r\\n\', instead with: {end}.')
+                raise PayloadError(
+                    f'Received chunk does not end with b\'\\r\\n\', instead with: {end}.'
+                )
             
             try:
                 chunk = decompressor.decompress(chunk)
@@ -1180,7 +1203,7 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
         """
         transport = self._transport
         if transport is None:
-            raise RuntimeError('Protocol has no attached transport.')
+            raise RuntimeError(f'Protocol has no attached transport; self={self!r}.')
         
         result = [f'{method} {path} HTTP/{version.major}.{version.major}\r\n']
         extend = result.extend
@@ -1214,7 +1237,7 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
         """
         transport = self._transport
         if transport is None:
-            raise RuntimeError('Protocol has no attached transport.')
+            raise RuntimeError(f'Protocol has no attached transport; self={self!r}.')
         
         result = [
             'HTTP/',
@@ -1257,7 +1280,7 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
         """
         transport = self._transport
         if transport is None:
-            raise RuntimeError('Protocol has no attached transport.')
+            raise RuntimeError(f'Protocol has no attached transport; self={self!r}.')
         
         # Prepare the header.
         head_1 = frame.head_1

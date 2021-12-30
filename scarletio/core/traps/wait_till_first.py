@@ -249,7 +249,9 @@ class WaitTillFirst(Future):
         RuntimeError
             Waiter futures do not support `.set_result` operation.
         """
-        raise RuntimeError(f'{self.__class__.__name__} does not support `set_result` operation.')
+        raise RuntimeError(
+            f'`{self.__class__.__name__}` does not support `.set_result` operation.'
+        )
     
     
     def set_result_if_pending(self, result):
@@ -266,7 +268,9 @@ class WaitTillFirst(Future):
         RuntimeError
             Waiter futures do not support `.set_result_if_pending` operation.
         """
-        raise RuntimeError(f'{self.__class__.__name__} does not support `set_result_if_pending` operation.')
+        raise RuntimeError(
+            f'`{self.__class__.__name__}` does not support `.set_result_if_pending` operation.'
+        )
     
     
     def set_exception(self, exception):
@@ -295,7 +299,9 @@ class WaitTillFirst(Future):
             exception = exception()
         
         if isinstance(exception, StopIteration):
-             raise TypeError(f'{exception} cannot be raised to a {self.__class__.__name__}: {self!r}.')
+            raise TypeError(
+                f'{exception} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
+            )
         
         if type(exception) is not TimeoutError:
             self._exception = exception
@@ -333,7 +339,9 @@ class WaitTillFirst(Future):
             exception = exception()
         
         if isinstance(exception, StopIteration):
-             raise TypeError(f'{exception} cannot be raised to a {self.__class__.__name__}: {self!r}.')
+            raise TypeError(
+                f'{exception} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
+            )
         
         self._mark_as_finished()
         
@@ -360,7 +368,9 @@ class WaitTillFirst(Future):
         RuntimeError
             Waiter futures do not support `.clear` operation.
         """
-        raise RuntimeError(f'{self.__class__.__name__} does not support `.clear` operation.')
+        raise RuntimeError(
+            f'`{self.__class__.__name__}` does not support `.clear` operation.'
+        )
     
     # `sync_wrap` is same as ``Future.sync_wrap``
     # `async_wrap` is same as ``Future.async_wrap``

@@ -160,7 +160,9 @@ class Gatherer(ResultGatheringFuture):
         awaitables = set()
         for awaitable in coroutines_or_futures:
             if not is_awaitable(awaitable):
-                raise TypeError(f'Cannot await on {awaitable.__class__.__name__}: {awaitable!r}')
+                raise TypeError(
+                    f'Cannot await on {awaitable.__class__.__name__}; {awaitable!r}.'
+                )
             awaitables.add(awaitable)
         
         self = object.__new__(cls)
@@ -268,7 +270,9 @@ class Gatherer(ResultGatheringFuture):
             exception = exception()
         
         if isinstance(exception, StopIteration):
-             raise TypeError(f'{exception} cannot be raised to a {self.__class__.__name__}: {self!r}')
+            raise TypeError(
+                f'{exception} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
+            )
         
         results = self._result
         results.append(GathererElement(None, exception))
@@ -303,6 +307,14 @@ class Gatherer(ResultGatheringFuture):
         """
         if self._state != FUTURE_STATE_PENDING:
             return 0
+        
+        if isinstance(exception, type):
+            exception = exception()
+        
+        if isinstance(exception, StopIteration):
+            raise TypeError(
+                f'{exception} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
+            )
         
         results = self._result
         results.append(GathererElement(None, exception))

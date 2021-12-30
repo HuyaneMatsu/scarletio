@@ -268,10 +268,17 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
                         early_response = await early_response
                 
                 if (early_response is not None):
-                    raise AbortHandshake(*early_response, request=request)
+                    raise AbortHandshake(
+                        *early_response,
+                        request = request,
+                    )
                 
             else:
-                raise AbortHandshake(SERVICE_UNAVAILABLE, 'Server is shutting down.', request=request)
+                raise AbortHandshake(
+                    SERVICE_UNAVAILABLE,
+                    'Server is shutting down.',
+                    request = request,
+                )
             
             connections = []
             connection_headers = request_headers.get_all(CONNECTION)
@@ -280,7 +287,9 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
                     connections.extend(parse_connections(connection_header))
         
             if not any(value.lower() == 'upgrade' for value in connections):
-                raise InvalidUpgrade(f'Invalid connection, no upgrade found, got {connections!r}.')
+                raise InvalidUpgrade(
+                    f'Invalid connection, no upgrade found, got {connections!r}.'
+                )
             
             upgrade = []
             upgrade_headers = request_headers.get_all(UPGRADE)
@@ -289,21 +298,31 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
                     upgrade.extend(parse_upgrades(upgrade_header))
             
             if len(upgrade) != 1 and upgrade[0].lower() != 'websocket': # ignore case
-                raise InvalidUpgrade(f'Expected \'WebSocket\' for \'Upgrade\', but got {upgrade!r}.')
+                raise InvalidUpgrade(
+                    f'Expected \'WebSocket\' for \'Upgrade\', but got {upgrade!r}.'
+                )
             
             received_keys = request_headers.get_all(SEC_WEBSOCKET_KEY)
             if received_keys is None:
-                raise InvalidHandshake(f'Missing {SEC_WEBSOCKET_KEY!r} from headers', request=request)
+                raise InvalidHandshake(
+                    f'Missing {SEC_WEBSOCKET_KEY!r} from headers',
+                    request = request,
+                )
             
             if len(received_keys) > 1:
-                raise InvalidHandshake(f'Multiple {SEC_WEBSOCKET_KEY!r} values at headers', request=request)
+                raise InvalidHandshake(
+                    f'Multiple {SEC_WEBSOCKET_KEY!r} values at headers',
+                    request = request,
+                )
             
             key = received_keys[0]
         
             try:
                 raw_key = b64decode(key.encode(), validate=True)
             except BinasciiError:
-                raise InvalidHandshake(f'Invalid {SEC_WEBSOCKET_KEY!r}: {key!r}.', request=request)
+                raise InvalidHandshake(
+                    f'Invalid {SEC_WEBSOCKET_KEY!r}: {key!r}.',
+                    request = request)
             
             if len(raw_key) != 16:
                 raise InvalidHandshake(
@@ -313,14 +332,23 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
             
             sw_version = request_headers.get_all(SEC_WEBSOCKET_VERSION)
             if sw_version is None:
-                raise InvalidHandshake(f'Missing {SEC_WEBSOCKET_VERSION!r} values at headers.', request=request)
+                raise InvalidHandshake(
+                    f'Missing {SEC_WEBSOCKET_VERSION!r} values at headers.',
+                    request = request,
+                )
             
             if len(sw_version) > 1:
-                raise InvalidHandshake(f'Multiple {SEC_WEBSOCKET_VERSION!r} values at headers.', request=request)
+                raise InvalidHandshake(
+                    f'Multiple {SEC_WEBSOCKET_VERSION!r} values at headers.',
+                    request = request,
+                )
             
             sw_version = sw_version[0]
             if sw_version != '13':
-                raise InvalidHandshake(f'Invalid {SEC_WEBSOCKET_VERSION!r}: {sw_version!r}.', request=request)
+                raise InvalidHandshake(
+                    f'Invalid {SEC_WEBSOCKET_VERSION!r}: {sw_version!r}.',
+                    request = request,
+                )
             
             while True:
                 origin = self.origin

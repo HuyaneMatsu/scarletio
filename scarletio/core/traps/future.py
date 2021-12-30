@@ -478,7 +478,9 @@ class Future:
             exception = exception()
         
         if isinstance(exception, StopIteration):
-             raise TypeError(f'{exception} cannot be raised to a {self.__class__.__name__}: {self!r}')
+            raise TypeError(
+                f'{exception} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
+            )
         
         self._exception = exception
         self._state = FUTURE_STATE_FINISHED
@@ -512,7 +514,9 @@ class Future:
             exception = exception()
         
         if isinstance(exception, StopIteration):
-             raise TypeError(f'{exception} cannot be raised to a {self.__class__.__name__}: {self!r}')
+        raise TypeError(
+            f'{exception} cannot be raised to a(n) {self.__class__.__name__}; {self!r}.'
+        )
         
         self._exception = exception
         self._state = FUTURE_STATE_FINISHED

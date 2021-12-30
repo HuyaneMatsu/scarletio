@@ -59,7 +59,9 @@ class AsyncQueue:
                 exception = exception()
             
             if isinstance(exception, StopIteration):
-                 raise TypeError(f'{exception} cannot be raised to a {cls.__name__}')
+                raise TypeError(
+                    f'{exception} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
+                )
         
         if iterable is None:
             results = deque(maxlen=max_length)
@@ -190,7 +192,9 @@ class AsyncQueue:
             exception = exception()
         
         if isinstance(exception, StopIteration):
-             raise TypeError(f'{exception} cannot be raised to a {self.__class__.__name__}: {self!r}')
+            raise TypeError(
+                f'{exception} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
+            )
         
         self._exception = exception
         

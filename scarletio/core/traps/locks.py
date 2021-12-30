@@ -185,10 +185,14 @@ class ScarletLock(Lock):
         elif issubclass(size_type, int):
             size = int(size)
         else:
-            raise TypeError(f'`size` can be `int`, got {size_type.__name__}.')
+            raise TypeError(
+                f'`size` can be `int`, got {size_type.__name__}; {size!r}.'
+            )
         
         if size < 1:
-            raise ValueError(f'`size` can be given only as positive, got {size!r}.')
+            raise ValueError(
+                f'`size` can be only positive, got {size!r}.'
+            )
         
         self = object.__new__(cls)
         self._loop = loop

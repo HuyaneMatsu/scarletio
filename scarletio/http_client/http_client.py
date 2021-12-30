@@ -169,8 +169,11 @@ class HTTPClient:
                     scheme = redirect_url.scheme
                     if scheme not in ('http', 'https', ''):
                         response.close()
-                        raise ConnectionError(f'Can redirect only to http or https, got {scheme!r}',
-                            history[0].request_info, tuple(history))
+                        raise ConnectionError(
+                            f'Can redirect only to http or https, got {scheme!r}',
+                            history[0].request_info,
+                            tuple(history),
+                        )
                     
                     elif not scheme:
                         redirect_url = url.join(redirect_url)
@@ -260,7 +263,10 @@ class HTTPClient:
         headers = IgnoreCaseMultiValueDictionary(headers)
         
         if (headers and (auth is not None) and AUTHORIZATION in headers):
-            raise ValueError('Can\'t combine \'Authorization\' header with \'auth\' parameter')
+            raise ValueError(
+                f'Can\'t combine \'Authorization\' header with \'auth\' parameter; '
+                f'auth={auth!r}; headers[{AUTHORIZATION!r}]={headers[AUTHORIZATION]!r}.'
+            )
         
         if (proxy_url is ...):
             proxy_url = self.proxy_url
@@ -269,7 +275,9 @@ class HTTPClient:
             proxy_auth = self.proxy_auth
         
         if not isinstance(ssl, SSL_ALLOWED_TYPES):
-            raise TypeError(f'`ssl` should be one of instance of: {SSL_ALLOWED_TYPES!r}, but got `{ssl!r}` instead.')
+            raise TypeError(
+                f'`ssl` can be any of {SSL_ALLOWED_TYPES!r}, got {ssl.__class__.__name__}; {ssl!r}.'
+            )
         
         history = []
         url = URL(url)
@@ -326,8 +334,11 @@ class HTTPClient:
                     scheme = redirect_url.scheme
                     if scheme not in ('http', 'https', ''):
                         response.close()
-                        raise ConnectionError(f'Can redirect only to http or https, got {scheme!r}',
-                            history[0].request_info, tuple(history))
+                        raise ConnectionError(
+                            f'Can redirect only to http or https, got {scheme!r}',
+                            history[0].request_info,
+                            tuple(history),
+                        )
                     
                     elif not scheme:
                         redirect_url = url.join(redirect_url)

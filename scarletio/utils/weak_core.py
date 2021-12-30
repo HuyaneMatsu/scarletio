@@ -112,7 +112,7 @@ def add_to_pending_removals(container, reference):
     pending_removals.add(reference)
 
 
-# speedup builtin stuff, Cpython is welcome
+# speedup builtin stuff, CPython is welcome
 @has_docs
 class WeakReferer(WeakrefType):
     """

@@ -374,7 +374,9 @@ class Task(Future):
         RuntimeError
             Tasks do not support `.set_result` operation.
         """
-        raise RuntimeError(f'{self.__class__.__name__} does not support `.set_result` operation')
+        raise RuntimeError(
+            f'`{self.__class__.__name__}` does not support `.set_result` operation.'
+        )
     
     
     def set_result_if_pending(self, result):
@@ -391,7 +393,9 @@ class Task(Future):
         RuntimeError
             Tasks do not support `.set_result_if_pending` operation.
         """
-        raise RuntimeError(f'{self.__class__.__name__} does not support `.set_result_if_pending` operation')
+        raise RuntimeError(
+            f'`{self.__class__.__name__}` does not support `.set_result_if_pending` operation.'
+        )
     
     
     # We will not send an exception to a task, but we will cancel it.
@@ -410,7 +414,9 @@ class Task(Future):
             exception = exception()
         
         if isinstance(exception, StopIteration):
-             raise TypeError(f'{exception} cannot be raised to a {self.__class__.__name__}: {self!r}')
+            raise TypeError(
+                f'{exception} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
+            )
         
         self._exception = exception
     
@@ -427,7 +433,9 @@ class Task(Future):
             exception = exception()
         
         if isinstance(exception, StopIteration):
-             raise TypeError(f'{exception} cannot be raised to a {self.__class__.__name__}: {self!r}')
+            raise TypeError(
+                f'{exception} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
+            )
         
         self._exception = exception
         return 1
@@ -442,7 +450,9 @@ class Task(Future):
         RuntimeError
             Tasks do not support `.clear` operation.
         """
-        raise RuntimeError(f'{self.__class__.__name__} does not support `.clear` operation')
+        raise RuntimeError(
+            f'`{self.__class__.__name__}` does not support `.clear` operation.'
+        )
     
     
     def _step(self, exception=None):
@@ -463,8 +473,11 @@ class Task(Future):
             If the task is already done.
         """
         if self._state != FUTURE_STATE_PENDING:
-            raise InvalidStateError(self, '_step', message = \
-                f'`{self.__class__.__name__}._step` already done of {self!r}, exception={exception!r}')
+            raise InvalidStateError(
+                self,
+                '_step',
+                message = f'`{self.__class__.__name__}._step` already done of {self!r}; exception={exception!r}.',
+            )
         
         if self._must_cancel:
             exception = self._must_exception(exception)

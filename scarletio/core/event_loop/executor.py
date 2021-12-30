@@ -56,7 +56,9 @@ class SyncWait:
             exception = exception()
         
         if type(exception) is StopIteration:
-             raise TypeError(f'{exception} cannot be raised to a {self.__class__.__name__}: {self!r}')
+             raise TypeError(
+                 f'{exception} cannot be raised to a {self.__class__.__name__}: {self!r}.'
+             )
         
         if self._exception is None:
             self._exception = exception
@@ -404,7 +406,7 @@ class ExecutorThread(Thread):
                     result = func()
                 except BaseException as err:
                     if isinstance(err, StopIteration):
-                        exception = RuntimeError(f'{err.__class__.__name__} cannot be raised to a Future')
+                        exception = RuntimeError(f'{err.__class__.__name__} cannot be raised to a Future.')
                         exception.__cause__ = err
                         err = exception
                         exception = None
@@ -453,8 +455,10 @@ class ExecutorThread(Thread):
         if future is None:
             loop = current_thread()
             if not isinstance(loop, EventThread):
-                raise RuntimeError(f'`future` parameter is not given and `{self!r}.execute` was not called '
-                    f'from an{EventThread.__name__} either.')
+                raise RuntimeError(
+                    f'`future` parameter is not given and `{self!r}.execute` was not called '
+                    f'from an `{EventThread.__name__}` either.'
+                )
             
             future = Future(loop)
         
@@ -625,7 +629,9 @@ class ClaimedExecutor:
         """
         executor = self.executor
         if executor is None:
-            raise RuntimeError(f'Executing on an already closed {self.__class__.__name__}.')
+            raise RuntimeError(
+                f'Executing on an already closed `{self.__class__.__name__}`.'
+            )
         
         future = self.parent.create_future()
         
@@ -829,8 +835,10 @@ class Executor:
         """
         local_thread = current_thread()
         if not isinstance(local_thread, EventThread):
-            raise RuntimeError(f'{self!r}.create_future was not called from {EventThread.__name__}, but from '
-                f'{local_thread.__class__.__name__}')
+            raise RuntimeError(
+                f'`{self!r}.create_future` was not called from an `{EventThread.__name__}`, but from '
+                f'{local_thread.__class__.__name__}; {local_thread!r}.'
+            )
         
         return Future(local_thread)
     

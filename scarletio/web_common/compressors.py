@@ -73,7 +73,9 @@ def get_decompressor_for(content_encoding):
     
     elif content_encoding == 'br':
         if BROTLI_DECOMPRESSOR is None:
-            raise ContentEncodingError('Can not decode content-encoding: brotli (br). Please install `brotlipy`.')
+            raise ContentEncodingError(
+                'Can not decode content-encoding: brotli (br). Please install `brotlipy`.'
+            )
         decompressor = BROTLI_DECOMPRESSOR()
     
     elif content_encoding == 'identity':
@@ -81,6 +83,8 @@ def get_decompressor_for(content_encoding):
         decompressor = None
     
     else:
-        raise ContentEncodingError(f'Can not decode content-encoding: {content_encoding!r}.')
+        raise ContentEncodingError(
+            f'Can not decode content-encoding: {content_encoding!r}.'
+        )
     
     return decompressor

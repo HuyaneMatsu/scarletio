@@ -567,7 +567,10 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         if hasattr(type_, '__await__'):
             return Task(type_.__await__(coroutine_or_future), self)
         
-        raise TypeError('A Future, a coroutine or an awaitable is required.')
+        raise TypeError(
+            f'`coroutine_or_future` can be `{Future.__name__}`, `Coroutine`, `awaitable`, got '
+            f'{coroutine_or_future.__class__.__name__}; {coroutine_or_future!r}.'
+        )
     
     
     def ensure_future_thread_safe(self, coroutine_or_future):
@@ -612,7 +615,10 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             self.wake_up()
             return task
 
-        raise TypeError('A Future, a coroutine or an awaitable is required.')
+        raise TypeError(
+            f'`coroutine_or_future` can be `{Future.__name__}`, `Coroutine`, `awaitable`, got '
+            f'{coroutine_or_future.__class__.__name__}; {coroutine_or_future!r}.'
+        )
     
     run = EventThreadRunDescriptor()
     
@@ -1371,7 +1377,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             If `socket` is not a stream socket.
         """
         if not _is_stream_socket(socket):
-            raise ValueError(f'A stream socket was expected, got {socket!r}.')
+            raise ValueError(f'A stream `socket` was expected, got {socket!r}.')
         
         return await self._create_connection_transport(socket, protocol_factory, ssl, '', True)
     
@@ -1447,7 +1453,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Can be used to narrow host resolution. Is passed to ``.get_address_info``.
         socket_flags : `int`, Optional (Keyword only)
             Can be used to narrow host resolution. Is passed to ``.get_address_info``.
-        local_address : `tuple` of (`None` or  `str`, `None`, `int`), Optional (Keyword only)
+        local_address : `tuple` of (`None`, `str`, `None`, `int`), Optional (Keyword only)
             Can be given as a `tuple` (`local_host`, `local_port`) to bind the socket locally. The `local_host` and
             `local_port` are looked up by ``.get_address_info``.
         
@@ -1480,12 +1486,12 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         infos = future_1.result()
         if not infos:
-            raise OSError('`get_address_info` returned empty list')
+            raise OSError('`get_address_info` returned empty list.')
         
         if (future_2 is not None):
             local_address_infos = future_2.result()
             if not local_address_infos:
-                raise OSError('`get_address_info` returned empty list')
+                raise OSError('`get_address_info` returned empty list.')
         
         exceptions = []
         for socket_family, socket_type, socket_protocol, canonical_name, address in infos:
@@ -1502,8 +1508,13 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                             socket.bind(local_address)
                             break
                         except OSError as err:
-                            err = OSError(err.errno, f'Error while attempting to bind on address '
-                                f'{local_address!r}: {err.strerror.lower()}.')
+                            err = OSError(
+                                err.errno,
+                                (
+                                    f'Error while attempting to bind on address '
+                                    f'{local_address!r}: {err.strerror.lower()}.'
+                                ),
+                            )
                             exceptions.append(err)
                     else:
                         socket.close()
@@ -1540,7 +1551,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                     raise exceptions[0]
                 
                 # Raise a combined exception so the user can see all the various error messages.
-                raise OSError(f'Multiple exceptions: {", ".join(exception_representations)}')
+                raise OSError(
+                    f'Multiple exceptions: {", ".join(exception_representations)}'
+                )
         
         return await self._create_connection_transport(socket, protocol_factory, ssl, server_host_name, False)
     
@@ -1582,7 +1595,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ssl, server_host_name = self._create_connection_shared_precheck(ssl, server_host_name, None)
         
         if not _is_stream_socket(socket):
-            raise ValueError(f'A stream socket was expected, got {socket!r}.')
+            raise ValueError(f'A stream `socket` was expected, got {socket!r}.')
         
         return await self._create_connection_transport(socket, protocol_factory, ssl, server_host_name, False)
     
@@ -1763,7 +1776,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ssl, server_host_name = self._create_unix_connection_shared_precheck(ssl, server_host_name)
         
         if socket.family not in (module_socket.AF_UNIX, module_socket.SOCK_STREAM):
-            raise ValueError(f'A UNIX Domain Stream Socket was expected, got {socket!r}.')
+            raise ValueError(f'A unix domain stream `socket` was expected, got {socket!r}.')
         
         socket.setblocking(False)
     
@@ -1912,13 +1925,18 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         try:
             socket.bind(path)
-        except OSError as exc:
+        except OSError as err:
             socket.close()
-            if exc.errno == errno.EADDRINUSE:
+            if err.errno == errno.EADDRINUSE:
                 # Let's improve the error message by adding  with what exact address it occurs.
-                raise OSError(errno.EADDRINUSE, f'Address {path!r} is already in use.') from None
+                raise OSError(
+                    errno.EADDRINUSE,
+                    f'Address {path!r} is already in use.'
+                ) from None
+            
             else:
                 raise
+        
         except:
             socket.close()
             raise
@@ -1963,7 +1981,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ssl = self._create_unix_server_shared_precheck(ssl)
         
         if socket.family not in (module_socket.AF_UNIX, module_socket.SOCK_STREAM):
-            raise ValueError(f'A UNIX Domain Stream Socket was expected, got {socket!r}.')
+            raise ValueError(f'A unix domain stream `socket` was expected, got {socket!r}.')
         
         socket.setblocking(False)
         
@@ -2249,15 +2267,23 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         try:
             err_number = socket.getsockopt(module_socket.SOL_SOCKET, module_socket.SO_ERROR)
-            if err_number != 0:
-                raise OSError(err_number, f'Connect call failed {address!r}.')
         except (BlockingIOError, InterruptedError):
             # socket is still registered, the callback will be retried later
             pass
+        
         except BaseException as err:
             future.set_exception(err)
+        
         else:
-            future.set_result(None)
+            if err_number:
+                future.set_exception(
+                    OSError(
+                        err_number,
+                        f'Connect call failed to: {address!r}.'
+                    )
+                )
+            else:
+                future.set_result(None)
     
     
     async def socket_receive(self, socket, n):
@@ -2433,16 +2459,16 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         protocol_factory : `callable`
             Factory function for creating a protocols.
         
-        local_address : `None`, `tuple` of (`None` or  `str`, `None`, `int`), `str`, `bytes`
+        local_address : `None`, `tuple` of (`None`, `str`, `None`, `int`), `str`
             Can be given as a `tuple` (`local_host`, `local_port`) to bind the socket locally. The `local_host` and
             `local_port` are looked up by ``.get_address_info``.
             
-            If `socket_family` is given as `AF_UNIX`, then also can bepath of a file or a file descriptor.
-        remote_address : `None`, `tuple` of (`None` or  `str`, `None`, `int`), `str`, `bytes`
+            If `socket_family` is given as `AF_UNIX`, then also can be path of a file or a file descriptor.
+        remote_address : `None`, `tuple` of (`None`, `str`, `None`, `int`), `str`
             Can be given as a `tuple` (`remote_host`, `remote_port`) to connect the socket to remove address. The
             `remote_host` and `remote_port` are looked up by ``.get_address_info``.
             
-            If `socket_family` is given as `AF_UNIX`, then also can bepath of a file or a file descriptor.
+            If `socket_family` is given as `AF_UNIX`, then also can be path of a file or a file descriptor.
         socket_family : `AddressFamily`, `int`, Optional (Keyword only)
             Can be either `AF_INET`, `AF_INET6`, `AF_UNIX`.
         socket_protocol : `int`, Optional (Keyword only)
@@ -2466,26 +2492,33 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         if (local_address is None) and (remote_address is None):
             if socket_family == 0:
-                raise ValueError(f'Unexpected address family: {socket_family!r}.')
+                raise ValueError(
+                    f'Unexpected address family: {socket_family!r}.'
+                )
             
             address_info.append((socket_family, socket_protocol, None, None))
         
         elif hasattr(module_socket, 'AF_UNIX') and socket_family == module_socket.AF_UNIX:
             if __debug__:
                 if (local_address is not None):
-                    if not isinstance(local_address, (str, bytes)):
-                        raise TypeError('`local_address` should be given as `None`, `str`, `bytes` '
-                            f', if `socket_family` is given as `AF_UNIX`, got '
-                            f'{local_address.__class__.__name__}')
+                    if not isinstance(local_address, str):
+                        raise TypeError(
+                            '`local_address` can be `None`, `str` if `socket_family` is `AF_UNIX`, got '
+                            f'{local_address.__class__.__name__}; {local_address!r}.'
+                        )
                 
                 if (remote_address is not None):
-                    if not isinstance(remote_address, (str, bytes)):
-                        raise TypeError('`remote_address` should be given as `None`, `str`, `bytes` '
-                            f', if `socket_family` is given as `AF_UNIX`, got '
-                            f'{remote_address.__class__.__name__}')
+                    if not isinstance(remote_address, str):
+                        raise TypeError(
+                            '`remote_address` can be `None`, `str` if `socket_family` is `AF_UNIX`, got '
+                            f'{remote_address.__class__.__name__}; {remote_address!r}.'
+                        )
             
-            if (local_address is not None) and local_address and \
-                    (local_address[0] != (0 if isinstance(local_address, bytes) else '\x00')):
+            if (
+                (local_address is not None) and
+                local_address and
+                (local_address[0] != '\x00')
+            ):
                 try:
                     if S_ISSOCK(os.stat(local_address).st_mode):
                         os.remove(local_address)
@@ -2521,7 +2554,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                     protocol=socket_protocol, flags=socket_flags)
                 
                 if not infos:
-                    raise OSError('`get_address_info` returned empty list')
+                    raise OSError('`get_address_info` returned empty list.')
                 
                 
                 for (
@@ -2618,7 +2651,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             The protocol returned by `protocol_factory`.
         """
         if socket.type != module_socket.SOCK_DGRAM:
-            raise ValueError(f'A UDP socket was expected, got {socket!r}.')
+            raise ValueError(f'A UDP `socket` was expected, got {socket!r}.')
         
         socket.setblocking(False)
         
@@ -2724,14 +2757,18 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ssl = self._create_server_shared_precheck(ssl)
         
         if (reuse_address is not None) and (not isinstance(reuse_address, bool)):
-            raise TypeError('`reuse_address` can be `None` or type `bool`, got '
-                f'`{reuse_address.__class__.__name__}`.')
+            raise TypeError(
+                '`reuse_address` can be `None`,`bool`, got '
+                f'{reuse_address.__class__.__name__};{reuse_address!r}.'
+            )
         
         if (reuse_port is not None) and (not isinstance(reuse_port, bool)):
-            raise TypeError('`reuse_address` can be `None` or type `bool`, got '
-                f'`{reuse_port.__class__.__name__}`.')
+            raise TypeError(
+                '`reuse_address` can be `None`, `bool`, got '
+                f'{reuse_port.__class__.__name__}; {reuse_port!r}.'
+            )
         
-        if reuse_port and (not hasattr(module_socket, 'SO_REUSEPORT')):
+        if (reuse_port is not None) and reuse_port and (not hasattr(module_socket, 'SO_REUSEPORT')):
             raise ValueError('`reuse_port` not supported by the socket module.')
         
         hosts = []
@@ -2740,20 +2777,27 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         elif isinstance(host, str):
             hosts.append(host)
         elif hasattr(type(host), '__iter__'):
-            for host in host:
-                if (host is None) or (host == ''):
-                    hosts.append(None)
-                    continue
+            for host_element in host:
+                if (host_element is None):
+                    pass
                 
-                if isinstance(host, str):
-                    hosts.append(host)
-                    continue
+                elif isinstance(host_element, str):
+                    if host_element == '':
+                        host_element = None
                 
-                raise TypeError('`host` is passed as `iterable`, but it yielded at least 1 not `None`, `str` '
-                    f'; `{host!r}`')
+                else:
+                    raise TypeError(
+                        f'`host` can contain `None`, `str` elements, got '
+                        f'`{host_element.__class__.__name__}`; {host_element!r}; host={host!r}.'
+                    )
+                
+                hosts.append(host_element)
+                continue
+                
         else:
-            raise TypeError('`host` can be `None`, `str`, `iterable` of (`None`, `str`), '
-                f'got {host!r}')
+            raise TypeError(
+                f'`host` can be `None`, `str`, `iterable` of (`None`, `str`), got {host.__class__.__name__}; {host!r}.'
+            )
         
         sockets = []
         
@@ -2788,17 +2832,27 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                             try:
                                 socket.setsockopt(module_socket.SOL_SOCKET, module_socket.SO_REUSEPORT, 1)
                             except OSError as err:
-                                raise ValueError('reuse_port not supported by socket module, SO_REUSEPORT defined '
-                                    'but not implemented.') from err
+                                raise ValueError(
+                                    '`reuse_port` not supported by socket module, `SO_REUSEPORT` defined '
+                                    'but not implemented.'
+                                ) from err
                         
-                        if (_HAS_IPv6 and (socket_family == module_socket.AF_INET6) and \
-                                hasattr(module_socket, 'IPPROTO_IPV6')):
+                        if (
+                            _HAS_IPv6 and
+                            (socket_family == module_socket.AF_INET6) and
+                            hasattr(module_socket, 'IPPROTO_IPV6')
+                        ):
                             socket.setsockopt(module_socket.IPPROTO_IPV6, module_socket.IPV6_V6ONLY, True)
                         try:
                             socket.bind(socket_address)
                         except OSError as err:
-                            raise OSError(err.errno, f'Error while attempting to bind on address '
-                                f'{socket_address!r}: {err.strerror.lower()!s}.') from None
+                            raise OSError(
+                                err.errno,
+                                (
+                                    f'Error while attempting to bind on address '
+                                    f'{socket_address!r}: {err.strerror.lower()!s}.'
+                                ),
+                            ) from None
                 
                 if futures:
                     continue
@@ -2853,7 +2907,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         ssl = self._create_server_shared_precheck(ssl)
         
         if socket.type != module_socket.SOCK_STREAM:
-            raise ValueError(f'A stream socket was expected, got {socket!r}.')
+            raise ValueError(f'A stream `socket` was expected, got {socket!r}.')
         
         socket.setblocking(False)
         
@@ -3000,7 +3054,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             Not supported on windows by the library.
         """
         if not isinstance(command, (bytes, str)):
-            raise TypeError(f'`cmd` must be `bytes`, `str`, got {command.__class__.__name__}.')
+            raise TypeError(f'`command` can be `bytes`, `str`, got {command.__class__.__name__}; {command!r}.')
         
         process_open_kwargs = {
             'preexec_fn' : preexecution_function,

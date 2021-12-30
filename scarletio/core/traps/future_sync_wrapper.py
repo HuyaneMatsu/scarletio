@@ -496,7 +496,9 @@ class FutureSyncWrapper:
                 exception = exception()
             
             if isinstance(exception, StopIteration):
-                 raise TypeError(f'{exception} cannot be raised to a {self.__class__.__name__}: {self!r}')
+                raise TypeError(
+                    f'{exception} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
+                )
             
             future = self._future
             if future is None:
@@ -520,7 +522,9 @@ class FutureSyncWrapper:
                 exception = exception()
             
             if isinstance(exception, StopIteration):
-                 raise TypeError(f'{exception} cannot be raised to a {self.__class__.__name__}: {self!r}')
+                raise TypeError(
+                    f'{exception} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
+                )
             
             future = self._future
             if future is None:

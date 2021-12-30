@@ -556,7 +556,7 @@ class TCPConnector(ConnectorBase):
         Active host info resolving events of the connector.
     family : `AddressFamily`, `int`
         Address family of the created socket if any.
-    local_address : `None`, `tuple` of (`None` or  `str`, `None`, `int`)
+    local_address : `None`, `tuple` of (`None`, `str`, `None`, `int`)
         Can be given as a `tuple` (`local_host`, `local_port`) to bind created sockets locally.
     ssl : `ssl.SSLContext`, `bool`, ``Fingerprint``, `NoneType`
         Whether and what type of ssl should the connector use.
@@ -579,13 +579,14 @@ class TCPConnector(ConnectorBase):
             Address family of the created socket if any. Defaults to `0`.
         ssl : `ssl.SSLContext`, `bool`, ``Fingerprint``, `NoneType`, Optional
             Whether and what type of ssl should the connector use. Defaults to `None`.
-        local_address : `None`, `tuple` of (`None` or  `str`, `None`, `int`), Optional
+        local_address : `None`, `tuple` of (`None`, `str`, `None`, `int`), Optional
             Can be given as a `tuple` (`local_host`, `local_port`) to bind created sockets locally. Defaults to `None`.
         force_close : `bool`, Optional
             Whether after each request (and between redirects) the connections should be closed. Defaults to `False`.
         """
         if not isinstance(ssl, SSL_ALLOWED_TYPES):
-            raise TypeError(f'`ssl` should be one of instance of: {SSL_ALLOWED_TYPES!r}, but got `{ssl!r}` instead.')
+            raise TypeError(
+                f'`ssl` can be any of {SSL_ALLOWED_TYPES!r}, got {ssl.__class__.__name__}; {ssl!r}.')
         
         self = ConnectorBase.__new__(cls, loop, force_close,)
         

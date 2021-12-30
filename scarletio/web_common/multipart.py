@@ -1042,7 +1042,9 @@ class MultipartWriter(PayloadBase):
             try:
                 boundary = boundary.encode('ascii')
             except UnicodeEncodeError as err:
-                raise ValueError('boundary should contains ASCII only chars') from err
+                raise ValueError(
+                    f'`boundary` should contain only ASCII chars, got {boundary!r}.'
+                ) from err
         
         # Refer to RFCs 7231, 7230, 5234.
         #
@@ -1060,7 +1062,9 @@ class MultipartWriter(PayloadBase):
         
         if VALID_TCHAR_RP.match(boundary) is None:
             if INVALID_QDTEXT_CHAR_RP.search(boundary) is not None:
-                raise ValueError('Boundary value contains invalid characters.')
+                raise ValueError(
+                    f'Boundary value contains invalid characters; got {boundary!r}.'
+                )
             
             # escape %x5C and %x22
             quoted_boundary = boundary.replace(b'\\', b'\\\\')
@@ -1130,7 +1134,9 @@ class MultipartWriter(PayloadBase):
             try:
                 payload = create_payload(body_part, kwargs)
             except LookupError as err:
-                raise TypeError(f'Cannot create payload from: {body_part!r}') from err
+                raise TypeError(
+                    f'Cannot create payload from: {body_part!r}.'
+                ) from err
         
         self.append_payload(payload)
         return payload
@@ -1167,7 +1173,9 @@ class MultipartWriter(PayloadBase):
             elif content_encoding in ('', 'identity'):
                 content_encoding = None
             else:
-                raise RuntimeError(f'Unknown content-encoding: {content_encoding!r}.')
+                raise RuntimeError(
+                    f'Unknown content-encoding: {content_encoding!r}.'
+                )
         
         # transfer-encoding
         try:
@@ -1182,7 +1190,9 @@ class MultipartWriter(PayloadBase):
             elif transfer_encoding == 'binary':
                 transfer_encoding = None
             else:
-                raise RuntimeError(f'Unknown content transfer encoding: {transfer_encoding!r}.')
+                raise RuntimeError(
+                    f'Unknown content transfer encoding: {transfer_encoding!r}.'
+                )
         
         # Set size to payload headers if applicable.
         size = payload.size
@@ -1413,7 +1423,10 @@ class MultipartPayloadWriter:
         
         elif content_encoding == 'br':
             if BROTLI_COMPRESSOR is None:
-                raise ContentEncodingError('Can not decode content-encoding: brotli (br). Please install `brotlipy`.')
+                raise ContentEncodingError(
+                    'Can not decode content-encoding: brotli (br). Please install `brotlipy`.'
+                )
+            
             compressor = BROTLI_COMPRESSOR()
         
         elif content_encoding == 'identity':
@@ -1421,7 +1434,9 @@ class MultipartPayloadWriter:
             compressor = None
         
         else:
-            raise ContentEncodingError(f'Can not decode content-encoding: {content_encoding!r}.')
+            raise ContentEncodingError(
+                f'Can not decode content-encoding: {content_encoding!r}.'
+            )
         
         
         if transfer_encoding is None:

@@ -93,7 +93,10 @@ def parse_extensions(header_value):
         # now lets parse the extension's name
         matched = _TOKEN_RP.match(header_value, index)
         if matched is None:
-            raise ValueError(f'Expected extension name since index {index}.')
+            raise ValueError(
+                f'Expected extension name since index {index!r}, got {header_value!r}.'
+            )
+        
         name = matched.group(0)
         index = matched.end()
         
@@ -125,7 +128,9 @@ def parse_extensions(header_value):
 
                 # invalid character
                 if header_value[index] != ';':
-                    raise ValueError(f'Expected \';\' at index {index}.')
+                    raise ValueError(
+                        f'Expected \';\' at index {index!r}, got {header_value!r}.'
+                    )
                 
                 # we have a sublist
                 index += 1
@@ -144,7 +149,10 @@ def parse_extensions(header_value):
             # lets parse the key now
             matched = _TOKEN_RP.match(header_value, index)
             if matched is None:
-                raise ValueError(f'Expected parameter name since index {index}.')
+                raise ValueError(
+                    f'Expected parameter name since index {index!r}, got {header_value!r}.'
+                )
+            
             key = matched.group(0)
             index = matched.end()
             
@@ -179,7 +187,9 @@ def parse_extensions(header_value):
 
             #invalid character
             if header_value[index] != '=':
-                raise ValueError(f'Expected \',\' or \';\' or \'=\' at index {index}.')
+                raise ValueError(
+                    f'Expected \',\' or \';\' or \'=\' at index {index!r}, got {header_value!r}.'
+                )
             
             index += 1
             
@@ -189,7 +199,9 @@ def parse_extensions(header_value):
             
             # are we at the end?
             if index == limit:
-                raise ValueError('Expected a parameter value, but string ended.')
+                raise ValueError(
+                    f'Expected a parameter value, but string ended, got {header_value!r}.'
+                )
             
             # is it '"stuff"' ?
             if header_value[index] == '"':
@@ -197,24 +209,33 @@ def parse_extensions(header_value):
                 
                 # are we at the end?
                 if index == limit:
-                    raise ValueError('Expected a parameter value, but string ended.')
+                    raise ValueError(
+                        f'Expected a parameter value, but string ended, got {header_value!r}.'
+                    )
                 
                 matched = _TOKEN_RP.match(header_value, index)
                 if matched is None:
-                    raise ValueError(f'Expected parameter value since index {index}.')
+                    raise ValueError(
+                        f'Expected parameter value since index {index!r}, got {header_value!r}'
+                    )
+                
                 value = matched.group(0)
                 index = matched.end()
                 
                 # are we at the end? or did we finish the string normally?
                 if index == limit or header_value[index] != '"':
-                    raise ValueError('Expected a \'"\' after starting a value with \'"\'.')
+                    raise ValueError(
+                        f'Expected a \'"\' after starting a value with \'"\', got {header_value!r}.'
+                    )
                 index += 1
             
             # is it 'stuff' ?
             else:
                 matched = _TOKEN_RP.match(header_value, index)
                 if matched is None:
-                    raise ValueError(f'Expected parameter value since index {index}.')
+                    raise ValueError(
+                        f'Expected parameter value since index {index!r}, got {header_value!r}.'
+                    )
                 value = matched.group(0)
                 index = matched.end()
             
@@ -257,7 +278,10 @@ def parse_connections(header_value):
         #now lets parse the upgrade's name
         matched = _TOKEN_RP.match(header_value, index)
         if matched is None:
-            raise ValueError(f'Expected upgrade type since index {index}.')
+            raise ValueError(
+                f'Expected upgrade type since index {index!r}, got {header_value!r}.'
+            )
+        
         name = matched.group(0)
         index = matched.end()
 
@@ -281,7 +305,9 @@ def parse_connections(header_value):
             index += 1
             continue
         
-        raise ValueError(f'Expected \',\' at index {index}.')
+        raise ValueError(
+            f'Expected \',\' at index {index!r}, got {header_value!r}.'
+        )
 
 
 def build_subprotocols(subprotocols):
@@ -338,7 +364,9 @@ def parse_upgrades(header_value):
         # now lets parse the upgrade's name
         matched = _PROTOCOL_RP.match(header_value, index)
         if matched is None:
-            raise ValueError(f'Expected upgrade type since index {index}.')
+            raise ValueError(
+                f'Expected upgrade type since index {index!r}, got {header_value!r}.'
+            )
         name = matched.group(0)
         index = matched.end()
         
@@ -362,7 +390,9 @@ def parse_upgrades(header_value):
             index += 1
             continue
         
-        raise ValueError(f'Expected \',\' at index {index}.')
+        raise ValueError(
+            f'Expected \',\' at index {index!r}, got {header_value!r}.'
+        )
 
 
 def build_content_disposition_header(disposition_type, parameters, quote_fields):
@@ -383,13 +413,17 @@ def build_content_disposition_header(disposition_type, parameters, quote_fields)
     value : `str`
     """
     if (not disposition_type) or not (TOKENS > set(disposition_type)):
-        raise ValueError(f'Bad content disposition type {disposition_type!r}.')
+        raise ValueError(
+            f'Bad content disposition type {disposition_type!r}.'
+        )
     
     if parameters:
         parameter_parts = [disposition_type]
         for key, value in parameters.items():
             if (not key) or (not (TOKENS > set(key))):
-                raise ValueError(f'Bad content disposition parameter {key!r}={value!r}.')
+                raise ValueError(
+                    f'Bad content disposition parameter {key!r}={value!r}.'
+                )
             
             if quote_fields:
                 value = quote(value, '[]')

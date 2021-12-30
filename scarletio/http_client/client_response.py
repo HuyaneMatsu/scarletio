@@ -366,7 +366,9 @@ class ClientResponse:
                      if (content_type is None) else
                 (content_type not in received_content_type)
             ):
-                raise TypeError(f'Attempt to decode JSON with unexpected mime_type: {received_content_type!r}.')
+                raise TypeError(
+                    f'Attempt to decode JSON with unexpected mime_type: {received_content_type!r}.'
+                )
         
         stripped = body.strip()
         if not stripped:

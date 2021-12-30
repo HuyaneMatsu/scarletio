@@ -63,18 +63,26 @@ class EventThreadContextManager:
         """
         thread_waiter = self.thread_waiter
         if thread_waiter is None:
-            raise RuntimeError(f'{self.__class__.__name__}.__enter__ called with thread waiter lock set.')
+            raise RuntimeError(
+                f'`{self.__class__.__name__}.__enter__` called with thread waiter lock set.'
+            )
         
         try:
             thread = self.thread
             if (thread is not current_thread()):
-                raise RuntimeError(f'{thread!r}.run called from an other thread: {current_thread()!r}')
+                raise RuntimeError(
+                    f'`{thread!r}.run` called from an other thread: {current_thread()!r}'
+                )
             
             if (thread.running):
-                raise RuntimeError(f'{thread!r}.run called when the thread is already running.')
+                raise RuntimeError(
+                    f'`{thread!r}.run` called when the thread is already running.'
+                )
             
             if (thread._is_stopped):
-                raise RuntimeError(f'{thread!r}.run called when the thread is already stopped.')
+                raise RuntimeError(
+                    f'`{thread!r}.run` called when the thread is already stopped.'
+                )
             
             thread.running = True
             

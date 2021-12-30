@@ -65,7 +65,9 @@ def _get_event_loop_is_current_thread():
     if (event_loop is not None):
         return event_loop, False
     
-    raise RuntimeError(f'No running event loop on {local_thread!r}.')
+    raise RuntimeError(
+        f'No running event loop for {local_thread!r}.'
+    )
 
 
 def get_event_loop():
@@ -90,7 +92,9 @@ def get_event_loop():
     if (event_loop is not None):
         return event_loop
     
-    raise RuntimeError(f'No running event loop on {local_thread!r}.')
+    raise RuntimeError(
+        f'No running event loop for {local_thread!r}.'
+    )
 
 
 def create_event_loop(**kwargs):
@@ -191,7 +195,9 @@ def run(awaitable, timeout=None):
     """
     local_thread = current_thread()
     if isinstance(local_thread, EventThread):
-        raise RuntimeError(f'`{local_thread.__class__.__name__}.run` should not be called from itself.')
+        raise RuntimeError(
+            f'`{local_thread.__class__.__name__}.run` should not be called from itself; thread={local_thread!r}.'
+        )
     
     event_loop = _try_detect_event_loop(local_thread)
     if (event_loop is None):

@@ -48,10 +48,14 @@ class Fingerprint:
         try:
             hash_function = HASH_FUNCTION_BY_DIGEST_LENGTH[fingerprint_length]
         except KeyError:
-            raise ValueError(f'`fingerprint` has invalid length, got {fingerprint_length!r}, {fingerprint!r}') from None
+            raise ValueError(
+                f'`fingerprint` has invalid length, got {fingerprint_length!r}, {fingerprint!r}.'
+            ) from None
         
         if hash_function is md5 or hash_function is sha1:
-            raise ValueError('`md5` and `sha1` are insecure and not supported, use `sha256`.')
+            raise ValueError(
+                '`md5` and `sha1` are insecure and not supported, use `sha256`.'
+            )
         
         self = object.__new__(cls)
         self.hash_function = hash_function
@@ -85,5 +89,7 @@ class Fingerprint:
             
         host, port, *_ = protocol.get_extra_info('peer_name')
         
-        raise ValueError(f'The expected fingerprint: {fingerprint!r} not matches the received; received={received!r}, '
-            f'host={host!r}, port={port!r}.')
+        raise ValueError(
+            f'The expected fingerprint: {fingerprint!r} not matches the received; received={received!r}; '
+            f'host={host!r}; port={port!r}.'
+        )

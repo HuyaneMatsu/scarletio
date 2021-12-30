@@ -191,6 +191,7 @@ class SSLPipe:
         state = self._state
         if state == SSL_PIPE_STATE_UNWRAPPED:
             raise RuntimeError('No security layer present.')
+        
         if state == SSL_PIPE_STATE_SHUTDOWN:
             raise RuntimeError('Shutdown in progress.')
         

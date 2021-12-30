@@ -203,8 +203,10 @@ class WebSocketServer:
             
             extra_response_headers = extra_response_headers_local
         else:
-            raise TypeError(f'`extra_response_headers` can be `None` or a dict-like with \'.items\' method, got '
-                f'{extra_response_headers.__class__.__name__}.')
+            raise TypeError(
+                f'`extra_response_headers` can be `None`, `dict-like` with \'.items\' method, got '
+                f'{extra_response_headers.__class__.__name__}; {extra_response_headers!r}.'
+            )
         
         if (extra_response_headers is not None) and (not extra_response_headers):
             extra_response_headers = None

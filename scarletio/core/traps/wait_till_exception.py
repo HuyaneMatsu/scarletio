@@ -29,17 +29,17 @@ class WaitTillExc(WaitTillFirst):
         
         Can be set as one of the following:
         
-        +-----------------+---------------+
-        | Respective name | Value         |
-        +=================+===============+
-        | FUTURE_STATE_PENDING         | `'FUTURE_STATE_PENDING'`   |
-        +-----------------+---------------+
-        | FUTURE_STATE_CANCELLED       | `'FUTURE_STATE_CANCELLED'` |
-        +-----------------+---------------+
-        | FUTURE_STATE_FINISHED        | `'FUTURE_STATE_FINISHED'`  |
-        +-----------------+---------------+
-        | FUTURE_STATE_RETRIEVED       | `'FUTURE_STATE_RETRIEVED'` |
-        +-----------------+---------------+
+        +---------------------------+-----------+
+        | Respective name           | Value     |
+        +===========================+===========+
+        | FUTURE_STATE_PENDING      | `0`       |
+        +---------------------------+-----------+
+        | FUTURE_STATE_CANCELLED    | `1`       |
+        +---------------------------+-----------+
+        | FUTURE_STATE_FINISHED     | `2`       |
+        +---------------------------+-----------+
+        | FUTURE_STATE_RETRIEVED    | `3`       |
+        +---------------------------+-----------+
         
         Note, that states are checked by memory address and not by equality. Also ``FUTURE_STATE_RETRIEVED`` is used only if
         `__debug__` is set as `True`.

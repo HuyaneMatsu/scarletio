@@ -1,6 +1,6 @@
 __all__ = ('TransportLayerBase', 'SocketTransportLayer', 'DatagramSocketTransportLayer',)
 
-import selectors
+import selectors, reprlib
 import socket as module_socket
 from collections import deque
 
@@ -358,8 +358,10 @@ class SocketTransportLayerBase(TransportLayerBase):
                 low = high>>2
         
         if low < 0 or high < low:
-            raise ValueError(f'High water must be greater or equal than low, what must be greater than equal than `0`, '
-                f'got high={high!r}; low={low!r}.')
+            raise ValueError(
+                f'High water must be greater or equal than low, what must be greater than equal than `0`, '
+                f'got high={high!r}; low={low!r}.'
+            )
         
         self._high_water = high
         self._low_water = low
@@ -510,10 +512,14 @@ class SocketTransportLayer(SocketTransportLayerBase):
     @copy_docs(SocketTransportLayerBase.write)
     def write(self, data):
         if not isinstance(data, (bytes, bytearray, memoryview)):
-            raise TypeError(f'data parameter must should be `bytes-like`, got {data.__class__.__name__}.')
+            raise TypeError(
+                f'`data` can be `bytes-like`, got {data.__class__.__name__}; {reprlib.repr(data)}.'
+            )
         
         if self._at_eof:
-            raise RuntimeError('Cannot call `.write` after `.write_eof`')
+            raise RuntimeError(
+                f'Cannot call `.write` after `.write_eof`; self={self!r}.'
+            )
         
         if not data:
             return
@@ -527,13 +533,16 @@ class SocketTransportLayer(SocketTransportLayerBase):
                 n = self._socket.send(data)
             except (BlockingIOError, InterruptedError):
                 pass
+            
             except BaseException as err:
                 self._fatal_error(err, 'Fatal write error on socket transport')
                 return
+            
             else:
                 data = data[n:]
                 if not data:
                     return
+            
             # Not all was written; register write handler.
             self._loop.add_writer(self._socket_file_descriptor, self._write_ready)
         
@@ -824,7 +833,9 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
             If `address` was given but it is different from the currently set one.
         """
         if not isinstance(data, (bytes, bytearray, memoryview)):
-            raise TypeError(f'data parameter must be a bytes-like object, not {type(data).__name__!r}')
+            raise TypeError(
+                f'`data` can be `bytes-like`, got {data.__class__.__name__}; {reprlib.repr(data)}.'
+            )
         
         if not data:
             return
@@ -832,7 +843,9 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
         address = self._address
         if (address is not None):
             if (maybe_address is not None) or (maybe_address != address):
-                raise ValueError(f'Invalid address: must be `None`, `{address!r}`, got {maybe_address!r}.')
+                raise ValueError(
+                    f'Invalid address: `address` should be `None`, got {maybe_address!r}; current={address!r}.'
+                )
             
             maybe_address = address
         

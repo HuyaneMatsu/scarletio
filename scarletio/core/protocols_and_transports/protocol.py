@@ -453,7 +453,7 @@ class ReadProtocolBase(AbstractProtocolBase):
             if n == 0:
                 return b''
             
-            raise ValueError(f'`.read_exactly` size can not be less than zero, got {n}.')
+            raise ValueError(f'`.read_exactly` size can not be less than `0`, got {n!r}.')
         
         return await self.set_payload_reader(self._read_exactly(n))
     
@@ -539,7 +539,7 @@ class ReadProtocolBase(AbstractProtocolBase):
         """
         if n < 1:
             if n < 0:
-                raise ValueError(f'.read_exactly called with negative `n`: {n!r}.')
+                raise ValueError(f'`.read_exactly` called with negative `n`, got {n!r}.')
             else:
                 return b''
         
@@ -876,7 +876,7 @@ class ReadWriteProtocolBase(ReadProtocolBase):
     def write(self, data):
         transport = self._transport
         if transport is None:
-            raise RuntimeError('Protocol has no attached transport.')
+            raise RuntimeError(f'Protocol has no attached transport; self={self!r}.')
         
         transport.write(data)
     
@@ -885,7 +885,7 @@ class ReadWriteProtocolBase(ReadProtocolBase):
     def writelines(self, lines):
         transport = self._transport
         if transport is None:
-            raise RuntimeError('Protocol has no attached transport.')
+            raise RuntimeError(f'Protocol has no attached transport; self={self!r}.')
         
         transport.writelines(lines)
     

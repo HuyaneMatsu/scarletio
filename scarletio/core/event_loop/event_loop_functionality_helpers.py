@@ -142,12 +142,16 @@ def _set_reuse_port(socket):
         `reuse_port` is not supported by socket module.
     """
     if not hasattr(module_socket, 'SO_REUSEPORT'):
-        raise ValueError('`reuse_port` not supported by socket module.')
+        raise ValueError(
+            '`reuse_port` not supported by socket module.'
+        )
     else:
         try:
             socket.setsockopt(module_socket.SOL_SOCKET, module_socket.SO_REUSEPORT, 1)
         except OSError:
-            raise ValueError('`reuse_port` not supported by socket module, `SO_REUSEPORT` defined but not implemented.')
+            raise ValueError(
+                '`reuse_port` not supported by socket module, `SO_REUSEPORT` defined but not implemented.'
+            )
 
 _OLD_ASYNC_GENERATOR_HOOKS = sys.get_asyncgen_hooks()
 
@@ -238,8 +242,10 @@ class EventThreadRunDescriptor:
         
         raise RuntimeError(f'The {obj.__class__.__name__} is already stopped.')
     
+    
     def __set__(self, obj, value):
         raise AttributeError('can\'t set attribute')
+    
     
     def __delete__(self, obj):
         raise AttributeError('can\'t delete attribute')

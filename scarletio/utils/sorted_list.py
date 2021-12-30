@@ -220,6 +220,7 @@ class SortedList(list):
         index = self.relative_index(value)
         if index == len(self) or self[index] != value:
             raise ValueError(f'{value!r} is not in the {self.__class__.__name__}.')
+        
         return index
     
     

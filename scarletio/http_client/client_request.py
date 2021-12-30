@@ -168,13 +168,15 @@ class ClientRequest:
         # Check proxy settings.
         if proxy_url is not None:
             if proxy_url.scheme != 'http':
-                raise ValueError(f'Only http proxies are supported, got {proxy_url!r}.')
+                raise ValueError(
+                    f'Only http proxies are supported, got {proxy_url!r}.'
+                )
             
-            if (proxy_auth is not None):
-                proxy_auth_type = proxy_auth.__class__
-                if proxy_auth_type is not BasicAuth:
-                    raise TypeError(f'`proxy_auth` must be `None`, `{BasicAuth.__name__}`, got '
-                        f'{proxy_auth_type.__name__}.')
+            if (proxy_auth is not None) and not isinstance(proxy_auth, BasicAuth):
+                raise TypeError(
+                    f'`proxy_auth` can be `None`, `{BasicAuth.__name__}`, got '
+                    f'{proxy_auth.__class__.__name__}; {proxy_auth!r}.'
+                )
         
         # Needed for transfer data checks
         chunked = True
@@ -185,7 +187,9 @@ class ClientRequest:
             if data:
                 if (compression is not None):
                     if headers.get(CONTENT_ENCODING, ''):
-                        raise ValueError('Compression can not be set if `Content-Encoding` header is set.')
+                        raise ValueError(
+                            f'Compression can not be set if `Content-Encoding` header is set.'
+                        )
                     
                     chunked = True
                 
@@ -222,11 +226,15 @@ class ClientRequest:
         
         if 'chunked' in transfer_encoding:
             if chunked:
-                raise ValueError('Chunked can not be set if `Transfer-Encoding: chunked` header is already set.')
+                raise ValueError(
+                    f'Chunked can not be set if `Transfer-Encoding: chunked` header is already set.'
+                )
         
         elif chunked:
             if CONTENT_LENGTH in headers:
-                raise ValueError('Chunked can not be set if `Content-Length` header is set.')
+                raise ValueError(
+                    'Chunked can not be set if `Content-Length` header is set.'
+                )
             headers[TRANSFER_ENCODING] = 'chunked'
         
         else:
@@ -334,14 +342,18 @@ class ClientRequest:
             new_err.__context__ = err
             new_err.__cause__ = err
             connection.protocol.set_exception(new_err)
+        
         except CancelledError as err:
             if not connection.closed:
                connection.protocol.set_exception(err)
+        
         except BaseException as err:
             connection.protocol.set_exception(err)
             raise
+        
         finally:
             self.writer = None
+    
     
     def send(self, connection):
         """
@@ -381,6 +393,7 @@ class ClientRequest:
         except:
             connection.close()
             raise
+    
     
     def terminate(self):
         """

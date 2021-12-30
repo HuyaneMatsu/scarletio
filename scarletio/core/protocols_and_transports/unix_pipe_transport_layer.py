@@ -63,8 +63,10 @@ class UnixReadPipeTransportLayer(TransportLayerBase):
         file_descriptor = pipe.fileno()
         mode = os.fstat(file_descriptor).st_mode
         if not (S_ISFIFO(mode) or S_ISSOCK(mode) or S_ISCHR(mode)):
-            raise ValueError(f'{cls.__name__} is only for pipes, sockets and character devices, got '
-                f'{pipe.__class__.__name__}; {pipe!r}.')
+            raise ValueError(
+                f'`{cls.__name__}` is only for pipes, sockets and character devices, got '
+                f'{pipe.__class__.__name__}; {pipe!r}.'
+            )
         
         extra = set_extra_info(extra, EXTRA_INFO_NAME_PIPE, pipe)
         
@@ -304,8 +306,10 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
         is_fifo = S_ISFIFO(mode)
         is_socket = S_ISSOCK(mode)
         if not (is_char or is_fifo or is_socket):
-            raise ValueError('Pipe transport is only for pipes, sockets and character devices, got '
-                f'{pipe.__class__.__name__}; {pipe!r}.')
+            raise ValueError(
+                f'{cls.__name__} is only for pipes, sockets and character devices, got '
+                f'{pipe.__class__.__name__}; {pipe!r}.'
+            )
         
 
         extra = set_extra_info(extra, EXTRA_INFO_NAME_PIPE, pipe)
@@ -623,8 +627,10 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
                 low = high>>2
         
         if low < 0 or high < low:
-            raise ValueError(f'High water must be greater or equal than low, what must be greater than equal than `0`, '
-                f'got high={high!r}; low={low!r}.')
+            raise ValueError(
+                f'High water must be greater or equal than low, what must be greater than equal than `0`, '
+                f'got high={high!r}; low={low!r}.'
+            )
         
         self._high_water = high
         self._low_water = low

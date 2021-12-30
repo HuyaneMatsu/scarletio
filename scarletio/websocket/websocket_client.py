@@ -236,16 +236,24 @@ class WebSocketClient(WebSocketCommonProtocol):
                 for name, value in headers.items():
                     request_headers[name] = value
             else:
-                raise TypeError('`extra_response_headers` can be `dict-like` with `.items` method, got '
-                    f'{headers.__class__.__name__}.')
+                raise TypeError(
+                    '`extra_response_headers` can be `dict-like` with `.items` method, got '
+                    f'{headers.__class__.__name__}; {headers!r}.'
+                )
         
         async with http_client.request(METHOD_GET, url, request_headers) as response:
            
             if response.raw_message.version != HttpVersion11:
-                raise InvalidHandshake(f'Unsupported HTTP version: {response.raw_message.version}.', response=response)
+                raise InvalidHandshake(
+                    f'Unsupported HTTP version: {response.raw_message.version}.',
+                    response = response,
+                )
             
             if response.status != 101:
-                raise InvalidHandshake(f'Invalid status code: {response.status!r}.', response=response)
+                raise InvalidHandshake(
+                    f'Invalid status code: {response.status!r}.',
+                    response = response,
+                )
             
             response_headers = response.headers
             connections = []
@@ -257,7 +265,7 @@ class WebSocketClient(WebSocketCommonProtocol):
             if not any(value.lower() == 'upgrade' for value in connections):
                 raise InvalidHandshake(
                     f'Invalid connection, no upgrade found, got {connections!r}.',
-                    response = response
+                    response = response,
                 )
             
             upgrade = []
@@ -275,11 +283,14 @@ class WebSocketClient(WebSocketCommonProtocol):
             expected_key = b64encode(hashlib.sha1((sec_key+WEBSOCKET_KEY).encode()).digest()).decode()
             received_keys = response_headers.get_all(SEC_WEBSOCKET_ACCEPT)
             if received_keys is None:
-                raise InvalidHandshake(f'Expected 1 secret key {expected_key!r}, but received 0.', response=response)
+                raise InvalidHandshake(
+                    f'Expected 1 secret key {expected_key!r}, but received 0.',
+                    response = response,
+                )
             if len(received_keys) > 1:
                 raise InvalidHandshake(
                     f'Expected 1 secret key {expected_key!r}, but received more: {received_keys!r}.',
-                    response = response
+                    response = response,
                 )
             
             received_key = received_keys[0]
@@ -338,7 +349,10 @@ class WebSocketClient(WebSocketCommonProtocol):
                 subprotocol = parsed_subprotocol_values[0]
                 
                 if subprotocol not in available_subprotocols:
-                    raise InvalidHandshake(f'Unsupported subprotocol: {subprotocol}.', response=response)
+                    raise InvalidHandshake(
+                        f'Unsupported subprotocol: {subprotocol}.',
+                        response = response,
+                    )
             
             connection = response.connection
             protocol = connection.protocol

@@ -362,7 +362,10 @@ class CallableAnalyzer:
                 while True:
                     real_function = callable_.__new__
                     if not callable(real_function):
-                        raise TypeError(f'`{callable_!r}.__new__` should be callable, got `{real_function!r}`')
+                        raise TypeError(
+                            f'`{callable_!r}.__new__` should be callable, got {real_function.__class__.__name__}; '
+                            f'{real_function!r}.'
+                        )
                     
                     if real_function is not object.__new__:
                         if is_coroutine_function(real_function):
@@ -390,7 +393,10 @@ class CallableAnalyzer:
                     
                     real_function = callable_.__init__
                     if not callable(real_function):
-                        raise TypeError(f'`{callable_!r}.__init__` should be callable, got `{real_function!r}`')
+                        raise TypeError(
+                            f'`{callable_!r}.__init__` should be callable, got {real_function.__class__.__name__}; '
+                            f'{real_function!r}.'
+                        )
                     
                     if real_function is not object.__init__:
                         if hasattr(callable_, '__call__'):
@@ -414,7 +420,7 @@ class CallableAnalyzer:
                     real_function = None
                     method_allocation = 0
                     
-                    if hasattr(callable_,'__call__'):
+                    if hasattr(callable_, '__call__'):
                         call = callable_.__call__
                         if is_coroutine_function(call):
                             instance_to_async = INSTANCE_TO_ASYNC_TRUE
@@ -428,13 +434,17 @@ class CallableAnalyzer:
                 
                 break
             
-            raise TypeError(f'Expected function, method or a callable object, got {callable_!r}.')
+            raise TypeError(
+                f'Expected `FunctionType`, `MethodType`, `callable`, got {callable_.__class__.__name__}; {callable_!r}.'
+            )
         
         if as_method and type(callable_) is FunctionType:
             method_allocation += 1
         
-        if (real_function is not None) and ( not hasattr(real_function, '__code__')):
-            raise TypeError(f'Expected function, got `{real_function!r}`')
+        if (real_function is not None) and not hasattr(real_function, '__code__'):
+            raise TypeError(
+                f'Expected `function-like`, got {real_function.__class__.__name__}; {real_function!r}.'
+            )
         
         parameters = []
         if (real_function is not None):
@@ -493,9 +503,12 @@ class CallableAnalyzer:
                     
                     parameter_index += 1
             
-            if (method_allocation>parameter_count) and (args_name is None):
-                raise TypeError(f'The passed object is a method like, but has not enough positional parameters: '
-                    f'`{real_function!r}`.')
+            if (method_allocation > parameter_count) and (args_name is None):
+                raise TypeError(
+                    f'Received a `method-like`, but has not enough positional parameters, got '
+                    f'{real_function.__class__.__name__}; {real_function!r}; '
+                    f'allocated parameter count={method_allocation!r}; total parameter count={parameter_count!r}.'
+                )
             
             index = 0
             while index < parameter_count:

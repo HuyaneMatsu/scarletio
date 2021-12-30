@@ -25,7 +25,9 @@ def quote(value, safe=None, protected=None, query_string=False):
         return None
     
     if not isinstance(value, str):
-        raise TypeError(f'`value` ca be `None`, `str`, got {value.__class__.__name__}.')
+        raise TypeError(
+            f'`value` can be `None`, `str`, got {value.__class__.__name__}; {value!r}.'
+        )
     
     if not value:
         return ''
@@ -61,7 +63,9 @@ def quote(value, safe=None, protected=None, query_string=False):
                 try:
                     unquoted = chr(int(percentage[1:].decode('ascii'), base=16))
                 except ValueError as err:
-                    raise ValueError(f'Unallowed percentage: {percentage!r}.') from err
+                    raise ValueError(
+                        f'Unallowed percentage: {percentage!r}; value={value!r}.'
+                    ) from err
                 
                 if unquoted in protected:
                     result.extend(percentage)
@@ -119,7 +123,9 @@ def unquote(value, unsafe=None, query_string=False):
         return None
     
     if not isinstance(value, str):
-        raise TypeError(f'`value` can be `None`, `str`, got {value.__class__.__name__}.')
+        raise TypeError(
+            f'`value` can be `None`, `str`, got {value.__class__.__name__}; {value!r}.'
+        )
     
     if not value:
         return ''

@@ -126,7 +126,9 @@ def modulize(klass):
         If `klass` is not given as `type`.
     """
     if not isinstance(klass, type):
-        raise TypeError('Only types can be modulized.')
+        raise TypeError(
+            f'Only types can be modulized, got {klass.__class__.__name__}; {klass!r}.'
+    )
     
     source_module = klass.__module__
     module_name = klass.__name__

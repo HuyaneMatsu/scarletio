@@ -22,25 +22,25 @@ class RemovedDescriptor:
     def __get__(self, obj, type_):
         name = self.name
         if name is None:
-            raise RuntimeError(f'{self.__class__.__name__} is not initialized correctly yet.')
+            raise RuntimeError(f'`{self.__class__.__name__}` is not initialized correctly yet.')
         
         if obj is None:
-            error_message = f'type object {type_.__name__!r} has no attribute {name!r}'
+            error_message = f'Type object `{type_.__name__!r}` has no attribute {name!r}'
         else:
-            error_message = f'{obj.__class__.__name__!r} object has no attribute {name!r}'
+            error_message = f'`{obj.__class__.__name__}` object has no attribute {name!r}'
         
         raise AttributeError(error_message)
     
     def __set__(self, obj, value):
         name = self.name
         if name is None:
-            raise RuntimeError(f'{self.__class__.__name__} is not initialized correctly yet.')
+            raise RuntimeError(f'`{self.__class__.__name__}` is not initialized correctly yet.')
         
         raise AttributeError(name)
     
     def __delete__(self, obj):
         name = self.name
         if name is None:
-            raise RuntimeError(f'{self.__class__.__name__} is not initialized correctly yet.')
+            raise RuntimeError(f'`{self.__class__.__name__}` is not initialized correctly yet.')
         
         raise AttributeError(name)

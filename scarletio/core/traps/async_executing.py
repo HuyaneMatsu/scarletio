@@ -250,10 +250,14 @@ class ScarletExecutor:
         elif issubclass(limit_type, int):
             limit = int(limit)
         else:
-            raise TypeError(f'`limit` can be given as `int`, got {limit_type.__name__}.')
+            raise TypeError(
+                f'`limit` can be `int`, got {limit_type.__name__}; {limit!r}.'
+            )
         
         if limit < 1:
-            raise ValueError(f'`limit` can be given only as positive, got {limit!r}.')
+            raise ValueError(
+                f'`limit` can only be positive, got {limit!r}.'
+            )
         
         self = object.__new__(cls)
         self._limit = limit
@@ -279,7 +283,9 @@ class ScarletExecutor:
         """
         loop = current_thread()
         if not isinstance(loop, EventThread):
-            raise RuntimeError(f'`{self.__class__.__name__}` used at non {EventThread.__name__}: {loop!r}.')
+            raise RuntimeError(
+                f'`{self.__class__.__name__}` used at non `{EventThread.__name__}`, at {loop!r}.'
+            )
         
         self._loop = loop
         self._waiter = Future(loop)
@@ -304,7 +310,9 @@ class ScarletExecutor:
         """
         callback = self._callback
         if callback is None:
-            raise RuntimeError(f'Calling `{self.__class__.__name__}.add` when {self!r} is not entered.')
+            raise RuntimeError(
+                f'Calling `{self.__class__.__name__}.add` when `{self!r}` is not entered.'
+            )
         
         future = self._loop.ensure_future(future)
         future.add_done_callback(callback)

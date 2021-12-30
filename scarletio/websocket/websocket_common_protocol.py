@@ -1,6 +1,6 @@
 __all__ = ('WebSocketCommonProtocol', )
 
-import codecs
+import codecs, reprlib
 import http as module_http
 from collections import OrderedDict
 from os import urandom
@@ -342,10 +342,13 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             operation_code = WEBSOCKET_OPERATION_TEXT
             data = data.encode('utf-8')
         else:
-            raise TypeError(f'Data must be `bytes-like`, `str`, got: {data.__class__.__name__}.')
+            raise TypeError(
+                f'Data must be `bytes-like`, `str`, got: {data.__class__.__name__}; {reprlib.repr(data)}.'
+            )
 
         await self.write_frame(operation_code, data)
-
+    
+    
     async def close(self, code=1000, reason=''):
         """
         Closes the websocket.
@@ -412,7 +415,10 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             Close code is not given as one of `(1000, 1001, 1002, 1003, 1007, 1008, 1009, 1010, 1011) | [3000:5000)`.
         """
         if not (code in EXTERNAL_CLOSE_CODES or 2999<code<5000):
-            raise WebSocketProtocolError(f'Status can be in range [3000:5000), got {code!r}.')
+            raise WebSocketProtocolError(
+                f'Status can be in range [3000:5000), got {code!r}.'
+            )
+        
         return code.to_bytes(2, 'big')+reason.encode('utf-8')
     
     async def ping(self, data=None):
@@ -447,7 +453,9 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         elif isinstance(data, str):
             data = data.encode('utf-8')
         else:
-            raise TypeError(f'Data must be `bytes-like`, `str`, got: {data.__class__.__name__}.')
+            raise TypeError(
+                f'Data must be `bytes-like`, `str`, got: {data.__class__.__name__}; {reprlib.repr(data)}.'
+            )
         
         pings = self.pings
         while data in pings:
@@ -489,7 +497,9 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         elif isinstance(data, str):
             data = data.encode('utf-8')
         else:
-            raise TypeError(f'Data must be `bytes-like`, `str`, got: {data.__class__.__name__}.')
+            raise TypeError(
+                f'Data must be `bytes-like`, `str`, got: {data.__class__.__name__}; {reprlib.repr(data)}.'
+            )
         
         await self.write_frame(WEBSOCKET_OPERATION_PONG, data)
     
@@ -514,6 +524,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             if self.transfer_data_task.is_done():
                 await shield(self.close_connection_task, self._loop)
                 raise ConnectionClosed(self.close_code, None, self.close_reason)
+            
             return
         
         if state == WEBSOCKET_STATE_CLOSED:
@@ -523,9 +534,11 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             if not self.close_code:
                 #if we started the closing handshake, wait for its completion
                 await shield(self.close_connection_task, self._loop)
+            
             raise ConnectionClosed(self.close_code, None, self.close_reason) from self.transfer_data_exception
         
         raise Exception('WebSocket connection isn\'t established yet.')
+    
     
     async def transfer_data(self):
         """
@@ -565,11 +578,14 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             self.fail_connection(1009)
         
         except BaseException as err:
-            await self._loop.render_exception_async(err, [
-                'Unexpected exception occurred at ',
-                repr(self),
-                '.transfer_data\n',
-                    ])
+            await self._loop.render_exception_async(
+                err,
+                [
+                    'Unexpected exception occurred at ',
+                    repr(self),
+                    '.transfer_data\n',
+                ],
+            )
             # should not happen
             exception = ConnectionClosed(1011, err)
             self.fail_connection(1011)
@@ -622,8 +638,10 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         elif frame.operation_code == WEBSOCKET_OPERATION_BINARY:
             text = False
         else: # frame.operation_code == OP_CONT:
-            raise WebSocketProtocolError(f'Unexpected operation_code, got {frame.operation_code!r}, expected {WEBSOCKET_OPERATION_TEXT!r} or '
-                f'{WEBSOCKET_OPERATION_BINARY!r}.')
+            raise WebSocketProtocolError(
+                f'Unexpected operation_code, got {frame.operation_code!r}, expected {WEBSOCKET_OPERATION_TEXT!r} or '
+                f'{WEBSOCKET_OPERATION_BINARY!r}.'
+            )
         
         # we got a whole frame, nice
         if frame.is_final:
@@ -649,8 +667,10 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
                 raise WebSocketProtocolError('Incomplete fragmented message.')
             
             if frame.operation_code != WEBSOCKET_OPERATION_CONTINUOUS:
-                raise WebSocketProtocolError(f'Unexpected operation_code, got {frame.operation_code!r}, expected '
-                    f'{WEBSOCKET_OPERATION_CONTINUOUS!r}.')
+                raise WebSocketProtocolError(
+                    f'Unexpected operation_code, got {frame.operation_code!r}, expected '
+                    f'{WEBSOCKET_OPERATION_CONTINUOUS!r}.'
+                )
         
         if text:
             try:
@@ -740,14 +760,16 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             if length >= 2:
                 code = int.from_bytes(data[:2], 'big')
                 if not (code in EXTERNAL_CLOSE_CODES or 2999 < code < 5000):
-                    raise WebSocketProtocolError(f'Invalid status code {code}.')
+                    raise WebSocketProtocolError(f'Invalid status code {code!r}.')
                 reason = data[2:].decode('utf-8')
                 self.close_code = code
                 self.close_reason = reason
             elif length == 0:
                 self.close_code = 1005
             else:
-                raise WebSocketProtocolError(f'Close frame too short: {length}.')
+                raise WebSocketProtocolError(
+                    f'Close frame too short: {length!r}; {reprlib.repr(data)}.'
+                )
             
             await self.write_close_frame(frame.data)
             return False

@@ -184,8 +184,10 @@ class WaitContinuously(WaitTillFirst):
             exception = self._exception
             if (exception is not None):
                 future.cancel()
-                raise RuntimeError(f'`{self.__class__.__name__}.add` called, when {self.__class__.__name__} is already '
-                    f'finished with an exception : {exception!r}') from exception
+                raise RuntimeError(
+                    f'`{self.__class__.__name__}.add` called, when `{self.__class__.__name__}` is already '
+                    f'finished with an exception; exception={exception!r}.'
+                ) from exception
             
             if future.is_done():
                 self._result[0].add(future)
@@ -205,8 +207,10 @@ class WaitContinuously(WaitTillFirst):
                 exception = self._exception
                 if (exception is not None):
                     future.cancel()
-                    raise RuntimeError(f'`{self.__class__.__name__}.add` called, when {self.__class__.__name__} is '
-                        f'already finished with an exception : {exception!r}') from exception
+                    raise RuntimeError(
+                        f'`{self.__class__.__name__}.add` called, when `{self.__class__.__name__}` is already '
+                        f'finished with an exception; exception={exception!r}.'
+                    ) from exception
                 
                 if future.is_done():
                     self._result[0].append(future)
@@ -223,8 +227,11 @@ class WaitContinuously(WaitTillFirst):
                 return
         
         future.cancel()
-        raise RuntimeError(f'`{self.__class__.__name__}.add` called, when {self.__class__.__name__} is already '
-               f'cancelled.')
+        
+        raise RuntimeError(
+            f'`{self.__class__.__name__}.add` called, when `{self.__class__.__name__}` is already '
+           f'cancelled; self={self!r}.'
+        )
     
     def _mark_as_finished(self):
         """
@@ -462,7 +469,9 @@ class WaitContinuously(WaitTillFirst):
             exception = exception()
         
         if isinstance(exception, StopIteration):
-             raise TypeError(f'{exception} cannot be raised to a {self.__class__.__name__}: {self!r}')
+            raise TypeError(
+                f'{exception} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
+            )
         
         if isinstance(exception, TimeoutError):
             self._state = FUTURE_STATE_FINISHED
@@ -502,7 +511,9 @@ class WaitContinuously(WaitTillFirst):
             exception = exception()
         
         if isinstance(exception, StopIteration):
-             raise TypeError(f'{exception} cannot be raised to a {self.__class__.__name__}: {self!r}')
+            raise TypeError(
+                f'{exception} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
+            )
         
         if isinstance(exception, TimeoutError):
             self._state = FUTURE_STATE_FINISHED

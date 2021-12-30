@@ -50,13 +50,19 @@ class BasicAuth:
             If password is given as `None`.
         """
         if username is None:
-            raise ValueError('`None` is not allowed as `login` value.')
+            raise ValueError(
+                '`username` cannot be `None`.'
+            )
         
         if ':' in username:
-            raise ValueError(f'`\':\'` is not allowed in `login` (RFC 1945#section-11.1), got {username!r}.')
+            raise ValueError(
+                f'`username` contains `\':\'` which is not allowed (RFC 1945#section-11.1), got {username!r}.'
+            )
         
         if password is None:
-            raise ValueError('`None` is not allowed as `password` value.')
+            raise ValueError(
+                '`password` cannot be `None`.'
+            )
         
         self = object.__new__(cls)
         
@@ -92,10 +98,15 @@ class BasicAuth:
         split = auth_header.strip().split(' ')
         if len(split) == 2:
             if split[0].strip().lower() != 'basic':
-                raise ValueError(f'Unknown authorization method: {split[0]!r}.')
+                raise ValueError(
+                    f'Unknown authorization method: {split[0]!r}.'
+                )
+            
             to_decode = split[1]
         else:
-            raise ValueError(f'Could not parse authorization header from: {auth_header!r}.')
+            raise ValueError(
+                f'Could not parse authorization header from: {auth_header!r}.'
+            )
         
         try:
             username, _, password = base64.b64decode(to_decode.encode('ascii')).decode(encoding).partition(':')
@@ -168,7 +179,7 @@ def is_ip_address(host):
     
     Parameters
     ----------
-    host : `str`, `bytes-like`
+    host : None`, `str`, `bytes-like`
         Host value.
     
     Returns
@@ -201,7 +212,9 @@ def is_ip_address(host):
         
         return False
     
-    raise TypeError(f'`host` should be given as `str`, `bytes-like`, got {host.__class__.__name__}.')
+    raise TypeError(
+        f'`host` can be `None`, `str`, `bytes-like`, got {host.__class__.__name__}; {host!r}.'
+    )
 
 
 TIMEOUT_STATE_NONE = 0
@@ -296,7 +309,9 @@ class Timeout:
         """
         task = self._loop.current_task
         if (task is None):
-            raise RuntimeError('`Timeout` entered outside of a `Task`!')
+            raise RuntimeError(
+                f'`{self.__class__.__name__}` entered outside of a `{task.__name__}`!'
+            )
         
         state = self._state
         if state == TIMEOUT_STATE_NONE:
@@ -306,7 +321,9 @@ class Timeout:
         elif state == TIMEOUT_STATE_CANCELLED:
             pass
         else:
-            raise RuntimeError('`Timeout` already used up.')
+            raise RuntimeError(
+                f'`{self.__class__.__name__}` already used.'
+            )
         
         return self
     

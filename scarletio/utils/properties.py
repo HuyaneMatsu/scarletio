@@ -275,8 +275,9 @@ class cached_property:
             name_type_correct = False
         
         if not name_type_correct:
-            raise TypeError(f'`fget` has no attribute or has, but non string attribute `__name__`, got '
-                f'{name_type.__name__}.')
+            raise TypeError(
+                f'`fget.__name__` can be `str`, got {name_type.__name__}; {name!r}.'
+            )
         
         self = object.__new__(cls)
         self.fget = fget
