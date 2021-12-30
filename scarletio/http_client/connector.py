@@ -15,7 +15,7 @@ else:
     SSL_CONTEXT_VERIFIED = module_ssl.create_default_context()
     
     SSL_CONTEXT_UNVERIFIED = module_ssl.SSLContext(module_ssl.PROTOCOL_SSLv23)
-    SSL_CONTEXT_UNVERIFIED.options |= module_ssl.OP_NO_SSLv2|module_ssl.OP_NO_SSLv3|module_ssl.OP_NO_COMPRESSION
+    SSL_CONTEXT_UNVERIFIED.options |= module_ssl.OP_NO_SSLv2 | module_ssl.OP_NO_SSLv3 | module_ssl.OP_NO_COMPRESSION
     SSL_CONTEXT_UNVERIFIED.set_default_verify_paths()
 
 from ..utils import IgnoreCaseMultiValueDictionary
@@ -486,7 +486,7 @@ class HostInfoCont:
         -------
         expired : `bool`
         """
-        if (self.timestamp+DNS_CACHE_TIMEOUT) < LOOP_TIME():
+        if (self.timestamp + DNS_CACHE_TIMEOUT) < LOOP_TIME():
             return True
         
         return False

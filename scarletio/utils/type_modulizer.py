@@ -58,7 +58,7 @@ def _modulize_function(old, globals_, source_module, module_name, module_path):
     qualname = old.__qualname__
     if (qualname is not None) and (len(qualname) > len(module_name)) and qualname[len(module_name)] =='.' and \
             qualname.startswith(module_name):
-        new.__qualname__ = qualname[len(module_name)+1:]
+        new.__qualname__ = qualname[len(module_name) + 1:]
     
     return new
 
@@ -88,7 +88,7 @@ def _modulize_type(klass, globals_, source_module, module_name, module_path):
             or not qualname.startswith(module_name):
         return
     
-    klass.__qualname__ = qualname[len(module_name)+1:]
+    klass.__qualname__ = qualname[len(module_name) + 1:]
     klass.__module__ = module_path
     
     for name in dir(klass):

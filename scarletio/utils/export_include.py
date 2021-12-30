@@ -62,7 +62,7 @@ def export(obj, obj_name=None):
             obj_name = obj.__class__.__name__
     
     if isinstance(obj, ModuleType):
-        obj_name = obj_name[obj_name.rfind('.')+1:]
+        obj_name = obj_name[obj_name.rfind('.') + 1:]
     
     SATISFIED[obj_name] = obj
     

@@ -83,7 +83,7 @@ class Server:
         """
         Removes `1` from the server's active counter. If there no more active sockets of the server, then closes it.
         """
-        active_count = self.active_count-1
+        active_count = self.active_count - 1
         self.active_count = active_count
         if active_count:
             return

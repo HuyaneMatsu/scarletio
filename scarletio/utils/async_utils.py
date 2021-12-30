@@ -20,7 +20,7 @@ def is_coroutine_function(func):
     -------
     is_coroutine_function : `bool`
     """
-    if isinstance(func, (FunctionType, MethodType)) and func.__code__.co_flags&CO_COROUTINE_ALL:
+    if isinstance(func, (FunctionType, MethodType)) and func.__code__.co_flags & CO_COROUTINE_ALL:
         return True
     else:
         return False
@@ -40,7 +40,7 @@ def is_coroutine_generator_function(func):
     -------
     is_coroutine_function_generator : `bool`
     """
-    if isinstance(func, (FunctionType, MethodType)) and func.__code__.co_flags&CO_ASYNC_GENERATOR:
+    if isinstance(func, (FunctionType, MethodType)) and func.__code__.co_flags & CO_ASYNC_GENERATOR:
         return True
     else:
         return False
@@ -103,7 +103,7 @@ def is_coroutine_generator(obj):
     else:
         return False
     
-    if code.co_flags&CO_ASYNC_GENERATOR:
+    if code.co_flags & CO_ASYNC_GENERATOR:
         return True
     
     return False
@@ -119,10 +119,10 @@ if sys.version_info >= (3, 11, 0):
         
         code_object = function.__code__
         code_flags = code_object.co_flags
-        if code_flags&CO_COROUTINE_ALL:
+        if code_flags & CO_COROUTINE_ALL:
             return function
         
-        if not code_flags&CO_GENERATOR:
+        if not code_flags & CO_GENERATOR:
             raise TypeError(
                 f'`function` can only be given as generator or as coroutine type, got {function!r}, '
                 f'co_flags={code_flags!r}.'
@@ -163,10 +163,10 @@ elif sys.version_info >= (3, 8, 0):
         
         code_object = function.__code__
         code_flags = code_object.co_flags
-        if code_flags&CO_COROUTINE_ALL:
+        if code_flags & CO_COROUTINE_ALL:
             return function
         
-        if not code_flags&CO_GENERATOR:
+        if not code_flags & CO_GENERATOR:
             raise TypeError(
                 f'`function` can only be given as generator or as coroutine type, got {function!r}, '
                 f'co_flags={code_flags!r}.'
@@ -202,10 +202,10 @@ else:
         
         code_object = function.__code__
         code_flags = code_object.co_flags
-        if code_flags&CO_COROUTINE_ALL:
+        if code_flags & CO_COROUTINE_ALL:
             return function
         
-        if not code_flags&CO_GENERATOR:
+        if not code_flags & CO_GENERATOR:
             raise TypeError(
                 f'`function` can only be given as generator or as coroutine type, got {function!r}, '
                 f'co_flags={code_flags!r}.'

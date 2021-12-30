@@ -155,7 +155,7 @@ class repeat_timeout:
         last_set = self._last_set
         if last_set:
             self._last_set = 0.0
-            handle = self._loop.call_at(last_set+self._timeout, self)
+            handle = self._loop.call_at(last_set + self._timeout, self)
         else:
             handle = None
             exception = CancelledError()

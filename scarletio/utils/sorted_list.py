@@ -169,9 +169,9 @@ class SortedList(list):
                 top = ln
                 while True:
                     if bot < top:
-                        half = (bot+top)>>1
+                        half = (bot + top) >> 1
                         if self[half] > value:
-                            bot = half+1
+                            bot = half + 1
                         else:
                             top = half
                         continue
@@ -190,9 +190,9 @@ class SortedList(list):
                 top = ln
                 while True:
                     if bot < top:
-                        half = (bot+top)>>1
+                        half = (bot + top) >> 1
                         if self[half] < value:
-                            bot = half+1
+                            bot = half + 1
                         else:
                             top = half
                         continue
@@ -244,9 +244,9 @@ class SortedList(list):
         if self._reversed:
             while True:
                 if bot < top:
-                    half = (bot+top)>>1
+                    half = (bot + top) >> 1
                     if self[half] > value:
-                        bot = half+1
+                        bot = half + 1
                     else:
                         top = half
                     continue
@@ -254,9 +254,9 @@ class SortedList(list):
         else:
             while True:
                 if bot < top:
-                    half = (bot+top)>>1
+                    half = (bot + top) >> 1
                     if self[half] < value:
-                        bot = half+1
+                        bot = half + 1
                     else:
                         top = half
                     continue
@@ -287,9 +287,9 @@ class SortedList(list):
         if self._reversed:
             while True:
                 if bot < top:
-                    half = (bot+top)>>1
+                    half = (bot + top) >> 1
                     if key(self[half]) > value:
-                        bot = half+1
+                        bot = half + 1
                     else:
                         top = half
                     continue
@@ -297,9 +297,9 @@ class SortedList(list):
         else:
             while True:
                 if bot < top:
-                    half = (bot+top)>>1
+                    half = (bot + top) >> 1
                     if key(self[half]) < value:
-                        bot = half+1
+                        bot = half + 1
                     else:
                         top = half
                     continue

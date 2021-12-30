@@ -542,9 +542,9 @@ class Cycler:
         """
         handle = self.handle
         if handle is None:
-            return -1. # wont be be called
+            return -1.0 # wont be be called
         
-        at = handle.when-LOOP_TIME()
+        at = handle.when - LOOP_TIME()
         
         if at < 0.0:
             return 0.0 # right now

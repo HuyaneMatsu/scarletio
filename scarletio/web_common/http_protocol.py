@@ -276,7 +276,7 @@ class HttpReadProtocol(ReadProtocolBase):
                             return False, None, None
                         else:
                             raise PayloadError(
-                                f'Multipart boundary not ended with b\'--\'+b\'\r\n\', got '
+                                f'Multipart boundary not ended with b\'--\' + b\'\r\n\', got '
                                 f'b\'--\'+{maybe_end_2!r}.'
                             )
                 else:
@@ -290,16 +290,16 @@ class HttpReadProtocol(ReadProtocolBase):
         
         length = headers.get(CONTENT_LENGTH, None)
         if length is None:
-            part = yield from self._read_until(b'\r\n--'+boundary)
+            part = yield from self._read_until(b'\r\n--' + boundary)
         else:
             length = int(length)
             part = yield from self._read_exactly(length)
             try:
-                maybe_boundary = yield from self._read_exactly(len(boundary)+4)
+                maybe_boundary = yield from self._read_exactly(len(boundary) + 4)
             except EOFError:
                 return False, None, part
             
-            if maybe_boundary != b'\r\n--'+boundary:
+            if maybe_boundary != b'\r\n--' + boundary:
                 raise PayloadError(
                     f'Multipart payload not ended with boundary, expected: b\'\r\n\' + b\'--\' + '
                     f'{boundary!r}, got {maybe_boundary!r}.'
@@ -578,8 +578,8 @@ class HttpReadProtocol(ReadProtocolBase):
                 raise PayloadError(f'Invalid header line: {chunk[offset:end]!r}.')
             
             name = chunk[offset:middle].lstrip()
-            value = chunk[middle+1:end].strip()
-            offset = end+2
+            value = chunk[middle + 1:end].strip()
+            offset = end + 2
         
         # Found \r\n instantly, we done!
         # The case, when there is nothing inside of the headers.
@@ -614,7 +614,7 @@ class HttpReadProtocol(ReadProtocolBase):
                 raise PayloadError(f'Invalid header line: {line!r}.')
             
             name = line[:middle]
-            value = line[middle+1:]
+            value = line[middle + 1:]
             
             # Jump on this part at the end if not done, we will need this for checking continuous lines.
             if chunks:
@@ -639,7 +639,7 @@ class HttpReadProtocol(ReadProtocolBase):
                     if end > offset:
                         value.append(chunk[offset:end].strip())
                         # add \r\n shift
-                        offset = end+2
+                        offset = end + 2
                         
                         # if we are at the en of the chunk, we need again a new one for continuous check
                         if offset == len(chunk):
@@ -709,10 +709,10 @@ class HttpReadProtocol(ReadProtocolBase):
                     raise PayloadError(f'Invalid header line: {chunk[offset:end]!r}.')
                 
                 name = chunk[offset:middle].lstrip().decode('utf-8', 'surrogateescape')
-                value = chunk[middle+1:end].strip()
+                value = chunk[middle + 1:end].strip()
                 
                 # Add 2 to the offset, to apply \r\n
-                offset = end+2
+                offset = end + 2
                 # if we are at the end of the chunk, remove it and reset the offset
                 if offset == len(chunk):
                     del chunks[0]
@@ -765,10 +765,10 @@ class HttpReadProtocol(ReadProtocolBase):
                         raise PayloadError(f'Invalid header line: {chunk[offset:end]!r}.')
                     
                     name = chunk[:middle].lstrip().decode('utf-8', 'surrogateescape')
-                    value = chunk[middle+1:end].strip()
+                    value = chunk[middle + 1:end].strip()
                     
                     #Apply offset and update chunk data if needed.
-                    offset = end+2
+                    offset = end + 2
                     if offset == len(chunk):
                         del chunks[0]
                         if chunks:
@@ -812,7 +812,7 @@ class HttpReadProtocol(ReadProtocolBase):
                         raise PayloadError(f'Invalid header line: {line!r}.')
                     
                     name = line[:middle].lstrip().decode('utf-8', 'surrogateescape')
-                    value = line[middle+1:].strip()
+                    value = line[middle + 1:].strip()
                     
                     # Update the current chunk and offset state
                     if chunks:
@@ -843,7 +843,7 @@ class HttpReadProtocol(ReadProtocolBase):
                     raise PayloadError(f'Invalid header line: {line!r}.')
                 
                 name = line[:middle].lstrip().decode('utf-8', 'surrogateescape')
-                value = line[middle+1:].strip()
+                value = line[middle + 1:].strip()
                 
                 # Update the current chunk and offset state
                 if chunks:
@@ -881,10 +881,10 @@ class HttpReadProtocol(ReadProtocolBase):
         """
         head_1, head_2 = yield from self._read_exactly(2)
         
-        if ((head_2&0b10000000)>>7) == is_client:
+        if ((head_2 & 0b10000000) >> 7) == is_client:
             raise WebSocketProtocolError('Incorrect masking.')
         
-        length = head_2&0b01111111
+        length = head_2 & 0b01111111
         
         if length == 126:
             data = yield from self._read_exactly(2)
@@ -1284,15 +1284,15 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
         
         # Prepare the header.
         head_1 = frame.head_1
-        head_2 = is_client<<7
+        head_2 = is_client << 7
         
         length = len(frame.data)
         if length < 126:
-            header = PACK_LENGTH_1(head_1, head_2|length)
+            header = PACK_LENGTH_1(head_1, head_2 | length)
         elif length < 65536:
-            header = PACK_LENGTH_2(head_1, head_2|126,length)
+            header = PACK_LENGTH_2(head_1, head_2 | 126,length)
         else:
-            header = PACK_LENGTH_3(head_1, head_2|127,length)
+            header = PACK_LENGTH_3(head_1, head_2 | 127,length)
         transport.write(header)
         
         # prepare the data.

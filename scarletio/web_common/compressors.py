@@ -66,7 +66,7 @@ def get_decompressor_for(content_encoding):
         decompressor = None
     
     elif content_encoding == 'gzip':
-        decompressor = ZLIB_DECOMPRESSOR(wbits=16+ZLIB_MAX_WBITS)
+        decompressor = ZLIB_DECOMPRESSOR(wbits=16 + ZLIB_MAX_WBITS)
     
     elif content_encoding == 'deflate':
         decompressor = ZLIB_DECOMPRESSOR(wbits=-ZLIB_MAX_WBITS)

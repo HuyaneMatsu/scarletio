@@ -133,7 +133,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
     
     is_client = True # placeholder for subclasses
     
-    def __new__(cls, loop, host, port, *, is_ssl=False, close_timeout=10.0, max_size=1<<26, max_queue=None):
+    def __new__(cls, loop, host, port, *, is_ssl=False, close_timeout=10.0, max_size=1 << 26, max_queue=None):
         """
         Initializes the ``WebSocketCommonProtocol`` with setting it's common attributes.
         
@@ -160,7 +160,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         self._set_common_websocket_attributes(host, port, is_ssl, close_timeout, max_size, max_queue)
         return self
     
-    def _set_common_websocket_attributes(self, host, port, is_ssl, close_timeout=10.0, max_size=1<<26, max_queue=None):
+    def _set_common_websocket_attributes(self, host, port, is_ssl, close_timeout=10.0, max_size=1 << 26, max_queue=None):
         """
         Sets the common websocket specific attributes for the protocol.
         
@@ -419,7 +419,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
                 f'Status can be in range [3000:5000), got {code!r}.'
             )
         
-        return code.to_bytes(2, 'big')+reason.encode('utf-8')
+        return code.to_bytes(2, 'big') + reason.encode('utf-8')
     
     async def ping(self, data=None):
         """

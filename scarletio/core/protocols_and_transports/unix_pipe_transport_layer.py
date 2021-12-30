@@ -621,10 +621,10 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
                 high = 65536
                 low = 16384
             else:
-                high = low<<2
+                high = low << 2
         else:
             if low is None:
-                low = high>>2
+                low = high >> 2
         
         if low < 0 or high < low:
             raise ValueError(

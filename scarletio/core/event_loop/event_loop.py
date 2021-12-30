@@ -240,7 +240,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             if not self._maybe_start():
                 return None
         
-        handle = TimerHandle(LOOP_TIME()+delay, callback, args)
+        handle = TimerHandle(LOOP_TIME() + delay, callback, args)
         heappush(self._scheduled, handle)
         return handle
     
@@ -299,7 +299,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             if not self._maybe_start():
                 return None
         
-        handle = TimerWeakHandle(LOOP_TIME()+delay, callback, args)
+        handle = TimerWeakHandle(LOOP_TIME() + delay, callback, args)
         heappush(self._scheduled, handle)
         return handle
     
@@ -638,7 +638,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             scheduled = self._scheduled # these can be added only from this thread
             
             while self.should_run:
-                timeout = LOOP_TIME()+LOOP_TIME_RESOLUTION # calculate limit
+                timeout = LOOP_TIME() + LOOP_TIME_RESOLUTION # calculate limit
                 while scheduled: # handle 'later' callbacks that are ready.
                     handle = scheduled[0]
                     if handle.cancelled:
@@ -655,7 +655,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                     timeout = 0.
                 elif scheduled:
                     # compute the desired timeout.
-                    timeout = scheduled[0].when-LOOP_TIME()
+                    timeout = scheduled[0].when - LOOP_TIME()
                 else:
                     timeout = None
                 
@@ -664,13 +664,13 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                     for key, mask in event_list:
                         file_object = key.fileobj
                         reader, writer = key.data
-                        if (reader is not None) and (mask&EVENT_READ):
+                        if (reader is not None) and (mask & EVENT_READ):
                             if reader.cancelled:
                                 self.remove_reader(file_object)
                             else:
                                 if not reader.cancelled:
                                     ready.append(reader)
-                        if (writer is not None) and (mask&EVENT_WRITE):
+                        if (writer is not None) and (mask & EVENT_WRITE):
                             if writer.cancelled:
                                 self.remove_writer(file_object)
                             else:
@@ -1231,7 +1231,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         else:
             mask = key.events
             reader, writer = key.data
-            self.selector.modify(fd, mask|EVENT_READ, (handle, writer))
+            self.selector.modify(fd, mask | EVENT_READ, (handle, writer))
             if reader is not None:
                 reader.cancel()
     
@@ -1302,7 +1302,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         mask = key.events
         reader, writer = key.data
         
-        self.selector.modify(file_descriptor, mask|EVENT_WRITE, (reader, handle))
+        self.selector.modify(file_descriptor, mask | EVENT_WRITE, (reader, handle))
         if writer is not None:
             writer.cancel()
     

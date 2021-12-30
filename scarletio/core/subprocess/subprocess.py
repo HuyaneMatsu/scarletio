@@ -8,7 +8,7 @@ from ..traps import Task, Future, WaitTillAll, future_or_timeout
 from ..protocols_and_transports import ReadProtocolBase
 
 IS_AIX = sys.platform.startswith('aix')
-LIMIT = 1<<16
+LIMIT = 1 << 16
 MAX_READ_SIZE = 262144
 
 PROCESS_EXIT_DELAY_LIMIT = 10

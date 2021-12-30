@@ -761,7 +761,7 @@ class Executor:
         -------
         used_executor_count : `int`
         """
-        return len(self.running_executors)+len(self.claimed_executors)
+        return len(self.running_executors) + len(self.claimed_executors)
     
     
     @property

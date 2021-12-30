@@ -44,7 +44,7 @@ def get_short_executable():
     
     index = executable.rfind(PATH_SEPARATOR)
     if index != -1:
-        executable = executable[index+1:]
+        executable = executable[index + 1:]
     
     if (not IS_UNIX) and executable.endswith('.exe'):
         executable = executable[:-len('.exe')]
@@ -104,9 +104,9 @@ def relative_index(list_, value):
     
     while True:
         if bot < top:
-            half = (bot+top)>>1
+            half = (bot + top) >> 1
             if list_[half] < value:
-                bot = half+1
+                bot = half + 1
             else:
                 top = half
             continue
@@ -146,7 +146,7 @@ def change_on_switch(list_, value, new_position, key=None):
         raise ValueError(f'{value!r} is not in the {list_.__class__.__name__}.')
     
     if new_position >= ln:
-        new_position = ln-1
+        new_position = ln - 1
     elif new_position < 0:
         new_position = 0
     
@@ -160,15 +160,15 @@ def change_on_switch(list_, value, new_position, key=None):
         change = +1
     
     else:
-        index = old_position+1
-        limit = new_position+1
+        index = old_position + 1
+        limit = new_position + 1
         change = -1
     
     while True:
         actual = list_[index]
         index += 1
         
-        position = index+change
+        position = index + change
         if key is None:
             element = (actual, position)
         else:

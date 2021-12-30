@@ -98,7 +98,7 @@ class ResultGatheringFuture(Future):
                     repr_parts.append(reprlib.repr(result))
                 
                 repr_parts.append(', needed=')
-                repr_parts.append(str(self._count-len(results)))
+                repr_parts.append(str(self._count - len(results)))
             else:
                 repr_parts.append(', exception=')
                 repr_parts.append(repr(exception))

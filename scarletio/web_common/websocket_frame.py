@@ -80,7 +80,7 @@ class WebSocketFrame:
             The data to ship with the websocket frame.
         """
         self.data = data
-        self.head_1 = (is_final<<7)|operation_code
+        self.head_1 = (is_final << 7) | operation_code
     
     @property
     def is_final(self):
@@ -91,7 +91,7 @@ class WebSocketFrame:
         -------
         is_final : `bool`
         """
-        return (self.head_1&0b10000000)>>7
+        return (self.head_1 & 0b10000000) >> 7
     
     
     @property
@@ -105,7 +105,7 @@ class WebSocketFrame:
         -------
         rsv1 : `int`
         """
-        return (self.head_1&0b01000000)>>6
+        return (self.head_1 & 0b01000000) >> 6
     
     
     @property
@@ -119,7 +119,7 @@ class WebSocketFrame:
         -------
         rsv2 : `int`
         """
-        return (self.head_1&0b00100000)>>5
+        return (self.head_1 & 0b00100000) >> 5
     
     
     @property
@@ -133,7 +133,7 @@ class WebSocketFrame:
         -------
         rsv3 : `int`
         """
-        return (self.head_1&0b00010000)>>4
+        return (self.head_1 & 0b00010000) >> 4
     
     
     @property
@@ -162,7 +162,7 @@ class WebSocketFrame:
             | WEBSOCKET_OPERATION_PONG          | 10    |
             +-----------------------------------+-------+
         """
-        return  self.head_1&0b00001111
+        return  self.head_1 & 0b00001111
     
     
     def check(self):
@@ -177,17 +177,17 @@ class WebSocketFrame:
             - If the websocket frame is fragmented frame. (Might be supported if people request is.)
             - If the frame operation_code is not any of the expected ones.
         """
-        if self.head_1&0b01110000:
+        if self.head_1 & 0b01110000:
             raise WebSocketProtocolError('Reserved bits must be `0`.')
         
-        operation_code = self.head_1&0b00001111
+        operation_code = self.head_1 & 0b00001111
         if operation_code in WEBSOCKET_DATA_OPERATIONS:
             return
         
         if operation_code in WEBSOCKET_CONTROL_OPERATIONS:
             if len(self.data) > 125:
                 raise WebSocketProtocolError('Control frame too long.')
-            if not self.head_1&0b10000000:
+            if not self.head_1 & 0b10000000:
                 raise WebSocketProtocolError('Fragmented control frame.')
             return
         

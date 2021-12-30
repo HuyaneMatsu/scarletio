@@ -190,7 +190,7 @@ class SocketTransportLayerBase(TransportLayerBase):
             except KeyError:
                 polling = 0
             else:
-                polling = key.events&selectors.EVENT_READ
+                polling = key.events & selectors.EVENT_READ
             
             repr_parts.append(' read=')
             if polling:
@@ -204,7 +204,7 @@ class SocketTransportLayerBase(TransportLayerBase):
             except KeyError:
                 polling = 0
             else:
-                polling = key.events&selectors.EVENT_WRITE
+                polling = key.events & selectors.EVENT_WRITE
 
             repr_parts.append(' write=<')
             if polling:
@@ -352,10 +352,10 @@ class SocketTransportLayerBase(TransportLayerBase):
                 high = 65536
                 low = 16384
             else:
-                high = low<<2
+                high = low << 2
         else:
             if low is None:
-                low = high>>2
+                low = high >> 2
         
         if low < 0 or high < low:
             raise ValueError(

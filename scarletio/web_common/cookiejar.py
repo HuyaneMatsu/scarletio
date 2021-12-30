@@ -352,7 +352,7 @@ class CookieJar:
             if max_age:
                 try:
                     delta_seconds = int(max_age)
-                    self._expire_cookie(LOOP_TIME()+delta_seconds, domain, name)
+                    self._expire_cookie(LOOP_TIME() + delta_seconds, domain, name)
                 except ValueError:
                     cookie['max-age'] = ''
             

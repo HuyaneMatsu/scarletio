@@ -43,7 +43,7 @@ if sys.platform == 'win32':
                         count = 1
                     else:
                         sharded_r.append(reader)
-                        count = count+1
+                        count = count + 1
                 
                 for writer in w:
                     if count == MAX_FD_S:

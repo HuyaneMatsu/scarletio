@@ -41,7 +41,7 @@ class HTTPStreamWriter:
         if (compression is None):
             compressor = None
         elif compression == 'gzip':
-            compressor = ZLIB_COMPRESSOR(wbits=16+ZLIB_MAX_WBITS)
+            compressor = ZLIB_COMPRESSOR(wbits=16 + ZLIB_MAX_WBITS)
         elif compression == 'deflate':
             compressor = ZLIB_COMPRESSOR(wbits=ZLIB_MAX_WBITS)
         else:
@@ -144,7 +144,7 @@ class HTTPStreamWriter:
         else:
             if chunk:
                 chunk = compressor.compress(chunk)
-                chunk = chunk+compressor.flush()
+                chunk = chunk + compressor.flush()
             else:
                 chunk = compressor.flush()
             

@@ -450,7 +450,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
                 selected_subprotocol = None
                 
                 for subprotocol in subprotocols:
-                    priority = parsed_header_subprotocols.index(subprotocol)+available_subprotocols.index(subprotocol)
+                    priority = parsed_header_subprotocols.index(subprotocol) + available_subprotocols.index(subprotocol)
                     if priority < lowest_priority:
                         lowest_priority = priority
                         selected_subprotocol = subprotocol
@@ -464,7 +464,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
             response_headers[UPGRADE] = 'websocket'
             response_headers[CONNECTION] = 'Upgrade'
             response_headers[SEC_WEBSOCKET_ACCEPT] = \
-                b64encode(hashlib.sha1((key+WEBSOCKET_KEY).encode()).digest()).decode()
+                b64encode(hashlib.sha1((key + WEBSOCKET_KEY).encode()).digest()).decode()
             
             if (extension_header is not None):
                 response_headers[SEC_WEBSOCKET_EXTENSIONS] = extension_header
@@ -500,7 +500,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
                     headers = IgnoreCaseMultiValueDictionary()
                 body = err.message
                 if not body.endswith('\n'):
-                    body = body+b'\n'
+                    body = body + b'\n'
             
             elif isinstance(err, InvalidOrigin):
                 status = FORBIDDEN

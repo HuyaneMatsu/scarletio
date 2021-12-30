@@ -88,9 +88,9 @@ class ReuBytesIO(BytesIO):
         self._last_operation = OPERATION_READ
         
         if amount is None:
-            amount = self._size-self.tell()
+            amount = self._size - self.tell()
         else:
-            readable = self._size-self.tell()
+            readable = self._size - self.tell()
             if amount > readable:
                 amount = readable
         

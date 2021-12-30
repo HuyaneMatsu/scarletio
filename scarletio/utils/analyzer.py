@@ -449,9 +449,9 @@ class CallableAnalyzer:
         parameters = []
         if (real_function is not None):
             parameter_count = real_function.__code__.co_argcount
-            accepts_args = real_function.__code__.co_flags&CO_VARARGS
+            accepts_args = real_function.__code__.co_flags & CO_VARARGS
             keyword_only_parameter_count = real_function.__code__.co_kwonlyargcount
-            accepts_kwargs = real_function.__code__.co_flags&CO_VARKEYWORDS
+            accepts_kwargs = real_function.__code__.co_flags & CO_VARKEYWORDS
             positional_only_parameter_count = getattr(real_function.__code__, 'co_posonlyargcount', 0)
             default_parameter_values = real_function.__defaults__
             default_keyword_only_parameter_values = real_function.__kwdefaults__
@@ -466,7 +466,7 @@ class CallableAnalyzer:
             parameter_names = real_function.__code__.co_varnames[start:end]
             
             start = end
-            end = start+keyword_only_parameter_count
+            end = start + keyword_only_parameter_count
             keyword_only_parameter_names = real_function.__code__.co_varnames[start:end]
             
             if accepts_args:
@@ -541,7 +541,7 @@ class CallableAnalyzer:
                 
                 parameter.reserved = (index<method_allocation)
                 parameters.append(parameter)
-                index = index+1
+                index = index + 1
             
             if args_name is None:
                 args_parameter = None
@@ -595,7 +595,7 @@ class CallableAnalyzer:
                 parameter.positionality = PARAMETER_TYPE_KEYWORD_ONLY
                 parameter.reserved = False
                 parameters.append(parameter)
-                index = index+1
+                index = index + 1
             
             if kwargs_name is None:
                 kwargs_parameter = None

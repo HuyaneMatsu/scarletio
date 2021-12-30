@@ -570,7 +570,7 @@ class ReadProtocolBase(AbstractProtocolBase):
                 collected = [chunk]
                 del chunks[0]
         else:
-            end = offset+n
+            end = offset + n
             if chunk_size > end:
                 self._offset = end
                 return chunk[offset:end]
@@ -610,7 +610,7 @@ class ReadProtocolBase(AbstractProtocolBase):
                 self._offset = 0
                 return b''.join(collected)
             
-            offset = self._offset = chunk_size+n
+            offset = self._offset = chunk_size + n
             collected.append(memoryview(chunk)[:offset])
             return b''.join(collected)
     
@@ -680,7 +680,7 @@ class ReadProtocolBase(AbstractProtocolBase):
             index = chunk.find(boundary, offset)
             if index != -1:
                 # Barrier found
-                offset = len(chunk)-len(data)+index+boundary_length
+                offset = len(chunk) - len(data) + index + boundary_length
                 if offset == len(chunk):
                     del chunks[0]
                     offset = 0

@@ -108,7 +108,7 @@ def _is_datagram_socket(socket):
     -------
     is_datagram_socket : `bool`
     """
-    return (socket.type&module_socket.SOCK_DGRAM) == module_socket.SOCK_DGRAM
+    return (socket.type & module_socket.SOCK_DGRAM) == module_socket.SOCK_DGRAM
 
 
 def _is_stream_socket(socket):
@@ -124,7 +124,7 @@ def _is_stream_socket(socket):
     -------
     is_stream_socket : `bool`
     """
-    return (socket.type&module_socket.SOCK_STREAM) == module_socket.SOCK_STREAM
+    return (socket.type & module_socket.SOCK_STREAM) == module_socket.SOCK_STREAM
 
 def _set_reuse_port(socket):
     """

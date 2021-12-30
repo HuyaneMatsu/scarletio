@@ -14,7 +14,7 @@ from .compressors import ZLIB_COMPRESSOR, BROTLI_COMPRESSOR, ZLIB_MAX_WBITS
 from .exceptions import ContentEncodingError
 from .mime_type import MimeType
 
-BIG_CHUNK_LIMIT = 1<<16
+BIG_CHUNK_LIMIT = 1 << 16
 DEFAULT_CONTENT_TYPE = 'application/octet-stream'
 
 VALID_TCHAR_RP = re.compile(br'\A[!#$%&\'*+\-.^_`|~\w]+\Z')
@@ -491,7 +491,7 @@ class BytesIOPayload(IOBasePayload):
         position = data.tell()
         end = data.seek(0, os.SEEK_END)
         data.seek(position)
-        self.size = end-position
+        self.size = end - position
 
 
 class BufferedReaderPayload(IOBasePayload):
@@ -1214,15 +1214,15 @@ class MultipartWriter(PayloadBase):
         if data:
             size = self.size
         else:
-            size = 6+len(self._boundary)
-            # b'--'+self._boundary+b'--\r\n'
+            size = 6 + len(self._boundary)
+            # b'--' + self._boundary + b'--\r\n'
         
         if (size is not None):
             if (content_encoding is not None) or (transfer_encoding is not None) or (payload.size is None):
                 size = None
             else:
-                size += 6+len(self._boundary)+payload.size+len(headers)
-                # b'--'+self._boundary+b'\r\n' ... data ... b'\r\n'
+                size += 6 + len(self._boundary) + payload.size + len(headers)
+                # b'--' + self._boundary + b'\r\n' ... data ... b'\r\n'
             
             self.size = size
         
@@ -1325,7 +1325,7 @@ class MultipartWriter(PayloadBase):
             await writer.write(b'\r\n')
         
         if close_boundary:
-            await writer.write(b'--'+self._boundary+b'--\r\n')
+            await writer.write(b'--' + self._boundary + b'--\r\n')
 
 
 TRANSFER_ENCODING_NONE = 0
@@ -1380,7 +1380,7 @@ class MultipartPayloadWriter:
             +===============+===============================================+
             | `None`        | `None`                                        |
             +---------------+-----------------------------------------------+
-            | `'gzip'`      | `ZLIB_COMPRESSOR(wbits=16+ZLIB_MAX_WBITS)`    |
+            | `'gzip'`      | `ZLIB_COMPRESSOR(wbits=16 + ZLIB_MAX_WBITS)`  |
             +---------------+-----------------------------------------------+
             | `'deflate'`   | `ZLIB_COMPRESSOR(wbits=-ZLIB_MAX_WBITS)`      |
             +---------------+-----------------------------------------------+
@@ -1416,7 +1416,7 @@ class MultipartPayloadWriter:
             compressor = None
         
         elif content_encoding == 'gzip':
-            compressor = ZLIB_COMPRESSOR(wbits=16+ZLIB_MAX_WBITS)
+            compressor = ZLIB_COMPRESSOR(wbits=16 + ZLIB_MAX_WBITS)
         
         elif content_encoding == 'deflate':
             compressor = ZLIB_COMPRESSOR(wbits=-ZLIB_MAX_WBITS)
@@ -1513,7 +1513,7 @@ class MultipartPayloadWriter:
             if not barrier:
                 return
             
-            barrier = (barrier//3)*3
+            barrier = (barrier // 3) * 3
             if not barrier:
                 return
             

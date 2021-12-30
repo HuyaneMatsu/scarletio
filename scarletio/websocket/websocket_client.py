@@ -280,7 +280,7 @@ class WebSocketClient(WebSocketCommonProtocol):
                     response = response,
                 )
             
-            expected_key = b64encode(hashlib.sha1((sec_key+WEBSOCKET_KEY).encode()).digest()).decode()
+            expected_key = b64encode(hashlib.sha1((sec_key + WEBSOCKET_KEY).encode()).digest()).decode()
             received_keys = response_headers.get_all(SEC_WEBSOCKET_ACCEPT)
             if received_keys is None:
                 raise InvalidHandshake(

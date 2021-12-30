@@ -59,7 +59,7 @@ def _create_rich_exception_message(instance, attribute_name):
         try:
             LOCKS.add(lock_key)
             
-            diversity = 0.8-(20-min(len(attribute_name), 20))*0.01
+            diversity = 0.8 - (20 - min(len(attribute_name), 20)) * 0.01
             
             directory = dir(instance)
             
