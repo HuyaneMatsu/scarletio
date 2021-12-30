@@ -1290,9 +1290,9 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
         if length < 126:
             header = PACK_LENGTH_1(head_1, head_2 | length)
         elif length < 65536:
-            header = PACK_LENGTH_2(head_1, head_2 | 126,length)
+            header = PACK_LENGTH_2(head_1, head_2 | 126, length)
         else:
-            header = PACK_LENGTH_3(head_1, head_2 | 127,length)
+            header = PACK_LENGTH_3(head_1, head_2 | 127, length)
         transport.write(header)
         
         # prepare the data.
