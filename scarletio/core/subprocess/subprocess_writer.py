@@ -5,6 +5,7 @@ from ...utils import copy_docs
 from ..protocols_and_transports import AbstractTransportLayerBase
 from ..traps import skip_ready_cycle
 
+
 class SubprocessWriter(AbstractTransportLayerBase):
     """
     Writer interface for subprocess calls.

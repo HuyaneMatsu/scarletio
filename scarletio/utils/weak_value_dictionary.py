@@ -1,8 +1,9 @@
 __all__ = ('WeakValueDictionary', )
 
-from .docs import has_docs
-from .weak_core import add_to_pending_removals, WeakReferer, KeyedReferer
 from .dict_update_iterable_iterator import _dict_update_iterable_iterator
+from .docs import has_docs
+from .weak_core import KeyedReferer, WeakReferer, add_to_pending_removals
+
 
 @has_docs
 class _WeakValueDictionaryCallback:

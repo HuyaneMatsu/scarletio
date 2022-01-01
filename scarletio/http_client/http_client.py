@@ -1,12 +1,14 @@
 __all__ = ('HTTPClient', )
 
 from ..utils import IgnoreCaseMultiValueDictionary, export
-
+from ..web_common import CookieJar, URL
+from ..web_common.headers import (
+    AUTHORIZATION, CONTENT_LENGTH, LOCATION, METHOD_DELETE, METHOD_GET, METHOD_HEAD, METHOD_OPTIONS, METHOD_PATCH,
+    METHOD_POST, METHOD_PUT, URI
+)
 from ..web_common.helpers import Timeout, tcp_nodelay
-from ..web_common import URL, CookieJar
-from ..web_common.headers import CONTENT_LENGTH, AUTHORIZATION, METHOD_HEAD, LOCATION, URI, METHOD_GET, METHOD_POST, \
-    METHOD_OPTIONS, METHOD_PUT, METHOD_PATCH, METHOD_DELETE
 from ..websocket import WebSocketClient
+
 from .client_request import ClientRequest
 from .connector import SSL_ALLOWED_TYPES, TCPConnector
 from .request_context_managers import RequestContextManager, WebSocketContextManager

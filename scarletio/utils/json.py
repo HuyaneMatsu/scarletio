@@ -1,8 +1,9 @@
 __all__ = ('JSONDecodeError', 'from_json', 'to_json')
 
-from json import dumps as dump_to_json, loads as from_json, JSONDecodeError
+from json import JSONDecodeError, dumps as dump_to_json, loads as from_json
 
 from .docs import has_docs
+
 
 @has_docs
 def added_json_serializer(obj):

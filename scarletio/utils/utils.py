@@ -6,6 +6,7 @@ from os import sep as PATH_SEPARATOR
 
 from .docs import has_docs
 
+
 IS_UNIX = (sys.platform != 'win32')
 
 @has_docs

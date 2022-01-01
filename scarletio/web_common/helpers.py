@@ -1,10 +1,11 @@
 __all__ = ('BasicAuth', 'HttpVersion', 'HttpVersion10', 'HttpVersion11',)
 
 import base64, binascii, re
-from collections import namedtuple
 import socket as module_socket
+from collections import namedtuple
 
 from ..core import CancelledError
+
 
 sentinel = object()
 

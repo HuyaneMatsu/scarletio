@@ -1,14 +1,18 @@
 __all__ = ('URL', )
 
 import reprlib
-from ipaddress import ip_address
-from urllib.parse import SplitResult, parse_qsl as parse_query_string_list, urljoin as url_join, \
-    urlsplit as url_split, urlunsplit as url_unsplit
-from math import isinf, isnan
 from datetime import datetime
+from ipaddress import ip_address
+from math import isinf, isnan
+from urllib.parse import (
+    SplitResult, parse_qsl as parse_query_string_list, urljoin as url_join, urlsplit as url_split,
+    urlunsplit as url_unsplit
+)
 
 from ..utils import MultiValueDictionary, cached_property
+
 from .quoting import quote, unquote
+
 
 NoneType = type(None)
 

@@ -1,23 +1,22 @@
 __all__ = ('ClientRequest',)
 
-from http.cookies import SimpleCookie, CookieError, Morsel
+from http.cookies import Morsel, SimpleCookie
 
-try:
-    import ssl as module_ssl
-except ImportError:
-    module_ssl = None
-
+from ..core import CancelledError, Task
 from ..utils import IgnoreCaseMultiValueDictionary
-from ..core import Task, CancelledError
-from ..web_common.headers import METHOD_POST_ALL, METHOD_CONNECT, CONTENT_LENGTH, ACCEPT, ACCEPT_ENCODING, HOST, \
-    TRANSFER_ENCODING, COOKIE, CONTENT_ENCODING, AUTHORIZATION, CONTENT_TYPE
-from ..web_common.helpers import BasicAuth
-from ..web_common.multipart import create_payload
 from ..web_common.formdata import Formdata
+from ..web_common.headers import (
+    ACCEPT, ACCEPT_ENCODING, AUTHORIZATION, CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TYPE, COOKIE, HOST,
+    METHOD_CONNECT, METHOD_POST_ALL, TRANSFER_ENCODING
+)
+from ..web_common.helpers import BasicAuth
 from ..web_common.http_stream_writer import HTTPStreamWriter
+from ..web_common.multipart import create_payload
+
+from .client_response import ClientResponse
 from .connection_key import ConnectionKey
 from .request_info import RequestInfo
-from .client_response import ClientResponse
+
 
 DEFAULT_HEADERS = (
     (ACCEPT, '*/*'),

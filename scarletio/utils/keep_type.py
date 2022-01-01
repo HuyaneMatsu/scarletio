@@ -1,6 +1,7 @@
 __all__ = ('KeepType',)
 
-from. docs import has_docs
+from .docs import has_docs
+
 
 @has_docs
 class KeepType:

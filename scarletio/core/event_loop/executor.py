@@ -1,13 +1,15 @@
 __all__ = ('ClaimedExecutor', 'Executor', 'ExecutorThread', 'SyncQueue', 'SyncWait', )
 
 import sys
-from threading import Lock as SyncLock, Event as SyncEvent, Thread, current_thread
 from collections import deque
+from threading import Event as SyncEvent, Lock as SyncLock, Thread, current_thread
 
-from ...utils import include, ignore_frame
+from ...utils import ignore_frame, include
 from ...utils.trace import render_exception_into
-from ..traps import Future
+
 from ..exceptions import CancelledError
+from ..traps import Future
+
 
 EventThread = include('EventThread')
 

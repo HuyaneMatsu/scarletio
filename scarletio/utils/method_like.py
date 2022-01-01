@@ -4,6 +4,7 @@ from types import MethodType
 
 from .docs import has_docs
 
+
 @has_docs
 class SubCheckType(type):
     """

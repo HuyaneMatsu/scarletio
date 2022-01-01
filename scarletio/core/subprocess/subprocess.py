@@ -1,11 +1,15 @@
 ﻿__all__ = ('AsyncProcess',)
 
 import sys
-from subprocess import TimeoutExpired, PIPE, Popen
 from socket import socketpair as create_socket_pair
+from subprocess import PIPE, Popen, TimeoutExpired
 
-from ..traps import Task, Future, WaitTillAll, future_or_timeout
 from ..protocols_and_transports import ReadProtocolBase
+from ..traps import Future, Task, WaitTillAll, future_or_timeout
+
+from .subprocess_protocols import SubprocessReadPipeProtocol, SubprocessWritePipeProtocol
+from .subprocess_writer import SubprocessWriter
+
 
 IS_AIX = sys.platform.startswith('aix')
 LIMIT = 1 << 16
@@ -13,8 +17,6 @@ MAX_READ_SIZE = 262144
 
 PROCESS_EXIT_DELAY_LIMIT = 10
 
-from .subprocess_protocols import SubprocessReadPipeProtocol, SubprocessWritePipeProtocol
-from .subprocess_writer import SubprocessWriter
 
 class AsyncProcess:
     """

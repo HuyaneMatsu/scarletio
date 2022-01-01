@@ -5,13 +5,13 @@ import http as module_http
 from collections import OrderedDict
 from os import urandom
 
+from ..core import AsyncQueue, CancelledError, Future, Lock, Task, future_or_timeout, shield
 from ..utils import include
-from ..core import Future, Task, AsyncQueue, future_or_timeout, shield, CancelledError, Lock
-
-from ..web_common import PayloadError, ConnectionClosed, WebSocketProtocolError, HttpReadWriteProtocol, WebSocketFrame
-from ..web_common.websocket_frame import WEBSOCKET_OPERATION_CONTINUOUS, WEBSOCKET_OPERATION_TEXT, \
-    WEBSOCKET_OPERATION_BINARY , WEBSOCKET_OPERATION_CLOSE, WEBSOCKET_OPERATION_PING, WEBSOCKET_OPERATION_PONG, \
-    WEBSOCKET_DATA_OPERATIONS
+from ..web_common import ConnectionClosed, HttpReadWriteProtocol, PayloadError, WebSocketFrame, WebSocketProtocolError
+from ..web_common.websocket_frame import (
+    WEBSOCKET_DATA_OPERATIONS, WEBSOCKET_OPERATION_BINARY, WEBSOCKET_OPERATION_CLOSE, WEBSOCKET_OPERATION_CONTINUOUS,
+    WEBSOCKET_OPERATION_PING, WEBSOCKET_OPERATION_PONG, WEBSOCKET_OPERATION_TEXT
+)
 
 
 FORBIDDEN = module_http.HTTPStatus.FORBIDDEN

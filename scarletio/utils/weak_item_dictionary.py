@@ -1,9 +1,10 @@
 __all__ = ('WeakItemDictionary',)
 
-from .docs import has_docs
-from .weak_core import WeakReferer, add_to_pending_removals, KeyedReferer, WeakHasher
-from .weak_key_dictionary import _WeakKeyDictionaryCallback, _WeakKeyDictionaryKeyIterator
 from .dict_update_iterable_iterator import _dict_update_iterable_iterator
+from .docs import has_docs
+from .weak_core import KeyedReferer, WeakReferer, add_to_pending_removals
+from .weak_key_dictionary import _WeakKeyDictionaryCallback, _WeakKeyDictionaryKeyIterator
+
 
 @has_docs
 class _WeakItemDictionaryValueCallback:

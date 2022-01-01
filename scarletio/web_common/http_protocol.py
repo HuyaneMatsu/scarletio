@@ -1,20 +1,21 @@
 __all__ = ('HttpReadProtocol', 'HttpReadWriteProtocol',)
 
-import re, base64, binascii
-from struct import Struct
+import base64, binascii, re
 from random import getrandbits
+from struct import Struct
 
-from ..utils import IgnoreCaseMultiValueDictionary, copy_docs
 from ..core import ReadProtocolBase, ReadWriteProtocolBase
+from ..utils import IgnoreCaseMultiValueDictionary, copy_docs
 
-from .headers import CONTENT_LENGTH, CONTENT_TYPE, CONTENT_TRANSFER_ENCODING, CONTENT_ENCODING, METHOD_CONNECT
-from .exceptions import PayloadError, WebSocketProtocolError
 from .compressors import COMPRESSION_ERRORS, get_decompressor_for
-from .http_message import RawResponseMessage, RawRequestMessage
+from .exceptions import PayloadError, WebSocketProtocolError
+from .headers import CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TRANSFER_ENCODING, CONTENT_TYPE, METHOD_CONNECT
 from .helpers import HttpVersion
-from .websocket_frame import apply_websocket_mask, WebSocketFrame
 from .helpers import HttpVersion11
+from .http_message import RawRequestMessage, RawResponseMessage
 from .mime_type import MimeType
+from .websocket_frame import WebSocketFrame, apply_websocket_mask
+
 
 HTTP_STATUS_RP = re.compile(b'HTTP/(\d)\.(\d) (\d\d\d)(?: (.*?))?\r\n')
 HTTP_REQUEST_RP = re.compile(b'([^ ]+) ([^ ]+) HTTP/(\d)\.(\d)\r\n')

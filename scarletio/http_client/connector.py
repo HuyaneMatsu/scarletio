@@ -1,43 +1,34 @@
 ﻿__all__ = ('TCPConnector',)
 
 import socket as module_socket
-from http.cookies import SimpleCookie
+import ssl as module_ssl
 from functools import partial as partial_func
+from http.cookies import SimpleCookie
 
-try:
-    import ssl as module_ssl
-except ImportError:
-    module_ssl = None
-    ssl_errors = ()
-else:
-    ssl_errors = (module_ssl.SSLError, module_ssl.CertificateError)
-    
-    SSL_CONTEXT_VERIFIED = module_ssl.create_default_context()
-    
-    SSL_CONTEXT_UNVERIFIED = module_ssl.SSLContext(module_ssl.PROTOCOL_SSLv23)
-    SSL_CONTEXT_UNVERIFIED.options |= module_ssl.OP_NO_SSLv2 | module_ssl.OP_NO_SSLv3 | module_ssl.OP_NO_COMPRESSION
-    SSL_CONTEXT_UNVERIFIED.set_default_verify_paths()
-
+from ..core import LOOP_TIME, Task, shield
 from ..utils import IgnoreCaseMultiValueDictionary
-from ..core import shield, Task, LOOP_TIME
-
-from ..web_common.http_protocol import HttpReadWriteProtocol
-from ..web_common.headers import HOST, METHOD_GET, AUTHORIZATION, PROXY_AUTHORIZATION, METHOD_CONNECT
 from ..web_common.exceptions import ProxyError
+from ..web_common.headers import AUTHORIZATION, HOST, METHOD_CONNECT, METHOD_GET, PROXY_AUTHORIZATION
 from ..web_common.helpers import is_ip_address
+from ..web_common.http_protocol import HttpReadWriteProtocol
 
 from .client_request import ClientRequest
-from .fingerprint import Fingerprint
 from .connection import Connection
+from .fingerprint import Fingerprint
+
 
 KEEP_ALIVE_TIMEOUT = 15.0
 DNS_CACHE_TIMEOUT = 10.0
 
-if module_ssl is None:
-    SSL_ALLOWED_TYPES = (type(None), )
-else:
-    SSL_ALLOWED_TYPES = (module_ssl.SSLContext, bool, Fingerprint, type(None))
+SSL_ALLOWED_TYPES = (module_ssl.SSLContext, bool, Fingerprint, type(None))
 
+ssl_errors = (module_ssl.SSLError, module_ssl.CertificateError)
+
+SSL_CONTEXT_VERIFIED = module_ssl.create_default_context()
+
+SSL_CONTEXT_UNVERIFIED = module_ssl.SSLContext(module_ssl.PROTOCOL_SSLv23)
+SSL_CONTEXT_UNVERIFIED.options |= module_ssl.OP_NO_SSLv2 | module_ssl.OP_NO_SSLv3 | module_ssl.OP_NO_COMPRESSION
+SSL_CONTEXT_UNVERIFIED.set_default_verify_paths()
 
 class ConnectorBase:
     """

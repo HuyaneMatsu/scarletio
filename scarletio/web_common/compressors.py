@@ -5,6 +5,7 @@ import zlib
 
 from .exceptions import ContentEncodingError
 
+
 try:
     import brotli
 except ImportError:

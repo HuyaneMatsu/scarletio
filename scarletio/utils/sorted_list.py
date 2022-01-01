@@ -3,6 +3,7 @@ __all__ = ('SortedList', )
 from .docs import has_docs
 from .removed_descriptor import RemovedDescriptor
 
+
 @has_docs
 class SortedList(list):
     """

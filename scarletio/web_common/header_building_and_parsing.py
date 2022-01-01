@@ -4,6 +4,7 @@ import re
 
 from .quoting import quote
 
+
 _TOKEN_RP = re.compile(r'[-!#$%&\'*+.^_`|~0-9a-zA-Z]+')
 _LIST_START_RP = re.compile('[\t ,]*')
 _SPACE_RP = re.compile('[\t ]*')

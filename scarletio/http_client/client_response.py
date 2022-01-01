@@ -1,12 +1,13 @@
 __all__ = ()
 
-import re, codecs
-from http.cookies import SimpleCookie, CookieError, Morsel
+import codecs, re
+from http.cookies import CookieError, SimpleCookie
 
-from ..utils import IgnoreCaseMultiValueDictionary, from_json
 from ..core import Task
-from ..web_common.headers import SET_COOKIE, CONNECTION, CONTENT_TYPE
+from ..utils import from_json
+from ..web_common.headers import CONNECTION, CONTENT_TYPE, SET_COOKIE
 from ..web_common.multipart import MimeType
+
 
 try:
     import cchardet as chardet

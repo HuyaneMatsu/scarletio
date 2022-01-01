@@ -2,6 +2,7 @@ __all__ = ()
 
 from .compressors import ZLIB_COMPRESSOR, ZLIB_MAX_WBITS
 
+
 WRITE_CHUNK_LIMIT = 65536
 
 class HTTPStreamWriter:

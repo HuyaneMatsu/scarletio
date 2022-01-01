@@ -1,6 +1,7 @@
 __all__ = ()
 
-from ssl import MemoryBIO, SSL_ERROR_WANT_READ, SSLError, CertificateError, SSL_ERROR_WANT_WRITE, SSL_ERROR_SYSCALL
+from ssl import CertificateError, MemoryBIO, SSLError, SSL_ERROR_SYSCALL, SSL_ERROR_WANT_READ, SSL_ERROR_WANT_WRITE
+
 
 SSL_PIPE_STATE_UNWRAPPED = 0
 SSL_PIPE_STATE_DO_HANDSHAKE = 1

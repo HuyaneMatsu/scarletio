@@ -3,8 +3,10 @@ __all__ = ('create_event_loop', 'create_future', 'create_task', 'get_event_loop'
 from threading import current_thread, enumerate as list_threads
 
 from ..utils import WeakItemDictionary
+
 from .event_loop import EventThread
-from .traps import Task, Future
+from .traps import Future, Task
+
 
 THREAD_TO_EVENT_LOOP_REFERENCE = WeakItemDictionary()
 

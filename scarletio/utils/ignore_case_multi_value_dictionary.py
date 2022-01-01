@@ -1,8 +1,9 @@
 __all__ = ('IgnoreCaseMultiValueDictionary', )
 
 from .docs import has_docs
-from .multi_value_dictionary import MultiValueDictionary
 from .ignore_case_string import IgnoreCaseString
+from .multi_value_dictionary import MultiValueDictionary
+
 
 @has_docs
 class IgnoreCaseMultiValueDictionary(MultiValueDictionary):

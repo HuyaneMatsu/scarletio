@@ -2,6 +2,7 @@ __all__ = ()
 
 from hashlib import md5, sha1, sha256
 
+
 HASH_FUNCTION_BY_DIGEST_LENGTH = {
     16: md5,
     20: sha1,

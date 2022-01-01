@@ -2,6 +2,7 @@ __all__ = ('quote', 'unquote',)
 
 from string import ascii_letters, ascii_lowercase, digits
 
+
 BINARY_ASCII_LOWERCASE = frozenset(ascii_lowercase.encode('ascii'))
 BINARY_PERCENTAGE_ALLOWED = frozenset((f'%{index:02X}'.encode('ascii') for index in range(256)))
 GEN_DELIMITERS = frozenset(':/?#[]@')

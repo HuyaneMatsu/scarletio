@@ -1,8 +1,9 @@
 __all__ = ('WeakMap',)
 
 from .docs import has_docs
-from .weak_core import add_to_pending_removals, WeakReferer
 from .removed_descriptor import RemovedDescriptor
+from .weak_core import WeakReferer, add_to_pending_removals
+
 
 @has_docs
 class _WeakMapCallback:

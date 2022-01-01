@@ -3,9 +3,10 @@ __all__ = ('CallableAnalyzer', 'RichAnalyzer')
 import sys
 from types import FunctionType
 
-from .method_like import MethodLike
 from .async_utils import is_coroutine_function, is_coroutine_generator_function
 from .code import CO_VARARGS, CO_VARKEYWORDS
+from .method_like import MethodLike
+
 
 IS_PYTHON_STULTUS = sys.version_info >= (3, 10, 0)
 

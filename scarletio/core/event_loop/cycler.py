@@ -3,6 +3,7 @@ __all__ = ('Cycler',)
 from threading import current_thread
 
 from ...utils import CallableAnalyzer
+
 from ..time import LOOP_TIME
 from ..traps import Task
 

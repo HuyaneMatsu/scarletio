@@ -1,17 +1,17 @@
 __all__ = ('modulize',)
 
-from types import FunctionType, MappingProxyType, GetSetDescriptorType, ModuleType
-NoneType = type(None)
-
 import sys
+from types import FunctionType, GetSetDescriptorType, MappingProxyType, ModuleType
+
+from .docs import has_docs
+
+
+NoneType = type(None)
 
 try:
     from _weakref import ref as WeakrefType
 except ImportError:
     from weakref import ref as WeakrefType
-
-from .docs import has_docs
-
 
 # This 2 type can be function
 WrapperDescriptorType = type(object.__ne__)

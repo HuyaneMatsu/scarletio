@@ -2,6 +2,7 @@ __all__ = ('WebSocketFrame', )
 
 from .exceptions import WebSocketProtocolError
 
+
 WEBSOCKET_OPERATION_CONTINUOUS = 0
 WEBSOCKET_OPERATION_TEXT = 1
 WEBSOCKET_OPERATION_BINARY = 2

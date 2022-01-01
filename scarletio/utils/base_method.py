@@ -1,8 +1,9 @@
 __all__ = ('BaseMethodDescriptor', 'BaseMethodType',)
 
 from .docs import has_docs
-from .properties import docs_property
 from .method_like import MethodLike
+from .properties import docs_property
+
 
 @has_docs
 class BaseMethodType(MethodLike):

@@ -1,15 +1,16 @@
 # Experimenting with web servers, nothing worthy
 # WORK IN PROGRESS
-import functools, http, re, sys, os, ntpath
-from threading import current_thread
 
-from uuid import UUID
+import functools, http, ntpath, os, re, sys
 from importlib.util import find_spec
+from threading import current_thread
+from uuid import UUID
 
-from ..web_common import URL, HttpReadWriteProtocol, PayloadError, HttpVersion11
-from ..utils import IgnoreCaseMultiValueDictionary, CallableAnalyzer
+from ..core import CancelledError, EventThread, Future, Task, WaitTillAll
+from ..utils import CallableAnalyzer, IgnoreCaseMultiValueDictionary
+from ..web_common import HttpReadWriteProtocol, HttpVersion11, PayloadError, URL
 from ..web_common.headers import METHOD_ALL, METHOD_GET
-from ..core import EventThread, WaitTillAll, Future, Task, CancelledError
+
 
 INTERNAL_SERVER_ERROR = http.HTTPStatus.INTERNAL_SERVER_ERROR
 BAD_REQUEST = http.HTTPStatus.BAD_REQUEST

@@ -5,8 +5,8 @@ from urllib.parse import urlencode
 
 from ..utils import MultiValueDictionary
 
-from .headers import CONTENT_TYPE, CONTENT_TRANSFER_ENCODING, CONTENT_LENGTH
-from .multipart import MultipartWriter, create_payload, BytesPayload
+from .headers import CONTENT_LENGTH, CONTENT_TRANSFER_ENCODING, CONTENT_TYPE
+from .multipart import BytesPayload, MultipartWriter, create_payload
 
 
 class Formdata:

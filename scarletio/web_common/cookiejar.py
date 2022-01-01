@@ -1,15 +1,16 @@
 __all__ = ('CookieJar', )
 
 import re
-from datetime import datetime, timezone
 from collections import defaultdict
+from datetime import datetime, timezone
 from http.cookies import Morsel, SimpleCookie
 from math import ceil
 
 from ..core import LOOP_TIME
 
-from .url import URL
 from .helpers import is_ip_address
+from .url import URL
+
 
 DATE_TOKENS_RP = re.compile('[\x09\x20-\x2F\x3B-\x40\x5B-\x60\x7B-\x7E]*(?P<token>[\x00-\x08\x0A-\x1F\d:a-zA-Z\x7F-\xFF]+)')
 DATE_HMS_TIME_RP = re.compile('(\d{1,2}):(\d{1,2}):(\d{1,2})')

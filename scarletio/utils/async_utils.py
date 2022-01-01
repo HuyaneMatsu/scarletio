@@ -2,10 +2,11 @@ __all__ = ('is_awaitable', 'is_coroutine', 'is_coroutine_function', 'is_coroutin
     'is_coroutine_generator_function', 'to_coroutine',)
 
 import sys
-from types import GeneratorType, CoroutineType, AsyncGeneratorType, MethodType, FunctionType
+from types import AsyncGeneratorType, CoroutineType, FunctionType, GeneratorType, MethodType
 
 from .code import CO_ASYNC_GENERATOR, CO_COROUTINE_ALL, CO_GENERATOR, CO_ITERABLE_COROUTINE
-from .docs import set_docs, has_docs
+from .docs import has_docs, set_docs
+
 
 @has_docs
 def is_coroutine_function(func):

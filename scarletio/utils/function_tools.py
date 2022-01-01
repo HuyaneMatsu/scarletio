@@ -5,6 +5,7 @@ from types import FunctionType
 from .docs import has_docs
 from .trace import ignore_frame
 
+
 ignore_frame(__spec__.origin, '__call__', 'return self.func(*self.args)', )
 ignore_frame(__spec__.origin, '__call__', 'return self.func(*self.args, **kwargs)', )
 

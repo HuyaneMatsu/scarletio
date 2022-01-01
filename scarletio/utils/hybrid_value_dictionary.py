@@ -1,9 +1,10 @@
 __all__ = ('HybridValueDictionary', )
 
-from .docs import has_docs
-from .weak_core import is_weakreferable, add_to_pending_removals, KeyedReferer
-from .weak_value_dictionary import _WeakValueDictionaryCallback
 from .dict_update_iterable_iterator import _dict_update_iterable_iterator
+from .docs import has_docs
+from .weak_core import KeyedReferer, add_to_pending_removals, is_weakreferable
+from .weak_value_dictionary import _WeakValueDictionaryCallback
+
 
 @has_docs
 class _HybridValueDictionaryKeyIterator:

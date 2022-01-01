@@ -2,6 +2,7 @@ __all__ = ('cached_property', 'class_property', 'docs_property', 'module_propert
 
 from .docs import has_docs
 
+
 NoneType = type(None)
 
 

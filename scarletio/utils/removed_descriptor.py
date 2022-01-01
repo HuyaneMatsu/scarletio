@@ -2,6 +2,7 @@ __all__ = ('RemovedDescriptor', )
 
 from .docs import has_docs
 
+
 @has_docs
 class RemovedDescriptor:
     """

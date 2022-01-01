@@ -1,18 +1,19 @@
 __all__ = ('create_payload', )
 
-import base64, binascii, os, re, mimetypes as mime_types, uuid
-from io import StringIO, TextIOBase, BytesIO, BufferedRandom, IOBase, BufferedReader
+import base64, binascii, mimetypes as mime_types, os, re, uuid
+from io import BufferedRandom, BufferedReader, BytesIO, IOBase, StringIO, TextIOBase
 from urllib.parse import urlencode as url_encode
 
-from ..utils import IgnoreCaseMultiValueDictionary, to_json
 from ..core import AsyncIO
+from ..utils import IgnoreCaseMultiValueDictionary, to_json
 
-from .quoting import unquote
-from .headers import CONTENT_DISPOSITION, CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TRANSFER_ENCODING, CONTENT_TYPE
-from .header_building_and_parsing import CHARS, build_content_disposition_header, TOKENS
-from .compressors import ZLIB_COMPRESSOR, BROTLI_COMPRESSOR, ZLIB_MAX_WBITS
+from .compressors import BROTLI_COMPRESSOR, ZLIB_COMPRESSOR, ZLIB_MAX_WBITS
 from .exceptions import ContentEncodingError
+from .header_building_and_parsing import CHARS, TOKENS, build_content_disposition_header
+from .headers import CONTENT_DISPOSITION, CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TRANSFER_ENCODING, CONTENT_TYPE
 from .mime_type import MimeType
+from .quoting import unquote
+
 
 BIG_CHUNK_LIMIT = 1 << 16
 DEFAULT_CONTENT_TYPE = 'application/octet-stream'

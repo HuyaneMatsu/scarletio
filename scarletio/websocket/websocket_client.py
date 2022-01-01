@@ -4,16 +4,19 @@ import hashlib
 from base64 import b64encode
 from os import urandom
 
+from ..core import AsyncQueue, Future, Lock
 from ..utils import IgnoreCaseMultiValueDictionary, include
-from ..core import Future, AsyncQueue, Lock
+from ..web_common import BasicAuth, HttpVersion11, InvalidHandshake, URL
+from ..web_common.header_building_and_parsing import (
+    build_extensions, build_subprotocols, parse_connections, parse_extensions, parse_subprotocols, parse_upgrades
+)
+from ..web_common.headers import (
+    AUTHORIZATION, CONNECTION, HOST, METHOD_GET, ORIGIN, SEC_WEBSOCKET_ACCEPT, SEC_WEBSOCKET_EXTENSIONS,
+    SEC_WEBSOCKET_KEY, SEC_WEBSOCKET_PROTOCOL, SEC_WEBSOCKET_VERSION, UPGRADE
+)
 
-from ..web_common.headers import CONNECTION, SEC_WEBSOCKET_KEY, AUTHORIZATION, SEC_WEBSOCKET_VERSION, \
-    SEC_WEBSOCKET_EXTENSIONS, SEC_WEBSOCKET_PROTOCOL, HOST, ORIGIN, SEC_WEBSOCKET_ACCEPT, UPGRADE, METHOD_GET
-from ..web_common.header_building_and_parsing import build_subprotocols, build_extensions, parse_subprotocols, \
-    parse_upgrades, parse_connections, parse_extensions
-from ..web_common import InvalidHandshake, URL, HttpVersion11, BasicAuth
+from .websocket_common_protocol import WEBSOCKET_KEY, WebSocketCommonProtocol
 
-from .websocket_common_protocol import WebSocketCommonProtocol, WEBSOCKET_KEY
 
 HTTPClient = include('HTTPClient')
 

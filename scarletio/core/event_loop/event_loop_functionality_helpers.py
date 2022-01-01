@@ -1,11 +1,13 @@
 __all__ = ()
 
+import socket as module_socket
 import sys
 from threading import current_thread
-import socket as module_socket
+
+from ...utils import DOCS_ENABLED, docs_property, include
 
 from ..traps import Task
-from ...utils import include, docs_property, DOCS_ENABLED
+
 
 EventThread = include('EventThread')
 

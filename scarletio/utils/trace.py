@@ -1,7 +1,8 @@
 __all__ = ('ignore_frame', 'render_exception_into', 'render_frames_into', 'should_ignore_frame',)
 
-import reprlib, linecache
-from types import GeneratorType, CoroutineType, MethodType
+import linecache, reprlib
+from types import CoroutineType, GeneratorType, MethodType
+
 
 IGNORED_FRAME_LINES = {}
 

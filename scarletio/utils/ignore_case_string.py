@@ -1,7 +1,9 @@
 __all__ = ('IgnoreCaseString', )
 
 import sys
+
 from .docs import has_docs
+
 
 @has_docs
 class IgnoreCaseString(str):

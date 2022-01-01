@@ -1,34 +1,39 @@
 __all__ = ('EventThread', )
 
-import sys, errno, weakref, subprocess, os
+import errno, os, subprocess, sys, weakref
 import socket as module_socket
-from functools import partial as partial_func
-from selectors import DefaultSelector, EVENT_WRITE, EVENT_READ
-from threading import current_thread, Thread
-from heapq import heappop, heappush
 from collections import deque
+from functools import partial as partial_func
+from heapq import heappop, heappush
+from itertools import chain
+from selectors import DefaultSelector, EVENT_READ, EVENT_WRITE
 from ssl import SSLContext, create_default_context
 from stat import S_ISSOCK
-from itertools import chain
+from threading import Thread, current_thread
 from types import MethodType
 
-from ...utils import alchemy_incendiary, DOCS_ENABLED, export, is_coroutine, IS_UNIX, copy_docs
+from ...utils import DOCS_ENABLED, IS_UNIX, alchemy_incendiary, copy_docs, export, is_coroutine
 from ...utils.trace import render_exception_into
 
-from ..traps import Future, Task, Gatherer, FutureAsyncWrapper, WaitTillFirst, WaitTillAll
-from ..time import LOOP_TIME, LOOP_TIME_RESOLUTION
-from .event_loop_functionality_helpers import _HAS_IPv6, _is_stream_socket, _set_reuse_port, _ip_address_info, \
-    EventThreadRunDescriptor
-from .event_thread_type import EventThreadType
-from .handles import Handle, TimerHandle, TimerWeakHandle
-from .event_thread_suspender import ThreadSuspenderContext
-from .server import Server
-from .executor import Executor
-from ..protocols_and_transports import ReadWriteProtocolBase, SocketTransportLayer, DatagramSocketTransportLayer, \
-    SSLBidirectionalTransportLayer, UnixReadPipeTransportLayer, UnixWritePipeTransportLayer
 from ..exceptions import CancelledError
+from ..protocols_and_transports import (
+    DatagramSocketTransportLayer, ReadWriteProtocolBase, SSLBidirectionalTransportLayer, SocketTransportLayer,
+    UnixReadPipeTransportLayer, UnixWritePipeTransportLayer
+)
 from ..subprocess import AsyncProcess
+from ..time import LOOP_TIME, LOOP_TIME_RESOLUTION
+from ..traps import Future, FutureAsyncWrapper, Gatherer, Task, WaitTillAll, WaitTillFirst
+
 from .cycler import Cycler
+from .event_loop_functionality_helpers import (
+    EventThreadRunDescriptor, _HAS_IPv6, _ip_address_info, _is_stream_socket, _set_reuse_port
+)
+from .event_thread_suspender import ThreadSuspenderContext
+from .event_thread_type import EventThreadType
+from .executor import Executor
+from .handles import Handle, TimerHandle, TimerWeakHandle
+from .server import Server
+
 
 @export
 class EventThread(Executor, Thread, metaclass=EventThreadType):

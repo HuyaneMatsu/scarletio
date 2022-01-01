@@ -2,6 +2,7 @@ __all__ = ('DOCS_ENABLED', 'copy_docs',  'has_docs', 'set_docs', )
 
 from functools import partial as partial_func
 
+
 # Future reference
 DOCS_ENABLED = True
 

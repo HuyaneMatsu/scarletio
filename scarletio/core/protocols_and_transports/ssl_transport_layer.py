@@ -1,15 +1,18 @@
 __all__ = ('SSLBidirectionalTransportLayer',)
 
 import reprlib
-from ssl import create_default_context as create_default_ssl_context, SSLError
 from collections import deque
+from ssl import SSLError, create_default_context as create_default_ssl_context
 
 from ...utils import copy_docs
+
 from .abstract import AbstractBidirectionalTransportLayerBase
-from .transport_layer import TransportLayerBase
+from .extra_info import (
+    EXTRA_INFO_NAME_CIPHER, EXTRA_INFO_NAME_COMPRESSION, EXTRA_INFO_NAME_PEER_CERTIFICATION,
+    EXTRA_INFO_NAME_SSL_CONTEXT, EXTRA_INFO_NAME_SSL_OBJECT, get_has_extra_info, set_extra_info
+)
 from .ssl_pipe import SSLPipe
-from .extra_info import EXTRA_INFO_NAME_SSL_CONTEXT, EXTRA_INFO_NAME_SSL_OBJECT, EXTRA_INFO_NAME_PEER_CERTIFICATION, \
-    EXTRA_INFO_NAME_CIPHER, EXTRA_INFO_NAME_COMPRESSION, set_extra_info, get_has_extra_info
+from .transport_layer import TransportLayerBase
 
 
 class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTransportLayerBase):

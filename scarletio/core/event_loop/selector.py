@@ -1,8 +1,9 @@
 __all__ = ()
 
 import sys
-from threading import current_thread
 from selectors import DefaultSelector
+from threading import current_thread
+
 
 if sys.platform == 'win32':
     # If windows select raises OSError, we cannot do anything, but if it it raises ValueError, we can increases

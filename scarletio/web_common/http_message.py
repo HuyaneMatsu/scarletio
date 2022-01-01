@@ -1,6 +1,7 @@
 __all__ = ()
 
-from .headers import CONNECTION, TRANSFER_ENCODING, CONTENT_ENCODING
+from .headers import CONNECTION, CONTENT_ENCODING, TRANSFER_ENCODING
+
 
 class RawMessage:
     """

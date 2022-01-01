@@ -3,6 +3,7 @@ __all__ = ('RichAttributeErrorBaseType',)
 from difflib import get_close_matches
 from itertools import permutations as permutate
 
+
 EXCEPTION_MESSAGE_CACHE = {}
 
 LOCKS = set()

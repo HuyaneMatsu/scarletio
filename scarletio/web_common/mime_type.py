@@ -2,6 +2,7 @@ __all__ = ('MimeType',)
 
 from ..utils import MultiValueDictionary
 
+
 class MimeType:
     # Parses a MIME type into its components
     __slots__ = ('parameters', 'sub_type', 'suffix', 'type', )

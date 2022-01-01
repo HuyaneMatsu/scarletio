@@ -2,6 +2,7 @@ __all__ = ()
 
 from ..utils import IgnoreCaseString
 
+
 METHOD_ANY = '*'
 METHOD_CONNECT = 'CONNECT'
 METHOD_HEAD = 'HEAD'

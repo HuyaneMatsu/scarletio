@@ -1,12 +1,15 @@
 __all__ = ('UnixReadPipeTransportLayer', 'UnixWritePipeTransportLayer')
 
-import os, sys, errno
+import errno, os, sys
 from stat import S_ISCHR, S_ISFIFO, S_ISSOCK
 
 from ...utils import copy_docs
+
 from ..traps import skip_ready_cycle
+
 from .extra_info import EXTRA_INFO_NAME_PIPE, set_extra_info
 from .transport_layer import TransportLayerBase
+
 
 MAX_READ_SIZE = 262144
 IS_AIX = sys.platform.startswith('aix')

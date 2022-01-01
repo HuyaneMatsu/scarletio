@@ -1,20 +1,25 @@
 __all__ = ('WebSocketCommonProtocol',)
 
 import hashlib
-from base64 import b64encode, b64decode
+from base64 import b64decode, b64encode
 from binascii import Error as BinasciiError
 from email.utils import formatdate
 
-from ..utils import is_coroutine, IgnoreCaseMultiValueDictionary
-from ..core import Future, Task, AsyncQueue, CancelledError, Lock
+from ..core import AsyncQueue, CancelledError, Future, Lock, Task
+from ..utils import IgnoreCaseMultiValueDictionary, is_coroutine
+from ..web_common import AbortHandshake, InvalidHandshake, InvalidOrigin, InvalidUpgrade, PayloadError
+from ..web_common.header_building_and_parsing import (
+    build_extensions, parse_connections, parse_extensions, parse_subprotocols, parse_upgrades
+)
+from ..web_common.headers import (
+    CONNECTION, CONTENT_LENGTH, CONTENT_TYPE, DATE, ORIGIN, SEC_WEBSOCKET_ACCEPT, SEC_WEBSOCKET_EXTENSIONS,
+    SEC_WEBSOCKET_KEY, SEC_WEBSOCKET_PROTOCOL, SEC_WEBSOCKET_VERSION, SERVER, UPGRADE
+)
 
-from ..web_common.headers import CONNECTION, SEC_WEBSOCKET_KEY, SEC_WEBSOCKET_VERSION, SEC_WEBSOCKET_EXTENSIONS, \
-    SEC_WEBSOCKET_PROTOCOL, ORIGIN, SEC_WEBSOCKET_ACCEPT, UPGRADE, DATE, CONTENT_TYPE, SERVER, CONTENT_LENGTH
-from ..web_common.header_building_and_parsing import build_extensions, parse_subprotocols, parse_upgrades, \
-    parse_connections, parse_extensions
-from ..web_common import PayloadError, InvalidUpgrade, AbortHandshake, InvalidHandshake, InvalidOrigin
-from .websocket_common_protocol import WebSocketCommonProtocol, SERVICE_UNAVAILABLE, SWITCHING_PROTOCOLS, \
-    INTERNAL_SERVER_ERROR, BAD_REQUEST, FORBIDDEN, UPGRADE_REQUIRED, WEBSOCKET_KEY
+from .websocket_common_protocol import (
+    BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE, SWITCHING_PROTOCOLS, UPGRADE_REQUIRED,
+    WEBSOCKET_KEY, WebSocketCommonProtocol
+)
 
 
 class WebSocketServerProtocol(WebSocketCommonProtocol):

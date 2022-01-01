@@ -1,13 +1,14 @@
 __all__ = ('WeakCallable', 'WeakHasher', 'WeakReferer', 'is_weakreferable', 'weak_method',)
 
+from .compact import NEEDS_DUMMY_INIT
+from .docs import has_docs
+from .method_like import MethodLike
+
 try:
     from _weakref import ref as WeakrefType
 except ImportError:
     from weakref import ref as WeakrefType
 
-from .docs import has_docs
-from .compact import NEEDS_DUMMY_INIT
-from .method_like import MethodLike
 
 @has_docs
 def is_weakreferable(object_):
