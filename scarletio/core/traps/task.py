@@ -290,7 +290,9 @@ class Task(Future):
                 extracted = ['Stack for ', repr(self), ' (most recent call last):\n']
                 extracted = render_frames_into(frames, extend=extracted)
                 if recursive:
-                    extracted.append('Last frame is a repeat from a frame above. Rest of the recursive part is not rendered.')
+                    extracted.append(
+                        'Last frame is a repeat from a frame above. Rest of the recursive part is not rendered.'
+                    )
             else:
                 extracted = ['No stack for ', repr(self), '\n']
         else:

@@ -1,7 +1,5 @@
 __all__ = ('enter_executor',)
 
-from types import GeneratorType
-
 from threading import current_thread
 
 from ...utils import ignore_frame, include
@@ -201,46 +199,15 @@ class enter_executor:
                     break
                 
                 else:
-                    try:
-                        blocking = result._blocking
-                    except AttributeError:
-                        if result is None:
-                            # bare yield relinquishes control for one event loop iteration.
-                            continue
-                        
-                        elif isinstance(result, GeneratorType):
-                            #Yielding a generator is just wrong.
-                            exception = RuntimeError(f'`yield` was used instead of `yield from` in '
-                                f'{self.__class__.__name__} {self!r} with `{result!r}`')
-                            continue
-                            
-                        else:
-                            # yielding something else is an error.
-                            exception = RuntimeError(f'{self.__class__.__name__} got bad yield: `{result!r}`')
-                            continue
+                    if isinstance(result, Future) and result._blocking:
+                        result._blocking = False
+                        local_waited_future = result
+                        if task._must_cancel:
+                            if local_waited_future.cancel():
+                                task._must_cancel = False
                     else:
-                        if blocking:
-                            if loop is not result._loop:
-                                exception = RuntimeError(f'{self.__class__.__name__} {self!r} got a Future {result!r} '
-                                    f'attached to a different loop')
-                                continue
-                            
-                            elif result is self:
-                                exception = RuntimeError(f'{self.__class__.__name__} cannot await on itself: {self!r}')
-                                continue
-                            
-                            else:
-                                result._blocking = False
-                                local_waited_future = result
-                                if task._must_cancel:
-                                    if local_waited_future.cancel():
-                                        task._must_cancel = False
-                                
-                                continue
-                        else:
-                            exception = RuntimeError(f'`yield` was used instead of `yield from` in task {self!r} with '
-                                f'{result!r}')
-                            continue
+                        continue
+        
         finally:
             task.remove_done_callback(self._cancel_callback)
             self = None
