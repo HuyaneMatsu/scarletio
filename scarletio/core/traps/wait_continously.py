@@ -53,7 +53,7 @@ class WaitContinuously(WaitTillFirst):
     _last_done : `None`, ``Future``
         The last done future or task of the ``WaitContinuously``.
     """
-    __slots__ = ('_last_done')
+    __slots__ = ('_last_done',)
     
     def __new__(cls, futures, loop):
         """

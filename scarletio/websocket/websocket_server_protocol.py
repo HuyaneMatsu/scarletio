@@ -155,8 +155,10 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
     """
     is_client = False
     
-    __slots__ = ('available_extensions', 'available_subprotocols', 'extra_response_headers', 'handler', 'handler_task',
-        'origin', 'origin', 'request_processor', 'server', 'subprotocol_selector', 'request', 'response_headers')
+    __slots__ = (
+        'available_extensions', 'available_subprotocols', 'extra_response_headers', 'handler', 'handler_task',
+        'origin', 'origin', 'request_processor', 'server', 'subprotocol_selector', 'request', 'response_headers'
+    )
     
     def __new__(cls, server):
         """

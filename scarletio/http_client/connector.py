@@ -58,8 +58,10 @@ class ConnectorBase:
     -----
     Connectors support weakreferencing.
     """
-    __slots__ = ('__weakref__', 'acquired_protocols', 'acquired_protocols_per_host', 'alive_protocols_per_host',
-        'cleanup_handle', 'closed',  'cookies', 'force_close', 'loop', )
+    __slots__ = (
+        '__weakref__', 'acquired_protocols', 'acquired_protocols_per_host', 'alive_protocols_per_host',
+        'cleanup_handle', 'closed',  'cookies', 'force_close', 'loop'
+    )
     
     def __new__(cls, loop, force_close=False,):
         """
@@ -353,8 +355,10 @@ class HostInfo:
     
     def __repr__(self):
         """Returns the host info's representation."""
-        return f'<{self.__class__.__name__}, hostname={self.hostname!r}, host={self.host!r}, port={self.port!r}, ' \
-               f'family={self.family!r}, protocol={self.protocol!r}, flags={self.flags!r}>'
+        return (
+            f'<{self.__class__.__name__}, hostname={self.hostname!r}, host={self.host!r}, port={self.port!r}, '
+            f'family={self.family!r}, protocol={self.protocol!r}, flags={self.flags!r}>'
+        )
     
     @classmethod
     def from_ip(cls, host, port, family):

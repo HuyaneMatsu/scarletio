@@ -56,9 +56,11 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
         Ensured data queued up to be written. Each element contains a tuple of the data to write and an offset till
         write from.
     """
-    __slots__ = ('_call_connection_made', '_closing', '_connection_made_waiter', '_in_handshake', '_protocol',
+    __slots__ = (
+        '_call_connection_made', '_closing', '_connection_made_waiter', '_in_handshake', '_protocol',
         '_server_host_name', '_server_side', '_session_established', '_ssl_context', '_ssl_pipe', '_transport',
-        '_write_backlog')
+        '_write_backlog'
+    )
     
     def __new__(cls, loop, protocol, ssl_context, connection_made_waiter, server_side, server_host_name,
             call_connection_made):

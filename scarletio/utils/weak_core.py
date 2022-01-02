@@ -227,6 +227,7 @@ class weak_method(WeakReferer, MethodLike):
         The amount of reserved parameters by weak_method.
     """
     __slots__ = ('__func__',)
+    
     __reserved_argcount__ = 1
     
     @has_docs

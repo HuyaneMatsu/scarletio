@@ -26,8 +26,9 @@ class Server:
     ssl_context : `None`, `ssl.SSLContext`
         If ssl is enabled for the connections, then set as `ssl.SSLContext`.
     """
-    __slots__ = ('active_count', 'backlog', 'close_waiters', 'loop', 'protocol_factory', 'serving', 'sockets',
-        'ssl_context', )
+    __slots__ = (
+        'active_count', 'backlog', 'close_waiters', 'loop', 'protocol_factory', 'serving', 'sockets', 'ssl_context'
+    )
     
     def __init__(self, loop, sockets, protocol_factory, ssl_context, backlog):
         """

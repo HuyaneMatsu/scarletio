@@ -81,6 +81,7 @@ class module_property:
         The module where the `module_property` was created.
     """
     __slots__ = ('fget', 'module', )
+    
     def __new__(cls, fget):
         module = getattr(fget, '__module__', None)
         if module is None:

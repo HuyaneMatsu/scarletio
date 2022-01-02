@@ -83,8 +83,10 @@ class SSLPipe:
         
         Note, that ``.state`` is checked by memory address and not by value.
     """
-    __slots__ = ('_handshake_callback', '_incoming', '_need_ssl_data', '_outgoing', '_server_host_name', '_server_side',
-        '_shutdown_callback', '_ssl_context', '_ssl_object', '_state')
+    __slots__ = (
+        '_handshake_callback', '_incoming', '_need_ssl_data', '_outgoing', '_server_host_name', '_server_side',
+        '_shutdown_callback', '_ssl_context', '_ssl_object', '_state'
+    )
     
     def __init__(self, context, server_side, server_host_name):
         """

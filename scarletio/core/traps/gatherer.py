@@ -67,6 +67,7 @@ class GathererCallback:
         The gathering future
     """
     __slots__ = ('_parent',)
+    
     def __init__(self, parent):
         """
         Creates a new gathering future callback.

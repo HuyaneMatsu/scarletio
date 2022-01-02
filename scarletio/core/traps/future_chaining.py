@@ -100,6 +100,7 @@ class _ChainRemover:
         The source future.
     """
     __slots__ = ('target',)
+    
     def __init__(self, target):
         self.target = target
     

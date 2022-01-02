@@ -32,6 +32,7 @@ class TaskLocal:
         The entered task.
     """
     __slots__ = ('_kwargs', '_task', )
+    
     def __new__(cls, **kwargs):
         """
         Creates a new ``TaskLocal``.
@@ -282,6 +283,7 @@ class HTTPServer:
         Asynchronous server instance. Set meanwhile the websocket server is running.
     """
     __slots__ = ('close_connection_task', 'handlers', 'loop', 'server')
+    
     async def __new__(cls, loop, host, port, *, ssl=None, **server_kwargs):
         """
         Creates a new ``HTTPServer`` with the given parameters.
@@ -447,6 +449,7 @@ class Route:
         Dynamic parameter queried from the urls.
     """
     __slots__ = ('parameters', 'rule', )
+    
     def __init__(self, rule):
         """
         Creates a new ``Route`` with the given `func`.
@@ -943,8 +946,11 @@ class PathRouter:
     route_end_path_all : `None`, `tuple` (``Rule``, `str`)
         ``.route_end_path`` version, what accepts accepts all type of request methods.
     """
-    __slots__ = ('route_end', 'route_end_all', 'route_end_path', 'route_end_path_all', 'route_step_paths',
-        'route_step_validated')
+    __slots__ = (
+        'route_end', 'route_end_all', 'route_end_path', 'route_end_path_all', 'route_step_paths',
+        'route_step_validated'
+    )
+    
     def __init__(self):
         """
         Creates a new ``PathRouter``.
@@ -2042,8 +2048,11 @@ class RuleFolder:
     view_func : `async-callable`
         The function to call when serving a request to the provided endpoint.
     """
-    __slots__ = ('endpoint', 'keyword_parameter_names', 'kwargs_parameter_supported', 'positional_parameter_names',
-        'rules', 'view_func')
+    __slots__ = (
+        'endpoint', 'keyword_parameter_names', 'kwargs_parameter_supported', 'positional_parameter_names', 'rules',
+        'view_func'
+    )
+    
     def __init__(self, view_func, positional_parameter_names, keyword_parameter_names, kwargs_parameter_supported,
             endpoint):
         """
@@ -2239,9 +2248,10 @@ class Rule:
     view_func : `async-callable`
         The function to call when serving a request to the provided endpoint.
     """
-    __slots__ = ('application', 'blueprint_state_stack', 'endpoint', 'keyword_parameter_names',
-        'kwargs_parameter_supported', 'parameters', 'positional_parameter_names', 'request_methods', 'rule',
-        'subdomain', 'view_func')
+    __slots__ = (
+        'application', 'blueprint_state_stack', 'endpoint', 'keyword_parameter_names', 'kwargs_parameter_supported',
+        'parameters', 'positional_parameter_names', 'request_methods', 'rule', 'subdomain', 'view_func'
+    )
     
     def __init__(self, rule, view_func, positional_parameter_names, keyword_parameter_names,
             kwargs_parameter_supported, endpoint, request_methods, parameters, subdomain):
@@ -2703,9 +2713,11 @@ class AppBase:
         | parameters        | `dict` of (`str`, `Any`)  | Parameters parsed from the request url.       |
         +-------------------+---------------------------+-----------------------------------------------+
     """
-    __slots__ = ('after_request_functions', 'before_request_functions', 'blueprints', 'error_handler_functions',
-        'import_name', 'root_path', 'rules', 'static_folder', 'static_url_path', 'teardown_request_functions',
-        'template_context_processors', 'template_folder', 'url_default_functions', 'url_value_preprocessors',)
+    __slots__ = (
+        'after_request_functions', 'before_request_functions', 'blueprints', 'error_handler_functions', 'import_name',
+        'root_path', 'rules', 'static_folder', 'static_url_path', 'teardown_request_functions',
+        'template_context_processors', 'template_folder', 'url_default_functions', 'url_value_preprocessors'
+    )
     
     def __new__(cls, import_name, template_folder, root_path, static_folder, static_url_path):
         """
@@ -3280,6 +3292,7 @@ class BlueprintState:
         Parameters which the routes of the blueprint will get by default.
     """
     __slots__ = ('blueprint', 'url_prefix', 'subdomain', 'parameters')
+    
     def __new__(cls, blueprint, options):
         """
         Creates a new blueprint state form the given blueprint and extra options.
@@ -3452,6 +3465,7 @@ class Blueprint(AppBase):
         Parameters which the routes of the blueprint will get by default.
     """
     __slots__ = ('url_prefix', 'subdomain', 'parameters')
+    
     def __new__(cls, import_name, *, template_folder=None, root_path=None, static_folder=None,
             static_url_path=None, url_prefix=None, subdomain=None, url_defaults=None):
         """
@@ -3619,6 +3633,7 @@ class WebApp(AppBase):
         The running web-server of the webapp.
     """
     __slots__ = ('_server',)
+    
     def __new__(cls, import_name, *, template_folder=None, root_path=None, static_folder='static',
             static_url_path=None):
         """
@@ -3776,6 +3791,7 @@ class RequestHandler:
         Routers for each subdomain.
     """
     __slots__ = ('_router', '_router_by_subdomain')
+    
     def __new__(cls, application):
         """
         Creates a new ``RequestHandler``.

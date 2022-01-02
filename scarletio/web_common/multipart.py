@@ -91,6 +91,7 @@ class PayloadBase:
         The payload's size if applicable.
     """
     __slots__ = ('content_type', 'data', 'encoding', 'filename', 'headers', 'size', )
+    
     def __init__(self, data, kwargs):
         """
         Creates a new ``PayloadBase``.
@@ -598,7 +599,7 @@ class AsyncIterablePayload(PayloadBase):
     size : `None`, `int`
         The payload's size if applicable.
     """
-    __slots__ = ('_iterator')
+    __slots__ = ('_iterator',)
     
     def __init__(self, data, kwargs):
         """

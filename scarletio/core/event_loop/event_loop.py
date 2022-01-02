@@ -85,9 +85,11 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
     """
     time = LOOP_TIME
     time_resolution = LOOP_TIME_RESOLUTION
-    __slots__ = ('__dict__', '__weakref__', '_async_generators', '_async_generators_shutdown_called',
-        '_self_write_socket', '_ready', '_scheduled', '_self_read_socket', 'context', 'current_task', 'running',
-        'selector', 'should_run', 'started',)
+    __slots__ = (
+        '__dict__', '__weakref__', '_async_generators', '_async_generators_shutdown_called', '_self_write_socket',
+        '_ready', '_scheduled', '_self_read_socket', 'context', 'current_task', 'running', 'selector', 'should_run',
+        'started',
+    )
     
     def __init__(self, keep_executor_count=1):
         """

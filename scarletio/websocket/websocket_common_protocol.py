@@ -127,9 +127,11 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
     is_client : `bool` = `True`
         Whether the websocket protocol is client or server side.
     """
-    __slots__ = ('_drain_lock', 'close_code', 'close_connection_task', 'close_timeout', 'close_reason',
+    __slots__ = (
+        '_drain_lock', 'close_code', 'close_connection_task', 'close_timeout', 'close_reason',
         'connection_lost_waiter', 'extensions', 'host', 'is_ssl', 'max_queue', 'max_size', 'messages', 'pings', 'port',
-        'state', 'subprotocol', 'transfer_data_exception', 'transfer_data_task', )
+        'state', 'subprotocol', 'transfer_data_exception', 'transfer_data_task'
+    )
     
     is_client = True # placeholder for subclasses
     

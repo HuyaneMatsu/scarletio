@@ -75,9 +75,11 @@ class AsyncProcess:
     stdout : ``ReadProtocolBase``
         Asynchronous stdout implementation.
     """
-    __slots__ = ('_alive_file_descriptors', '_closed', '_connection_lost', '_drain_waiter', '_exit_waiters', '_extra',
-        '_loop', '_paused', '_pending_calls', '_subprocess_stderr_protocol', '_subprocess_stdin_protocol',
-        '_subprocess_stdout_protocol', 'process', 'process_id', 'return_code', 'stderr', 'stdin', 'stdout')
+    __slots__ = (
+        '_alive_file_descriptors', '_closed', '_connection_lost', '_drain_waiter', '_exit_waiters', '_extra', '_loop',
+        '_paused', '_pending_calls', '_subprocess_stderr_protocol', '_subprocess_stdin_protocol',
+        '_subprocess_stdout_protocol', 'process', 'process_id', 'return_code', 'stderr', 'stdin', 'stdout'
+    )
     
     async def __new__(cls, loop, process_parameters, shell, stdin, stdout, stderr, buffer_size, extra,
             process_open_kwargs):

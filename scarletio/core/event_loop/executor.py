@@ -371,6 +371,7 @@ class ExecutorThread(Thread):
         Synchronous queue of functions to execute and of their waiter future.
     """
     __slots__ = ('state', 'queue',)
+    
     def __init__(self):
         """
         Creates and start a ``ExecutorThread``.
@@ -552,6 +553,7 @@ class _ClaimEndedCallback:
         The executor thread, what is given to the parent executor when all of it's tasks are done.
     """
     __slots__ = ('executor', 'parent',)
+    
     def __init__(self, parent, executor):
         """
         Creates a new ``_ClaimEndedCallback`` with the given parameters.

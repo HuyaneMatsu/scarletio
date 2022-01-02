@@ -116,8 +116,10 @@ class SocketTransportLayerBase(TransportLayerBase):
     _socket_file_descriptor : `int`
         The transport's socket's file descriptor identifier.
     """
-    __slots__ = ('_closing', '_connection_lost', '_high_water', '_low_water', '_paused', '_protocol',
-        '_protocol_paused', '_socket', '_socket_file_descriptor',)
+    __slots__ = (
+        '_closing', '_connection_lost', '_high_water', '_low_water', '_paused', '_protocol', '_protocol_paused',
+        '_socket', '_socket_file_descriptor'
+    )
     
     def __new__(cls, loop, extra, socket, protocol, waiter):
         """

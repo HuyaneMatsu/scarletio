@@ -278,8 +278,10 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
     _protocol_paused : `bool`
         Whether ``.protocol`` is paused writing.
     """
-    __slots__ = ('_buffer', '_extra', '_high_water', '_low_water', '_closing', '_file_descriptor', '_loop', '_pipe',
-        '_protocol', '_protocol_paused')
+    __slots__ = (
+        '_buffer', '_extra', '_high_water', '_low_water', '_closing', '_file_descriptor', '_loop', '_pipe',
+        '_protocol', '_protocol_paused'
+    )
     
     async def __new__(cls, loop, pipe, protocol, extra=None):
         """

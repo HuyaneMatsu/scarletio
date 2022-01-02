@@ -228,6 +228,7 @@ class ScarletExecutor:
         equal to the ``._limit``.
     """
     __slots__ = ('_active', '_callback', '_exception', '_limit', '_loop', '_waiter', )
+    
     def __new__(cls, limit=10):
         """
         Creates a new Scarlet executor instance.

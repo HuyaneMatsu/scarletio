@@ -244,8 +244,10 @@ class CallableAnalyzer:
     real_function : `callable`
         The function wrapped by the given callable.
     """
-    __slots__ = ('args_parameter', 'parameters', 'callable', 'instance_to_async', 'kwargs_parameter',
-        'method_allocation', 'real_function', )
+    __slots__ = (
+        'args_parameter', 'parameters', 'callable', 'instance_to_async', 'kwargs_parameter', 'method_allocation',
+        'real_function'
+    )
     
     def __repr__(self):
         """Returns the callable analyzer's representation."""

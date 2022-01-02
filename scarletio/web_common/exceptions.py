@@ -1,5 +1,7 @@
-__all__ = ('AbortHandshake', 'ConnectionClosed', 'ContentEncodingError', 'HttpProcessingError', 'InvalidHandshake',
-    'InvalidOrigin', 'InvalidUpgrade', 'PayloadError', 'ProxyError', 'WebSocketProtocolError')
+__all__ = (
+    'AbortHandshake', 'ConnectionClosed', 'ContentEncodingError', 'HttpProcessingError', 'InvalidHandshake',
+    'InvalidOrigin', 'InvalidUpgrade', 'PayloadError', 'ProxyError', 'WebSocketProtocolError'
+)
 
 class PayloadError(Exception):
     """

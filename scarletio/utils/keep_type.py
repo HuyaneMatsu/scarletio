@@ -28,6 +28,7 @@ class KeepType:
         Attribute names to ignore when extending.
     """
     __slots__ = ('old_class',)
+    
     _ignored_attr_names = frozenset(('__name__', '__qualname__', '__weakref__', '__dict__', '__slots__', '__module__'))
     
     @has_docs

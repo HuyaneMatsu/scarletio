@@ -44,8 +44,10 @@ class ReadProtocolBase(AbstractProtocolBase):
     _transport : `None`, `Any`
         Asynchronous transport implementation. Is set meanwhile the protocol is alive.
     """
-    __slots__ = ('_at_eof', '_chunks', '_exception', '_loop', '_offset', '_paused', '_payload_reader',
-        '_payload_waiter', '_transport')
+    __slots__ = (
+        '_at_eof', '_chunks', '_exception', '_loop', '_offset', '_paused', '_payload_reader', '_payload_waiter',
+        '_transport'
+    )
     
     def __new__(cls, loop):
         """

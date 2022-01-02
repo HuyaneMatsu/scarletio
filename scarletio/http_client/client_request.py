@@ -58,8 +58,10 @@ class ClientRequest:
     writer : `None`, ``Task`` of ``.write_bytes``
         Payload writer task, what is present meanwhile the request's payload is sending.
     """
-    __slots__ = ('auth', 'body', 'chunked', 'compression', 'headers', 'loop', 'method', 'original_url', 'proxy_auth',
-        'proxy_url', 'response', 'ssl', 'url', 'writer',)
+    __slots__ = (
+        'auth', 'body', 'chunked', 'compression', 'headers', 'loop', 'method', 'original_url', 'proxy_auth',
+        'proxy_url', 'response', 'ssl', 'url', 'writer'
+    )
     
     def __new__(cls, loop, method, url, headers, data, params, cookies, auth, proxy_url, proxy_auth, ssl):
         """

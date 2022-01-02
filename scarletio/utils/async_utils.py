@@ -1,5 +1,7 @@
-__all__ = ('is_awaitable', 'is_coroutine', 'is_coroutine_function', 'is_coroutine_generator',
-    'is_coroutine_generator_function', 'to_coroutine',)
+__all__ = (
+    'is_awaitable', 'is_coroutine', 'is_coroutine_function', 'is_coroutine_generator',
+    'is_coroutine_generator_function', 'to_coroutine'
+)
 
 import sys
 from types import AsyncGeneratorType, CoroutineType, FunctionType, GeneratorType, MethodType

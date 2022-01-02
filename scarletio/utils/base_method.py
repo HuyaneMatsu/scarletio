@@ -26,6 +26,7 @@ class BaseMethodType(MethodLike):
         The amount of reserved parameters by BaseMethodTypes.
     """
     __slots__ = ('__base__', '__func__', '__self__', )
+    
     __reserved_argcount__ = 2
     
     @has_docs

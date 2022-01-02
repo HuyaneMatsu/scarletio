@@ -57,8 +57,10 @@ class ClientResponse:
     raw_message : `None`, ``RawResponseMessage``
         Raw received http response.
     """
-    __slots__ = ('_released', 'body', 'closed', 'connection', 'payload_waiter', 'cookies', 'headers', 'history', 'loop',
-        'method', 'status', 'url', 'writer', 'raw_message')
+    __slots__ = (
+        '_released', 'body', 'closed', 'connection', 'payload_waiter', 'cookies', 'headers', 'history', 'loop',
+        'method', 'status', 'url', 'writer', 'raw_message'
+    )
        
     def __new__(cls, request, connection):
         """
