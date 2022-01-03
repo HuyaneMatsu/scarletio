@@ -3,8 +3,10 @@ __all__ = ('ResultGatheringFuture',)
 import reprlib
 
 from ...utils.trace import format_callback
+
 from ..exceptions import InvalidStateError
-from .future import FUTURE_STATE_PENDING, FUTURE_STATE_FINISHED, Future
+
+from .future import FUTURE_STATE_FINISHED, FUTURE_STATE_PENDING, Future
 
 
 class ResultGatheringFuture(Future):

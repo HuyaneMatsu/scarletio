@@ -1,14 +1,16 @@
 __all__ = ('Task',)
 
-import sys, reprlib
-from types import CoroutineType, GeneratorType
+import reprlib, sys
 from threading import current_thread
+from types import CoroutineType, GeneratorType
 
-from ...utils import copy_docs, ignore_frame, render_frames_into, alchemy_incendiary, include
+from ...utils import alchemy_incendiary, copy_docs, ignore_frame, include, render_frames_into
 from ...utils.trace import format_callback, format_coroutine, render_exception_into
-from ..exceptions import InvalidStateError, CancelledError
-from .future import FUTURE_STATE_PENDING, FUTURE_STATE_CANCELLED, FUTURE_STATE_FINISHED, FUTURE_STATE_RETRIEVED, \
-    get_future_state_name, Future
+
+from ..exceptions import CancelledError, InvalidStateError
+
+from .future import FUTURE_STATE_FINISHED, FUTURE_STATE_PENDING, FUTURE_STATE_RETRIEVED, Future, get_future_state_name
+
 
 ignore_frame(__spec__.origin, 'result', 'raise exception',)
 ignore_frame(__spec__.origin, '__iter__', 'yield self',)

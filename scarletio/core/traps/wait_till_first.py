@@ -1,9 +1,11 @@
 __all__ = ('WaitTillFirst',)
 
 from ...utils import set_docs
+
 from ..exceptions import InvalidStateError
-from .future import FUTURE_STATE_PENDING, FUTURE_STATE_CANCELLED, FUTURE_STATE_FINISHED, FUTURE_STATE_RETRIEVED, \
-    Future
+
+from .future import FUTURE_STATE_CANCELLED, FUTURE_STATE_FINISHED, FUTURE_STATE_PENDING, FUTURE_STATE_RETRIEVED, Future
+
 
 class WaitTillFirst(Future):
     """

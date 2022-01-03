@@ -2,6 +2,7 @@ __all__ = ('WaitTillAll',)
 
 from .wait_till_first import WaitTillFirst
 
+
 class WaitTillAll(WaitTillFirst):
     """
     A future subclass, which waits till all the given tasks or futures become done. When finished, returns the `done`

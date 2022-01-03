@@ -2,9 +2,12 @@ __all__ = ('AsyncLifoQueue', 'AsyncQueue',)
 
 from collections import deque
 
-from ...utils import to_coroutine, copy_docs, copy_func, ignore_frame
+from ...utils import copy_docs, copy_func, ignore_frame, to_coroutine
+
 from ..exceptions import CancelledError
+
 from .future import Future
+
 
 ignore_frame(__spec__.origin, 'result_no_wait', 'raise exception',)
 ignore_frame(__spec__.origin, '__aexit__', 'raise exception',)

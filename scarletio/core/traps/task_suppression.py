@@ -2,10 +2,11 @@ __all__ = ('skip_ready_cycle', 'sleep')
 
 from threading import current_thread
 
-from ...utils import to_coroutine, include
+from ...utils import include, to_coroutine
 
 from .future import Future
 from .handle_cancellers import _SleepHandleCanceller
+
 
 EventThread = include('EventThread')
 

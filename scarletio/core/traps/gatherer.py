@@ -1,10 +1,12 @@
 __all__ = ('Gatherer',)
 
-from ...utils import is_awaitable, ignore_frame
-from ..exceptions import InvalidStateError
-from .future import FUTURE_STATE_PENDING, FUTURE_STATE_FINISHED
+from ...utils import ignore_frame, is_awaitable
 
+from ..exceptions import InvalidStateError
+
+from .future import FUTURE_STATE_FINISHED, FUTURE_STATE_PENDING
 from .result_gathering_future import ResultGatheringFuture
+
 
 ignore_frame(__spec__.origin, '__call__', 'raise exception',)
 ignore_frame(__spec__.origin, '__call__', 'future.result()',)

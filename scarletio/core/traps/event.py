@@ -1,6 +1,7 @@
 __all__ = ('Event', )
 
-from ...utils import to_coroutine, copy_func
+from ...utils import copy_func, to_coroutine
+
 from .future import Future
 
 

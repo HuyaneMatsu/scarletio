@@ -1,7 +1,9 @@
 __all__ = ('shield',)
 
 from ...utils import set_docs
-from .future import FUTURE_STATE_PENDING, FUTURE_STATE_FINISHED, FUTURE_STATE_RETRIEVED, Future
+
+from .future import FUTURE_STATE_FINISHED, FUTURE_STATE_PENDING, FUTURE_STATE_RETRIEVED, Future
+
 
 class _FutureChainer:
     """

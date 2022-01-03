@@ -3,9 +3,12 @@ __all__ = ('enter_executor',)
 from threading import current_thread
 
 from ...utils import ignore_frame, include
+
 from ..exceptions import CancelledError
-from .future import Future, FUTURE_STATE_PENDING, FUTURE_STATE_CANCELLED
+
+from .future import FUTURE_STATE_CANCELLED, FUTURE_STATE_PENDING, Future
 from .task import Task
+
 
 ignore_frame(__spec__.origin, 'result', 'raise exception',)
 ignore_frame(__spec__.origin, '__iter__', 'yield self',)

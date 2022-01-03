@@ -3,11 +3,16 @@ __all__ = ('FutureAsyncWrapper', )
 import reprlib
 from types import MethodType
 
-from ...utils import set_docs, copy_docs, export, ignore_frame
+from ...utils import copy_docs, export, ignore_frame, set_docs
 from ...utils.trace import format_callback
+
 from ..exceptions import InvalidStateError
-from .future import FUTURE_STATE_PENDING, FUTURE_STATE_CANCELLED, FUTURE_STATE_FINISHED, FUTURE_STATE_RETRIEVED, \
-    get_future_state_name, Future
+
+from .future import (
+    FUTURE_STATE_CANCELLED, FUTURE_STATE_FINISHED, FUTURE_STATE_PENDING, FUTURE_STATE_RETRIEVED, Future,
+    get_future_state_name
+)
+
 
 ignore_frame(__spec__.origin, 'result', 'raise exception',)
 ignore_frame(__spec__.origin, '__iter__', 'yield self',)

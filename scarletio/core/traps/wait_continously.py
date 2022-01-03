@@ -1,9 +1,12 @@
 __all__ = ('WaitContinuously', )
 
 from ...utils import ignore_frame
-from ..exceptions import InvalidStateError, CancelledError
-from .future import FUTURE_STATE_PENDING, FUTURE_STATE_CANCELLED, FUTURE_STATE_FINISHED, FUTURE_STATE_RETRIEVED
+
+from ..exceptions import CancelledError, InvalidStateError
+
+from .future import FUTURE_STATE_CANCELLED, FUTURE_STATE_FINISHED, FUTURE_STATE_PENDING, FUTURE_STATE_RETRIEVED
 from .wait_till_first import WaitTillFirst
+
 
 ignore_frame(__spec__.origin, 'result', 'raise exception',)
 

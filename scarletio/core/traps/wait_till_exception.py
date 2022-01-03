@@ -2,6 +2,7 @@ __all__ = ('WaitTillExc',)
 
 from .wait_till_first import WaitTillFirst
 
+
 class WaitTillExc(WaitTillFirst):
     """
     A future subclass, which waits till the first task or future raises an exception, or till all of them becomes done.

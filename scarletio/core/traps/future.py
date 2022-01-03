@@ -1,11 +1,14 @@
 __all__ = ('Future',)
 
-import sys, reprlib, warnings
+import reprlib, sys, warnings
 
-from ...utils import include, ignore_frame, set_docs
+from ...utils import ignore_frame, include, set_docs
 from ...utils.trace import format_callback
-from ..exceptions import InvalidStateError, CancelledError
+
+from ..exceptions import CancelledError, InvalidStateError
+
 from .handle_cancellers import _HandleCancellerBase
+
 
 FutureSyncWrapper = include('FutureSyncWrapper')
 FutureAsyncWrapper = include('FutureAsyncWrapper')

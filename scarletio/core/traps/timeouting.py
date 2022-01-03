@@ -3,11 +3,13 @@ __all__ = ('future_or_timeout', 'repeat_timeout',)
 from threading import current_thread
 
 from ...utils import include
+
 from ..exceptions import CancelledError
 from ..time import LOOP_TIME
 
 from .handle_cancellers import _TimeoutHandleCanceller
 from .task import Task
+
 
 EventThread = include('EventThread')
 

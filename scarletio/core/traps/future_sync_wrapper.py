@@ -1,13 +1,18 @@
 __all__ = ('FutureSyncWrapper', )
 
-import sys, reprlib, warnings
+import reprlib, sys, warnings
+from threading import Event as SyncEvent, Lock as SyncLock
 from types import MethodType
-from threading import Lock as SyncLock, Event as SyncEvent
 
-from ...utils import set_docs, copy_docs, export, ignore_frame
-from ..exceptions import InvalidStateError, CancelledError
-from .future import FUTURE_STATE_PENDING, FUTURE_STATE_CANCELLED, FUTURE_STATE_FINISHED, FUTURE_STATE_RETRIEVED, \
-    get_future_state_name, Future
+from ...utils import copy_docs, export, ignore_frame, set_docs
+
+from ..exceptions import CancelledError, InvalidStateError
+
+from .future import (
+    FUTURE_STATE_CANCELLED, FUTURE_STATE_FINISHED, FUTURE_STATE_PENDING, FUTURE_STATE_RETRIEVED, Future,
+    get_future_state_name
+)
+
 
 ignore_frame(__spec__.origin, 'result', 'raise exception',)
 ignore_frame(__spec__.origin, 'wait', 'return self.result()', )
