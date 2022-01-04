@@ -1,3 +1,10 @@
+## 1.0.8 *\[2022-01-04\]*
+
+#### Bug fixes
+
+- `EventThread.get_tasks` could drop `AttributeError`.
+- Fix a `TypeError` in `quote`.
+
 ## 1.0.7 *\[2021-12-26\]*
 
 #### Bug fixes

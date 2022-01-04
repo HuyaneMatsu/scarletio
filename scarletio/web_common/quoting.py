@@ -68,7 +68,7 @@ def quote(value, safe=None, protected=None, query_string=False):
                         f'Unallowed percentage: {percentage!r}; value={value!r}.'
                     ) from err
                 
-                if unquoted in protected:
+                if (protected is not None) and (unquoted in protected):
                     result.extend(percentage)
                 elif unquoted in safe:
                     result.append(ord(unquoted))
