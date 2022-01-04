@@ -947,14 +947,16 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             elif isinstance(func, Future):
                 future_checks_pending.add(func)
             
-            for parameter in handle.args:
-                if isinstance(parameter, MethodType):
-                    maybe_future = parameter.__self__
-                    if isinstance(maybe_future, Future):
-                        future_checks_pending.add(maybe_future)
-                
-                elif isinstance(parameter, Future):
-                    future_checks_pending.add(parameter)
+            args = handle.args
+            if (args is not None):
+                for parameter in args:
+                    if isinstance(parameter, MethodType):
+                        maybe_future = parameter.__self__
+                        if isinstance(maybe_future, Future):
+                            future_checks_pending.add(maybe_future)
+                    
+                    elif isinstance(parameter, Future):
+                        future_checks_pending.add(parameter)
         
         # Check callbacks
         
