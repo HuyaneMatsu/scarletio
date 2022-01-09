@@ -1,10 +1,16 @@
 <h3 align="center">
-    <b><a href="https://github.com/HuyaneMatsu/scarletio">scarletio</a></b>
+    <font size="6">
+        <b>
+            <a href="https://github.com/HuyaneMatsu/scarletio">
+                scarletio
+            </a>
+        </b>
+    </font>
 </h3>
 
-<h5 align="center">
+<b>
     Asynchronous blackmagic & Witchcraft
-</h5>
+</b>
 
 <h1></h1>
 
