@@ -1,6 +1,6 @@
-<h1 align="center">
+<h2 align="center">
     <b><a href="https://github.com/HuyaneMatsu/scarletio">scarletio</a></b>
-</h1>
+</h2>
 
 <h5 align="center">
     Asynchronous blackmagic & Witchcraft
