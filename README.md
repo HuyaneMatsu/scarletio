@@ -12,7 +12,9 @@
     </b>
 </p>
 
-<h1></h1>
+<br>
+
+----
 
 Scarletio is a coroutine based concurrent Python library using modern `async / await` syntax. It abstracts away
 threading behind event loops providing concurrent API since the start.
