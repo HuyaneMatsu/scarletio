@@ -26,6 +26,7 @@ from .weak_core import *
 from .weak_item_dictionary import *
 from .weak_key_dictionary import *
 from .weak_map import *
+from .weak_set import *
 from .weak_value_dictionary import *
 
 __all__ = (
@@ -57,5 +58,6 @@ __all__ = (
     *weak_item_dictionary.__all__,
     *weak_key_dictionary.__all__,
     *weak_map.__all__,
+    *weak_set.__all__,
     *weak_value_dictionary.__all__,
 )

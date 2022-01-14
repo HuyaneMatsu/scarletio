@@ -102,7 +102,6 @@ class WeakSet(set):
     @has_docs
     def __and__(self, other):
         """Returns a new set with the elements common of self and other."""
-        
         if isinstance(other, type(self)):
             new = type(self)()
             
@@ -347,48 +346,287 @@ class WeakSet(set):
     # __ne__ -> same
     # __new__-> same
     
-    # TODO
-    '''
     @has_docs
     def __or__(self, other):
         """Returns the union of two sets."""
-        new = self.copy()
-        for element in iter_to_non_weak_set(other):
-            if element in self:
-                self.discard(element)
+        if isinstance(other, type(self)) or hasattr(type(other), '__iter__'):
+            new = self.copy()
+            
+            for element in other:
+                new.add(element)
+            
+            return new
+        
+        return NotImplemented
+    
+    def __rand__(self, other):
+        """Returns a new set with the elements common of self and other."""
+        return self.__and__(other)
+    
+    def __reduce__(self):
+        """Reduces the set to a picklable object."""
+        return (type(self), list(self))
+    
+    def __reduce_ex__(self, version):
+        """Reduces the set to a picklable object."""
+        return type(self).__reduce__(self)
+    
+    def __repr__(self):
+        """Returns the set's representation."""
+        result = [self.__class__.__name__, '({']
+        if len(self):
+            limit = self.MAX_REPR_ELEMENT_LIMIT
+            collected = 0
+            
+            for element_reference in set.__iter__(self):
+                element = element_reference()
+                if (element is None):
+                    add_to_pending_removals(self, element_reference)
+                    continue
+                
+                result.append(repr(element))
+                result.append(', ')
+                
+                collected +=1
+                if collected != limit:
+                    continue
+                
+                leftover = len(self) - collected
+                if leftover:
+                    result.append('...}, ')
+                    result.append(str(leftover))
+                    result.append(' truncated)')
+                else:
+                    result[-1] = '})'
+                break
             else:
-                self.add(element)
+                result[-1] = '})'
+            
+            self._commit_removals()
+        else:
+            result.append('})')
+        
+        return ''.join(result)
+    
+    __ror__ = __or__
+    
+    def __rsub__(self, other):
+        """Returns a new the set, without elements found in self."""
+        if isinstance(other, type(self)):
+            other = set(iter(other))
+        
+        elif isinstance(other, set):
+            pass
+        
+        elif hasattr(type(other), '__iter__'):
+            other = set(other)
+        
+        else:
+            return NotImplemented
+        
+        new = type(self)()
+        
+        for element in other:
+            if element not in self:
+                new.add(element)
         
         return new
     
-    __rand__
-    __reduce__
-    __reduce_ex__
-    __repr__
-    __ror__
-    __rsub__
-    __rxor__
-    __setattr__
-    __sizeof__
-    __str__
-    __sub__
-    __subclasshook__
-    __xor__
-    add
-    clear
-    copy
-    difference
-    difference_update
-    discard
-    intersection
-    intersection_update
-    isdisjoint
-    issubset
-    issuperset
-    pop
-    remove
-    symmetric_difference
-    symmetric_difference_update
-    union
-    update
-    '''
+    def __rxor__(self, other):
+        """Return a new set with elements in either the set or other but not both."""
+        if isinstance(other, type(self)):
+            other = set(iter(other))
+        
+        elif isinstance(other, set):
+            pass
+        
+        elif hasattr(type(other), '__iter__'):
+            other = set(other)
+        
+        else:
+            return NotImplemented
+        
+        self_set = set(iter(self))
+        
+        return type(self)(self_set ^ other)
+    
+    # __setattr__ -> same
+    # __sizeof__ -> same
+    
+    __str__ = __repr__
+    
+    def __sub__(self, other):
+        if isinstance(other, type(self)):
+            other = set(iter(other))
+        
+        elif isinstance(other, set):
+            pass
+        
+        elif hasattr(type(other), '__iter__'):
+            other = set(other)
+        
+        else:
+            return NotImplemented
+        
+        new = type(self)()
+        
+        for element in self:
+            if element not in other:
+                new.add(element)
+        
+        return new
+    
+    # __subclasshook__ -> same
+    
+    __xor__ = __rxor__
+
+    
+    def add(self, element):
+        """
+        Adds the `element` to the set.
+        
+        Parameters
+        ----------
+        element : `Any`
+            The element to add.
+        
+        Raises
+        ------
+        TypeError
+            If `element` is not weakreferable.
+        """
+        element_reference = WeakReferer(element, self._callback)
+        set.add(self, element_reference)
+    
+    
+    def clear(self):
+        """Remove all elements from the set."""
+        self._pending_removals = None
+        set.clear(self)
+    
+    def copy(self):
+        """Return a shallow copy of the set."""
+        new = type(self)()
+        new_callback = new._callback
+        
+        for element_reference in set.__iter__(self):
+            element = element_reference()
+            if (element is not None):
+                element_reference =  WeakReferer(element, new_callback)
+                set.add(new, element_reference)
+    
+    
+    difference = __sub__
+    
+    difference_update = __isub__
+    
+    def discard(self, element):
+        """
+        Removes `element` from the set if it is present.
+        
+        Parameters
+        ----------
+        element : `Any`
+            The element to remove.
+        """
+        try:
+            element_reference = WeakReferer(element)
+        except TypeError:
+            pass
+        else:
+            set.discard(self, element_reference)
+    
+    intersection = __and__
+    
+    intersection_update = __iand__
+    
+    
+    def isdisjoint(self, other):
+        """
+        Return whether if the set has no elements in common with other. Sets are disjoint if and only if
+        their intersection is the empty set.
+        
+        Returns
+        -------
+        is_disjoint : `bool`
+        """
+        if isinstance(other, type(self)):
+            return set.isdisjoint(self, other)
+        
+        elif isinstance(other, set):
+            pass
+        
+        elif hasattr(type(other), '__iter__'):
+            other = set(other)
+        
+        else:
+            raise TypeError(
+                f'`Cannot discount with other, got {other.__class__.__name__}; {other!r}.'
+            )
+        
+        self_set = set(iter(self))
+        return self_set.isdisjoint(other)
+    
+    
+    issubset = __le__
+    
+    issuperset = __ge__
+    
+    def pop(self):
+        """
+        Remove and return an arbitrary element from the set.
+        
+        Returns
+        -------
+        element
+        
+        Raises
+        ------
+        KeyError
+            If the set is empty.
+        """
+        while True:
+            element_reference = set.pop(self)
+            
+            element = element_reference()
+            if (element is not None):
+                return element
+    
+    
+    def remove(self, element):
+        """
+        Removes `element` from the set.
+        
+        Parameters
+        ----------
+        element : `Any`
+            The element ot remove.
+        
+        Raises
+        ------
+        KeyError
+            If `element` is not in the set.
+        """
+        """
+        Removes `element` from the set if it is present.
+        
+        Parameters
+        ----------
+        element : `Any`
+            The element to remove.
+        """
+        try:
+            element_reference = WeakReferer(element)
+        except TypeError:
+            raise KeyError(element) from None
+        
+        set.remove(self, element_reference)
+    
+    
+    symmetric_difference = __xor__
+    
+    symmetric_difference_update = __xor__
+    
+    union = __or__
+    
+    update = __ior__

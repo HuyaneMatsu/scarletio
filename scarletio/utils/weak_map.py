@@ -191,8 +191,7 @@ class WeakMap(dict):
         try:
             dict.__delitem__(self, reference)
         except KeyError as err:
-            err.args=(key,)
-            raise
+            raise KeyError(key) from None
     
     # __dir__ -> same
     # __doc__ -> same
