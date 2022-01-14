@@ -607,14 +607,6 @@ class WeakSet(set):
         KeyError
             If `element` is not in the set.
         """
-        """
-        Removes `element` from the set if it is present.
-        
-        Parameters
-        ----------
-        element : `Any`
-            The element to remove.
-        """
         try:
             element_reference = WeakReferer(element)
         except TypeError:
