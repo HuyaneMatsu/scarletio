@@ -74,7 +74,7 @@ class WeakSet(set):
     -----
     ``WeakSet``-s are weakreferable.
     """
-    __slots__ = ('__weakref__', '_pending_removals', '_iterating', '_callback')
+    __slots__ = ('_pending_removals', '_iterating', '_callback')
     
     MAX_REPR_ELEMENT_LIMIT = 50
 
