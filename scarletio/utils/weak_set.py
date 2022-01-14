@@ -359,18 +359,22 @@ class WeakSet(set):
         
         return NotImplemented
     
+    @has_docs
     def __rand__(self, other):
         """Returns a new set with the elements common of self and other."""
         return self.__and__(other)
     
+    @has_docs
     def __reduce__(self):
         """Reduces the set to a picklable object."""
         return (type(self), list(self))
     
+    @has_docs
     def __reduce_ex__(self, version):
         """Reduces the set to a picklable object."""
         return type(self).__reduce__(self)
     
+    @has_docs
     def __repr__(self):
         """Returns the set's representation."""
         result = [self.__class__.__name__, '({']
@@ -410,6 +414,7 @@ class WeakSet(set):
     
     __ror__ = __or__
     
+    @has_docs
     def __rsub__(self, other):
         """Returns a new the set, without elements found in self."""
         if isinstance(other, type(self)):
@@ -432,6 +437,7 @@ class WeakSet(set):
         
         return new
     
+    @has_docs
     def __rxor__(self, other):
         """Return a new set with elements in either the set or other but not both."""
         if isinstance(other, type(self)):
@@ -455,6 +461,7 @@ class WeakSet(set):
     
     __str__ = __repr__
     
+    @has_docs
     def __sub__(self, other):
         if isinstance(other, type(self)):
             other = set(iter(other))
@@ -479,8 +486,8 @@ class WeakSet(set):
     # __subclasshook__ -> same
     
     __xor__ = __rxor__
-
     
+    @has_docs
     def add(self, element):
         """
         Adds the `element` to the set.
@@ -498,12 +505,13 @@ class WeakSet(set):
         element_reference = WeakReferer(element, self._callback)
         set.add(self, element_reference)
     
-    
+    @has_docs
     def clear(self):
         """Remove all elements from the set."""
         self._pending_removals = None
         set.clear(self)
     
+    @has_docs
     def copy(self):
         """Return a shallow copy of the set."""
         new = type(self)()
@@ -520,6 +528,7 @@ class WeakSet(set):
     
     difference_update = __isub__
     
+    @has_docs
     def discard(self, element):
         """
         Removes `element` from the set if it is present.
@@ -540,7 +549,7 @@ class WeakSet(set):
     
     intersection_update = __iand__
     
-    
+    @has_docs
     def isdisjoint(self, other):
         """
         Return whether if the set has no elements in common with other. Sets are disjoint if and only if
@@ -572,6 +581,7 @@ class WeakSet(set):
     
     issuperset = __ge__
     
+    @has_docs
     def pop(self):
         """
         Remove and return an arbitrary element from the set.
@@ -592,7 +602,7 @@ class WeakSet(set):
             if (element is not None):
                 return element
     
-    
+    @has_docs
     def remove(self, element):
         """
         Removes `element` from the set.
