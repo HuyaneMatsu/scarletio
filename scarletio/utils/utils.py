@@ -1,6 +1,6 @@
 __all__ = (
-    'IS_UNIX', 'any_to_any', 'change_on_switch', 'get_short_executable', 'list_difference', 'relative_index',
-    'un_map_pack', 'where'
+    'IS_UNIX', 'any_to_any', 'change_on_switch', 'get_short_executable', 'is_iterable', 'list_difference',
+    'relative_index', 'un_map_pack', 'where'
 )
 
 import sys
@@ -334,3 +334,19 @@ class un_map_pack:
         """Gets the next value of the un-map-packer."""
         return self.next_value
 
+
+@has_docs
+def is_iterable(object_):
+    """
+    Returns whether the object is iterable.
+    
+    Parameters
+    ----------
+    object_ : `Any`
+        The object to check.
+    
+    Returns
+    -------
+    is_iterable : `bool`
+    """
+    return hasattr(type(object_), '__iter__')

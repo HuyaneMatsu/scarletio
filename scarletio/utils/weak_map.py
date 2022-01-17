@@ -151,7 +151,6 @@ class WeakMap(dict):
         
         return self_set == other
     
-    # __eq__ > same
     # __format__ -> same
     # __ge__ -> same
     # __getattribute__ -> same
@@ -223,10 +222,38 @@ class WeakMap(dict):
         return length
     
     # __lt__ -> same
-    # __ne__ -> same
+    
+    def __ne__(self, other):
+        """returns whether the two weak maps are equal."""
+        if isinstance(other, type(self)):
+            return dict.__ne__(self, other)
+        
+        if isinstance(other, set):
+            pass
+        
+        elif hasattr(type(other), '__iter__'):
+            other = set(other)
+        
+        else:
+            return NotImplemented
+        
+        self_set = set(iter(self))
+        
+        return self_set != other
+    
     # __new__ -> same
-    # __reduce__ -> we do not care
-    # __reduce_ex__ -> we do not care
+    
+    @has_docs
+    def __reduce__(self):
+        """Reduces the map to a picklable object."""
+        return (type(self), list(self))
+    
+    
+    @has_docs
+    def __reduce_ex__(self, version):
+        """Reduces the map to a picklable object."""
+        return type(self).__reduce__(self)
+    
     
     @has_docs
     def __repr__(self):
@@ -282,6 +309,7 @@ class WeakMap(dict):
         dict.clear(self)
         self._pending_removals = None
     
+    
     @has_docs
     def copy(self):
         """
@@ -309,6 +337,7 @@ class WeakMap(dict):
         self._commit_removals()
         
         return new
+    
     
     @has_docs
     def get(self, key, default=None):
@@ -347,8 +376,10 @@ class WeakMap(dict):
         
         return default
     
+    
     items = RemovedDescriptor()
     keys = RemovedDescriptor()
+    
     
     @has_docs
     def pop(self, key, default=...):
@@ -393,10 +424,12 @@ class WeakMap(dict):
         
         return default
     
+    
     popitem = RemovedDescriptor()
     setdefault = RemovedDescriptor()
     update = RemovedDescriptor()
     values = RemovedDescriptor()
+    
     
     @has_docs
     def set(self, key):

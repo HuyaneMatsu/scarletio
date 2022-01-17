@@ -550,7 +550,24 @@ class WeakValueDictionary(dict):
         return length
     
     # __lt__ -> same
-    # __ne__ -> same
+    
+    def __ne__(self, other):
+        if isinstance(other, type(self)):
+            return dict.__ne__(self, other)
+        
+        if isinstance(other, dict):
+            pass
+        
+        elif hasattr(type(other), '__iter__'):
+            other = dict(other)
+        
+        else:
+            return NotImplemented
+        
+        self_dict = dict(self.items())
+        
+        return self_dict != other
+    
     # __new__ -> same
     
     @has_docs
