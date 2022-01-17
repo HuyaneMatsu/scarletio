@@ -144,7 +144,7 @@ class WeakSet(set):
     # __doc__ -> same
     
     
-    def  __eq__(self, other):
+    def __eq__(self, other):
         if isinstance(other, type(self)):
             return set.__eq__(self, other)
         
@@ -157,9 +157,9 @@ class WeakSet(set):
         else:
             return NotImplemented
         
-        self_elements = set(iter(self))
+        self_set = set(iter(self))
         
-        return self_elements == other
+        return self_set == other
     
     
     # __format__ -> same

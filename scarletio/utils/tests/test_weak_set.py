@@ -4,6 +4,7 @@ from weak_helpers import WeakReferencable
 
 from scarletio import WeakSet
 
+
 # Test WeakSet
 
 # Test constructor
@@ -21,13 +22,13 @@ def test_WeakSet_constructor_empty():
 
 
 def test_WeakSet_constructor_filled():
-    elements = [WeakReferencable(x) for x in range(3)]
+    objects_ = [WeakReferencable(x) for x in range(3)]
 
-    weak_set = WeakSet(elements)
-    assert len(weak_set) == len(elements)
-    assert sorted(weak_set) == elements
+    weak_set = WeakSet(objects_)
+    assert len(weak_set) == len(objects_)
+    assert sorted(weak_set) == objects_
 
-# test magic methods
+# Test magic methods
 
 def test_WeakSet_and():
     objects_1 = [WeakReferencable(x) for x in range(3)]

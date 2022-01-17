@@ -370,7 +370,24 @@ class WeakValueDictionary(dict):
     # __delitem__ -> same
     # __dir__ -> same
     # __doc__ -> same
-    # __eq__ -> same
+    
+    def __eq__(self, other):
+        if isinstance(other, type(self)):
+            return dict.__eq__(self, other)
+        
+        if isinstance(other, dict):
+            pass
+        
+        elif hasattr(type(other), '__iter__'):
+            other = dict(other)
+        
+        else:
+            return NotImplemented
+        
+        self_dict = dict(self.items())
+        
+        return self_dict == other
+    
     # __format__ -> same
     # __ge__ -> same
     # __getattribute__ -> same
@@ -431,8 +448,18 @@ class WeakValueDictionary(dict):
     # __lt__ -> same
     # __ne__ -> same
     # __new__ -> same
-    # __reduce__ -> we do not care
-    # __reduce_ex__ -> we do not care
+    
+    @has_docs
+    def __reduce__(self):
+        """Reduces the dictionary to a picklable object."""
+        return (type(self), list(self.items()))
+    
+    
+    @has_docs
+    def __reduce_ex__(self, version):
+        """Reduces the dictionary to a picklable object."""
+        return type(self).__reduce__(self)
+    
     
     @has_docs
     def __repr__(self):
@@ -495,6 +522,7 @@ class WeakValueDictionary(dict):
         dict.clear(self)
         self._pending_removals = None
     
+    
     @has_docs
     def copy(self):
         """
@@ -521,6 +549,7 @@ class WeakValueDictionary(dict):
         self._commit_removals()
         
         return new
+    
     
     @has_docs
     def get(self, key, default=None):
@@ -554,6 +583,7 @@ class WeakValueDictionary(dict):
         
         return default
     
+    
     @has_docs
     def items(self):
         """
@@ -565,6 +595,7 @@ class WeakValueDictionary(dict):
         """
         return _WeakValueDictionaryItemIterator(self)
     
+    
     @has_docs
     def keys(self):
         """
@@ -575,6 +606,7 @@ class WeakValueDictionary(dict):
         key_iterator : ``_WeakValueDictionaryKeyIterator``
         """
         return _WeakValueDictionaryKeyIterator(self)
+    
     
     @has_docs
     def pop(self, key, default=...):
@@ -608,6 +640,7 @@ class WeakValueDictionary(dict):
             raise KeyError(key)
         
         return default
+    
     
     @has_docs
     def popitem(self):
