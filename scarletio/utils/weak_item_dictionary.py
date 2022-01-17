@@ -140,7 +140,46 @@ class _WeakItemDictionaryValueIterator:
     def __len__(self):
         """Returns the respective ``WeakValueDictionary``'s length."""
         return len(self._parent)
-
+    
+    
+    @has_docs
+    def __eq__(self, other):
+        """Returns whether the two weak item dictionary value iterators are the same."""
+        if isinstance(other, type(self)):
+            return self._parent == other._parent
+        
+        elif isinstance(other, list):
+            if len(self) != len(other):
+                return False
+            
+            other = other.copy()
+        
+        elif hasattr(type(other), '__iter__'):
+            has_length_method = hasattr(type(other), '__len__')
+            
+            if has_length_method:
+                if len(self) != len(other):
+                    return False
+            
+            other = list(other)
+            
+            if not has_length_method:
+                if len(self) != len(other):
+                    return False
+        
+        else:
+            return NotImplemented
+        
+        for value in self:
+            try:
+                other.remove(value)
+            except ValueError:
+                return False
+        
+        if other:
+            return False
+        
+        return True
 
 
 @has_docs
@@ -240,7 +279,46 @@ class _WeakItemDictionaryItemIterator:
     def __len__(self):
         """Returns the respective ``WeakItemDictionary``'s length."""
         return len(self._parent)
-
+    
+    
+    @has_docs
+    def __eq__(self, other):
+        """Returns whether the two weak value dictionary item iterators are the same."""
+        if isinstance(other, type(self)):
+            return self._parent == other._parent
+        
+        elif isinstance(other, list):
+            if len(self) != len(other):
+                return False
+            
+            other = other.copy()
+        
+        elif hasattr(type(other), '__iter__'):
+            has_length_method = hasattr(type(other), '__len__')
+            
+            if has_length_method:
+                if len(self) != len(other):
+                    return False
+            
+            other = list(other)
+            
+            if not has_length_method:
+                if len(self) != len(other):
+                    return False
+        
+        else:
+            return NotImplemented
+        
+        for item in self:
+            try:
+                other.remove(item)
+            except ValueError:
+                return False
+        
+        if other:
+            return False
+        
+        return True
 
 
 @has_docs
@@ -331,7 +409,25 @@ class WeakItemDictionary(dict):
     
     # __dir__ -> same
     # __doc__ -> same
-    # __eq__ -> same
+    
+    def __eq__(self, other):
+        """Returns whether the two dictionaries are the same."""
+        if isinstance(other, type(self)):
+            return dict.__eq__(self, other)
+        
+        if isinstance(other, dict):
+            pass
+        
+        elif hasattr(type(other), '__iter__'):
+            other = dict(other)
+        
+        else:
+            return NotImplemented
+        
+        self_dict = dict(self.items())
+        
+        return self_dict == other
+    
     # __format__ -> same
     # __ge__ -> same
     # __getattribute__ -> same
@@ -396,7 +492,25 @@ class WeakItemDictionary(dict):
         return length
     
     # __lt__ -> same
-    # __ne__ -> same
+    
+    def __ne__(self, other):
+        """Returns whether the two dictionaries are different."""
+        if isinstance(other, type(self)):
+            return dict.__ne__(self, other)
+        
+        if isinstance(other, dict):
+            pass
+        
+        elif hasattr(type(other), '__iter__'):
+            other = dict(other)
+        
+        else:
+            return NotImplemented
+        
+        self_dict = dict(self.items())
+        
+        return self_dict != other
+    
     # __new__ -> same
     # __reduce__ -> we do not care
     # __reduce_ex__ -> we do not care

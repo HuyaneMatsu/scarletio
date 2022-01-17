@@ -5,7 +5,6 @@ from weak_helpers import WeakReferencable
 from scarletio import WeakValueDictionary
 
 
-
 # Test WeakValueDictionary
 
 # Test constructor
