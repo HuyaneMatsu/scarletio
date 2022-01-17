@@ -627,7 +627,7 @@ class WeakSet(set):
         is_disjoint : `bool`
         """
         if isinstance(other, type(self)):
-            other_set = set(iter(other))
+            other = set(iter(other))
             
             # Something breaks the normal solution:
             # return set.isdisjoint(self, other)
