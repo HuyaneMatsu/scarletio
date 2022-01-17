@@ -131,6 +131,18 @@ def test_WeakItemDictionary_setitem():
     weak_item_dictionary[key] = value
     assert weak_item_dictionary[key] == value
     assert len(weak_item_dictionary) == 4
+    
+    key = 7
+    value = WeakReferencable(7)
+    
+    with pytest.raises(TypeError):
+        weak_item_dictionary[key] = value
+    
+    key = WeakReferencable(7)
+    value = 7
+    
+    with pytest.raises(TypeError):
+        weak_item_dictionary[key] = value
 
 
 # methods
@@ -291,17 +303,23 @@ def test_WeakItemDictionary_setdefault():
     value_2 = WeakReferencable(6)
     expected_value_2 = WeakReferencable(1)
     
+    key_3 = 7
+    value_3 = 9
+    
     weak_item_dictionary = WeakItemDictionary(relations)
     
-    value = weak_item_dictionary.set_default(key_1, value_1)
+    value = weak_item_dictionary.setdefault(key_1, value_1)
     assert value == expected_value_1
     assert len(weak_item_dictionary) == 3
     
     
-    value = weak_item_dictionary.set_default(key_2, value_2)
+    value = weak_item_dictionary.setdefault(key_2, value_2)
     assert value == expected_value_2
     assert len(weak_item_dictionary) == 3
     assert weak_item_dictionary[key_2] == expected_value_2
+
+    with pytest.raises(TypeError):
+        weak_item_dictionary.setdefault(key_3, value_3)
 
 
 def test_WeakItemDictionary_update():

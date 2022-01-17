@@ -463,6 +463,7 @@ def test_WeakSet_add():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     object_1 = objects_1[0]
     object_2 = WeakReferencable(4)
+    object_3 = 7
     
     test_case = WeakSet(objects_1)
     test_case.add(object_1)
@@ -480,6 +481,9 @@ def test_WeakSet_add():
     expected_state.add(object_2)
     
     assert test_case == expected_state
+    
+    with pytest.raises(TypeError):
+        test_case.add(object_3)
 
 
 def test_WeakSet_clear():
@@ -523,6 +527,7 @@ def test_WeakSet_discard():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     object_1 = objects_1[0]
     object_2 = WeakReferencable(4)
+    object_3 = 7
     
     test_case = WeakSet(objects_1)
     test_case.discard(object_1)
@@ -540,6 +545,9 @@ def test_WeakSet_discard():
     expected_state.discard(object_2)
     
     assert test_case == expected_state
+    
+    
+    test_case.discard(object_3)
 
 
 def test_WeakSet_intersection():
@@ -601,6 +609,7 @@ def test_WeakSet_remove():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     object_1 = objects_1[0]
     object_2 = WeakReferencable(4)
+    object_4 = 7
     
     test_case = WeakSet(objects_1)
     
@@ -621,6 +630,9 @@ def test_WeakSet_remove():
     expected_state.discard(object_2)
     
     assert test_case == expected_state
+    
+    with pytest.raises(KeyError):
+        test_case.remove(object_4)
 
 
 def test_WeakSet_symmetric_difference():

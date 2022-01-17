@@ -446,6 +446,11 @@ class WeakMap(dict):
         -------
         real_key : `Any`
             The matched key, or the given one.
+        
+        Raises
+        ------
+        TypeError
+            If `key` not supports weakreferencing.
         """
         reference = WeakReferer(key, self._callback)
         real_reference = dict.get(self, reference, None)

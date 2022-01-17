@@ -184,9 +184,12 @@ def test_WeakMap_get():
     
     object_3 = WeakReferencable(6)
     
+    object_4 = 7
+    
     assert weak_map_1.get(object_1) is object_1_expected
     assert weak_map_1.get(object_2) is object_2_expected
     assert weak_map_1.get(object_3) is None
+    assert weak_map_1.get(object_4) is None
 
 
 def test_WeakMap_pop():
@@ -201,6 +204,8 @@ def test_WeakMap_pop():
     
     object_3 = WeakReferencable(6)
     
+    object_4 = 8
+    
     assert weak_map_1.pop(object_1) is object_1_expected
     assert len(weak_map_1) == 2
     
@@ -213,6 +218,14 @@ def test_WeakMap_pop():
     assert len(weak_map_1) == 1
 
     assert weak_map_1.pop(object_3, None) is None
+    assert len(weak_map_1) == 1
+    
+    
+    assert weak_map_1.pop(object_4, None) is None
+    assert len(weak_map_1) == 1
+
+    with pytest.raises(KeyError):
+        weak_map_1.pop(object_4)
     assert len(weak_map_1) == 1
 
 
@@ -229,6 +242,8 @@ def test_WeakMap_set():
     object_3 = WeakReferencable(6)
     object_3_expected = object_3
     
+    object_4 = 7
+    
     assert weak_map_1.set(object_1) is object_1_expected
     assert len(weak_map_1) == 3
     
@@ -236,4 +251,8 @@ def test_WeakMap_set():
     assert len(weak_map_1) == 3
     
     assert weak_map_1.set(object_3) is object_3_expected
+    assert len(weak_map_1) == 4
+    
+    with pytest.raises(TypeError):
+        weak_map_1.set(object_4)
     assert len(weak_map_1) == 4
