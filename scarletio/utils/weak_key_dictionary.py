@@ -119,6 +119,30 @@ class _WeakKeyDictionaryKeyIterator:
         return len(self._parent)
 
 
+    @has_docs
+    def __eq__(self, other):
+        """Returns whether the two weak key dictionary key iterators are the same."""
+        if isinstance(other, type(self)):
+            return self._parent == other._parent
+        
+        elif isinstance(other, set):
+            if len(self) != len(other):
+                return False
+        
+        elif hasattr(type(other), '__iter__'):
+            other = set(other)
+            
+            if len(self) != len(other):
+                return False
+        
+        else:
+            return NotImplemented
+        
+        self_set = set(self)
+        
+        return self_set == other
+
+
 @has_docs
 class _WeakKeyDictionaryValueIterator:
     """
@@ -191,10 +215,51 @@ class _WeakKeyDictionaryValueIterator:
         
         return result
     
+    
     @has_docs
     def __len__(self):
         """Returns the respective ``WeakKeyDictionary``'s length."""
         return len(self._parent)
+    
+    
+    @has_docs
+    def __eq__(self, other):
+        """Returns whether the two weak key dictionary value iterators are the same."""
+        if isinstance(other, type(self)):
+            return self._parent == other._parent
+        
+        elif isinstance(other, list):
+            if len(self) != len(other):
+                return False
+            
+            other = other.copy()
+        
+        elif hasattr(type(other), '__iter__'):
+            has_length_method = hasattr(type(other), '__len__')
+            
+            if has_length_method:
+                if len(self) != len(other):
+                    return False
+            
+            other = list(other)
+            
+            if not has_length_method:
+                if len(self) != len(other):
+                    return False
+        
+        else:
+            return NotImplemented
+        
+        for value in self:
+            try:
+                other.remove(value)
+            except ValueError:
+                return False
+        
+        if other:
+            return False
+        
+        return True
 
 
 @has_docs
@@ -279,6 +344,46 @@ class _WeakKeyDictionaryItemIterator:
     def __len__(self):
         """Returns the respective ``WeakKeyDictionary``'s length."""
         return len(self._parent)
+    
+    
+    @has_docs
+    def __eq__(self, other):
+        """Returns whether the two weak key dictionary item iterators are the same."""
+        if isinstance(other, type(self)):
+            return self._parent == other._parent
+        
+        elif isinstance(other, list):
+            if len(self) != len(other):
+                return False
+            
+            other = other.copy()
+        
+        elif hasattr(type(other), '__iter__'):
+            has_length_method = hasattr(type(other), '__len__')
+            
+            if has_length_method:
+                if len(self) != len(other):
+                    return False
+            
+            other = list(other)
+            
+            if not has_length_method:
+                if len(self) != len(other):
+                    return False
+        
+        else:
+            return NotImplemented
+        
+        for item in self:
+            try:
+                other.remove(item)
+            except ValueError:
+                return False
+        
+        if other:
+            return False
+        
+        return True
 
 
 @has_docs
@@ -465,6 +570,7 @@ class WeakKeyDictionary(dict):
         dict.clear(self)
         self._pending_removals = None
     
+    
     @has_docs
     def copy(self):
         """
@@ -511,6 +617,7 @@ class WeakKeyDictionary(dict):
         """
         return dict.get(self, WeakReferer(key), default)
     
+    
     @has_docs
     def items(self):
         """
@@ -522,6 +629,7 @@ class WeakKeyDictionary(dict):
         """
         return _WeakKeyDictionaryItemIterator(self)
     
+    
     @has_docs
     def keys(self):
         """
@@ -532,6 +640,7 @@ class WeakKeyDictionary(dict):
         key_iterator : ``_WeakKeyDictionaryKeyIterator``
         """
         return _WeakKeyDictionaryKeyIterator(self)
+    
     
     @has_docs
     def pop(self, key, default=...):
