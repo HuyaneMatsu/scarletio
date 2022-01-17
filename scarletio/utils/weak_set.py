@@ -124,7 +124,9 @@ class WeakSet(set):
         
         return NotImplemented
     
+    
     # __class__ -> same
+    
     
     @has_docs
     def __contains__(self, element):
@@ -134,13 +136,34 @@ class WeakSet(set):
         except TypeError:
             return False
         
-        return dict.__contains__(self, element)
+        return set.__contains__(self, element)
+    
     
     # __delattr__ -> same
     # __dir__ -> same
     # __doc__ -> same
-    # __eq__ -> same
+    
+    
+    def  __eq__(self, other):
+        if isinstance(other, type(self)):
+            return set.__eq__(self, other)
+        
+        if isinstance(other, set):
+            pass
+        
+        elif hasattr(type(other), '__iter__'):
+            other = set(other)
+        
+        else:
+            return NotImplemented
+        
+        self_elements = set(iter(self))
+        
+        return self_elements == other
+    
+    
     # __format__ -> same
+    
     
     @has_docs
     def __ge__(self, other):
@@ -156,7 +179,9 @@ class WeakSet(set):
         
         return set.__ge__(self, other)
     
+    
     # __getattribute__ -> same
+    
     
     @has_docs
     def __gt__(self, other):
@@ -172,13 +197,15 @@ class WeakSet(set):
         
         return set.__gt__(self, other)
     
+    
     # __hash__ ->same
+    
     
     @has_docs
     def __iand__(self, other):
         """Update the set, keeping only elements found in it and all others."""
         if isinstance(other, type(self)):
-            other_set = set(iter(self))
+            other_set = set(iter(other))
         
         elif isinstance(other, set):
             other_set = other
@@ -193,6 +220,8 @@ class WeakSet(set):
         
         for element in self_set ^ other_set:
             self.discard(element)
+        
+        return self
     
     
     @has_docs
@@ -211,7 +240,9 @@ class WeakSet(set):
         if (iterable is not None):
             self.update(iterable)
     
+    
     # __init_subclass__ -> same
+    
     
     @has_docs
     def __ior__(self, other):
@@ -241,6 +272,7 @@ class WeakSet(set):
         
         return self
     
+    
     @has_docs
     def __iter__(self):
         """
@@ -267,6 +299,7 @@ class WeakSet(set):
         finally:
             self._iterating -= 1
             self._commit_removals()
+    
     
     @has_docs
     def __ixor__(self, other):
@@ -303,6 +336,7 @@ class WeakSet(set):
             return NotImplemented
         
         return self
+    
     
     @has_docs
     def __le__(self, other):
@@ -343,8 +377,27 @@ class WeakSet(set):
         
         return set.__lt__(self, other)
     
-    # __ne__ -> same
+    
+    def  __ne__(self, other):
+        if isinstance(other, type(self)):
+            return set.__ne__(self, other)
+        
+        if isinstance(other, set):
+            pass
+        
+        elif hasattr(type(other), '__iter__'):
+            other = set(other)
+        
+        else:
+            return NotImplemented
+        
+        self_elements = set(iter(self))
+        
+        return self_elements != other
+    
+    
     # __new__-> same
+    
     
     @has_docs
     def __or__(self, other):
@@ -359,20 +412,20 @@ class WeakSet(set):
         
         return NotImplemented
     
-    @has_docs
-    def __rand__(self, other):
-        """Returns a new set with the elements common of self and other."""
-        return self.__and__(other)
+    
+    __rand__ = __and__
     
     @has_docs
     def __reduce__(self):
         """Reduces the set to a picklable object."""
         return (type(self), list(self))
     
+    
     @has_docs
     def __reduce_ex__(self, version):
         """Reduces the set to a picklable object."""
         return type(self).__reduce__(self)
+    
     
     @has_docs
     def __repr__(self):
@@ -412,7 +465,9 @@ class WeakSet(set):
         
         return ''.join(result)
     
+    
     __ror__ = __or__
+    
     
     @has_docs
     def __rsub__(self, other):
@@ -437,6 +492,7 @@ class WeakSet(set):
         
         return new
     
+    
     @has_docs
     def __rxor__(self, other):
         """Return a new set with elements in either the set or other but not both."""
@@ -459,7 +515,9 @@ class WeakSet(set):
     # __setattr__ -> same
     # __sizeof__ -> same
     
+    
     __str__ = __repr__
+    
     
     @has_docs
     def __sub__(self, other):
@@ -485,7 +543,9 @@ class WeakSet(set):
     
     # __subclasshook__ -> same
     
+    
     __xor__ = __rxor__
+    
     
     @has_docs
     def add(self, element):
@@ -505,11 +565,13 @@ class WeakSet(set):
         element_reference = WeakReferer(element, self._callback)
         set.add(self, element_reference)
     
+    
     @has_docs
     def clear(self):
         """Remove all elements from the set."""
         self._pending_removals = None
         set.clear(self)
+    
     
     @has_docs
     def copy(self):
@@ -522,11 +584,14 @@ class WeakSet(set):
             if (element is not None):
                 element_reference =  WeakReferer(element, new_callback)
                 set.add(new, element_reference)
+        
+        return new
     
     
     difference = __sub__
     
     difference_update = __isub__
+    
     
     @has_docs
     def discard(self, element):
@@ -545,9 +610,11 @@ class WeakSet(set):
         else:
             set.discard(self, element_reference)
     
+    
     intersection = __and__
     
     intersection_update = __iand__
+    
     
     @has_docs
     def isdisjoint(self, other):
@@ -560,7 +627,10 @@ class WeakSet(set):
         is_disjoint : `bool`
         """
         if isinstance(other, type(self)):
-            return set.isdisjoint(self, other)
+            other_set = set(iter(other))
+            
+            # Something breaks the normal solution:
+            # return set.isdisjoint(self, other)
         
         elif isinstance(other, set):
             pass
@@ -570,7 +640,7 @@ class WeakSet(set):
         
         else:
             raise TypeError(
-                f'`Cannot discount with other, got {other.__class__.__name__}; {other!r}.'
+                f'`Cannot disjoint with other, got {other.__class__.__name__}; {other!r}.'
             )
         
         self_set = set(iter(self))
@@ -580,6 +650,7 @@ class WeakSet(set):
     issubset = __le__
     
     issuperset = __ge__
+    
     
     @has_docs
     def pop(self):
@@ -601,6 +672,7 @@ class WeakSet(set):
             element = element_reference()
             if (element is not None):
                 return element
+    
     
     @has_docs
     def remove(self, element):
@@ -627,7 +699,7 @@ class WeakSet(set):
     
     symmetric_difference = __xor__
     
-    symmetric_difference_update = __xor__
+    symmetric_difference_update = __ixor__
     
     union = __or__
     
