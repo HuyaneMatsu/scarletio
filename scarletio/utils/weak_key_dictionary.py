@@ -454,7 +454,28 @@ class WeakKeyDictionary(dict):
     
     # __dir__ -> same
     # __doc__ -> same
-    # __eq__ -> same
+    
+    
+    @has_docs
+    def __eq__(self, other):
+        """Returns whether the two dictionaries are the same."""
+        if isinstance(other, type(self)):
+            return dict.__eq__(self, other)
+        
+        if isinstance(other, dict):
+            pass
+        
+        elif hasattr(type(other), '__iter__'):
+            other = dict(other)
+        
+        else:
+            return NotImplemented
+        
+        self_dict = dict(self.items())
+        
+        return self_dict == other
+    
+    
     # __format__ -> same
     # __ge__ -> same
     # __getattribute__ -> same
@@ -503,7 +524,25 @@ class WeakKeyDictionary(dict):
         return length
     
     # __lt__ -> same
-    # __ne__ -> same
+    
+    def __ne__(self, other):
+        """Returns whether the two dictionaries are different."""
+        if isinstance(other, type(self)):
+            return dict.__ne__(self, other)
+        
+        if isinstance(other, dict):
+            pass
+        
+        elif hasattr(type(other), '__iter__'):
+            other = dict(other)
+        
+        else:
+            return NotImplemented
+        
+        self_dict = dict(self.items())
+        
+        return self_dict != other
+    
     # __new__ -> same
     # __reduce__ -> we do not care
     # __reduce_ex__ -> we do not care

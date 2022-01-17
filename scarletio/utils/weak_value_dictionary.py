@@ -476,6 +476,7 @@ class WeakValueDictionary(dict):
     # __doc__ -> same
     
     def __eq__(self, other):
+        """Returns whether the two dictionaries are the same."""
         if isinstance(other, type(self)):
             return dict.__eq__(self, other)
         
@@ -552,6 +553,7 @@ class WeakValueDictionary(dict):
     # __lt__ -> same
     
     def __ne__(self, other):
+        """Returns whether the two dictionaries are different."""
         if isinstance(other, type(self)):
             return dict.__ne__(self, other)
         

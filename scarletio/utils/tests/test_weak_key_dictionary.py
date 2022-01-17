@@ -83,8 +83,8 @@ def test_WeakKeyDictionary_iter():
     weak_key_dictionary = WeakKeyDictionary(relations)
     weak_key_dictionary_empty = WeakKeyDictionary()
     
-    assert iter(weak_key_dictionary) == weak_key_dictionary.keys()
-    assert iter(weak_key_dictionary_empty) == weak_key_dictionary_empty.keys()
+    assert list(iter(weak_key_dictionary)) == list(weak_key_dictionary.keys())
+    assert list(iter(weak_key_dictionary_empty)) == list(weak_key_dictionary_empty.keys())
 
 
 def test_WeakKeyDictionary_len():
@@ -195,7 +195,7 @@ def test_WeakKeyDictionary_items():
     items = weak_key_dictionary.items()
     
     assert len(items) == len(weak_key_dictionary)
-    assert sorted(items) == sorted((key, weak_key_dictionary[key])  for key in weak_key_dictionary.keys())
+    assert sorted(items) == sorted((key, weak_key_dictionary[key]) for key in weak_key_dictionary.keys())
     assert item_1 in items
     assert not (item_2 in items)
     assert not (item_3 in items)
@@ -205,7 +205,7 @@ def test_WeakKeyDictionary_items():
     items = weak_key_dictionary_empty.values()
     
     assert len(items) == len(weak_key_dictionary_empty)
-    assert sorted(items) == sorted((key, weak_key_dictionary[key])  for key in weak_key_dictionary.keys())
+    assert sorted(items) == sorted((key, weak_key_dictionary[key]) for key in weak_key_dictionary.keys())
     assert not (item_1 in items)
     assert not (item_2 in items)
     assert not (item_3 in items)
@@ -261,7 +261,7 @@ def test_WeakKeyDictionary_popitem():
     relations = {WeakReferencable(x): x for x in range(2)}
     
     item_1 = (WeakReferencable(1), 1)
-    item_2 = (WeakReferencable(1), 1)
+    item_2 = (WeakReferencable(2), 2)
     
     weak_key_dictionary = WeakKeyDictionary(relations)
     
