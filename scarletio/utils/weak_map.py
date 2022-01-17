@@ -56,69 +56,6 @@ class _WeakMapCallback:
 
 
 @has_docs
-class _WeakMapIterator:
-    """
-    Iterator for ``WeakKeyDictionary``-s.
-    
-    Attributes
-    ----------
-    _parent : ``WeakReferer`` to ``WeakMap``
-        The parent weak map.
-    """
-    __slots__ = ('_parent', )
-    
-    @has_docs
-    def __init__(self, parent):
-        """
-        Creates a new ``_WeakMapIterator`` bound to the given ``WeakMap``.
-        
-        Parameters
-        ----------
-        parent : ``WeakMap``
-            The parent weak map.
-        """
-        self._parent = parent
-    
-    @has_docs
-    def __iter__(self):
-        """
-        Iterates over a weak map.
-        
-        This method is a generator.
-        
-        Yields
-        ------
-        key : `Any`
-        """
-        parent = self._parent
-        parent._iterating += 1
-        
-        try:
-            for reference in dict.__iter__(parent):
-                key = reference()
-                if (key is None):
-                    add_to_pending_removals(parent, reference)
-                    continue
-                
-                yield key
-                continue
-        
-        finally:
-            parent._iterating -= 1
-            parent._commit_removals()
-    
-    @has_docs
-    def __contains__(self, key):
-        """Returns whether the respective ``WeakMap`` contains the given key."""
-        return (key in self._parent)
-    
-    @has_docs
-    def __len__(self):
-        """Returns the respective ``WeakMap``'s length."""
-        return len(self._parent)
-
-
-@has_docs
 class WeakMap(dict):
     """
     Weak map is a mix of weak dictionaries and weak sets. Can be used to retrieve an already existing weakreferenced
@@ -195,6 +132,25 @@ class WeakMap(dict):
     
     # __dir__ -> same
     # __doc__ -> same
+    
+    def __eq__(self, other):
+        """returns whether the two weak maps are equal."""
+        if isinstance(other, type(self)):
+            return dict.__eq__(self, other)
+        
+        if isinstance(other, set):
+            pass
+        
+        elif hasattr(type(other), '__iter__'):
+            other = set(other)
+        
+        else:
+            return NotImplemented
+        
+        self_set = set(iter(self))
+        
+        return self_set == other
+    
     # __eq__ > same
     # __format__ -> same
     # __ge__ -> same
@@ -233,8 +189,26 @@ class WeakMap(dict):
     
     @has_docs
     def __iter__(self):
-        """Returns a ``_WeakMapIterator`` iterating over the weak map's keys."""
-        return iter(_WeakMapIterator(self))
+        """
+        Iterates over the weak map's elements.
+        
+        This method is an iterable generator,
+        """
+        self._iterating += 1
+        
+        try:
+            for reference in dict.__iter__(self):
+                key = reference()
+                if (key is None):
+                    add_to_pending_removals(self, reference)
+                    continue
+                
+                yield key
+                continue
+        
+        finally:
+            self._iterating -= 1
+            self._commit_removals()
     
     # __le__ -> same
     
