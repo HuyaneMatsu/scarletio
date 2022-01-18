@@ -144,7 +144,7 @@ def test_WeakItemDictionary_setitem():
     
     weak_item_dictionary[key_2] = value_2
     assert weak_item_dictionary[key_2] == value_2
-    assert len(weak_item_dictionary) == 4
+    assert len(weak_item_dictionary) == 5
     
     with pytest.raises(TypeError):
         weak_item_dictionary[key_3] = value_3
