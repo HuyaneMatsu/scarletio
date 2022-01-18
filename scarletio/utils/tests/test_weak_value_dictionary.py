@@ -116,25 +116,25 @@ def test_WeakValueDictionary_setitem():
     relations = {x: WeakReferencable(x) for x in range(3)}
     weak_value_dictionary = WeakValueDictionary(relations)
     
-    key = 4
-    value = WeakReferencable(4)
+    key_1 = 4
+    value_1 = WeakReferencable(4)
     
-    relations[key] = value
-    assert weak_value_dictionary[key] == value
+    key_2 = 3
+    value_2 = WeakReferencable(6)
+    
+    key_3 = 6
+    value_3 = 9
+    
+    relations[key_1] = value_1
+    assert weak_value_dictionary[key_1] == value_1
     assert len(weak_value_dictionary) == 4
     
-    key = 3
-    value = WeakReferencable(6)
-    
-    weak_value_dictionary[key] = value
-    assert weak_value_dictionary[key] == value
+    weak_value_dictionary[key_2] = value_2
+    assert weak_value_dictionary[key_2] == value_2
     assert len(weak_value_dictionary) == 4
-    
-    key = 6
-    value = 9
     
     with pytest.raises(TypeError):
-        weak_value_dictionary[key] = value
+        weak_value_dictionary[key_3] = value_3
 
 
 # methods
