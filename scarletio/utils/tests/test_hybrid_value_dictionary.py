@@ -26,7 +26,7 @@ def test_HybridValueDictionary_constructor_filled():
     
     hybrid_value_dictionary = HybridValueDictionary(relations)
     assert len(hybrid_value_dictionary) == len(relations)
-    assert sorted(hybrid_value_dictionary) == relations
+    assert dict(hybrid_value_dictionary.items()) == relations
 
 
 # test magic methods
