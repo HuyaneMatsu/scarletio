@@ -385,7 +385,10 @@ def test_HybridValueDictionary_values():
     values = hybrid_value_dictionary.values()
     
     assert len(values) == len(hybrid_value_dictionary)
-    assert sorted(values) == sorted(value for key, value in hybrid_value_dictionary.items())
+    assert sorted(values, key=sort_by_type_first_key) == sorted(
+        (value for key, value in hybrid_value_dictionary.items()),
+        key = sort_by_type_first_key,
+    )
     assert value_1 in values
     assert not (value_2 in values)
     
