@@ -264,10 +264,10 @@ def test_WeakValueDictionary_pop():
 
 
 def test_WeakValueDictionary_popitem():
-    relations = {x: WeakReferencable(x) for x in range(2)}
-    
     item_1 = (1, WeakReferencable(1))
     item_2 = (2, WeakReferencable(2))
+    
+    relations = dict([item_1, item_2])
     
     weak_value_dictionary = WeakValueDictionary(relations)
     
