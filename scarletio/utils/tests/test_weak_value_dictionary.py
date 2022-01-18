@@ -119,13 +119,13 @@ def test_WeakValueDictionary_setitem():
     key_1 = 4
     value_1 = WeakReferencable(4)
     
-    key_2 = 3
+    key_2 = 2
     value_2 = WeakReferencable(6)
     
     key_3 = 6
     value_3 = 9
     
-    relations[key_1] = value_1
+    weak_value_dictionary[key_1] = value_1
     assert weak_value_dictionary[key_1] == value_1
     assert len(weak_value_dictionary) == 4
     
