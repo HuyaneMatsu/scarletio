@@ -427,7 +427,34 @@ class WeakMap(dict):
     
     popitem = RemovedDescriptor()
     setdefault = RemovedDescriptor()
-    update = RemovedDescriptor()
+    
+    
+    @has_docs
+    def update(self, iterable):
+        """
+        Updates the map with the given iterable.
+        
+        Parameters
+        ----------
+        iterable : `iterable`
+            The iterable to update the map with.
+        
+        Raises
+        ------
+        TypeError
+            If the given value is not `iterable`, or any of it's elements is not weakreferable.
+        """
+        if hasattr(type(iterable), '__iter__'):
+            # Make sure, we have unique elements, so convert other to set
+            for element in iterable:
+                self.set(element)
+        
+        else:
+            raise TypeError(
+                f'Parameter `iterable` must be an iterable, got {iterable.__class__.__name__}; {iterable!r}.'
+            )
+    
+    
     values = RemovedDescriptor()
     
     

@@ -3,6 +3,7 @@
 - Add `is_iterable`.
 - Add `WeakSet`.
 - Add `Future.wait_for_completion`.
+- Add missing `WeakMap.update`.
 
 ## 1.0.8 *\[2022-01-04\]*
 
