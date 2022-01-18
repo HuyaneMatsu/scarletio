@@ -316,8 +316,8 @@ def test_WeakValueDictionary_setdefault():
 
 def test_WeakValueDictionary_update():
     relations_1 = {x: WeakReferencable(x) for x in range(2)}
-    relations_2 = {x: WeakReferencable(x)+1 for x in range(3)}
-    relations_3 = {x: WeakReferencable(x)-1 for x in range(1)}
+    relations_2 = {x: WeakReferencable(x+1) for x in range(3)}
+    relations_3 = {x: WeakReferencable(x-1) for x in range(1)}
     
     relations_update_1_2 = relations_1.copy()
     relations_update_1_2.update(relations_2)

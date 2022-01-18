@@ -152,6 +152,46 @@ class _HybridValueDictionaryValueIterator:
         return len(self._parent)
 
 
+    @has_docs
+    def __eq__(self, other):
+        """Returns whether the dictionary value iterators are the same."""
+        if isinstance(other, type(self)):
+            return self._parent == other._parent
+        
+        elif isinstance(other, list):
+            if len(self) != len(other):
+                return False
+            
+            other = other.copy()
+        
+        elif hasattr(type(other), '__iter__'):
+            has_length_method = hasattr(type(other), '__len__')
+            
+            if has_length_method:
+                if len(self) != len(other):
+                    return False
+            
+            other = list(other)
+            
+            if not has_length_method:
+                if len(self) != len(other):
+                    return False
+        
+        else:
+            return NotImplemented
+        
+        for value in self:
+            try:
+                other.remove(value)
+            except ValueError:
+                return False
+        
+        if other:
+            return False
+        
+        return True
+
+
 @has_docs
 class _HybridValueDictionaryItemIterator:
     """
@@ -242,6 +282,46 @@ class _HybridValueDictionaryItemIterator:
     def __len__(self):
         """Returns the respective ``HybridValueDictionary``'s length."""
         return len(self._parent)
+    
+    
+    @has_docs
+    def __eq__(self, other):
+        """Returns whether the two dictionary item iterators are the same."""
+        if isinstance(other, type(self)):
+            return self._parent == other._parent
+        
+        elif isinstance(other, list):
+            if len(self) != len(other):
+                return False
+            
+            other = other.copy()
+        
+        elif hasattr(type(other), '__iter__'):
+            has_length_method = hasattr(type(other), '__len__')
+            
+            if has_length_method:
+                if len(self) != len(other):
+                    return False
+            
+            other = list(other)
+            
+            if not has_length_method:
+                if len(self) != len(other):
+                    return False
+        
+        else:
+            return NotImplemented
+        
+        for item in self:
+            try:
+                other.remove(item)
+            except ValueError:
+                return False
+        
+        if other:
+            return False
+        
+        return True
 
 
 @has_docs
@@ -330,7 +410,25 @@ class HybridValueDictionary(dict):
     # __delitem__ -> same
     # __dir__ -> same
     # __doc__ -> same
-    # __eq__ -> same
+    
+    def __eq__(self, other):
+        """Returns whether the two dictionaries are the same."""
+        if isinstance(other, type(self)):
+            return dict.__eq__(self, other)
+        
+        if isinstance(other, dict):
+            pass
+        
+        elif hasattr(type(other), '__iter__'):
+            other = dict(other)
+        
+        else:
+            return NotImplemented
+        
+        self_dict = dict(self.items())
+        
+        return self_dict == other
+    
     # __format__ -> same
     # __ge__ -> same
     # __getattribute__ -> same
@@ -392,10 +490,39 @@ class HybridValueDictionary(dict):
         return length
     
     # __lt__ -> same
-    # __ne__ -> same
+    
+    
+    def __ne__(self, other):
+        """Returns whether the two dictionaries are different."""
+        if isinstance(other, type(self)):
+            return dict.__ne__(self, other)
+        
+        if isinstance(other, dict):
+            pass
+        
+        elif hasattr(type(other), '__iter__'):
+            other = dict(other)
+        
+        else:
+            return NotImplemented
+        
+        self_dict = dict(self.items())
+        
+        return self_dict != other
+    
     # __new__ -> same
-    # __reduce__ -> we do not care
-    # __reduce_ex__ -> we do not care
+    
+    @has_docs
+    def __reduce__(self):
+        """Reduces the dictionary to a picklable object."""
+        return (type(self), list(self.items()))
+    
+    
+    @has_docs
+    def __reduce_ex__(self, version):
+        """Reduces the dictionary to a picklable object."""
+        return type(self).__reduce__(self)
+    
     
     @has_docs
     def __repr__(self):

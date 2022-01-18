@@ -544,8 +544,18 @@ class WeakKeyDictionary(dict):
         return self_dict != other
     
     # __new__ -> same
-    # __reduce__ -> we do not care
-    # __reduce_ex__ -> we do not care
+    
+    @has_docs
+    def __reduce__(self):
+        """Reduces the dictionary to a picklable object."""
+        return (type(self), list(self.items()))
+    
+    
+    @has_docs
+    def __reduce_ex__(self, version):
+        """Reduces the dictionary to a picklable object."""
+        return type(self).__reduce__(self)
+    
     
     @has_docs
     def __repr__(self):
