@@ -18,7 +18,7 @@ def test_WeakItemDictionary_constructor():
 def test_WeakItemDictionary_constructor_empty():
     weak_item_dictionary = WeakItemDictionary([])
     assert len(weak_item_dictionary) == 0
-    assert sorted(weak_item_dictionary) == []
+    assert sorted(weak_item_dictionary.items()) == []
 
 
 def test_WeakItemDictionary_constructor_filled():
@@ -26,7 +26,7 @@ def test_WeakItemDictionary_constructor_filled():
     
     weak_item_dictionary = WeakItemDictionary(relations)
     assert len(weak_item_dictionary) == len(relations)
-    assert sorted(weak_item_dictionary) == relations
+    assert sorted(weak_item_dictionary.items()) == sorted(relations.items())
 
 
 # test magic methods
