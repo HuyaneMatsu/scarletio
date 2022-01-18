@@ -60,6 +60,9 @@ def test_HybridValueDictionary_eq():
     assert hybrid_value_dictionary_1 == relations_1
     assert not (hybrid_value_dictionary_1 == relations_2)
     assert not (hybrid_value_dictionary_1 == relations_3)
+    
+    assert hybrid_value_dictionary_1.__eq__([1, ]) is NotImplemented
+    assert hybrid_value_dictionary_1.__eq__(1) is NotImplemented
 
 
 def test_HybridValueDictionary_getitem():
@@ -110,6 +113,9 @@ def test_HybridValueDictionary_ne():
     assert not (hybrid_value_dictionary_1 != relations_1)
     assert hybrid_value_dictionary_1 != relations_2
     assert hybrid_value_dictionary_1 != relations_3
+
+    assert hybrid_value_dictionary_1.__ne__([1, ]) is NotImplemented
+    assert hybrid_value_dictionary_1.__ne__(1) is NotImplemented
 
 
 def test_HybridValueDictionary_setitem():
@@ -374,6 +380,19 @@ def test_HybridValueDictionary_update():
     test_case = hybrid_value_dictionary_1.copy()
     test_case.update(list(relations_3.items()))
     assert test_case == relations_update_1_3
+    
+
+    test_case = hybrid_value_dictionary_1.copy()
+    with pytest.raises(TypeError):
+        test_case.update([1, ])
+    
+    test_case = hybrid_value_dictionary_1.copy()
+    with pytest.raises(TypeError):
+        test_case.update(1)
+
+    test_case = hybrid_value_dictionary_1.copy()
+    with pytest.raises(ValueError):
+        test_case.update([(1,), ])
 
 
 def test_HybridValueDictionary_values():
