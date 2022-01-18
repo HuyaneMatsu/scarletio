@@ -633,6 +633,7 @@ class WeakKeyDictionary(dict):
         new._pending_removals = None
         callback = _WeakKeyDictionaryCallback(new)
         new._callback = callback
+        new._iterating = 0
         
         for key_reference, value in dict.items(self):
             key = key_reference()
