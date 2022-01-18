@@ -116,24 +116,27 @@ def test_HybridValueDictionary_setitem():
     relations = {0: WeakReferencable(0), 1: 1, 2: WeakReferencable(2)}
     hybrid_value_dictionary = HybridValueDictionary(relations)
     
-    key = 4
-    value = WeakReferencable(4)
+    key_1 = 4
+    value_1 = WeakReferencable(4)
     
-    relations[key] = value
-    assert hybrid_value_dictionary[key] == value
+    key_2 = 2
+    value_2 = WeakReferencable(6)
+    
+    key_3 = 6
+    value_3 = 9
+    
+    hybrid_value_dictionary[key_1] = value_1
+    assert hybrid_value_dictionary[key_1] == value_1
     assert len(hybrid_value_dictionary) == 4
     
-    key = 3
-    value = WeakReferencable(6)
     
-    hybrid_value_dictionary[key] = value
-    assert hybrid_value_dictionary[key] == value
+    hybrid_value_dictionary[key_2] = value_2
+    assert hybrid_value_dictionary[key_2] == value_2
     assert len(hybrid_value_dictionary) == 4
     
-    key = 6
-    value = 9
     
-    hybrid_value_dictionary[key] = value
+    hybrid_value_dictionary[key_3] = value_3
+    assert hybrid_value_dictionary[key_3] == value_3
     assert len(hybrid_value_dictionary) == 5
 
 
