@@ -267,10 +267,10 @@ def test_HybridValueDictionary_pop():
 
 
 def test_HybridValueDictionary_popitem():
-    relations = {x: WeakReferencable(x) for x in range(2)}
-    
     item_1 = (1, 1)
     item_2 = (2, WeakReferencable(2))
+    
+    relations = dict([item_1, item_2])
     
     hybrid_value_dictionary = HybridValueDictionary(relations)
     
