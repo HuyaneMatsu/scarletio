@@ -357,17 +357,15 @@ def test_WeakValueDictionary_update():
     assert test_case == relations_update_1_3
     
     
-    test_case = weak_value_dictionary_1.copy()
-    test_case.update(list(relations_1.items()))
-    assert test_case == relations_1
+    test_case = WeakValueDictionary()
+    with pytest.raises(TypeError):
+        test_case.update([1, ])
     
-    test_case = weak_value_dictionary_1.copy()
-    test_case.update(list(relations_2.items()))
-    assert test_case == relations_update_1_2
-    
-    test_case = weak_value_dictionary_1.copy()
-    test_case.update(list(relations_3.items()))
-    assert test_case == relations_update_1_3
+    with pytest.raises(TypeError):
+        test_case.update(1)
+
+    with pytest.raises(ValueError):
+        test_case.update([(1,), ])
 
 
 def test_WeakValueDictionary_values():

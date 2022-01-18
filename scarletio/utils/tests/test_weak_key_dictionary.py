@@ -64,6 +64,10 @@ def test_WeakKeyDictionary_eq():
     assert not (weak_key_dictionary_1 == relations_3)
 
 
+    assert weak_key_dictionary_1.__eq__([1, ]) is NotImplemented
+    assert weak_key_dictionary_1.__eq__(1) is NotImplemented
+
+
 def test_WeakKeyDictionary_getitem():
     relations = {WeakReferencable(x): x for x in range(3)}
     weak_key_dictionary = WeakKeyDictionary(relations)
@@ -112,6 +116,10 @@ def test_WeakKeyDictionary_ne():
     assert not (weak_key_dictionary_1 != relations_1)
     assert weak_key_dictionary_1 != relations_2
     assert weak_key_dictionary_1 != relations_3
+
+
+    assert weak_key_dictionary_1.__ne__([1, ]) is NotImplemented
+    assert weak_key_dictionary_1.__ne__(1) is NotImplemented
 
 
 def test_WeakKeyDictionary_setitem():
@@ -366,6 +374,17 @@ def test_WeakKeyDictionary_update():
     test_case = weak_key_dictionary_1.copy()
     test_case.update(list(relations_3.items()))
     assert test_case == relations_update_1_3
+
+
+    test_case = WeakKeyDictionary()
+    with pytest.raises(TypeError):
+        test_case.update([1, ])
+    
+    with pytest.raises(TypeError):
+        test_case.update(1)
+
+    with pytest.raises(ValueError):
+        test_case.update([(1,), ])
 
 
 def test_WeakKeyDictionary_values():

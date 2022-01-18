@@ -466,8 +466,11 @@ class WeakKeyDictionary(dict):
             pass
         
         elif hasattr(type(other), '__iter__'):
-            other = dict(other)
-        
+            try:
+                other = dict(other)
+            except (TypeError, ValueError):
+                return NotImplemented
+            
         else:
             return NotImplemented
         
@@ -534,7 +537,10 @@ class WeakKeyDictionary(dict):
             pass
         
         elif hasattr(type(other), '__iter__'):
-            other = dict(other)
+            try:
+                other = dict(other)
+            except (TypeError, ValueError):
+                return NotImplemented
         
         else:
             return NotImplemented

@@ -382,15 +382,13 @@ def test_HybridValueDictionary_update():
     assert test_case == relations_update_1_3
     
 
-    test_case = hybrid_value_dictionary_1.copy()
+    test_case = HybridValueDictionary()
     with pytest.raises(TypeError):
         test_case.update([1, ])
     
-    test_case = hybrid_value_dictionary_1.copy()
     with pytest.raises(TypeError):
         test_case.update(1)
 
-    test_case = hybrid_value_dictionary_1.copy()
     with pytest.raises(ValueError):
         test_case.update([(1,), ])
 

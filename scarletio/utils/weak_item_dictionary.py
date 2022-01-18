@@ -420,7 +420,10 @@ class WeakItemDictionary(dict):
             pass
         
         elif hasattr(type(other), '__iter__'):
-            other = dict(other)
+            try:
+                other = dict(other)
+            except (ValueError, TypeError):
+                return NotImplemented
         
         else:
             return NotImplemented
@@ -503,7 +506,10 @@ class WeakItemDictionary(dict):
             pass
         
         elif hasattr(type(other), '__iter__'):
-            other = dict(other)
+            try:
+                other = dict(other)
+            except (ValueError, TypeError):
+                return NotImplemented
         
         else:
             return NotImplemented
