@@ -2,7 +2,7 @@ __all__ = ('Future',)
 
 import reprlib, sys, warnings
 
-from ...utils import ignore_frame, include, set_docs
+from ...utils import ignore_frame, include, set_docs, to_coroutine
 from ...utils.trace import format_callback
 
 from ..exceptions import CancelledError, InvalidStateError
@@ -540,6 +540,23 @@ class Future:
         return self.result()
     
     __await__ = __iter__
+    
+    
+    @to_coroutine
+    def wait_for_completion(self):
+        """
+        Awaits the future till it is done, not retrieving it's result.
+        
+        This method is an awaitable generator.
+        
+        Notes
+        -----
+        This method do not protects the future from task cancellation, or from timeout context managers.
+        """
+        if self._state == FUTURE_STATE_PENDING:
+            self._blocking = True
+            yield self
+    
     
     if __debug__:
         def __del__(self):
