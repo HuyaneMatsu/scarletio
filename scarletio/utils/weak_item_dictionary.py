@@ -219,7 +219,8 @@ class _WeakItemDictionaryItemIterator:
         item : `tuple` (`Any`, `Any`)
         """
         parent = self._parent
-        parent._iterating += 1
+        iterating = parent._iterating
+        parent._iterating = iterating + 1
         
         try:
             for key_reference, value_reference in dict.items(parent):
@@ -609,6 +610,7 @@ class WeakItemDictionary(dict):
         new._key_callback = key_callback
         value_callback = _WeakItemDictionaryValueCallback(new)
         new._value_callback = value_callback
+        new._iterating = 0
         
         for key_reference, value_reference in dict.items(self):
             key = key_reference()
