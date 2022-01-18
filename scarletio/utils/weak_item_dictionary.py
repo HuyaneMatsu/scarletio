@@ -436,11 +436,11 @@ class WeakItemDictionary(dict):
     def __getitem__(self, key):
         """Gets the value of the weak item dictionary which matches the given key."""
         try:
-            key = WeakReferer(key)
+            key_reference = WeakReferer(key)
         except TypeError:
             raise KeyError(key) from None
         
-        value_reference = dict.__getitem__(self, key)
+        value_reference = dict.__getitem__(self, key_reference)
         value = value_reference()
         if (value is not None):
             return value
@@ -448,7 +448,7 @@ class WeakItemDictionary(dict):
         if self._iterating:
             add_to_pending_removals(self, value_reference.key)
         else:
-            dict.__delitem__(self, key)
+            dict.__delitem__(self, value_reference.key)
         
         raise KeyError(key)
     

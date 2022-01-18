@@ -26,7 +26,7 @@ def test_WeakKeyDictionary_constructor_filled():
     
     weak_key_dictionary = WeakKeyDictionary(relations)
     assert len(weak_key_dictionary) == len(relations)
-    assert sorted(weak_key_dictionary) == relations
+    assert sorted(weak_key_dictionary.items()) == sorted(relations.items())
 
 
 # test magic methods

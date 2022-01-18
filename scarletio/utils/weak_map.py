@@ -166,7 +166,11 @@ class WeakMap(dict):
         reference = dict.__getitem__(self, reference)
         key = reference()
         if (key is None):
-            add_to_pending_removals(self, reference)
+            if self._iterating:
+                add_to_pending_removals(self, reference)
+            else:
+                dict.__delitem__(self, reference)
+            
             raise KeyError(key)
         
         return key
