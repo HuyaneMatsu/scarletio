@@ -290,7 +290,7 @@ def test_HybridValueDictionary_popitem():
 
 
 def test_HybridValueDictionary_setdefault():
-    relations = {x: WeakReferencable(x) for x in range(2)}
+    relations = {0: WeakReferencable(0), 1: 1, 2: WeakReferencable(2)}
     
     key_1 = 6
     value_1 = WeakReferencable(6)
@@ -307,12 +307,12 @@ def test_HybridValueDictionary_setdefault():
     
     value = hybrid_value_dictionary.setdefault(key_1, value_1)
     assert value == expected_value_1
-    assert len(hybrid_value_dictionary) == 3
+    assert len(hybrid_value_dictionary) == 4
     
     
     value = hybrid_value_dictionary.setdefault(key_2, value_2)
     assert value == expected_value_2
-    assert len(hybrid_value_dictionary) == 3
+    assert len(hybrid_value_dictionary) == 4
     assert hybrid_value_dictionary[key_2] == expected_value_2
     
     with pytest.raises(TypeError):

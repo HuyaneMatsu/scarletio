@@ -127,6 +127,21 @@ class WeakReferer(WeakrefType):
             pass
     else:
         __init__ = object.__init__
+    
+    
+    def __repr__(self):
+        repr_parts = ['<', self.__class__.__name__]
+        
+        value = self()
+        if value is None:
+            repr_parts.append(' (dead)')
+        else:
+            repr_parts.append(' value=')
+            repr_parts.append(repr(value))
+        
+        repr_parts.append('>')
+        return ''.join(repr_parts)
+
 
 del WeakrefType
 

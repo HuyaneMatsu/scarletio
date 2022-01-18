@@ -163,7 +163,14 @@ class WeakMap(dict):
         except TypeError:
             raise KeyError(key) from None
         
-        return dict.__getitem__(self, reference)
+        reference = dict.__getitem__(self, reference)
+        key = reference()
+        if (key is None):
+            add_to_pending_removals(self, reference)
+            raise KeyError(key)
+        
+        return key
+    
     
     # __gt__ -> same
     # __hash__ -> same

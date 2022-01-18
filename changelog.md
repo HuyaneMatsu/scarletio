@@ -5,6 +5,10 @@
 - Add `Future.wait_for_completion`.
 - Add missing `WeakMap.update`.
 
+#### Bug fixes
+
+- `WeakMap.__getitem__` returned incorrect value.
+
 ## 1.0.8 *\[2022-01-04\]*
 
 #### Bug fixes
