@@ -1,6 +1,6 @@
 import pytest
 
-from weak_helpers import WeakReferencable
+from weak_helpers import WeakReferencable, sort_by_type_first_key
 
 from scarletio import HybridValueDictionary
 
@@ -394,6 +394,10 @@ def test_HybridValueDictionary_values():
     values = hybrid_value_dictionary_empty.values()
     
     assert len(values) == len(hybrid_value_dictionary_empty)
-    assert sorted(values) == sorted(value for key, value in hybrid_value_dictionary_empty.items())
+    assert sorted(values, key=sort_by_type_first_key) == sorted(
+        (value for key, value in hybrid_value_dictionary_empty.items()),
+        key = sort_by_type_first_key,
+    )
+    
     assert not (value_1 in values)
     assert not (value_2 in values)

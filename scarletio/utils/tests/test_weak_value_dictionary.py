@@ -209,7 +209,9 @@ def test_WeakValueDictionary_items():
     items = weak_value_dictionary_empty.values()
     
     assert len(items) == len(weak_value_dictionary_empty)
-    assert sorted(items) == sorted((key, weak_value_dictionary[key]) for key in weak_value_dictionary.keys())
+    assert sorted(items) == sorted(
+        (key, weak_value_dictionary_empty[key]) for key in weak_value_dictionary_empty.keys()
+    )
     assert not (item_1 in items)
     assert not (item_2 in items)
     assert not (item_3 in items)
