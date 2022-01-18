@@ -65,17 +65,25 @@ def test_WeakItemDictionary_eq():
 
 
 def test_WeakItemDictionary_getitem():
-    relations = {WeakReferencable(x): WeakReferencable(x) for x in range(3)}
+    relations = {WeakReferencable(x): WeakReferencable(x+4) for x in range(3)}
     weak_item_dictionary = WeakItemDictionary(relations)
     weak_item_dictionary_empty = WeakItemDictionary()
     
-    assert relations[WeakReferencable(2)] == 2
+    key_1 = WeakReferencable(2)
+    value_1 = WeakReferencable(6)
+    
+    
+    key_2 = WeakReferencable(6)
+    
+    key_3 = WeakReferencable(6)
+    
+    assert relations[key_1] == value_1
     
     with pytest.raises(KeyError):
-        weak_item_dictionary[WeakReferencable(6)]
+        weak_item_dictionary[key_2]
     
     with pytest.raises(KeyError):
-        weak_item_dictionary_empty[WeakReferencable(6)]
+        weak_item_dictionary_empty[key_3]
 
 
 def test_WeakItemDictionary_iter():
@@ -83,8 +91,8 @@ def test_WeakItemDictionary_iter():
     weak_item_dictionary = WeakItemDictionary(relations)
     weak_item_dictionary_empty = WeakItemDictionary()
     
-    assert list(iter(weak_item_dictionary)) == list(weak_item_dictionary.keys())
-    assert list(iter(weak_item_dictionary_empty)) == list(weak_item_dictionary_empty.keys())
+    assert sorted(iter(weak_item_dictionary)) == sorted(weak_item_dictionary.keys())
+    assert sorted(iter(weak_item_dictionary_empty)) == sorted(weak_item_dictionary_empty.keys())
 
 
 def test_WeakItemDictionary_len():
