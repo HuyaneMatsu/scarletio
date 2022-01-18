@@ -225,7 +225,7 @@ def test_WeakItemDictionary_items():
     items = weak_item_dictionary_empty.values()
     
     assert len(items) == len(weak_item_dictionary_empty)
-    assert sorted(items) == sorted((key, weak_item_dictionary[key]) for key in weak_item_dictionary.keys())
+    assert sorted(items) == sorted((key, weak_item_dictionary_empty[key]) for key in weak_item_dictionary_empty.keys())
     assert not (item_1 in items)
     assert not (item_2 in items)
     assert not (item_3 in items)
