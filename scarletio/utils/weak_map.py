@@ -331,7 +331,7 @@ class WeakMap(dict):
         new : ``WeakMap``
         """
         new = dict.__new__(type(self))
-        new._iterating = False
+        new._iterating = 0
         new._pending_removals = None
         new._callback = callback = _WeakMapCallback(new)
         

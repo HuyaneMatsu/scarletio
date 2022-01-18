@@ -659,6 +659,7 @@ class WeakValueDictionary(dict):
         new._pending_removals = None
         callback = _WeakValueDictionaryCallback(new)
         new._callback = callback
+        new._iterating = 0
         
         for key, value_reference in dict.items(self):
             value = value_reference()

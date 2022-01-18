@@ -10,6 +10,7 @@
 - `WeakMap.__getitem__` returned incorrect value.
 - `WeakItemDictionary.copy` didn't set all attributes.
 - `WeakKeyDictionary.copy` didn't set all attributes.
+- WeakValueDictionary`.copy` didn't set all attributes.
 
 ## 1.0.8 *\[2022-01-04\]*
 
