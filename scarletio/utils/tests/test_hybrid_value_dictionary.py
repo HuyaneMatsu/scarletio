@@ -302,6 +302,7 @@ def test_HybridValueDictionary_setdefault():
     
     key_3 = 7
     value_3 = 9
+    expected_value_3 = value_3
     
     hybrid_value_dictionary = HybridValueDictionary(relations)
     
@@ -315,8 +316,10 @@ def test_HybridValueDictionary_setdefault():
     assert len(hybrid_value_dictionary) == 4
     assert hybrid_value_dictionary[key_2] == expected_value_2
     
-    with pytest.raises(TypeError):
-        hybrid_value_dictionary.setdefault(key_3, value_3)
+    value = hybrid_value_dictionary.setdefault(key_3, value_3)
+    assert value == expected_value_3
+    assert len(hybrid_value_dictionary) == 5
+    assert hybrid_value_dictionary[key_3] == expected_value_3
 
 
 def test_HybridValueDictionary_update():
