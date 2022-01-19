@@ -1,7 +1,7 @@
 __all__ = ('WeakSet',)
 
 from .docs import has_docs
-from .utils import is_hashable
+from .utils import is_hashable, is_iterable
 from .weak_core import WeakReferer, add_to_pending_removals, is_weakreferable
 
 
@@ -106,15 +106,15 @@ class WeakSet(set):
         if isinstance(other, type(self)):
             new = type(self)()
             
-            for weak_element in set.__iter__(other):
-                if set.__contains__(self, weak_element):
-                    element = weak_element()
+            for element_reference in set.__iter__(other):
+                if set.__contains__(self, element_reference):
+                    element = element_reference()
                     if (element is not None):
                         new.add(element)
             
             return new
         
-        if hasattr(type(other), '__iter__'):
+        if is_iterable(other):
             new = type(self)()
             
             for element in other:
@@ -155,7 +155,7 @@ class WeakSet(set):
         if isinstance(other, set):
             pass
         
-        elif hasattr(type(other), '__iter__'):
+        elif is_iterable(other):
             try:
                 other = set(other)
             except TypeError:
@@ -181,7 +181,7 @@ class WeakSet(set):
         elif isinstance(other, set):
             pass
         
-        elif hasattr(type(other), '__iter__'):
+        elif is_iterable(other):
             try:
                 other = set(other)
             except TypeError:
@@ -204,7 +204,7 @@ class WeakSet(set):
         elif isinstance(other, set):
             pass
         
-        elif hasattr(type(other), '__iter__'):
+        elif is_iterable(other):
             try:
                 other = set(other)
             except TypeError:
@@ -227,7 +227,7 @@ class WeakSet(set):
         elif isinstance(other, set):
             other_set = other
         
-        elif hasattr(type(other), '__iter__'):
+        elif is_iterable(other):
             try:
                 other_set = set(other)
             except TypeError:
@@ -286,7 +286,7 @@ class WeakSet(set):
                 if not is_hashable(element):
                     return NotImplemented
                     
-        elif hasattr(type(other), '__iter__'):
+        elif is_iterable(other):
             # Make sure, we have unique elements, so convert other to set
             other = list(other)
             
@@ -310,12 +310,12 @@ class WeakSet(set):
     def __isub__(self, other):
         """Update the set, removing elements found in others."""
         if isinstance(other, type(self)):
-            for weak_element in set.__iter__(other):
-                set.discard(self, weak_element)
+            for element_reference in set.__iter__(other):
+                set.discard(self, element_reference)
             
             return self
         
-        elif hasattr(type(other), '__iter__'):
+        elif is_iterable(other):
             pass
         
         else:
@@ -359,13 +359,14 @@ class WeakSet(set):
     def __ixor__(self, other):
         """Update the set, keeping only elements found in either set, but not in both."""
         if isinstance(other, type(self)):
-            for weak_element in set.__iter__(other):
-                element = weak_element()
+            for element_reference in set.__iter__(other):
+                element = element_reference()
                 if element is None:
+                    add_to_pending_removals(self, element_reference)
                     continue
                 
                 try:
-                    set.remove(self, weak_element)
+                    set.remove(self, element_reference)
                 except KeyError:
                     self.add(element)
             
@@ -384,7 +385,7 @@ class WeakSet(set):
                 if not is_hashable(element):
                     return NotImplemented
                     
-        elif hasattr(type(other), '__iter__'):
+        elif is_iterable(other):
             # Make sure, we have unique elements, so convert other to set
             other = list(other)
             
@@ -409,14 +410,14 @@ class WeakSet(set):
     
     @has_docs
     def __le__(self, other):
-        """Test whether every element in the set is in other."""
+        """Returns whether every element in the set is in other."""
         if isinstance(other, type(self)):
             return set.__le__(self, other)
         
         elif isinstance(other, set):
             pass
         
-        elif hasattr(type(other), '__iter__'):
+        elif is_iterable(other):
             try:
                 other = set(other)
             except TypeError:
@@ -446,7 +447,7 @@ class WeakSet(set):
         elif isinstance(other, set):
             pass
         
-        elif hasattr(type(other), '__iter__'):
+        elif is_iterable(other):
             try:
                 other = set(other)
             except TypeError:
@@ -464,7 +465,7 @@ class WeakSet(set):
         if isinstance(other, set):
             pass
         
-        elif hasattr(type(other), '__iter__'):
+        elif is_iterable(other):
             try:
                 other = set(other)
             except TypeError:
@@ -489,7 +490,7 @@ class WeakSet(set):
             for element in other:
                 new.add(element)
         
-        elif hasattr(type(other), '__iter__'):
+        elif is_iterable(other):
             new = self.copy()
             
             for element in other:
@@ -503,7 +504,9 @@ class WeakSet(set):
         
         return new
     
+    
     __rand__ = __and__
+    
     
     @has_docs
     def __reduce__(self):
@@ -568,7 +571,7 @@ class WeakSet(set):
         elif isinstance(other, set):
             pass
         
-        elif hasattr(type(other), '__iter__'):
+        elif is_iterable(other):
             try:
                 other = set(other)
             except TypeError:
@@ -598,7 +601,7 @@ class WeakSet(set):
         elif isinstance(other, set):
             pass
         
-        elif hasattr(type(other), '__iter__'):
+        elif is_iterable(other):
             try:
                 other = set(other)
             except TypeError:
@@ -636,7 +639,7 @@ class WeakSet(set):
         elif isinstance(other, set):
             pass
         
-        elif hasattr(type(other), '__iter__'):
+        elif is_iterable(other):
             try:
                 other = set(other)
             except TypeError:
@@ -726,7 +729,7 @@ class WeakSet(set):
         elif isinstance(iterable, set):
             pass
         
-        elif hasattr(type(iterable), '__iter__'):
+        elif is_iterable(iterable):
             iterable = set(iterable)
         
         else:
@@ -760,10 +763,10 @@ class WeakSet(set):
             - If an element of `iterable` is now weakreferable.
         """
         if isinstance(iterable, type(self)):
-            for weak_element in set.__iter__(iterable):
-                set.discard(self, weak_element)
+            for element_reference in set.__iter__(iterable):
+                set.discard(self, element_reference)
         
-        elif hasattr(type(iterable), '__iter__'):
+        elif is_iterable(iterable):
             for element in iterable:
                 self.discard(element)
         
@@ -801,6 +804,10 @@ class WeakSet(set):
         iterable : `iterable`
             The values to make difference with.
         
+        Returns
+        -------
+        new : ``WeakSet``
+        
         Raises
         ------
         TypeError
@@ -811,15 +818,15 @@ class WeakSet(set):
         if isinstance(iterable, type(self)):
             new = type(self)()
             
-            for weak_element in set.__iter__(iterable):
-                if set.__contains__(self, weak_element):
-                    element = weak_element()
+            for element_reference in set.__iter__(iterable):
+                if set.__contains__(self, element_reference):
+                    element = element_reference()
                     if (element is not None):
                         new.add(element)
             
             return new
         
-        if hasattr(type(iterable), '__iter__'):
+        if is_iterable(iterable):
             new = type(self)()
             
             for element in iterable:
@@ -855,7 +862,7 @@ class WeakSet(set):
         elif isinstance(iterable, set):
             iterable_set = iterable
         
-        elif hasattr(type(iterable), '__iter__'):
+        elif is_iterable(iterable):
             iterable_set = set(iterable)
         
         else:
@@ -874,39 +881,119 @@ class WeakSet(set):
     
     
     @has_docs
-    def isdisjoint(self, other):
+    def isdisjoint(self, iterable):
         """
         Return whether if the set has no elements in common with other. Sets are disjoint if and only if
         their intersection is the empty set.
         
+        Parameters
+        ----------
+        iterable : `iterable`
+            The value to check disjoint with.
+        
         Returns
         -------
         is_disjoint : `bool`
+        
+        Raises
+        ------
+        TypeError
+            - If `iterable` is not `iterable`.
+            - If an element of `iterable` is not hashable.
         """
-        if isinstance(other, type(self)):
-            other = set(iter(other))
+        if isinstance(iterable, type(self)):
+            iterable = set(iter(iterable))
             
             # Something breaks the normal solution:
             # return set.isdisjoint(self, other)
         
-        elif isinstance(other, set):
+        elif isinstance(iterable, set):
             pass
         
-        elif hasattr(type(other), '__iter__'):
-            other = set(other)
+        elif is_iterable(iterable):
+            iterable = set(iterable)
         
         else:
             raise TypeError(
-                f'`Cannot disjoint with other, got {other.__class__.__name__}; {other!r}.'
+                f'`iterable` can be `iterable`, got {iterable.__class__.__name__}; {iterable!r}.'
             )
         
         self_set = set(iter(self))
-        return self_set.isdisjoint(other)
+        return self_set.isdisjoint(iterable)
     
     
-    issubset = __le__
+    @has_docs
+    def issubset(self, iterable):
+        """
+        Returns whether every element in the set is in other.
+        
+        Parameters
+        ----------
+        iterable : `iterable`
+            The value to check subset state with.
+        
+        Returns
+        -------
+        is_subset : `bool`
+        
+        Raises
+        ------
+        TypeError
+            - If `iterable` is not `iterable`.
+            - If an element of `iterable` is not hashable.
+        """
+        if isinstance(iterable, type(self)):
+            return set.__le__(self, iterable)
+        
+        elif isinstance(iterable, set):
+            pass
+        
+        elif is_iterable(iterable):
+            iterable = set(iterable)
+        
+        else:
+            raise TypeError(
+                f'`iterable` can be `iterable`, got {iterable.__class__.__name__}; {iterable!r}.'
+            )
+        
+        return set(iter(self)).issubset(iterable)
     
-    issuperset = __ge__
+    
+    @has_docs
+    def issuperset(self, iterable):
+        """
+        Returns whether every element in other is in the set.
+        
+        Parameters
+        ----------
+        iterable : `iterable`
+            The value to check superset state with.
+        
+        Returns
+        -------
+        is_superset : `bool`
+        
+        Raises
+        ------
+        TypeError
+            - If `iterable` is not `iterable`.
+            - If an element of `iterable` is not hashable.
+        """
+        if isinstance(iterable, type(self)):
+            return set.__ge__(self, iterable)
+        
+        elif isinstance(iterable, set):
+            pass
+        
+        elif is_iterable(iterable):
+            iterable = set(iterable)
+        
+        else:
+            raise TypeError(
+                f'`iterable` can be `iterable`, got {iterable.__class__.__name__}; {iterable!r}.'
+            )
+        
+        return set(iter(self)).issuperset(iterable)
     
     
     @has_docs
@@ -916,7 +1003,8 @@ class WeakSet(set):
         
         Returns
         -------
-        element
+        element : `Any`
+            The removed element.
         
         Raises
         ------
@@ -954,11 +1042,139 @@ class WeakSet(set):
         set.remove(self, element_reference)
     
     
-    symmetric_difference = __xor__
+    @has_docs
+    def symmetric_difference(self, iterable):
+        """
+        Return a new set with elements in either the set or other but not both.
+        
+        Parameters
+        ----------
+        iterable : `iterable`
+            The values to make symmetric difference with.
+        
+        Returns
+        -------
+        new : ``WeakSet``
+        
+        Raises
+        ------
+        TypeError
+            - If `iterable` is not `iterable`.
+            - If an element of `iterable` is not hashable.
+            - If an element of `iterable` is now weakreferable.
+        """
+        if isinstance(iterable, type(self)):
+            iterable = set(iter(iterable))
+        
+        elif isinstance(iterable, set):
+            pass
+        
+        elif is_iterable(iterable):
+            iterable = set(iterable)
+        
+        else:
+            raise TypeError(
+                f'`iterable` can be `iterable`, got {iterable.__class__.__name__}; {iterable!r}.'
+            )
+        
+        self_set = set(iter(self))
+        
+        new = type(self)()
+        
+        for element in (self_set ^ iterable):
+            new.add(element)
+        
+        return new
     
-    symmetric_difference_update = __ixor__
     
-    union = __or__
+    @has_docs
+    def symmetric_difference_update(self, iterable):
+        """
+        Update the set, keeping only elements found in either set, but not in both.
+        
+        Parameters
+        ----------
+        iterable : `iterable`
+            The values to do symmetric difference update with.
+        
+        Returns
+        -------
+        new : ``WeakSet``
+        
+        Raises
+        ------
+        TypeError
+            - If `iterable` is not `iterable`.
+            - If an element of `iterable` is not hashable.
+            - If an element of `iterable` is now weakreferable.
+        """
+        if isinstance(iterable, type(self)):
+            for element_reference in set.__iter__(iterable):
+                element = element_reference()
+                if element is None:
+                    add_to_pending_removals(self, element_reference)
+                    continue
+                
+                try:
+                    set.remove(self, element_reference)
+                except KeyError:
+                    self.add(element)
+            
+            return
+        
+        
+        if isinstance(iterable, (set, dict)):
+            pass
+        
+        elif is_iterable(iterable):
+            iterable = set(iterable)
+        
+        else:
+            raise TypeError(
+                f'`iterable` can be `iterable`, got {iterable.__class__.__name__}; {iterable!r}.'
+            )
+        
+        for element in iterable:
+            try:
+                self.remove(element)
+            except KeyError:
+                self.add(element)
+    
+    
+    @has_docs
+    def union(self, iterable):
+        """
+        Returns the union of two sets.
+        
+        Parameters
+        ----------
+        iterable : `iterable`
+            The values to union with.
+        
+        Returns
+        -------
+        new : ``WeakSet``
+        
+        Raises
+        ------
+        TypeError
+            - If `iterable` is not `iterable`.
+            - If an element of `iterable` is not hashable.
+            - If an element of `iterable` is now weakreferable.
+        """
+        if isinstance(iterable, type(self)) or is_iterable(iterable):
+            new = self.copy()
+            
+            for element in iterable:
+                new.add(element)
+        
+        else:
+            raise TypeError(
+                f'`iterable` can be `iterable`, got {iterable.__class__.__name__}; {iterable!r}.'
+            )
+        
+        return new
+    
     
     def update(self, iterable):
         """

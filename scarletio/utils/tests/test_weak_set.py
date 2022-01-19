@@ -496,8 +496,8 @@ def test_WeakSet_rxor():
     assert test_case == objects_1_2_xor
     
     
-    assert weak_set_empty.__rsub__(1) is NotImplemented
-    assert weak_set_empty.__rsub__([1]) is NotImplemented
+    assert weak_set_empty.__rxor__(1) is NotImplemented
+    assert weak_set_empty.__rxor__([1]) is NotImplemented
 
 
 def test_WeakSet_sub():
@@ -822,11 +822,53 @@ def test_WeakSet_isdisjoint():
 
 
 def test_WeakSet_issubset():
-    assert WeakSet.issubset is WeakSet.__le__
+    objects_1 = [WeakReferencable(x) for x in range(3)]
+    objects_2 = [WeakReferencable(x) for x in range(2)]
+    objects_3 = [WeakReferencable(x) for x in range(4)]
+    
+    weak_set_1 = WeakSet(objects_1)
+    weak_set_2 = WeakSet(objects_2)
+    weak_set_3 = WeakSet(objects_3)
+    
+    assert weak_set_1.issubset(weak_set_1)
+    assert not (weak_set_1.issubset(weak_set_2))
+    assert weak_set_1.issubset(weak_set_3)
+    
+    assert weak_set_1.issubset(objects_1)
+    assert not (weak_set_1.issubset(objects_2))
+    assert weak_set_1.issubset(objects_3)
+    
+    
+    test_case = WeakSet()
+    with pytest.raises(TypeError):
+        test_case.issubset(1)
+    
+    assert test_case.issubset([1]) == True
 
 
 def test_WeakSet_issuperset():
-    assert WeakSet.issuperset is WeakSet.__ge__
+    objects_1 = [WeakReferencable(x) for x in range(3)]
+    objects_2 = [WeakReferencable(x) for x in range(2)]
+    objects_3 = [WeakReferencable(x) for x in range(4)]
+    
+    weak_set_1 = WeakSet(objects_1)
+    weak_set_2 = WeakSet(objects_2)
+    weak_set_3 = WeakSet(objects_3)
+    
+    assert weak_set_1.issuperset(weak_set_1)
+    assert weak_set_1.issuperset(weak_set_2)
+    assert not (weak_set_1.issuperset(weak_set_3))
+    
+    assert weak_set_1.issuperset(objects_1)
+    assert weak_set_1.issuperset(objects_2)
+    assert not (weak_set_1.issuperset(objects_3))
+    
+    
+    test_case = WeakSet()
+    with pytest.raises(TypeError):
+        test_case.issuperset(1)
+    
+    assert test_case.issuperset([1]) == False
 
 
 def test_WeakSet_pop():
@@ -836,7 +878,7 @@ def test_WeakSet_pop():
     
     popped = test_case.pop()
     
-    assert len(test_case) == len(objects_1)-1
+    assert len(test_case) == len(objects_1) - 1
     assert popped in objects_1
     
     
@@ -877,15 +919,110 @@ def test_WeakSet_remove():
 
 
 def test_WeakSet_symmetric_difference():
-    assert WeakSet.symmetric_difference is WeakSet.__xor__
+    objects_1 = [WeakReferencable(x) for x in range(3)]
+    objects_2 = [WeakReferencable(x) for x in range(2)]
+    
+    weak_set_1 = WeakSet(objects_1)
+    weak_set_2 = WeakSet(objects_2)
+    weak_set_empty = WeakSet()
+    
+    objects_1_2_xor = WeakSet(set(objects_1).symmetric_difference(set(objects_2)))
+    
+    test_case = weak_set_1.copy().symmetric_difference(weak_set_1)
+    assert test_case == weak_set_empty
+    
+    test_case = weak_set_1.copy().symmetric_difference(weak_set_2)
+    assert test_case == objects_1_2_xor
+    
+    
+    test_case = weak_set_1.copy().symmetric_difference(objects_1)
+    assert test_case == weak_set_empty
+    
+    test_case = weak_set_1.copy().symmetric_difference(objects_2)
+    assert test_case == objects_1_2_xor
+    
+    
+    with pytest.raises(TypeError):
+        weak_set_empty.symmetric_difference(1)
+    
+    with pytest.raises(TypeError):
+        weak_set_empty.symmetric_difference([1])
 
 
 def test_WeakSet_symmetric_difference_update():
-    assert WeakSet.symmetric_difference_update is WeakSet.__ixor__
+    objects_1 = [WeakReferencable(x) for x in range(3)]
+    objects_2 = [WeakReferencable(x) for x in range(2)]
+    
+    weak_set_1 = WeakSet(objects_1)
+    weak_set_2 = WeakSet(objects_2)
+    weak_set_empty = WeakSet()
+    
+    objects_1_2_xor = WeakSet(set(objects_1) ^ set(objects_2))
+    
+    
+    test_case = weak_set_1.copy()
+    test_case.symmetric_difference_update(weak_set_1)
+    assert test_case == weak_set_empty
+    
+    test_case = weak_set_1.copy()
+    test_case.symmetric_difference_update(weak_set_2)
+    assert test_case == objects_1_2_xor
+    
+    
+    test_case = weak_set_1.copy()
+    test_case.symmetric_difference_update(objects_1)
+    assert test_case == weak_set_empty
+    
+    test_case = weak_set_1.copy()
+    test_case.symmetric_difference_update(objects_2)
+    assert test_case == objects_1_2_xor
+    
+    test_case = WeakSet()
+    with pytest.raises(TypeError):
+        test_case.symmetric_difference_update(1)
+    assert len(test_case) == 0
+    
+    with pytest.raises(TypeError):
+        test_case.symmetric_difference_update([1])
+    assert len(test_case) == 0
 
 
 def test_WeakSet_union():
-    assert WeakSet.union is WeakSet.__or__
+    objects_1 = [WeakReferencable(x) for x in range(3)]
+    objects_2 = [WeakReferencable(x) for x in range(2)]
+    objects_3 = [WeakReferencable(x) for x in range(4)]
+    
+    weak_set_1 = WeakSet(objects_1)
+    weak_set_2 = WeakSet(objects_2)
+    weak_set_3 = WeakSet(objects_3)
+    
+    
+    test_case = weak_set_1.copy().union(weak_set_1)
+    assert test_case == weak_set_1
+    
+    test_case = weak_set_1.copy().union(weak_set_2)
+    assert test_case == weak_set_1
+    
+    test_case = weak_set_1.copy().union(weak_set_3)
+    assert test_case == weak_set_3
+    
+    
+    test_case = weak_set_1.copy().union(objects_1)
+    assert test_case == weak_set_1
+    
+    test_case = weak_set_1.copy().union(objects_2)
+    assert test_case == weak_set_1
+    
+    test_case = weak_set_1.copy().union(objects_3)
+    assert test_case == weak_set_3
+    
+    
+    test_case = WeakSet()
+    with pytest.raises(TypeError):
+        test_case.union(1)
+    
+    with pytest.raises(TypeError):
+        test_case.union([1])
 
 
 def test_WeakSet_update():
