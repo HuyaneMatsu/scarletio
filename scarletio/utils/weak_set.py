@@ -377,23 +377,15 @@ class WeakSet(set):
                 if not is_weakreferable(element):
                     return NotImplemented
             
-        elif isinstance(other, (tuple, list)):
-            for element in other:
-                if not is_weakreferable(element):
-                    return NotImplemented
-                
-                if not is_hashable(element):
-                    return NotImplemented
-                    
         elif is_iterable(other):
-            # Make sure, we have unique elements, so convert other to set
-            other = list(other)
+            # Make sure to check out only unique elements
+            try:
+                other = set(other)
+            except TypeError:
+                return NotImplemented
             
             for element in other:
                 if not is_weakreferable(element):
-                    return NotImplemented
-                
-                if not is_hashable(element):
                     return NotImplemented
         
         else:
@@ -437,6 +429,7 @@ class WeakSet(set):
             length -= len(pending_removals)
         
         return length
+    
     
     @has_docs
     def __lt__(self, other):
@@ -705,7 +698,7 @@ class WeakSet(set):
     
     def difference(self, iterable):
         """
-        Returns a new set, without elements found in `iterable`.
+        Returns a new set, without elements found in other.
         
         Parameters
         ----------
@@ -1124,21 +1117,30 @@ class WeakSet(set):
         
         
         if isinstance(iterable, (set, dict)):
-            pass
+            for element in iterable:
+                try:
+                    self.remove(element)
+                except KeyError:
+                    self.add(element)
+        
         
         elif is_iterable(iterable):
-            iterable = set(iterable)
+            # check for dupes
+            added = set()
+            
+            for element in iterable:
+                if (element not in added):
+                    try:
+                        self.remove(element)
+                    except KeyError:
+                        self.add(element)
+                    
+                    added.add(element)
         
         else:
             raise TypeError(
                 f'`iterable` can be `iterable`, got {iterable.__class__.__name__}; {iterable!r}.'
             )
-        
-        for element in iterable:
-            try:
-                self.remove(element)
-            except KeyError:
-                self.add(element)
     
     
     @has_docs
