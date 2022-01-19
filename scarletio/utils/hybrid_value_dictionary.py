@@ -1,46 +1,18 @@
 __all__ = ('HybridValueDictionary', )
 
+from .dict_iterator_bases import DictionaryItemIteratorBase, DictionaryKeyIteratorBase, DictionaryValueIteratorBase
 from .dict_update_iterable_iterator import _dict_update_iterable_iterator
-from .docs import has_docs
+from .docs import copy_docs, has_docs
 from .weak_core import KeyedReferer, add_to_pending_removals, is_weakreferable
 from .weak_value_dictionary import _WeakValueDictionaryCallback
 
 
-@has_docs
-class _HybridValueDictionaryKeyIterator:
-    """
-    Key iterator for ``HybridValueDictionary``-s.
+class _HybridValueDictionaryKeyIterator(DictionaryKeyIteratorBase):
+    __slots__ = ()
     
-    Attributes
-    ----------
-    _parent : ``WeakReferer`` to ``HybridValueDictionary``
-        The parent hybrid value dictionary.
-    """
-    __slots__ = ('_parent',)
     
-    @has_docs
-    def __init__(self, parent):
-        """
-        Creates a new ``_HybridValueDictionaryKeyIterator`` bound to the given ``HybridValueDictionary``.
-        
-        Parameters
-        ----------
-        parent : ``HybridValueDictionary``
-            The parent hybrid value dictionary.
-        """
-        self._parent = parent
-    
-    @has_docs
+    @copy_docs(DictionaryKeyIteratorBase.__iter__)
     def __iter__(self):
-        """
-        Iterates over a hybrid value dictionary's keys.
-        
-        This method is a generator.
-        
-        Yields
-        ------
-        key : `Any`
-        """
         parent = self._parent
         parent._iterating += 1
         
@@ -57,52 +29,17 @@ class _HybridValueDictionaryKeyIterator:
             parent._iterating -= 1
             parent._commit_removals()
     
-    @has_docs
+    
+    @copy_docs(DictionaryKeyIteratorBase.__contains__)
     def __contains__(self, contains_key):
-        """Returns whether the respective ``HybridValueDictionary`` contains the given key."""
         return (contains_key in self._parent)
-    
-    @has_docs
-    def __len__(self):
-        """Returns the respective ``HybridValueDictionary``'s length."""
-        return len(self._parent)
 
 
-@has_docs
-class _HybridValueDictionaryValueIterator:
-    """
-    Value iterator for ``HybridValueDictionary``-s.
+class _HybridValueDictionaryValueIterator(DictionaryValueIteratorBase):
+    __slots__ = ()
     
-    Attributes
-    ----------
-    _parent : ``WeakReferer`` to ``HybridValueDictionary``
-        The parent hybrid value dictionary.
-    """
-    __slots__ = ('_parent',)
-    
-    @has_docs
-    def __init__(self, parent):
-        """
-        Creates a new ``_HybridValueDictionaryValueIterator`` bound to the given ``HybridValueDictionary``.
-        
-        Parameters
-        ----------
-        parent : ``HybridValueDictionary``
-            The parent hybrid value dictionary.
-        """
-        self._parent = parent
-    
-    @has_docs
+    @copy_docs(DictionaryValueIteratorBase.__iter__)
     def __iter__(self):
-        """
-        Iterates over a hybrid value dictionary's values.
-        
-        This method is a generator.
-        
-        Yields
-        ------
-        value : `Any`
-        """
         parent = self._parent
         parent._iterating += 1
         
@@ -123,9 +60,9 @@ class _HybridValueDictionaryValueIterator:
             parent._iterating -=1
             parent._commit_removals()
     
-    @has_docs
+    
+    @copy_docs(DictionaryValueIteratorBase.__contains__)
     def __contains__(self, contains_value):
-        """Returns whether the respective ``HybridValueDictionary`` contains the given value."""
         parent = self._parent
         for value_weakreferable, value_or_reference in dict.values(parent):
             if value_weakreferable:
@@ -145,88 +82,13 @@ class _HybridValueDictionaryValueIterator:
         parent._commit_removals()
         
         return result
-    
-    @has_docs
-    def __len__(self):
-        """Returns the respective ``HybridValueDictionary``'s length."""
-        return len(self._parent)
 
 
-    @has_docs
-    def __eq__(self, other):
-        """Returns whether the dictionary value iterators are the same."""
-        if isinstance(other, type(self)):
-            return self._parent == other._parent
-        
-        elif isinstance(other, list):
-            if len(self) != len(other):
-                return False
-            
-            other = other.copy()
-        
-        elif hasattr(type(other), '__iter__'):
-            has_length_method = hasattr(type(other), '__len__')
-            
-            if has_length_method:
-                if len(self) != len(other):
-                    return False
-            
-            other = list(other)
-            
-            if not has_length_method:
-                if len(self) != len(other):
-                    return False
-        
-        else:
-            return NotImplemented
-        
-        for value in self:
-            try:
-                other.remove(value)
-            except ValueError:
-                return False
-        
-        if other:
-            return False
-        
-        return True
-
-
-@has_docs
-class _HybridValueDictionaryItemIterator:
-    """
-    Item iterator for ``HybridValueDictionary``-s.
+class _HybridValueDictionaryItemIterator(DictionaryItemIteratorBase):
+    __slots__ = ()
     
-    Attributes
-    ----------
-    _parent : ``WeakReferer`` to ``HybridValueDictionary``
-        The parent hybrid value dictionary.
-    """
-    __slots__ = ('_parent',)
-    
-    @has_docs
-    def __init__(self, parent):
-        """
-        Creates a new ``_HybridValueDictionaryItemIterator`` bound to the given ``HybridValueDictionary``.
-        
-        Parameters
-        ----------
-        parent : ``HybridValueDictionary``
-            The parent hybrid value dictionary.
-        """
-        self._parent = parent
-    
-    @has_docs
+    @copy_docs(DictionaryItemIteratorBase.__iter__)
     def __iter__(self):
-        """
-        Iterates over a hybrid value dictionary's items.
-        
-        This method is a generator.
-        
-        Yields
-        ------
-        item : `tuple` (`Any`, `Any`)
-        """
         parent = self._parent
         parent._iterating += 1
         
@@ -247,9 +109,9 @@ class _HybridValueDictionaryItemIterator:
             parent._iterating -= 1
             parent._commit_removals()
     
-    @has_docs
+    
+    @copy_docs(DictionaryItemIteratorBase.__contains__)
     def __contains__(self, contains_item):
-        """Returns whether the respective ``HybridValueDictionary`` contains the given item."""
         if not isinstance(contains_item, tuple):
             return False
         
@@ -277,51 +139,6 @@ class _HybridValueDictionaryItemIterator:
             value = value_or_reference
         
         return (value == contains_value)
-    
-    @has_docs
-    def __len__(self):
-        """Returns the respective ``HybridValueDictionary``'s length."""
-        return len(self._parent)
-    
-    
-    @has_docs
-    def __eq__(self, other):
-        """Returns whether the two dictionary item iterators are the same."""
-        if isinstance(other, type(self)):
-            return self._parent == other._parent
-        
-        elif isinstance(other, list):
-            if len(self) != len(other):
-                return False
-            
-            other = other.copy()
-        
-        elif hasattr(type(other), '__iter__'):
-            has_length_method = hasattr(type(other), '__len__')
-            
-            if has_length_method:
-                if len(self) != len(other):
-                    return False
-            
-            other = list(other)
-            
-            if not has_length_method:
-                if len(self) != len(other):
-                    return False
-        
-        else:
-            return NotImplemented
-        
-        for item in self:
-            try:
-                other.remove(item)
-            except ValueError:
-                return False
-        
-        if other:
-            return False
-        
-        return True
 
 
 @has_docs

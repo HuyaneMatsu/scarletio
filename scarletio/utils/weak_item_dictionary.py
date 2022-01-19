@@ -1,7 +1,8 @@
 __all__ = ('WeakItemDictionary',)
 
+from .dict_iterator_bases import DictionaryItemIteratorBase, DictionaryValueIteratorBase
 from .dict_update_iterable_iterator import _dict_update_iterable_iterator
-from .docs import has_docs
+from .docs import copy_docs, has_docs
 from .weak_core import KeyedReferer, WeakReferer, add_to_pending_removals
 from .weak_key_dictionary import _WeakKeyDictionaryCallback, _WeakKeyDictionaryKeyIterator
 
@@ -59,43 +60,11 @@ class _WeakItemDictionaryValueCallback:
                 pass
 
 
-@has_docs
-class _WeakItemDictionaryValueIterator:
-    """
-    Value iterator for ``WeakValueDictionary``-s.
+class _WeakItemDictionaryValueIterator(DictionaryValueIteratorBase):
+    __slots__ = ()
     
-    Attributes
-    ----------
-    _parent : ``WeakReferer`` to ``WeakValueDictionary``
-        The parent weak value dictionary.
-    """
-    __slots__ = ('_parent',)
-    
-    
-    @has_docs
-    def __init__(self, parent):
-        """
-        Creates a new ``_WeakValueDictionaryValueIterator`` bound to the given ``WeakValueDictionary``.
-        
-        Parameters
-        ----------
-        parent : ``WeakValueDictionary``
-            The parent weak value dictionary.
-        """
-        self._parent = parent
-    
-    
-    @has_docs
+    @copy_docs(DictionaryValueIteratorBase.__iter__)
     def __iter__(self):
-        """
-        Iterates over a weak value dictionary's values.
-        
-        This method is a generator.
-        
-        Yields
-        ------
-        value : `Any`
-        """
         parent = self._parent
         parent._iterating += 1
         
@@ -114,9 +83,8 @@ class _WeakItemDictionaryValueIterator:
             parent._commit_removals()
     
     
-    @has_docs
+    @copy_docs(DictionaryValueIteratorBase.__contains__)
     def __contains__(self, contains_value):
-        """Returns whether the respective ``WeakValueDictionary`` contains the given value."""
         parent = self._parent
         for value_reference in dict.values(parent):
             value = value_reference()
@@ -136,88 +104,12 @@ class _WeakItemDictionaryValueIterator:
         return result
     
     
-    @has_docs
-    def __len__(self):
-        """Returns the respective ``WeakValueDictionary``'s length."""
-        return len(self._parent)
-    
-    
-    @has_docs
-    def __eq__(self, other):
-        """Returns whether the two weak item dictionary value iterators are the same."""
-        if isinstance(other, type(self)):
-            return self._parent == other._parent
-        
-        elif isinstance(other, list):
-            if len(self) != len(other):
-                return False
-            
-            other = other.copy()
-        
-        elif hasattr(type(other), '__iter__'):
-            has_length_method = hasattr(type(other), '__len__')
-            
-            if has_length_method:
-                if len(self) != len(other):
-                    return False
-            
-            other = list(other)
-            
-            if not has_length_method:
-                if len(self) != len(other):
-                    return False
-        
-        else:
-            return NotImplemented
-        
-        for value in self:
-            try:
-                other.remove(value)
-            except ValueError:
-                return False
-        
-        if other:
-            return False
-        
-        return True
 
-
-@has_docs
-class _WeakItemDictionaryItemIterator:
-    """
-    Item iterator for ``WeakItemDictionary``-s.
+class _WeakItemDictionaryItemIterator(DictionaryItemIteratorBase):
+    __slots__ = ()
     
-    Attributes
-    ----------
-    _parent : ``WeakReferer`` to ``WeakItemDictionary``
-        The parent weak item dictionary.
-    """
-    __slots__ = ('_parent',)
-    
-    @has_docs
-    def __init__(self, parent):
-        """
-        Creates a new ``_WeakItemDictionaryItemIterator`` bound to the given ``WeakItemDictionary``.
-        
-        Parameters
-        ----------
-        parent : ``WeakItemDictionary``
-            The parent weak item dictionary.
-        """
-        self._parent = parent
-    
-    
-    @has_docs
+    @copy_docs(DictionaryItemIteratorBase.__iter__)
     def __iter__(self):
-        """
-        Iterates over a weak item dictionary's items.
-        
-        This method is a generator.
-        
-        Yields
-        ------
-        item : `tuple` (`Any`, `Any`)
-        """
         parent = self._parent
         iterating = parent._iterating
         parent._iterating = iterating + 1
@@ -242,9 +134,8 @@ class _WeakItemDictionaryItemIterator:
             parent._commit_removals()
     
     
-    @has_docs
+    @copy_docs(DictionaryItemIteratorBase.__contains__)
     def __contains__(self, contains_item):
-        """Returns whether the respective ``WeakItemDictionary`` contains the given item."""
         if not isinstance(contains_item, tuple):
             return False
         
@@ -274,52 +165,6 @@ class _WeakItemDictionaryItemIterator:
             return False
         
         return (value == contains_value)
-    
-    
-    @has_docs
-    def __len__(self):
-        """Returns the respective ``WeakItemDictionary``'s length."""
-        return len(self._parent)
-    
-    
-    @has_docs
-    def __eq__(self, other):
-        """Returns whether the two weak value dictionary item iterators are the same."""
-        if isinstance(other, type(self)):
-            return self._parent == other._parent
-        
-        elif isinstance(other, list):
-            if len(self) != len(other):
-                return False
-            
-            other = other.copy()
-        
-        elif hasattr(type(other), '__iter__'):
-            has_length_method = hasattr(type(other), '__len__')
-            
-            if has_length_method:
-                if len(self) != len(other):
-                    return False
-            
-            other = list(other)
-            
-            if not has_length_method:
-                if len(self) != len(other):
-                    return False
-        
-        else:
-            return NotImplemented
-        
-        for item in self:
-            try:
-                other.remove(item)
-            except ValueError:
-                return False
-        
-        if other:
-            return False
-        
-        return True
 
 
 @has_docs
