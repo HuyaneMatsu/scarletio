@@ -541,7 +541,7 @@ class WeakKeyDictionary(dict):
                 other = dict(other)
             except (TypeError, ValueError):
                 return NotImplemented
-        
+            
         else:
             return NotImplemented
         

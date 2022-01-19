@@ -1,6 +1,6 @@
 __all__ = (
-    'IS_UNIX', 'any_to_any', 'change_on_switch', 'get_short_executable', 'is_iterable', 'list_difference',
-    'relative_index', 'un_map_pack', 'where'
+    'IS_UNIX', 'any_to_any', 'change_on_switch', 'get_short_executable', 'is_hashable', 'is_iterable',
+    'list_difference', 'relative_index', 'un_map_pack', 'where'
 )
 
 import sys
@@ -350,3 +350,30 @@ def is_iterable(object_):
     is_iterable : `bool`
     """
     return hasattr(type(object_), '__iter__')
+
+
+@has_docs
+def is_hashable(object_):
+    """
+    Returns whether the object is hashable.
+    
+    Parameters
+    ----------
+    object_ : `Any`
+        The object to check.
+    
+    Returns
+    -------
+    is_iterable : `bool`
+    """
+    try:
+        hasher_function = getattr(type(object_), '__hash__')
+    except AttributeError:
+        return False
+    
+    try:
+        hasher_function(object_)
+    except (TypeError, NotImplementedError):
+        return False
+    
+    return True

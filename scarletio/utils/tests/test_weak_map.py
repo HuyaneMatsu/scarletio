@@ -78,6 +78,8 @@ def test_WeakMap_eq():
     assert not (weak_map_1 == objects_2)
     assert not (weak_map_1 == objects_3)
 
+    assert weak_map_1.__eq__(1) is NotImplemented
+
 
 def test_WeakMap_getitem():
     objects_1 = [WeakReferencable(x) for x in range(3)]
@@ -138,6 +140,8 @@ def test_WeakMap_ne():
     assert not (weak_map_1 != objects_1)
     assert weak_map_1 != objects_2
     assert weak_map_1 != objects_3
+    
+    assert weak_map_1.__ne__(1) is NotImplemented
 
 
 # Test Methods
@@ -256,3 +260,47 @@ def test_WeakMap_set():
     with pytest.raises(TypeError):
         weak_map_1.set(object_4)
     assert len(weak_map_1) == 4
+
+
+def test_WeakMap_ior():
+    objects_1 = [WeakReferencable(x) for x in range(3)]
+    objects_2 = [WeakReferencable(x) for x in range(2)]
+    objects_3 = [WeakReferencable(x) for x in range(4)]
+    
+    weak_map_1 = WeakMap(objects_1)
+    weak_map_2 = WeakMap(objects_2)
+    weak_map_3 = WeakMap(objects_3)
+    
+    
+    test_case = weak_map_1.copy()
+    test_case.update(weak_map_1)
+    assert test_case == weak_map_1
+    
+    test_case = weak_map_1.copy()
+    test_case.update(weak_map_2)
+    assert test_case == weak_map_1
+    
+    test_case = weak_map_1.copy()
+    test_case.update(weak_map_3)
+    assert test_case == objects_3
+    
+
+    test_case = weak_map_1.copy()
+    test_case.update(objects_1)
+    assert test_case == weak_map_1
+    
+    test_case = weak_map_1.copy()
+    test_case.update(objects_2)
+    assert test_case == weak_map_1
+    
+    test_case = weak_map_1.copy()
+    test_case.update(objects_3)
+    assert test_case == objects_3
+    
+    
+    test_case = WeakMap()
+    with pytest.raises(TypeError):
+        test_case.update([1, ])
+    
+    with pytest.raises(TypeError):
+        test_case.update(1)

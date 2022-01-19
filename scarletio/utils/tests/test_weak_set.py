@@ -58,6 +58,16 @@ def test_WeakSet_and():
     
     test_case = weak_set_1.copy() & objects_3
     assert test_case == weak_set_1
+    
+    
+    test_case = WeakSet()
+    
+    assert test_case.__and__(1) is NotImplemented
+    assert len(test_case) == 0
+    
+    intersection = test_case.__and__([1])
+    assert intersection is not NotImplemented
+    assert len(intersection) == 0
 
 
 def test_WeakSet_contains():
@@ -89,6 +99,11 @@ def test_WeakSet_eq():
     assert weak_set_1 == objects_1
     assert not (weak_set_1 == objects_2)
     assert not (weak_set_1 == objects_3)
+    
+    
+    test_case = WeakSet()
+    assert test_case.__eq__(1) is NotImplemented
+    assert test_case.__eq__([1]) == False
 
 
 def test_WeakSet_ge():
@@ -107,6 +122,11 @@ def test_WeakSet_ge():
     assert weak_set_1 >= objects_1
     assert weak_set_1 >= objects_2
     assert not (weak_set_1 >= objects_3)
+    
+    
+    test_case = WeakSet()
+    assert test_case.__ge__(1) is NotImplemented
+    assert test_case.__ge__([1]) == False
 
 
 def test_WeakSet_gt():
@@ -125,6 +145,11 @@ def test_WeakSet_gt():
     assert not (weak_set_1 > objects_1)
     assert weak_set_1 > objects_2
     assert not (weak_set_1 > objects_3)
+    
+    
+    test_case = WeakSet()
+    assert test_case.__gt__(1) is NotImplemented
+    assert test_case.__gt__([1]) == False
 
 
 def test_WeakSet_iand():
@@ -161,6 +186,14 @@ def test_WeakSet_iand():
     test_case = weak_set_1.copy()
     test_case &= objects_3
     assert test_case == weak_set_1
+    
+    
+    test_case = WeakSet()
+    assert test_case.__iand__(1) is NotImplemented
+    assert len(test_case) == 0
+    
+    assert test_case.__iand__([1]) is test_case
+    assert len(test_case) == 0
 
 
 def test_WeakSet_ior():
@@ -197,6 +230,13 @@ def test_WeakSet_ior():
     test_case = weak_set_1.copy()
     test_case |= objects_3
     assert test_case == objects_3
+    
+    
+    test_case = WeakSet()
+    assert test_case.__ior__(1) is NotImplemented
+    assert len(test_case) == 0
+    assert test_case.__ior__([1]) is NotImplemented
+    assert len(test_case) == 0
 
 
 def test_WeakSet_isub():
@@ -236,6 +276,13 @@ def test_WeakSet_isub():
     test_case = weak_set_1.copy()
     test_case -= objects_3
     assert test_case == weak_set_empty
+    
+    
+    test_case = WeakSet()
+    assert test_case.__isub__(1) is NotImplemented
+    assert len(test_case) == 0
+    assert test_case.__isub__([1]) is test_case
+    assert len(test_case) == 0
 
 
 def test_WeakSet_iter():
@@ -276,6 +323,12 @@ def test_WeakSet_ixor():
     test_case = weak_set_1.copy()
     test_case ^= objects_2
     assert test_case == objects_1_2_xor
+    
+    test_case = WeakSet()
+    assert test_case.__ixor__(1) is NotImplemented
+    assert len(test_case) == 0
+    assert test_case.__ixor__([1]) is NotImplemented
+    assert len(test_case) == 0
 
 
 def test_WeakSet_le():
@@ -294,6 +347,11 @@ def test_WeakSet_le():
     assert weak_set_1 <= objects_1
     assert not (weak_set_1 <= objects_2)
     assert weak_set_1 <= objects_3
+    
+    
+    test_case = WeakSet()
+    assert test_case.__le__(1) is NotImplemented
+    assert test_case.__le__([1]) == True
 
 
 def test_WeakSet_len():
@@ -323,6 +381,11 @@ def test_WeakSet_lt():
     assert not (weak_set_1 < objects_1)
     assert not (weak_set_1 < objects_2)
     assert weak_set_1 < objects_3
+    
+    
+    test_case = WeakSet()
+    assert test_case.__lt__(1) is NotImplemented
+    assert test_case.__lt__([1]) == True
 
 
 def test_WeakSet_ne():
@@ -338,6 +401,10 @@ def test_WeakSet_ne():
     assert not (weak_set_1 != objects_1)
     assert not (weak_set_2 != objects_2)
     assert weak_set_1 != objects_2
+
+    test_case = WeakSet()
+    assert test_case.__ne__(1) is NotImplemented
+    assert test_case.__ne__([1]) == True
 
 
 def test_WeakSet_or():
@@ -368,6 +435,11 @@ def test_WeakSet_or():
     
     test_case = weak_set_1.copy() | objects_3
     assert test_case == weak_set_3
+    
+    
+    test_case = WeakSet()
+    assert test_case.__or__(1) is NotImplemented
+    assert test_case.__or__([1]) is NotImplemented
 
 
 def test_WeakSet_rand():
@@ -394,6 +466,10 @@ def test_WeakSet_rsub():
     
     test_case = objects_3 - weak_set_1.copy()
     assert test_case == weak_set_3_1_sub
+    
+    test_case = WeakSet()
+    assert test_case.__rsub__(1) is NotImplemented
+    assert test_case.__rsub__([1]) is NotImplemented
 
 
 def test_WeakSet_rxor():
@@ -418,12 +494,17 @@ def test_WeakSet_rxor():
     
     test_case = weak_set_1.copy() ^ objects_2
     assert test_case == objects_1_2_xor
+    
+    
+    assert weak_set_empty.__rsub__(1) is NotImplemented
+    assert weak_set_empty.__rsub__([1]) is NotImplemented
 
 
 def test_WeakSet_sub():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(x) for x in range(4)]
+    objects_4 = [1]
     
     weak_set_1 = WeakSet(objects_1)
     weak_set_2 = WeakSet(objects_2)
@@ -450,6 +531,11 @@ def test_WeakSet_sub():
     
     test_case = weak_set_1.copy() - objects_3
     assert test_case == weak_set_empty
+    
+    test_case = weak_set_1.copy() - objects_4
+    assert test_case == weak_set_1
+    
+    assert weak_set_empty.__sub__(1) is NotImplemented
 
 
 def test_WeakSet_xor():
@@ -516,11 +602,89 @@ def test_WeakSet_copy():
 
 
 def test_WeakSet_difference():
-    assert WeakSet.difference is WeakSet.__sub__
+    objects_1 = [WeakReferencable(x) for x in range(3)]
+    objects_2 = [WeakReferencable(x) for x in range(2)]
+    objects_3 = [WeakReferencable(x) for x in range(4)]
+    objects_4 = [1]
+    
+    weak_set_1 = WeakSet(objects_1)
+    weak_set_2 = WeakSet(objects_2)
+    weak_set_3 = WeakSet(objects_3)
+    weak_set_empty = WeakSet()
+    
+    weak_set_1_2_sub = WeakSet(set(objects_1) - set(objects_2))
+    
+    test_case = weak_set_1.copy() - weak_set_1
+    assert test_case == weak_set_empty
+    
+    test_case = weak_set_1.copy().difference(weak_set_2)
+    assert test_case == weak_set_1_2_sub
+    
+    test_case = weak_set_1.copy() - weak_set_3
+    assert test_case == weak_set_empty
+    
+    
+    test_case = weak_set_1.copy().difference(objects_1)
+    assert test_case == weak_set_empty
+    
+    test_case = weak_set_1.copy().difference(objects_2)
+    assert test_case == weak_set_1_2_sub
+    
+    test_case = weak_set_1.copy().difference(objects_3)
+    assert test_case == weak_set_empty
+    
+    test_case = weak_set_1.copy().difference(objects_4)
+    assert test_case == weak_set_1
+    
+    with pytest.raises(TypeError):
+        weak_set_empty.difference(1)
 
 
 def test_WeakSet_difference_update():
-    assert WeakSet.difference_update is WeakSet.__isub__
+    objects_1 = [WeakReferencable(x) for x in range(3)]
+    objects_2 = [WeakReferencable(x) for x in range(2)]
+    objects_3 = [WeakReferencable(x) for x in range(4)]
+    
+    weak_set_1 = WeakSet(objects_1)
+    weak_set_2 = WeakSet(objects_2)
+    weak_set_3 = WeakSet(objects_3)
+    weak_set_empty = WeakSet()
+    
+    weak_set_1_2_sub = WeakSet(set(objects_1) - set(objects_2))
+    
+    
+    test_case = weak_set_1.copy()
+    test_case.difference_update(weak_set_1)
+    assert test_case == weak_set_empty
+    
+    test_case = weak_set_1.copy()
+    test_case.difference_update(weak_set_2)
+    assert test_case == weak_set_1_2_sub
+    
+    test_case = weak_set_1.copy()
+    test_case.difference_update(weak_set_3)
+    assert test_case == weak_set_empty
+    
+
+    test_case = weak_set_1.copy()
+    test_case.difference_update(objects_1)
+    assert test_case == weak_set_empty
+    
+    test_case = weak_set_1.copy()
+    test_case.difference_update(objects_2)
+    assert test_case == weak_set_1_2_sub
+    
+    test_case = weak_set_1.copy()
+    test_case.difference_update(objects_3)
+    assert test_case == weak_set_empty
+    
+    
+    with pytest.raises(TypeError):
+        assert test_case.difference_update(1)
+    assert len(test_case) == 0
+    
+    test_case.difference_update([1])
+    assert len(test_case) == 0
 
 
 def test_WeakSet_discard():
@@ -548,14 +712,91 @@ def test_WeakSet_discard():
     
     
     test_case.discard(object_3)
+    assert test_case == expected_state
 
 
 def test_WeakSet_intersection():
-    assert WeakSet.intersection is WeakSet.__and__
+    objects_1 = [WeakReferencable(x) for x in range(3)]
+    objects_2 = [WeakReferencable(x) for x in range(2)]
+    objects_3 = [WeakReferencable(x) for x in range(4)]
+    
+    weak_set_1 = WeakSet(objects_1)
+    weak_set_2 = WeakSet(objects_2)
+    weak_set_3 = WeakSet(objects_3)
+    
+    test_case = weak_set_1.copy().intersection(weak_set_1)
+    assert test_case == weak_set_1
+    
+    test_case = weak_set_1.copy().intersection(weak_set_2)
+    assert test_case == weak_set_2
+    
+    test_case = weak_set_1.copy().intersection(weak_set_3)
+    assert test_case == weak_set_1
+    
+    
+    test_case = weak_set_1.copy().intersection(objects_1)
+    assert test_case == weak_set_1
+    
+    test_case = weak_set_1.copy().intersection(objects_2)
+    assert test_case == weak_set_2
+    
+    test_case = weak_set_1.copy().intersection(objects_3)
+    assert test_case == weak_set_1
+    
+    
+    test_case = WeakSet()
+    
+    with pytest.raises(TypeError):
+        assert test_case.intersection(1)
+    
+    intersection = test_case.intersection([1])
+    assert len(intersection) == 0
 
 
 def test_WeakSet_intersection_update():
-    assert WeakSet.intersection_update is WeakSet.__iand__
+
+    objects_1 = [WeakReferencable(x) for x in range(3)]
+    objects_2 = [WeakReferencable(x) for x in range(2)]
+    objects_3 = [WeakReferencable(x) for x in range(4)]
+    
+    weak_set_1 = WeakSet(objects_1)
+    weak_set_2 = WeakSet(objects_2)
+    weak_set_3 = WeakSet(objects_3)
+    
+    
+    test_case = weak_set_1.copy()
+    test_case.intersection_update(weak_set_1)
+    assert test_case == weak_set_1
+    
+    test_case = weak_set_1.copy()
+    test_case.intersection_update(weak_set_2)
+    assert test_case == weak_set_2
+    
+    test_case = weak_set_1.copy()
+    test_case.intersection_update(weak_set_3)
+    assert test_case == weak_set_1
+    
+
+    test_case = weak_set_1.copy()
+    test_case.intersection_update(objects_1)
+    assert test_case == weak_set_1
+    
+    test_case = weak_set_1.copy()
+    test_case.intersection_update(objects_2)
+    assert test_case == weak_set_2
+    
+    test_case = weak_set_1.copy()
+    test_case.intersection_update(objects_3)
+    assert test_case == weak_set_1
+    
+    
+    test_case = WeakSet()
+    with pytest.raises(TypeError):
+        test_case.intersection_update(1)
+    assert len(test_case) == 0
+    
+    test_case.intersection_update([1])
+    assert len(test_case) == 0
 
 
 def test_WeakSet_isdisjoint():
@@ -648,4 +889,46 @@ def test_WeakSet_union():
 
 
 def test_WeakSet_update():
-    assert WeakSet.update is WeakSet.__ior__
+    objects_1 = [WeakReferencable(x) for x in range(3)]
+    objects_2 = [WeakReferencable(x) for x in range(2)]
+    objects_3 = [WeakReferencable(x) for x in range(4)]
+    
+    weak_set_1 = WeakSet(objects_1)
+    weak_set_2 = WeakSet(objects_2)
+    weak_set_3 = WeakSet(objects_3)
+    
+    
+    test_case = weak_set_1.copy()
+    test_case.update(weak_set_1)
+    assert test_case == weak_set_1
+    
+    test_case = weak_set_1.copy()
+    test_case.update(weak_set_2)
+    assert test_case == weak_set_1
+    
+    test_case = weak_set_1.copy()
+    test_case.update(weak_set_3)
+    assert test_case == objects_3
+    
+
+    test_case = weak_set_1.copy()
+    test_case.update(objects_1)
+    assert test_case == weak_set_1
+    
+    test_case = weak_set_1.copy()
+    test_case.update(objects_2)
+    assert test_case == weak_set_1
+    
+    test_case = weak_set_1.copy()
+    test_case.update(objects_3)
+    assert test_case == objects_3
+    
+    
+    test_case = WeakSet()
+    with pytest.raises(TypeError):
+        test_case.update(1)
+    assert len(test_case) == 0
+    
+    with pytest.raises(TypeError):
+        test_case.update([1])
+    assert len(test_case) == 0

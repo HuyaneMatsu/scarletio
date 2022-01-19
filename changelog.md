@@ -4,6 +4,7 @@
 - Add `WeakSet`.
 - Add `Future.wait_for_completion`.
 - Add missing `WeakMap.update`.
+- Add `is_hashable`.
 
 #### Bug fixes
 
