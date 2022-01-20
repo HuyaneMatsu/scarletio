@@ -60,6 +60,10 @@ def test_WeakValueDictionary_eq():
     assert weak_value_dictionary_1 == relations_1
     assert not (weak_value_dictionary_1 == relations_2)
     assert not (weak_value_dictionary_1 == relations_3)
+    
+    
+    assert weak_value_dictionary_1.__eq__([1, ]) is NotImplemented
+    assert weak_value_dictionary_1.__eq__(1) is NotImplemented
 
 
 def test_WeakValueDictionary_getitem():
@@ -67,7 +71,7 @@ def test_WeakValueDictionary_getitem():
     weak_value_dictionary = WeakValueDictionary(relations)
     weak_value_dictionary_empty = WeakValueDictionary()
     
-    assert relations[2] == WeakReferencable(2)
+    assert weak_value_dictionary[2] == WeakReferencable(2)
     
     with pytest.raises(KeyError):
         weak_value_dictionary[6]
@@ -81,8 +85,8 @@ def test_WeakValueDictionary_iter():
     weak_value_dictionary = WeakValueDictionary(relations)
     weak_value_dictionary_empty = WeakValueDictionary()
     
-    assert list(iter(weak_value_dictionary)) == list(weak_value_dictionary.keys())
-    assert list(iter(weak_value_dictionary_empty)) == list(weak_value_dictionary_empty.keys())
+    assert sorted(iter(weak_value_dictionary)) == sorted(weak_value_dictionary.keys())
+    assert sorted(iter(weak_value_dictionary_empty)) == sorted(weak_value_dictionary_empty.keys())
 
 
 def test_WeakValueDictionary_len():
@@ -110,6 +114,9 @@ def test_WeakValueDictionary_ne():
     assert not (weak_value_dictionary_1 != relations_1)
     assert weak_value_dictionary_1 != relations_2
     assert weak_value_dictionary_1 != relations_3
+
+    assert weak_value_dictionary_1.__ne__([1, ]) is NotImplemented
+    assert weak_value_dictionary_1.__ne__(1) is NotImplemented
 
 
 def test_WeakValueDictionary_setitem():
@@ -206,7 +213,7 @@ def test_WeakValueDictionary_items():
     
     weak_value_dictionary_empty = WeakValueDictionary()
     
-    items = weak_value_dictionary_empty.values()
+    items = weak_value_dictionary_empty.items()
     
     assert len(items) == len(weak_value_dictionary_empty)
     assert sorted(items) == sorted(

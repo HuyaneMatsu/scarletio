@@ -84,8 +84,8 @@ def test_HybridValueDictionary_iter():
     hybrid_value_dictionary = HybridValueDictionary(relations)
     hybrid_value_dictionary_empty = HybridValueDictionary()
     
-    assert list(iter(hybrid_value_dictionary)) == list(hybrid_value_dictionary.keys())
-    assert list(iter(hybrid_value_dictionary_empty)) == list(hybrid_value_dictionary_empty.keys())
+    assert sorted(iter(hybrid_value_dictionary)) == sorted(hybrid_value_dictionary.keys())
+    assert sorted(iter(hybrid_value_dictionary_empty)) == sorted(hybrid_value_dictionary_empty.keys())
 
 
 def test_HybridValueDictionary_len():

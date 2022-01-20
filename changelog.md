@@ -5,6 +5,7 @@
 - Add `Future.wait_for_completion`.
 - Add missing `WeakMap.update`.
 - Add `is_hashable`.
+- Add `MultiValueDictionary.popitem`.
 
 #### Bug fixes
 
@@ -12,6 +13,7 @@
 - `WeakItemDictionary.copy` didn't set all attributes.
 - `WeakKeyDictionary.copy` didn't set all attributes.
 - WeakValueDictionary`.copy` didn't set all attributes.
+- `_MultiValueDictionaryItemIterator.__contains__` returned incorrect value.
 
 ## 1.0.8 *\[2022-01-04\]*
 

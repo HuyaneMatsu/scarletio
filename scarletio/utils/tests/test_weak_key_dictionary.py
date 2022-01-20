@@ -87,8 +87,8 @@ def test_WeakKeyDictionary_iter():
     weak_key_dictionary = WeakKeyDictionary(relations)
     weak_key_dictionary_empty = WeakKeyDictionary()
     
-    assert list(iter(weak_key_dictionary)) == list(weak_key_dictionary.keys())
-    assert list(iter(weak_key_dictionary_empty)) == list(weak_key_dictionary_empty.keys())
+    assert sorted(iter(weak_key_dictionary)) == sorted(weak_key_dictionary.keys())
+    assert sorted(iter(weak_key_dictionary_empty)) == sorted(weak_key_dictionary_empty.keys())
 
 
 def test_WeakKeyDictionary_len():

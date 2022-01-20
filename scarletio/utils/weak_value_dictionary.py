@@ -270,7 +270,10 @@ class WeakValueDictionary(dict):
             pass
         
         elif hasattr(type(other), '__iter__'):
-            other = dict(other)
+            try:
+                other = dict(other)
+            except TypeError:
+                return NotImplemented
         
         else:
             return NotImplemented
@@ -347,7 +350,10 @@ class WeakValueDictionary(dict):
             pass
         
         elif hasattr(type(other), '__iter__'):
-            other = dict(other)
+            try:
+                other = dict(other)
+            except TypeError:
+                return NotImplemented
         
         else:
             return NotImplemented
@@ -555,7 +561,7 @@ class WeakValueDictionary(dict):
     @has_docs
     def popitem(self):
         """
-        Pops an item of the weak value dictionary.
+        Pops an item of the dictionary.
         
         Returns
         -------
@@ -564,7 +570,7 @@ class WeakValueDictionary(dict):
         Raises
         ------
         KeyError
-            If the weak value dictionary is empty.
+            If the dictionary is empty.
         """
         while dict.__len__(self):
             key, value_reference = dict.popitem(self)
