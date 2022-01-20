@@ -1,6 +1,6 @@
 __all__ = ('IgnoreCaseMultiValueDictionary', )
 
-from .docs import has_docs
+from .docs import copy_docs, has_docs
 from .ignore_case_string import IgnoreCaseString
 from .multi_value_dictionary import MultiValueDictionary
 
@@ -14,21 +14,8 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
     """
     __slots__ = ()
     
-    @has_docs
+    @copy_docs(MultiValueDictionary.__init__)
     def __init__(self, iterable=None):
-        """
-        Creates a new ``IgnoreCaseMultiValueDictionary``.
-        
-        Parameters
-        ----------
-        iterable : `None`, `iterable`, Optional
-            Iterable to update the created MultiValueDictionary initially.
-            
-            Can be given as one of the following:
-                - ``MultiValueDictionary``.
-                - `dict`.
-                - `iterable` of `key` - `value` pairs.
-        """
         dict.__init__(self)
         
         if (iterable is None) or (not iterable):
@@ -60,42 +47,30 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
                 else:
                     values.append(value)
     
-    @has_docs
+    
+    @copy_docs(MultiValueDictionary.__getitem__)
     def __getitem__(self, key):
-        """
-        Returns the MultiValueDictionary's `value` for the given `key`. If the `key` has more values, then returns the 0th of
-        them.
-        """
         key = IgnoreCaseString(key)
         return dict.__getitem__(self, key)[0]
     
-    @has_docs
+    
+    @copy_docs(MultiValueDictionary.__setitem__)
     def __setitem__(self, key, value):
-        """Adds the given `key` - `value` pair to the MultiValueDictionary."""
         key = IgnoreCaseString(key)
         MultiValueDictionary.__setitem__(self, key, value)
     
-    @has_docs
+    
+    @copy_docs(MultiValueDictionary.__delitem__)
     def __delitem__(self, key):
-        """
-        Removes the `value` for the given `key` from the MultiValueDictionary. If the `key` has more values, then removes only
-        the 0th of them.
-        """
         key = IgnoreCaseString(key)
         MultiValueDictionary.__delitem__(self, key)
     
-    @has_docs
+    
+    @copy_docs(MultiValueDictionary.extend)
     def extend(self, mapping):
-        """
-        Extends the MultiValueDictionary titled with the given `mapping`'s items.
-        
-        Parameters
-        ----------
-        mapping : `Any`
-            Any mapping type, what has `.items` attribute.
-        """
         getitem = dict.__getitem__
         setitem = dict.__setitem__
+        
         for key, value in mapping.items():
             key = IgnoreCaseString(key)
             try:
@@ -106,117 +81,35 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
                 if value not in values:
                     values.append(value)
     
-    @has_docs
+    
+    @copy_docs(MultiValueDictionary.get_all)
     def get_all(self, key, default=None):
-        """
-        Returns all the values matching the given `key`.
-        
-        Parameters
-        ----------
-        key : `Any`
-            The `key` to match.
-        default : `Any`, Optional
-            Default value to return if `key` is not present in the MultiValueDictionary. Defaults to `None`.
-        
-        Returns
-        -------
-        values : `default or `list` of `Any`
-            The values for the given `key` if present.
-        """
         key = IgnoreCaseString(key)
         return MultiValueDictionary.get_all(self, key, default)
     
-    @has_docs
+    
+    @copy_docs(MultiValueDictionary.get_one)
     def get_one(self, key, default=None):
-        """
-        Returns the 0th value matching the given `key`.
-        
-        Parameters
-        ----------
-        key : `Any`
-            The key to match.
-        default : `Any`, Optional
-            Default value to return if `key` is not present in the MultiValueDictionary. Defaults to `None`.
-        
-        Returns
-        -------
-        value : `default`, `Any`
-            The value for the given key if present.
-        """
         key = IgnoreCaseString(key)
         return MultiValueDictionary.get_one(self, key, default)
     
     get = get_one
     
-    @has_docs
+    
+    @copy_docs(MultiValueDictionary.setdefault)
     def setdefault(self, key, default=None):
-        """
-        Returns the value for the given `key`.
-        
-        If the `key` is not present in the MultiValueDictionary, then set's the given `default` value as it.
-        
-        Parameters
-        ----------
-        key : `Any`
-            The key to match.
-        default : `Any`, Optional
-            Default value to set and return if `key` is not present in the MultiValueDictionary.
-        
-        Returns
-        -------
-        value : `default`, `Any`
-            The first value for which `key` matched, or `default` if none.
-        """
         key = IgnoreCaseString(key)
         return MultiValueDictionary.setdefault(self, key, default)
     
-    @has_docs
+    
+    @copy_docs(MultiValueDictionary.pop_all)
     def pop_all(self, key, default=...):
-        """
-        Removes all the values from the MultiValueDictionary which the given `key` matched.
-        
-        Parameters
-        ----------
-        key : `Any`
-            The key to match.
-        default : `Any`, Optional
-            Default value to return if `key` is not present in the MultiValueDictionary.
-        
-        Returns
-        -------
-        values : `default`, `list` of `Any`
-            The matched values. If `key` is not present, but `default` value is given, then returns that.
-        
-        Raises
-        ------
-        KeyError
-            if `key` is not present in the MultiValueDictionary and `default` value is not given either.
-        """
         key = IgnoreCaseString(key)
         return MultiValueDictionary.pop_all(self, key, default)
     
-    @has_docs
+    
+    @copy_docs(MultiValueDictionary.pop_one)
     def pop_one(self, key, default=...):
-        """
-        Removes the first value from the MultiValueDictionary, which matches the given `key`.
-        
-        Parameters
-        ----------
-        key : `Any`
-            The key to match.
-        default : `Any`, Optional
-            Default value to return if `key` is not present in the MultiValueDictionary.
-        
-        Returns
-        -------
-        value : `default`, `list` of `Any`
-            The 0th matched value. If `key` is not present, but `default` value is given, then returns that.
-        
-        Raises
-        ------
-        KeyError
-            if `key` is not present in the MultiValueDictionary and `default` value is not given either.
-        """
         key = IgnoreCaseString(key)
         return MultiValueDictionary.pop_one(self, key, default)
     
