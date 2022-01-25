@@ -14,6 +14,8 @@
 - `WeakKeyDictionary.copy` didn't set all attributes.
 - WeakValueDictionary`.copy` didn't set all attributes.
 - `_MultiValueDictionaryItemIterator.__contains__` returned incorrect value.
+- `MultiValueDictionary.__init__` could add the same item multiple times.
+- `IgnoreCaseMultiValueDictionary.__init__` could add the same item multiple times.
 
 ## 1.0.8 *\[2022-01-04\]*
 

@@ -45,7 +45,8 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
                 except KeyError:
                     setitem(self, key, [value])
                 else:
-                    values.append(value)
+                    if value not in values:
+                        values.append(value)
     
     
     @copy_docs(MultiValueDictionary.__getitem__)

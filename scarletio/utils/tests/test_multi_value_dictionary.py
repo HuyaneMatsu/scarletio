@@ -19,11 +19,11 @@ def test_MultiValueDictionary_constructor_empty():
 
 
 def test_MultiValueDictionary_constructor_filled():
-    relations = [('a', 'a'), ('b', 'b'), ('a', 'c')]
+    relations = [('a', 'a'), ('b', 'b'), ('a', 'c'), ('b', 'b')]
     
     multi_value_dictionary = MultiValueDictionary(relations)
     assert len(multi_value_dictionary) == len(set(relation[0] for relation in relations))
-    assert sorted(multi_value_dictionary.items()) == sorted(relations)
+    assert sorted(multi_value_dictionary.items()) == sorted(set(relations))
 
 
 # Test magic methods
