@@ -1,3 +1,9 @@
+## 1.0.10 *\[2022-01-29\]*
+
+#### Bug fixes
+
+- `HttpReadProtocol.get_payload_reader_task` should return `None` if status is 204.
+
 ## 1.0.9 *\[2022-01-25\]*
 
 - Add `is_iterable`.

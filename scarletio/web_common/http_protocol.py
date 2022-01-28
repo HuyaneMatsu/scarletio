@@ -930,6 +930,9 @@ class HttpReadProtocol(ReadProtocolBase):
                 raise PayloadError(f'{CONTENT_LENGTH} must be a non negative int, got: {length!r}.')
         
         if (not message.upgraded):
+            if message.status == 204:
+                return None
+            
             if message.chunked:
                 decompressor = get_decompressor_for(message.encoding)
                 if decompressor is None:
@@ -949,6 +952,9 @@ class HttpReadProtocol(ReadProtocolBase):
             return self._read_until_eof()
         
         if isinstance(message, RawResponseMessage) and message.status >= 199 and (length is None):
+            if message.status == 204:
+                return None
+            
             if message.chunked:
                 decompressor = get_decompressor_for(message.encoding)
                 if decompressor is None:
