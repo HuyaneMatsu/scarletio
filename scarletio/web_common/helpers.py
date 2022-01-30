@@ -82,7 +82,7 @@ class BasicAuth:
         ----------
         auth_header : `str`
             Authorization header value.
-        encoding : `str`, Optional
+        encoding : `str` = `BASIC_AUTH_DEFAULT_ENCODING`, Optional
             Encoding used to encode the authorization headers. Defaults to `'latin1'`.
         
         Returns

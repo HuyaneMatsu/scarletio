@@ -109,9 +109,9 @@ class URL:
         
         Parameters
         ----------
-        value : ``URL``, `str`, `urllib.parse.SplitResult`, Optional
+        value : ``URL``, `str`, `urllib.parse.SplitResult` = `''`, Optional
             The value to create ``URL`` from. Defaults to empty string.
-        encoded : `bool`, Optional
+        encoded : `bool` = `False`, Optional
             Whether the given `value` is already encoded. Defaults to `False`.
 
         Raises

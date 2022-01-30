@@ -142,11 +142,11 @@ class SyncQueue:
         
         Parameters
         ----------
-        iterable : `iterable` of `Any`
+        iterable : `None`, `iterable` of `Any` = `None`, Optional
             Iterable to set the queue's results initially from.
-        max_length : `int`
+        max_length : `None`, `int` = `None`, Optional
             Maximal length of the queue. If the queue would pass it's maximal length, it's oldest results are popped.
-        cancelled : `bool`
+        cancelled : `bool` = `False`, Optional
             Whether the queue should be initially cancelled.
         """
         self._results = deque(maxlen=max_length) if iterable is None else deque(iterable, maxlen=max_length)
@@ -440,7 +440,7 @@ class ExecutorThread(Thread):
         ----------
         func : `callable`
             The function to execute.
-        future : `None`, ``Future``, Optional
+        future : `None`, ``Future`` = `None`, Optional
             A future, what's result is set, when the `func` finishes it's execution.
             
             If not given a new future is created. Defaults to `None`
@@ -520,7 +520,7 @@ class ExecutionPair:
     __slots__ = ('func', 'future', )
     
     
-    def __init__(self,func,future):
+    def __init__(self, func, future):
         """
         Creates a new ``ExecutionPair``.
         
@@ -743,7 +743,7 @@ class Executor:
         
         Parameters
         ----------
-        keep_executor_count : `int`, Optional
+        keep_executor_count : `int` = `1`, Optional
             The minimal amount of executors to keep alive (or not close).
         """
         self.free_executors = deque()

@@ -254,7 +254,7 @@ class WeakSet(set):
         
         Parameters
         ----------
-        iterable : `iterable`, Optional
+        iterable : `None`, `iterable` = `None`, Optional
             Iterable to update the created set with.
         """
         self._pending_removals = None

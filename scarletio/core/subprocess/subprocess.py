@@ -283,7 +283,7 @@ class AsyncProcess:
         ----------
         name : `str`
             The extra information's name to get.
-        default : `Any`, Optional
+        default : `Any` = `None`, Optional
             Default value to return if `name` could not be matched. Defaults to `None`.
         
         Returns
@@ -749,9 +749,9 @@ class AsyncProcess:
         
         Parameters
         ----------
-        input_ : `None`, `bytes-like`, Optional
+        input_ : `None`, `bytes-like` = `None` , Optional
             Optional data to be sent to the sub-process.
-        timeout : `None`, `float`, Optional
+        timeout : `None`, `float` = `None`, Optional
             The maximal amount of time to wait for the process to close in seconds.
         
         Returns
@@ -763,7 +763,7 @@ class AsyncProcess:
         
         Raises
         ------
-        TimeoutExpired
+        TimeoutError
             If the process was not closed before timeout.
         """
         tasks = []

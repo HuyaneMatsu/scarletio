@@ -129,7 +129,7 @@ class HTTPStreamWriter:
         
         Parameters
         ----------
-        chunk : `bytes-like`
+        chunk : `bytes-like` = `b''`, Optional
             The data to write.
         """
         if self._at_eof:

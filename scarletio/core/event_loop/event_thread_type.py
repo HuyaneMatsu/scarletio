@@ -134,11 +134,11 @@ class EventThreadType(type):
         
         Parameters
         ----------
-        daemon : `bool`, Optional
+        daemon : `bool` = `False`, Optional
             Whether the created thread should be daemon. Defaults to `False`.
-        name : `None`, `str`, Optional
+        name : `None`, `str` = `None`, Optional
             The created thread's name. Defaults to `None`
-        start_later : `bool`, Optional
+        start_later : `bool` = `True`, Optional
             Whether the event loop should be started only later. Defaults to `True`.
         **kwargs : keyword parameters
             Additional event thread specific parameters.

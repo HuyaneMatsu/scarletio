@@ -1020,9 +1020,10 @@ class DatagramAddressedReadProtocol(AbstractProtocolBase):
         
         Parameters
         ----------
-        address : `None`, `tuple` (`str`, `int`), Optional
+        address : `None`, `tuple` (`str`, `int`) = `None`, Optional
             The address of which payload is waiter for.
-        timeout : `None`, `
+        timeout : `None`, `float = `None`, Optional
+            The maximal amount of time to wait before raising `TimeoutError`.
         
         Returns
         -------
@@ -1030,6 +1031,11 @@ class DatagramAddressedReadProtocol(AbstractProtocolBase):
             - If `timeout` is given and timeout occur, then returns `None`.
             - if `address` is given and data is received from ir, then returns the respective ``ReadProtocolBase``.
             - If `address` is not given, then returns a `tuple` of the respective `address` and protocol.
+        
+        Raises
+        ------
+        TimeoutError
+            - If timeout occured.
         """
         if timeout is None:
             if address is None:

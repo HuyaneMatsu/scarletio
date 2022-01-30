@@ -172,7 +172,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
         
         Parameters
         ----------
-        exception : `None`, ``BaseException``, Optional
+        exception : `None`, ``BaseException`` = `None`, Optional
             Exception to throw into ``._connection_made_waiter`` if any.
         """
         connection_made_waiter = self._connection_made_waiter

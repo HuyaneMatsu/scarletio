@@ -111,9 +111,9 @@ class Task(Future):
         
         Parameters
         ----------
-        limit : `int`, Optional
+        limit : `int` = `-1`, Optional
             The maximal amount of stacks to fetch. By giving it as negative integer, there will be no stack limit
-            to fetch back, Defaults to `-1`.
+            to fetch back.
         
         Returns
         -------
@@ -241,10 +241,10 @@ class Task(Future):
         
         Parameters
         ----------
-        limit : `int`, Optional
+        limit : `int` = `-1`, Optional
             The maximal amount of stacks to print. By giving it as negative integer, there will be no stack limit
-            to print out, Defaults to `-1`.
-        file : `None`, `I/O stream`, Optional
+            to print out.
+        file : `None`, `I/O stream` = `None`, Optional
             The file to print the stack to. Defaults to `sys.stderr`.
         
         Notes
@@ -265,7 +265,7 @@ class Task(Future):
         
         Parameters
         ----------
-        limit : `int`, Optional
+        limit : `int`
             The maximal amount of stacks to print. By giving it as negative integer, there will be no stack limit
             to print out,
         file : `None`, `I/O stream`

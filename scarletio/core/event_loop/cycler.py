@@ -172,9 +172,8 @@ class Cycler:
             The time interval of the cycler to call the added functions.
         *funcs : `callable`
             Callables, what the cycler will call.
-        priority : `int`
+        priority : `int` = `0`, Optional (Keyword only)
             Priority order of the added callables, which define in which order the given `funcs` will be called.
-            Defaults to `0`
         
         Raises
         ------
@@ -445,7 +444,7 @@ class Cycler:
         ----------
         func : `callable`
             Callable, what the cycler will call.
-        priority : `int`
+        priority : `int` = `0`, Optional
             Priority order of the added callables, which define in which order the given `funcs` will be called.
         
         Raises

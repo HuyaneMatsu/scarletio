@@ -38,8 +38,8 @@ class Formdata:
         
         Parameters
         ----------
-        quote_fields : `bool`, Optional
-            Whether type option field values should be quoted. Defaults to `True`.
+        quote_fields : `bool` = `True`, Optional
+            Whether type option field values should be quoted.
         """
         self.fields = []
         self.is_multipart = False
@@ -100,13 +100,13 @@ class Formdata:
             The field's name.
         value : `Any`
             The field's value.
-        content_type : `None`, `str`, Optional
-            The field's content type. Defaults to `None`.
-        filename : `None`, `str`, Optional
+        content_type : `None`, `str` = `None`, Optional
+            The field's content type.
+        filename : `None`, `str` = `None`, Optional
             The field's name. If not given or given as `None` (so by the default), and the given `value` is an `IOBase`
             instance then tries to use that's name.
-        transfer_encoding : `None`, `str`, Optional
-            The field's transfer encoding. Defaults to `None`.
+        transfer_encoding : `None`, `str` = `None`, Optional
+            The field's transfer encoding.
         
         Raises
         ------
@@ -241,11 +241,11 @@ class Formdata:
     
     def __call__(self, encoding='utf-8'):
         """
-        Gets the payload of the ``Formdata``-
+        Gets the payload of the ``Formdata``.
         
         Parameters
         ----------
-        encoding : `str`
+        encoding : `str` = `'utf-8'`, Optional
             The encoding to use to encode the formdata's fields.
         
         Returns

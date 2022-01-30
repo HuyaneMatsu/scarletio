@@ -55,7 +55,7 @@ class UnixReadPipeTransportLayer(TransportLayerBase):
             The pipe to connect to on read end.
         protocol : ``SubprocessReadPipeProtocol``, `Any`
             Asynchronous protocol implementation used by the transport.
-        extra : `None`, `dict` of (`str`, `Any`) items, Optional
+        extra : `None`, `dict` of (`str`, `Any`) items
             Optional transport information.
         
         Raises
@@ -297,7 +297,7 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
             The pipe to connect to on read end.
         protocol : ``SubprocessWritePipeProtocol``, `Any`
             Asynchronous protocol implementation used by the transport.
-        extra : `None`, `dict` of (`str`, `Any`) items, Optional
+        extra : `None`, `dict` of (`str`, `Any`) items = `None`, Optional
             Optional transport information.
 
         Raises
@@ -610,9 +610,9 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
         
         Parameters
         ----------
-        low : None`, `int`, Optional
+        low : None`, `int` = `None`, Optional
             The ``.protocol`` is paused writing when the buffer size passes the high water mark. Defaults to `65536`.
-        high : `None`, `int`, Optional
+        high : `None`, `int` = `None`, Optional
             The ``.protocol`` is resumed writing when the buffer size goes under the low water mark. Defaults to
             `16384`.
 

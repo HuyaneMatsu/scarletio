@@ -88,7 +88,7 @@ class MultiValueDictionary(dict):
         
         Parameters
         ----------
-        iterable : `None`, `iterable`, Optional
+        iterable : `None`, `iterable` = `None`, Optional
             Iterable to update the created dictionary initially.
             
             Can be given as one of the following:
@@ -233,8 +233,8 @@ class MultiValueDictionary(dict):
         ----------
         key : `Any`
             The `key` to match.
-        default : `Any`, Optional
-            Default value to return if `key` is not present in the dictionary. Defaults to `None`.
+        default : `Any` = `None`, Optional
+            Default value to return if `key` is not present in the dictionary.
         
         Returns
         -------
@@ -256,8 +256,8 @@ class MultiValueDictionary(dict):
         ----------
         key : `Any`
             The key to match.
-        default : `Any`, Optional
-            Default value to return if `key` is not present in the dictionary. Defaults to `None`.
+        default : `Any` = `None`, Optional
+            Default value to return if `key` is not present in the dictionary.
         
         Returns
         -------
@@ -284,7 +284,7 @@ class MultiValueDictionary(dict):
         ----------
         key : `Any`
             The key to match.
-        default : `Any`, Optional
+        default : `Any` = `None`, Optional
             Default value to set and return if `key` is not present in the dictionary.
         
         Returns

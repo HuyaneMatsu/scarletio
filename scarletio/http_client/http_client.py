@@ -44,11 +44,11 @@ class HTTPClient:
         ----------
         loop : ``EventThread``
             The event loop used by the http client.
-        proxy_url : `None`, `str`, ``URL``, Optional
-            Proxy url to use with all of the requests of the http client. Defaults to `None`.
-        proxy_auth : `None`, ``BasicAuth``, Optional
-            Proxy authorization to send with all the requests of the http client. Defaults to `None`.
-        connector : `None`, ``ConnectorBase``, Optional (Keyword only)
+        proxy_url : `None`, `str`, ``URL`` = `None`, Optional
+            Proxy url to use with all of the requests of the http client.
+        proxy_auth : `None`, ``BasicAuth`` = `None`, Optional
+            Proxy authorization to send with all the requests of the http client.
+        connector : `None`, ``ConnectorBase`` = `None`, Optional (Keyword only)
             Connector to be used by the ``HTTPClient``. If not given or given as `None`, a new ``TCPConnector`` is
             created and used.
         """
@@ -77,12 +77,12 @@ class HTTPClient:
             The url to request.
         headers : (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items
             Request headers.
-        data : `None`, `Any`, Optional
-            Data to send a the body of the request. Defaults to `None`.
-        params : `None`, `dict` of (`str`, (`str`, `int`, `float`, `bool`)) items, Optional
-            Query string parameters. Defaults to `None`.
-        redirects : `int`, Optional
-            The maximal amount of allowed redirects. Defaults to `3`.
+        data : `None`, `Any` = `None`, Optional
+            Data to send a the body of the request.
+        params : `None`, `Any` = `None`, Optional
+            Query string parameters
+        redirects : `int` = `3`, Optional
+            The maximal amount of allowed redirects.
         
         Returns
         -------
@@ -211,21 +211,21 @@ class HTTPClient:
             The url to request.
         headers : (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items
             Request headers.
-        data : `None`, `Any`, Optional
-            Data to send a the body of the request. Defaults to `None`.
-        params : `None`, `dict` of (`str`, (`str`, `int`, `float`, `bool`)) items, Optional
-            Query string parameters. Defaults to `None`.
-        redirects : `int`, Optional
-            The maximal amount of allowed redirects. Defaults to `3`.
-        auth : `None`, ``BasicAuth``, Optional
+        data : `None`, `Any` = `None`, Optional
+            Data to send a the body of the request.
+        params : `None`, `Any` = `None`, Optional
+            Query string parameters.
+        redirects : `int` = `3`, Optional
+            The maximal amount of allowed redirects.
+        auth : `None`, ``BasicAuth`` = `None`, Optional
             Authorization to use.
         proxy_url : `None`, `str`, ``URL``, Optional
             Proxy url to use instead of the client's own.
         proxy_auth : `None`, ``BasicAuth``, Optional
             Proxy authorization to use instead of the client's.
-        timeout : `float`, Optional
+        timeout : `float` = `DEFAULT_TIMEOUT`, Optional
             The maximal duration to wait for server response. Defaults to `60.0` seconds.
-        ssl : `ssl.SSLContext`, `bool`, ``Fingerprint``, `NoneType`
+        ssl : `ssl.SSLContext`, `bool`, ``Fingerprint``, `NoneType` = `None`, Optional
             Whether and what type of ssl should the connector use.
         
         Returns
@@ -414,7 +414,7 @@ class HTTPClient:
             The method of the request.
         url : `str`, ``URL``
             The url to request.
-        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items, Optional
+        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items = `None`, Optional
             Request headers.
         **kwargs : Keyword Parameters
             Additional keyword parameters.
@@ -422,11 +422,11 @@ class HTTPClient:
         Other Parameters
         ----------------
         data : `None`, `Any`, Optional (Keyword only)
-            Data to send a the body of the request. Defaults to `None`.
-        params : `None`, `dict` of (`str`, (`str`, `int`, `float`, `bool`)) items, Optional (Keyword only)
-            Query string parameters. Defaults to `None`.
+            Data to send a the body of the request.
+        params : `None`, `Any`, Optional (Keyword only)
+            Query string parameters.
         redirects : `int`, Optional (Keyword only)
-            The maximal amount of allowed redirects. Defaults to `3`.
+            The maximal amount of allowed redirects.
         
         Returns
         -------
@@ -458,7 +458,7 @@ class HTTPClient:
             The method of the request.
         url : `str`, ``URL``
             The url to request.
-        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items, Optional
+        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items = `None`, Optional
             Request headers.
         **kwargs : Keyword Parameters
             Additional keyword parameters.
@@ -466,20 +466,20 @@ class HTTPClient:
         Other Parameters
         ----------------
         data : `None`, `Any`, Optional (Keyword only)
-            Data to send a the body of the request. Defaults to `None`.
-        params : `None`, `dict` of (`str`, (`str`, `int`, `float`, `bool`)) items, Optional (Keyword only)
-            Query string parameters. Defaults to `None`.
+            Data to send a the body of the request.
+        params : `None`, `Any`, Optional (Keyword only)
+            Query string parameters.
         redirects : `int`, Optional (Keyword only)
-            The maximal amount of allowed redirects. Defaults to `3`.
+            The maximal amount of allowed redirects.
         auth : `None`, ``BasicAuth``, Optional (Keyword only)
             Authorization to use.
-        proxy_url : `None`, `str`, ``URL``, Optional
+        proxy_url : `None`, `str`, ``URL``, Optional  (Keyword only)
             Proxy url to use instead of the client's own.
         proxy_auth : `None`, ``BasicAuth``, Optional (Keyword only)
             Proxy authorization to use instead of the client's.
         timeout : `float`, Optional (Keyword only)
-            The maximal duration to wait for server response. Defaults to `60.0` seconds.
-        ssl : `ssl.SSLContext`, `bool`, ``Fingerprint``, `NoneType`
+            The maximal duration to wait for server response.
+        ssl : `ssl.SSLContext`, `bool`, ``Fingerprint``, `NoneType`, Optional (Keyword only)
             Whether and what type of ssl should the connector use.
         
         Returns
@@ -518,11 +518,11 @@ class HTTPClient:
         Other Parameters
         ----------------
         data : `None`, `Any`, Optional (Keyword only)
-            Data to send a the body of the request. Defaults to `None`.
-        params : `None`, `dict` of (`str`, (`str`, `int`, `float`, `bool`)) items, Optional (Keyword only)
-            Query string parameters. Defaults to `None`.
+            Data to send a the body of the request.
+        params : `None`, `Any`, Optional (Keyword only)
+            Query string parameters.
         redirects : `int`, Optional (Keyword only)
-            The maximal amount of allowed redirects. Defaults to `3`.
+            The maximal amount of allowed redirects.
 
         Returns
         -------
@@ -553,7 +553,7 @@ class HTTPClient:
         ----------
         url : `str`, ``URL``
             The url to request.
-        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items, Optional
+        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items = `None`, Optional
             Request headers.
         **kwargs : Keyword Parameters
             Additional keyword parameters.
@@ -561,11 +561,11 @@ class HTTPClient:
         Other Parameters
         ----------------
         data : `None`, `Any`, Optional (Keyword only)
-            Data to send a the body of the request. Defaults to `None`.
-        params : `None`, `dict` of (`str`, (`str`, `int`, `float`, `bool`)) items, Optional (Keyword only)
-            Query string parameters. Defaults to `None`.
+            Data to send a the body of the request.
+        params : `None`, `Any`, Optional (Keyword only)
+            Query string parameters.
         redirects : `int`, Optional (Keyword only)
-            The maximal amount of allowed redirects. Defaults to `3`.
+            The maximal amount of allowed redirects.
 
         Returns
         -------
@@ -596,7 +596,7 @@ class HTTPClient:
         ----------
         url : `str`, ``URL``
             The url to request.
-        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items, Optional
+        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items = `None`, Optional
             Request headers.
         **kwargs : Keyword Parameters
             Additional keyword parameters.
@@ -604,11 +604,11 @@ class HTTPClient:
         Other Parameters
         ----------------
         data : `None`, `Any`, Optional (Keyword only)
-            Data to send a the body of the request. Defaults to `None`.
-        params : `None`, `dict` of (`str`, (`str`, `int`, `float`, `bool`)) items, Optional (Keyword only)
-            Query string parameters. Defaults to `None`.
+            Data to send a the body of the request.
+        params : `None`, `Any`, Optional (Keyword only)
+            Query string parameters.
         redirects : `int`, Optional (Keyword only)
-            The maximal amount of allowed redirects. Defaults to `3`.
+            The maximal amount of allowed redirects.
 
         Returns
         -------
@@ -639,7 +639,7 @@ class HTTPClient:
         ----------
         url : `str`, ``URL``
             The url to request.
-        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items, Optional
+        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items = `None`, Optional
             Request headers.
         **kwargs : Keyword Parameters
             Additional keyword parameters.
@@ -647,11 +647,11 @@ class HTTPClient:
         Other Parameters
         ----------------
         data : `None`, `Any`, Optional (Keyword only)
-            Data to send a the body of the request. Defaults to `None`.
-        params : `None`, `dict` of (`str`, (`str`, `int`, `float`, `bool`)) items, Optional (Keyword only)
-            Query string parameters. Defaults to `None`.
+            Data to send a the body of the request.
+        params : `None`, `Any`, Optional (Keyword only)
+            Query string parameters.
         redirects : `int`, Optional (Keyword only)
-            The maximal amount of allowed redirects. Defaults to `3`.
+            The maximal amount of allowed redirects.
 
         Returns
         -------
@@ -682,7 +682,7 @@ class HTTPClient:
         ----------
         url : `str`, ``URL``
             The url to request.
-        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items, Optional
+        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items = `None`, Optional
             Request headers.
         **kwargs : Keyword Parameters
             Additional keyword parameters.
@@ -690,11 +690,11 @@ class HTTPClient:
         Other Parameters
         ----------------
         data : `None`, `Any`, Optional (Keyword only)
-            Data to send a the body of the request. Defaults to `None`.
-        params : `None`, `dict` of (`str`, (`str`, `int`, `float`, `bool`)) items, Optional (Keyword only)
-            Query string parameters. Defaults to `None`.
+            Data to send a the body of the request.
+        params : `None`, `Any`, Optional (Keyword only)
+            Query string parameters.
         redirects : `int`, Optional (Keyword only)
-            The maximal amount of allowed redirects. Defaults to `3`.
+            The maximal amount of allowed redirects.
 
         Returns
         -------
@@ -725,7 +725,7 @@ class HTTPClient:
         ----------
         url : `str`, ``URL``
             The url to request.
-        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items, Optional
+        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items = `None`, Optional
             Request headers.
         **kwargs : Keyword Parameters
             Additional keyword parameters.
@@ -733,11 +733,11 @@ class HTTPClient:
         Other Parameters
         ----------------
         data : `None`, `Any`, Optional (Keyword only)
-            Data to send a the body of the request. Defaults to `None`.
-        params : `None`, `dict` of (`str`, (`str`, `int`, `float`, `bool`)) items, Optional (Keyword only)
-            Query string parameters. Defaults to `None`.
+            Data to send a the body of the request.
+        params : `None`, `Any`, Optional (Keyword only)
+            Query string parameters.
         redirects : `int`, Optional (Keyword only)
-            The maximal amount of allowed redirects. Defaults to `3`.
+            The maximal amount of allowed redirects.
 
         Returns
         -------
@@ -768,7 +768,7 @@ class HTTPClient:
         ----------
         url : `str`, ``URL``
             The url to request.
-        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items, Optional
+        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items = `None`, Optional
             Request headers.
         **kwargs : Keyword Parameters
             Additional keyword parameters.
@@ -776,11 +776,11 @@ class HTTPClient:
         Other Parameters
         ----------------
         data : `None`, `Any`, Optional (Keyword only)
-            Data to send a the body of the request. Defaults to `None`.
-        params : `None`, `dict` of (`str`, (`str`, `int`, `float`, `bool`)) items, Optional (Keyword only)
-            Query string parameters. Defaults to `None`.
+            Data to send a the body of the request.
+        params : `None`, `Any`, Optional (Keyword only)
+            Query string parameters.
         redirects : `int`, Optional (Keyword only)
-            The maximal amount of allowed redirects. Defaults to `3`.
+            The maximal amount of allowed redirects.
 
         Returns
         -------
@@ -819,7 +819,7 @@ class HTTPClient:
         origin : `None`, `str`, Optional (Keyword only)
             Value of the Origin header.
         available_extensions : `None` or (`list` of `Any`), Optional (Keyword only)
-            Available websocket extensions. Defaults to `None`.
+            Available websocket extensions.
             
             Each websocket extension should have the following `4` attributes / methods:
             - `name`: `str`. The extension's name.
@@ -842,6 +842,6 @@ class HTTPClient:
             bytes.
         max_queue : `None`, `int`, Optional (Keyword only)
             Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of it is
-            removed. Defaults to `None`.
+            removed.
         """
         return WebSocketContextManager(WebSocketClient(self.loop, url, **kwargs, http_client=self))

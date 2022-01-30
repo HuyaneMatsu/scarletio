@@ -70,7 +70,7 @@ class TransportLayerBase(AbstractTransportLayerBase):
         ----------
         exception : `BaseException`
             The occurred exception.
-        message : `str`, Optional
+        message : `str` = `'Fatal error on transport layer'`, Optional
             Additional error message to render.
         """
         if not isinstance(exception, (BrokenPipeError, ConnectionResetError, ConnectionAbortedError)):
@@ -342,9 +342,9 @@ class SocketTransportLayerBase(TransportLayerBase):
         
         Parameters
         ----------
-        low : None`, `int`, Optional
+        low : None`, `int` = `None`, Optional
             The ``.protocol`` is paused writing when the buffer size passes the high water mark. Defaults to `65536`.
-        high : `None`, `int`, Optional
+        high : `None`, `int` = `None`, Optional
             The ``.protocol`` is resumed writing when the buffer size goes under the low water mark. Defaults to
             `16384`.
 
@@ -729,8 +729,8 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
             Asynchronous protocol implementation used by the transport.
         waiter : `None`, ``Future`
             Waiter, what's result is set, when the transport connected. Defaults to `None`.
-        address : `None`, `tuple` (`str`, `int`), Optional
-            The last address, where the transport sent data. Defaults to `None`. The send target address should not
+        address : `None`, `tuple` (`str`, `int`)
+            The last address, where the transport sent data. The send target address should not
             differ from the last, where the transport sent data.
         """
         self = SocketTransportLayerBase.__new__(cls, loop, extra, socket, protocol, waiter)
@@ -828,7 +828,7 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
         ----------
         data : `bytes-like`
             The data to send.
-        maybe_address : `None`, `tuple` (`str`, `int`), Optional
+        maybe_address : `None`, `tuple` (`str`, `int`) = `None`, Optional
             The address to send the data to.
         
         Raises

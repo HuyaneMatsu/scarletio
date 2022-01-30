@@ -28,7 +28,7 @@ def get_extra_info(extra, name, default):
         Optional transform information.
     name : `str`
         The extra information's name to get.
-    default : `Any`, Optional
+    default : `Any`
         Default value to return if `name` could not be matched. Defaults to `None`.
     
     Returns

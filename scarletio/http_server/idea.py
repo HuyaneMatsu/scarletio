@@ -136,7 +136,7 @@ class HTTPRequestHandler(HttpReadWriteProtocol):
     _offset : `int`
         Byte offset, of the used up data of the most-left chunk.
     _paused : `bool`
-        Whether the protocol's respective transport's reading is paused. Defaults to `False`.
+        Whether the protocol's respective transport's reading is paused.
         
         Also note, that not every transport supports pausing.
     _exception : `None`, `BaseException`
@@ -294,11 +294,11 @@ class HTTPServer:
         ----------
         loop : ``EventThread``
             The event loop to what the http server server is bound to.
-        host : `None`, `str`, `iterable` of (`None`, `str`), Optional
+        host : `None`, `str`, `iterable` of (`None`, `str`)
             To what network interfaces should the server be bound.
-        port : `None`, `int`, Optional
+        port : `None`, `int`
             The port to use by the `host`(s).
-        ssl : `None`, ``SSLContext``, Optional (Keyword only)
+        ssl : `None`, ``SSLContext`` = `None`, Optional (Keyword only)
             Whether and what ssl is enabled for the connections.
         **server_kwargs : Keyword parameters
             Additional keyword parameters to create the websocket server with.
@@ -2825,9 +2825,9 @@ class AppBase:
             `endpoint` and `view_func` depending 1 or 2 parameters were given.
         endpoint  : `None`, `str`, Optional
             The internal endpoint of the url. Defaults to the name of the added function.
-        view_func : `async-callable`
+        view_func : `async-callable`, Optional
             The function to call when serving a request to the provided endpoint.
-        provide_automatic_options : `None`, `bool`, Optional (Keyword only)
+        provide_automatic_options : `None`, `bool` = `None`, Optional (Keyword only)
             Controls whether `options` should be handled manually.
         **options : keyword parameters
             Additional options to be forward to the underlying ``Rule`` object.
@@ -3475,21 +3475,21 @@ class Blueprint(AppBase):
         ----------
         import_name : `str`
             The name of the package or module that this app belongs to.
-        template_folder : `None`, `str`, Optional (Keyword only)
+        template_folder : `None`, `str` = `None`, Optional (Keyword only)
             The folder from where the templates should be loaded from.
-        root_path : `None`, `str`, Optional (Keyword only)
+        root_path : `None`, `str` = `None`, Optional (Keyword only)
             Absolute path to the package on the filesystem.
-        static_folder : `None`, `str`, Optional (Keyword only)
+        static_folder : `None`, `str` = `None`, Optional (Keyword only)
             Path on top of the application route path for static files, which can be accessed trough the
-            `static_url_path`. Defaults to `None`.
-        static_url_path : `None`, `str`, Optional (Keyword only)
+            `static_url_path`.`.
+        static_url_path : `None`, `str` = `None`, Optional (Keyword only)
             Url path to static files. Defaults to `static_folder`'s value.
-        url_prefix : `None`, `str`, Optional (Keyword only)
+        url_prefix : `None`, `str` = `None`, Optional (Keyword only)
             Url prefix for all the routes registered to the blueprint.
-        subdomain : `None`, `str`, Optional (Keyword only)
+        subdomain : `None`, `str` = `None`, Optional (Keyword only)
             Subdomain, what the routes of the blueprint gonna match.
-        url_defaults : `None`, `dict` of (`str`, `Any`) items or (`set`, `list`, `tuple`) of (`str`, `Any`) items
-                , Optional (Keyword only)
+        url_defaults : `None`, `dict` of (`str`, `Any`) items or (`set`, `list`, `tuple`) of (`str`, `Any`) items \
+                = `None` , Optional (Keyword only)
             Parameters which the routes of the blueprint will get by default.
         
         Raises
@@ -3643,14 +3643,14 @@ class WebApp(AppBase):
         ----------
         import_name : `str`
             The name of the package or module that this app belongs to.
-        template_folder : `None`, `str`, Optional (Keyword only)
+        template_folder : `None`, `str` = `None`, Optional (Keyword only)
             The folder from where the templates should be loaded from.
-        root_path : `None`, `str`, Optional (Keyword only)
+        root_path : `None`, `str` = `None`, Optional (Keyword only)
             Absolute path to the package on the filesystem.
-        static_folder : `None`, `str`, Optional (Keyword only)
+        static_folder : `None`, `str` = `'static'`, Optional (Keyword only)
             Path on top of the application route path for static files, which can be accessed trough the
-            `static_url_path`. Defaults to `'static'`.
-        static_url_path : `None`, `str`, Optional (Keyword only)
+            `static_url_path`.
+        static_url_path : `None`, `str` = `None`, Optional (Keyword only)
             Url path to static files. Defaults to `static_folder`'s value.
         
         Raises

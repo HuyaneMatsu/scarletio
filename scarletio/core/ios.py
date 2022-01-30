@@ -78,7 +78,7 @@ class ReuBytesIO(BytesIO):
         
         Parameters
         ----------
-        amount : `None`, `int`, Optional
+        amount : `None`, `int` = `None`, Optional
             The amount of data to read from the buffer. If given as `None`, so by the default, then reads all the data
             out from it.
         
@@ -126,7 +126,7 @@ class ReuBytesIO(BytesIO):
         ----------
         offset : `int`
             Position to move the cursor to.
-        whence : `int`, Optional
+        whence : `int` = `os.SEEK_SET`, Optional
             How the given `offset` should be interpreted. Default value for whence is `os.SEEK_SET`.
             
             Can be given as:
@@ -676,7 +676,7 @@ class AsyncIO:
         ----------
         offset : `int`
             Position to move the cursor to.
-        whence : `int`, Optional
+        whence : `int` = `os.SEEK_SET`, Optional
             How the given `offset` should be interpreted. Default value for whence is `os.SEEK_SET`.
             
             Can be given as:
@@ -755,7 +755,7 @@ class AsyncIO:
         
         Parameters
         ----------
-        size : `None`, `int`, Optional
+        size : `None`, `int` = `None`, Optional
             The stream's new size in bytes.
         
         Returns
@@ -1273,8 +1273,8 @@ class ReuAsyncIO(AsyncIO):
         
         Parameters
         ----------
-        hint : `int`, Optional
-            The upper limit if lines to read. Defaults to `-1`.
+        hint : `int` = `-1`, Optional
+            The upper limit if lines to read.
             
             If given as negative `int`, then all the data till eof is read from the underlying stream.
         
@@ -1314,7 +1314,7 @@ class ReuAsyncIO(AsyncIO):
         ----------
         offset : `int`
             Position to move the cursor to.
-        whence : `int`, Optional
+        whence : `int` = `os.SEEK_SET`, Optional
             How the given `offset` should be interpreted. Default value for whence is `os.SEEK_SET`.
             
             Can be given as:

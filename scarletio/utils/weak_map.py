@@ -186,7 +186,7 @@ class WeakMap(dict):
         
         Parameters
         ----------
-        iterable : `iterable`, Optional
+        iterable : `None`, `iterable` = `None`, Optional
             Iterable to update the created map with.
         """
         self._pending_removals = None
@@ -359,8 +359,8 @@ class WeakMap(dict):
         ----------
         key : `Any`
             A key to match.
-        default : `Any`, Optional
-            Default value to return if the given `key` could not be matched. Defaults to `None`.
+        default : `Any` = `None`, Optional
+            Default value to return if the given `key` could not be matched.
         
         Returns
         -------

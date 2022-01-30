@@ -311,9 +311,9 @@ class ClientResponse:
         
         Parameters
         ----------
-        encoding : `None`, `str`, Optional
+        encoding : `None`, `str` = `None`, Optional
             If no encoding is given, then detects it from the payload-
-        errors : `str`, Optional
+        errors : `str` = `'strict'`, Optional
             May be given to set a different error handling scheme. The default `errors` value is `'strict'`, meaning
             that encoding errors raise a `UnicodeError`. Other possible values are `'ignore'`, `'replace'`,
             `'xmlcharrefreplace'`, `'backslashreplace'` and any other name registered via `codecs.register_error()`.
@@ -340,12 +340,12 @@ class ClientResponse:
         
         Parameters
         ----------
-        encoding : None`, `str`, Optional
+        encoding : None`, `str` = `None`, Optional
             Encoding to use instead of the response's. If given as `None` (so by default), then will use the response's
             own encoding.
-        loader : `callable`, Optional
+        loader : `callable` = ``from_json``, Optional
             Json loader. Defaults to json.loads`.
-        content_type : `None`, `str`, Optional
+        content_type : `None`, `str` = `None`, Optional
             Content type to use instead of the default one. Defaults to `'application/json'`.
         
         Returns

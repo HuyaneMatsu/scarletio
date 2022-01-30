@@ -161,9 +161,9 @@ def format_callback(func, args=None, kwargs=None):
     ----------
     func : `callable`
         The callback to format.
-    args : `None`, `iterable` of `Any`, Optional
+    args : `None`, `iterable` of `Any` = `None`, Optional
         Additional parameters to call the `func` with.
-    kwargs : `None`, `dict` of (`str`, `Any`) items, Optional
+    kwargs : `None`, `dict` of (`str`, `Any`) items = `None`, Optional
         Additional keyword parameters to call the `func` with.
     
     Returns

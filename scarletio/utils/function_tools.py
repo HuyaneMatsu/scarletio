@@ -57,7 +57,7 @@ class alchemy_incendiary:
             The function to call.
         args : `tuple` of `Any`
             Parameters to call `func` with.
-        kwargs : `None` of `dict` of (`str`, `Any`) items, Optional
+        kwargs : `None` of `dict` of (`str`, `Any`) items = `None`, Optional
             Keyword parameters to call func with if applicable.
         """
         self.func = func

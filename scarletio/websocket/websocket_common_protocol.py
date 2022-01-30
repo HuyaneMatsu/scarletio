@@ -147,16 +147,15 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             The respective server's address to connect to.
         port : `int`
             The respective server's port to connect to.
-        is_ssl : `bool`, Optional (Keyword only)
-            Whether the connection is secure. Defaults to `False`.
-        close_timeout : `float`, Optional (Keyword only)
-            The maximal duration in seconds what is waited for response after close frame is sent. Defaults to `10.0`.
-        max_size : `int`, Optional (Keyword only)
-            Max payload size to receive. If a payload exceeds it, ``PayloadError`` is raised. Defaults to `67108864`
-            bytes.
-        max_queue : `None`, `int`, Optional (Keyword only)
+        is_ssl : `bool` = `False`, Optional (Keyword only)
+            Whether the connection is secure.
+        close_timeout : `float` = `10.0`, Optional (Keyword only)
+            The maximal duration in seconds what is waited for response after close frame is sent
+        max_size : `int` = `67108864`, Optional (Keyword only)
+            Max payload size to receive. If a payload exceeds it, ``PayloadError`` is raised.
+        max_queue : `None`, `int` = `None`, Optional (Keyword only)
             Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of it is
-            removed. Defaults to `None`.
+            removed.
         """
         self = HttpReadWriteProtocol.__new__(cls, loop)
         self._set_common_websocket_attributes(host, port, is_ssl, close_timeout, max_size, max_queue)
@@ -174,14 +173,14 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             The respective server's port to connect to.
         is_ssl : `bool`
             Whether the connection is secure. Defaults to `False`.
-        close_timeout : `float`, Optional
-            The maximal duration in seconds what is waited for response after close frame is sent. Defaults to `10.0`.
-        max_size : `int`, Optional
-            Max payload size to receive. If a payload exceeds it, ``PayloadError`` is raised. Defaults to `67108864`
+        close_timeout : `float` = `10.0`, Optional
+            The maximal duration in seconds what is waited for response after close frame is sent.
+        max_size : `int` = `67108864`, Optional
+            Max payload size to receive. If a payload exceeds it, ``PayloadError`` is raised.
             bytes.
-        max_queue : `None`, `int`, Optional
+        max_queue : `None`, `int` = `None`, Optional
             Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of it is
-            removed. Defaults to `None`.
+            removed.
         """
         self.host = host
         self.port = port
@@ -362,11 +361,11 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         
         Parameters
         ----------
-        code : `int`, Optional.
+        code : `int` = `1000`, Optional.
             WebSocket close code. Defaults to `1000`. Can be one of:
             `(1000, 1001, 1002, 1003, 1007, 1008, 1009, 1010, 1011) | [3000:5000)`.
-        reason : `str`, Optional
-            WebSocket close reason. Can be given as empty string. Defaults to empty string as well.
+        reason : `str` = `''`, Optional
+            WebSocket close reason. Can be given as empty string.
         
         Raises
         ------
@@ -889,8 +888,8 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         
         Parameters
         ----------
-        data : `bytes-like`, Optional
-            The data to send. Defaults to empty `bytes`.
+        data : `bytes-like` = `b''`, Optional
+            The data to send.
         
         Raises
         ------
@@ -992,10 +991,10 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         
         Parameters
         ----------
-        code : `int`, Optional
-            WebSocket close code. Defaults to `1006`.
-        reason : `str`, Optional
-            WebSocket close reason. Defaults to empty string.
+        code : `int` = `1006`, Optional
+            WebSocket close code.
+        reason : `str` = `''`, Optional
+            WebSocket close reason.
         
         Returns
         -------

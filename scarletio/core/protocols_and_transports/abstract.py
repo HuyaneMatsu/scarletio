@@ -15,7 +15,7 @@ class AbstractTransportLayerBase:
         ----------
         name : `str`
             The extra information's name to get.
-        default : `Any`, Optional
+        default : `Any`, `None`, Optional
             Default value to return if `name` could not be matched. Defaults to `None`.
         
         Returns
@@ -178,9 +178,9 @@ class AbstractTransportLayerBase:
         
         Parameters
         ----------
-        high : `None`, `int`, Optional
+        high : `None`, `int` = `None`, Optional
             High limit to stop reading if reached.
-        low : `None`, `int`, Optional
+        low : `None`, `int` = `None`, Optional
             Low limit to start reading if reached.
         
         Raises
@@ -325,7 +325,7 @@ class AbstractProtocolBase:
         ----------
         name : `str`
             The extra information's name to get.
-        default : `Any`, Optional
+        default : `Any` = `None`, Optional
             Default value to return if `name` could not be matched. Defaults to `None`.
         
         Returns

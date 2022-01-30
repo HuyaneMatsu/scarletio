@@ -110,14 +110,14 @@ def create_event_loop(**kwargs):
     
     Other parameters
     ----------------
-    daemon : `bool`, Optional (Keyword only)
-        Whether the event loop should be daemon. Defaults to `False`
-    name : `None`, `str`, Optional (Keyword only)
-        The event loop's name. Defaults ot `None`.
-    start_later : `bool`, Optional (Keyword only)
-        Whether the event loop should be started only later. Defaults to `True`
-    keep_executor_count : `int`, Optional (Keyword only)
-        The minimal amount of executors, what the event thread should keep alive. Defaults to `1`.
+    daemon : `bool` = `False`, Optional (Keyword only)
+        Whether the event loop should be daemon.
+    name : `None`, `str` = `None`, Optional (Keyword only)
+        The event loop's name.
+    start_later : `bool` = `True`, Optional (Keyword only)
+        Whether the event loop should be started only later.
+    keep_executor_count : `int` = `1`, Optional (Keyword only)
+        The minimal amount of executors, what the event thread should keep alive.
 
     Returns
     -------
@@ -181,7 +181,7 @@ def run(awaitable, timeout=None):
     ----------
     awaitable : `awaitable`
         The awaitable to run.
-    timeout : `None`, `float`, Optional
+    timeout : `None`, `float` = `None`, Optional
         Timeout after the awaitable should be cancelled. Defaults to `None`.
     
     Raises

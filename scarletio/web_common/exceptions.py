@@ -198,8 +198,8 @@ class ConnectionClosed(Exception):
             The websocket close code.
         exception : `None`, `BaseException`
             Source exception if applicable.
-        reason : `None or `str`, Optional
-            Web socket close reason if any. Defaults to `None`.
+        reason : `None`, `str` = `None`, Optional
+            Web socket close reason if any.
         """
         self.code = code
         self.exception = exception

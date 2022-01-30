@@ -311,7 +311,7 @@ class WeakItemDictionary(dict):
         
         Parameters
         ----------
-        iterable : `iterable`, Optional
+        iterable : `None`, `iterable` = `None`, Optional
             Iterable to update the created dictionary with.
         """
         self._pending_removals = None
@@ -494,8 +494,8 @@ class WeakItemDictionary(dict):
         ----------
         key : `Any`
             A key to match.
-        default : `Any`, Optional
-            Default value to return if the given `key` could not be matched. Defaults to `None`.
+        default : `None`, `Any` = `None`, Optional
+            Default value to return if the given `key` could not be matched.
         
         Returns
         -------
@@ -633,7 +633,7 @@ class WeakItemDictionary(dict):
         ----------
         key : `Any`
             The key to match.
-        default : `Any`, Optional
+        default : `Any`
             Default value to set and return if `key` is not present in the weak item dictionary.
         
         Returns

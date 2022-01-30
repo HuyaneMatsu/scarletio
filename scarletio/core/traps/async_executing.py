@@ -238,8 +238,8 @@ class ScarletExecutor:
         
         Parameters
         ----------
-        limit : `int`, Optional
-            The maximal amount of parallelism allowed by the Scarlet executor. Defaults to `10`.
+        limit : `int` = `10`, Optional
+            The maximal amount of parallelism allowed by the Scarlet executor.
         
         Raises
         ------

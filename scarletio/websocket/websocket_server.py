@@ -99,9 +99,9 @@ class WebSocketServer:
             
             Should be given as an `async-callable` accepting `1` parameter the respective asynchronous server side
             websocket protocol implementations.
-        protocol : `Any`, Optional (Keyword only)
-            Asynchronous server side websocket protocol implementation. Defaults to ``WebSocketServerProtocol``.
-        available_extensions : `None` or (`list` of `Any`), Optional (Keyword only)
+        protocol : `Any` = ``WebSocketServerProtocol``, Optional (Keyword only)
+            Asynchronous server side websocket protocol implementation.
+        available_extensions : `None` or (`list` of `Any`) = `None`, Optional (Keyword only)
             Available websocket extensions.
             
             Each websocket extension should have the following `4` attributes / methods:
@@ -112,13 +112,14 @@ class WebSocketServer:
                 maximal size of a received frame. If it is passed, ``PayloadError`` is raised.
             - `encode` : `callable`. Encoder method, what processes the websocket frames to send. Should accept `1`
                 parameter, the respective websocket ``Frame``.
-        extra_response_headers : `None` or (``IgnoreCaseMultiValueDictionary``, `dict-like`) of (`str`, `str`) items, Optional (Keyword only)
+        extra_response_headers : `None` or (``IgnoreCaseMultiValueDictionary``, `dict-like`) of
+                (`str`, `str`) items = `None`, Optional (Keyword only)
             Extra headers to send with the http response.
-        origin : `None`, `str`, Optional (Keyword only)
+        origin : `None`, `str` = `None`, Optional (Keyword only)
             Value of the Origin header.
-        available_subprotocols : `None` or (`list` of `str`), Optional (Keyword only)
+        available_subprotocols : `None` or (`list` of `str`) = `None`, Optional (Keyword only)
             A list of supported subprotocols in order of decreasing preference.
-        request_processor : `None`, `callable`, Optional (Keyword only)
+        request_processor : `None`, `callable` = `None`, Optional (Keyword only)
             An optionally asynchronous callable, what processes the initial requests from the potential clients.
             
             Should accept the following parameters:
@@ -127,22 +128,21 @@ class WebSocketServer:
             
             The `request_processor` on accepted request should return `None`, otherwise a `tuple` of
             ``AbortHandshake`` parameters.
-        subprotocol_selector `None`, `callable`, Optional (Keyword only)
+        subprotocol_selector `None`, `callable` = `None`, Optional (Keyword only)
             User hook to select subprotocols. Should accept the following parameters:
             - `parsed_header_subprotocols` : `list` of `str`. The subprotocols supported by the client.
             - `available_subprotocols` : `list` of `str`. The subprotocols supported by the server.
-        websocket_kwargs : `dict` of (`str`, `Any`), Optional (Keyword only)
+        websocket_kwargs : `None`, `dict` of (`str`, `Any`) = `None`, Optional (Keyword only)
             Extra parameters for creating the websocket protocol.
             
             Can have any of the following items:
             - `close_timeout` : `float`. The maximal duration in seconds what is waited for response after close
-                frame is sent. Defaults to `10.0`.
+                frame is sent.
             - `max_size` : `int`.Max payload size to receive. If a payload exceeds it, ``PayloadError`` is raised.
-                Defaults to `67108864` bytes.
             - `max_queue` : `None`, `int`.
                 Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of
-                it is removed. Defaults to `None`.
-        ssl : `None`, ``SSLContext``, Optional (Keyword only)
+                it is removed.
+        ssl : `None`, ``SSLContext`` = `None`, Optional (Keyword only)
             Whether and what ssl is enabled for the connections.
         **server_kwargs : Keyword parameters
             Additional keyword parameters to create the websocket server with.
@@ -153,7 +153,7 @@ class WebSocketServer:
             Can be given either as `socket.AF_INET`, `socket.AF_INET6` to force the socket to use `IPv4`, `IPv6`.
             If not given, then  will be determined from host name.
         backlog : `int`, Optional (Keyword only)
-            The maximum number of queued connections passed to `listen()` (defaults to 100).
+            The maximum number of queued connections passed to `socket.listen()`.
         reuse_address : `bool`, Optional (Keyword only)
             Tells the kernel to reuse a local socket in `TIME_WAIT` state, without waiting for its natural timeout to
             expire. If not specified will automatically be set to True on Unix.

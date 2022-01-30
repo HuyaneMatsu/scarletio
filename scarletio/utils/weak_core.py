@@ -256,7 +256,7 @@ class weak_method(WeakReferer, MethodLike):
             The object to weakreference and pass to `func`.
         func : `callable`
             The function to call as a method.
-        callback : `Any`, Optional
+        callback : `Any` = `None`, Optional
             Callback running when the object is garbage collected.
         """
         self = WeakReferer.__new__(cls, obj, callback)

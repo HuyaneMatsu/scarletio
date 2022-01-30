@@ -71,7 +71,7 @@ class ConnectorBase:
         ----------
         loop : ``EventThread``
             The event loop to what the connector is bound to.
-        force_close : `bool`, Optional
+        force_close : `bool` = `False`, Optional
             Whether after each request (and between redirects) the connections should be closed. Defaults to `False`.
         """
         self = object.__new__(cls)
@@ -551,7 +551,7 @@ class TCPConnector(ConnectorBase):
         Active host info resolving events of the connector.
     family : `AddressFamily`, `int`
         Address family of the created socket if any.
-    local_address : `None`, `tuple` of (`None`, `str`, `None`, `int`)
+    local_address : `None`, `tuple` ((`None`, `str`), (`None`, `int`))
         Can be given as a `tuple` (`local_host`, `local_port`) to bind created sockets locally.
     ssl : `ssl.SSLContext`, `bool`, ``Fingerprint``, `NoneType`
         Whether and what type of ssl should the connector use.
@@ -570,18 +570,19 @@ class TCPConnector(ConnectorBase):
         ----------
         loop : ``EventThread``
             The event loop to what the connector is bound to.
-        family : `AddressFamily`, `int`
-            Address family of the created socket if any. Defaults to `0`.
-        ssl : `ssl.SSLContext`, `bool`, ``Fingerprint``, `NoneType`, Optional
-            Whether and what type of ssl should the connector use. Defaults to `None`.
-        local_address : `None`, `tuple` of (`None`, `str`, `None`, `int`), Optional
-            Can be given as a `tuple` (`local_host`, `local_port`) to bind created sockets locally. Defaults to `None`.
-        force_close : `bool`, Optional
-            Whether after each request (and between redirects) the connections should be closed. Defaults to `False`.
+        family : `AddressFamily`, `int` = `0`, Optional
+            Address family of the created socket if any
+        ssl : `ssl.SSLContext`, `bool`, ``Fingerprint``, `NoneType` = `None`, Optional
+            Whether and what type of ssl should the connector use.
+        local_address : `None`, `tuple` of ((`None`, `str`), (`None`, `int`)) = `None`, Optional
+            Can be given as a `tuple` (`local_host`, `local_port`) to bind created sockets locally.
+        force_close : `bool` = `False`, Optional
+            Whether after each request (and between redirects) the connections should be closed.
         """
         if not isinstance(ssl, SSL_ALLOWED_TYPES):
             raise TypeError(
-                f'`ssl` can be any of {SSL_ALLOWED_TYPES!r}, got {ssl.__class__.__name__}; {ssl!r}.')
+                f'`ssl` can be any of {SSL_ALLOWED_TYPES!r}, got {ssl.__class__.__name__}; {ssl!r}.'
+            )
         
         self = ConnectorBase.__new__(cls, loop, force_close,)
         
@@ -638,7 +639,7 @@ class TCPConnector(ConnectorBase):
         
         Parameters
         ----------
-        key : `tuple`, (`None`, `str`, `None`, `int`)
+        key : `tuple`, ((`None`, `str`), (`None`, `int`))
             A tuple containing a `host`, `port` par to resolve.
         
         Returns

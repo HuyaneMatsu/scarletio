@@ -1200,7 +1200,7 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
             The request's path.
         headers : ``IgnoreCaseMultiValueDictionary``
             Request headers.
-        version : ``HttpVersion``, Optional
+        version : ``HttpVersion`` = `HttpVersion11`, Optional
             Http version of the request. Defaults to `HttpVersion11`.
         
         Raises
@@ -1232,9 +1232,9 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
             The response's status.
         headers : ``IgnoreCaseMultiValueDictionary``
             Response headers.
-        version : ``HttpVersion``, Optional
+        version : ``HttpVersion`` = `HttpVersion11`, Optional
             Http version of the response. Defaults to `HttpVersion11`.
-        body : `None`, `bytes-like`, Optional
+        body : `None`, `bytes-like` = `None`, Optional
             Http response body.
         
         Raises

@@ -17,11 +17,48 @@ QUOTE_SAFE_MAP = {}
 UNQUOTE_UNSAFE_MAP = {}
 
 def iter_nullable_string(string):
+    """
+    Iterates overt he given nullable string.
+    
+    Parameters
+    ----------
+    string : `None`, `str`
+        The string to iterate trough
+    
+    Yields
+    ------
+    element : `str`
+    """
     if (string is not None):
         yield from string
 
 
 def quote(value, safe=None, protected=None, query_string=False):
+    """
+    Http quotes the given `value`.
+    
+    Parameters
+    ----------
+    value : `None`, `str`
+        The value to quote.
+    safe : `None`, `str` = `None`, Optional
+        Additional not percentage encoding safe characters, which should not be contained by potentially percent
+        encoded characters.
+    protected : `None`, `str` = `None`, Optional
+        Additional characters, which should not be percentage encoded.
+    query_string : `bool` = `False`, Optional
+        Whether the `value` is a query string value.
+    
+    Returns
+    -------
+    unquoted : `None`, `str`
+        The unquoted value. Returns `None` of `value` was given as `None` as well.
+    
+    Raises
+    ------
+    TypeError
+        If `value` was not given neither as `None`, nor `str`.
+    """
     if value is None:
         return None
     
@@ -100,15 +137,17 @@ def quote(value, safe=None, protected=None, query_string=False):
 
 def unquote(value, unsafe=None, query_string=False):
     """
-    Http quotes the given `value`.
+    Http unquotes the given `value`.
     
     Parameters
     ----------
     value : `None`, `str`
         The value to quote.
-    unsafe : `str`, Optional
+    unsafe : `None`, `str` = `None`, Optional
         Additional not percentage encoding safe characters, which should not be contained by potentially percent
-        encoded characters. Defaults to empty string.
+        encoded characters.
+    query_string : `bool` = `False`, Optional
+        Whether the `value` is a query string value.
     
     Returns
     -------

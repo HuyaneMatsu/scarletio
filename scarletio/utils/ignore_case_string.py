@@ -37,11 +37,11 @@ class IgnoreCaseString(str):
         
         Parameters
         ----------
-        value : `Any`, Optional
+        value : `Any` = `''`, Optional
             The value, what is representation or encoded version is returned.
-        encoding : `str`, Optional
+        encoding : `str` = `sys.getdefaultencoding()`, Optional
             Encoding to use when decoding a `bytes-like`.
-        errors : `str`, Optional
+        errors : `str` = `'strict'`, Optional
             May be given to set a different error handling scheme when decoding from `bytes-like`. The default `errors`
             value is `'strict'`, meaning that encoding errors raise a `UnicodeError`. Other possible values are
             `'ignore'`, `'replace'`, `'xmlcharrefreplace'`, `'backslashreplace'` and any other name registered via

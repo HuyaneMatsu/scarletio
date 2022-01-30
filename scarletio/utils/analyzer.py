@@ -307,9 +307,8 @@ class CallableAnalyzer:
         ----------
         callable_ : `callable`
             The callable to analyze.
-        as_method : `bool`, Optional
-            Whether the given `callable` is given as a `function`, but it should be analyzed as a `method`. Defaults
-            to `False`.
+        as_method : `bool` = `False`, Optional
+            Whether the given `callable` is given as a `function`, but it should be analyzed as a `method`.
         
         Raises
         ------
@@ -946,7 +945,7 @@ class RichAnalyzer:
         ----------
         callable_ : `callable`
             The callable to analyze.
-        as_method : `bool`, Optional
+        as_method : `bool` = `False`, Optional
             Whether the given `callable` is given as a `function`, but it should be analyzed as a `method`. Defaults
             to `False`.
         

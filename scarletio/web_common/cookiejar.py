@@ -190,8 +190,8 @@ class CookieJar:
         
         Parameters
         ----------
-        unsafe : `bool`
-            Whether unsafe cookies are added to the jar as well. Defaults to `False`.
+        unsafe : `bool` = `False`, Optional
+            Whether unsafe cookies are added to the jar as well.
         """
         self.cookies = defaultdict(SimpleCookie)
         self.host_only_cookies = set()
@@ -301,7 +301,7 @@ class CookieJar:
         ----------
         cookies : `http.cookies.SimpleCookie`
             A cookie to update the
-        response_url : ``URL``
+        response_url : ``URL`` = `URL()`, Optional
             Respective response's url.
         """
         hostname = response_url.raw_host
@@ -376,7 +376,7 @@ class CookieJar:
         
         Parameters
         ----------
-        request_url : ``URL``
+        request_url : ``URL`` = `URL()`, Optional
             The url to filter the cookies by.
         
         Returns

@@ -367,9 +367,9 @@ class FutureSyncWrapper:
         
         Parameters
         ----------
-        timeout : `None`, `float`, Optional
+        timeout : `None`, `float` = `None`, Optional
             Timeout in seconds till the waited future's result should be set. Giving it as `None`, means no time limit.
-        propagate_cancellation : `bool`, Optional
+        propagate_cancellation : `bool` = `False`, Optional
             Whether cancellation should be propagated towards the waited task.
         
         Raises

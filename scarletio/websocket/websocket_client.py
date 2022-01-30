@@ -132,9 +132,9 @@ class WebSocketClient(WebSocketCommonProtocol):
             The respective event loop, what the protocol uses for it's asynchronous tasks.
         url : `str`, ``URL``
             The url to connect to.
-        origin : `None`, `str`, Optional (Keyword only)
+        origin : `None`, `str` = `None`, Optional (Keyword only)
             Value of the Origin header.
-        available_extensions : `None` or (`list` of `Any`), Optional (Keyword only)
+        available_extensions : `None`, `list` of `Any` = `None`, Optional (Keyword only)
             Available websocket extensions. Defaults to `None`.
             
             Each websocket extension should have the following `4` attributes / methods:
@@ -145,11 +145,12 @@ class WebSocketClient(WebSocketCommonProtocol):
                 maximal size of a received frame. If it is passed, ``PayloadError`` is raised.
             - `encode` : `callable`. Encoder method, what processes the websocket frames to send. Should accept `1`
                 parameter, the respective websocket ``WebSocketFrame``.
-        available_subprotocols : `None` or (`list` of `str`), Optional (Keyword only)
+        available_subprotocols : `None`, `list` of `str` = `None`, Optional (Keyword only)
             A list of supported subprotocols in order of decreasing preference.
-        headers : ``IgnoreCaseMultiValueDictionary``, `dict-like` with (`str`, `str`) items, Optional (Keyword only)
+        headers : `None`, ``IgnoreCaseMultiValueDictionary``, `dict-like` with (`str`, `str`) items = `None`
+                , Optional (Keyword only)
             Extra request headers.
-        http_client : `None`, ``HTTPClient``, Optional (Keyword only)
+        http_client : `None`, ``HTTPClient`` = `None`, Optional (Keyword only)
             Http client to use to connect the websocket.
         **websocket_kwargs : Keyword parameters
             Additional keyword parameters to create the websocket with.
@@ -163,7 +164,7 @@ class WebSocketClient(WebSocketCommonProtocol):
             bytes.
         max_queue : `None`, `int`, Optional (Keyword only)
             Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of it is
-            removed. Defaults to `None`.
+            removed.
         
         Returns
         -------

@@ -146,13 +146,13 @@ class class_property:
         
         Parameters
         ----------
-        fget : `None`, `callable`, Optional
+        fget : `None`, `callable` = `None`, Optional
             getter method.
-        fset : `None`, `callable`, Optional
+        fset : `None`, `callable` = `None`, Optional
             Setter method.
-        fdel : `None`, `callable`, Optional
+        fdel : `None`, `callable` = `None`, Optional
             Deleter method.
-        doc : `None`, `Any`, Optional
+        doc : `None`, `Any` = `None`, Optional
             Documentation for the property.
         """
         if (doc is None) and (fget is not None):

@@ -133,7 +133,7 @@ class SSLPipe:
         
         Parameters
         ----------
-        callback : `None`, `callable`, Optional
+        callback : `None`, `callable` = `None`, Optional
             A Callback which will be called when handshake is completed.
             
             Should accept the following parameters:
@@ -175,7 +175,7 @@ class SSLPipe:
         
         Parameters
         ----------
-        callback : `None`, `callable`, Optional
+        callback : `None`, `callable` = `None`, Optional
             A callback which will be called when the shutdown is completed.
             
             Should accept no parameters.

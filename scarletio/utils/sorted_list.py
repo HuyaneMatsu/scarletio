@@ -342,8 +342,8 @@ class SortedList(list):
             The value to search in the SortedList.
         key : `callable`
             A function that serves as a key for the sort comparison.
-        default : `Any`, Optional
-            Default value to returns if no matching element was present. Defaults to `None`.
+        default : `Any` = `None`, Optional
+            Default value to returns if no matching element was present.
         
         Returns
         -------
@@ -372,8 +372,8 @@ class SortedList(list):
             The value to search in the SortedList.
         key : `callable`
             A function that serves as a key for the sort comparison.
-        default : `Any`, Optional
-            Default value to returns if no matching element was present. Defaults to `None`.
+        default : `Any` = `None`, Optional
+            Default value to returns if no matching element was present.
         
         Returns
         -------

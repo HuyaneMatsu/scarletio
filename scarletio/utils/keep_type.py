@@ -41,7 +41,7 @@ class KeepType:
         ----------
         old_class : `type`
             The old class to extend.
-        new_class : `None`, `type`, Optional (Keyword only)
+        new_class : `None`, `type` = `None`, Optional (Keyword only)
             The new class to extend the old class's functionality with.
         
         Returns

@@ -47,9 +47,11 @@ class AsyncQueue:
         ----------
         loop : ``EventThread``
             The loop to what the created queue will be bound to.
-        max_length : `None`, `int`, Optional
+        iterable : `None`, `iterable` = `None`, Optional
+            A preset iterable to extend the queue with.
+        max_length : `None`, `int` = `None`, Optional
             The maximal length of the queue.
-        exception : `None`, `BaseException`
+        exception : `None`, `BaseException` = `None`, Optional
             Exception to raise when the queue is empty.
         
         Raises
@@ -63,7 +65,7 @@ class AsyncQueue:
             
             if isinstance(exception, StopIteration):
                 raise TypeError(
-                    f'{exception} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
+                    f'{exception} cannot be raised to a(n) `{cls.__name__}`.'
                 )
         
         if iterable is None:
