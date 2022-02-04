@@ -1,3 +1,10 @@
+## 1.0.11 *\[2022-02-??\]*
+
+#### Improvements
+
+- Add `__main__` file to scarletio. It starts an interactive console.
+
+
 ## 1.0.10 *\[2022-01-29\]*
 
 #### Bug fixes
