@@ -29,10 +29,15 @@ if AWAIT_AVAILABLE:
 else:
     AWAIT_NOTE = '!!! Direct \'await\' is not available on your python version. Please use python 3.8 or newer !!!'
 
-
-HELP = (
-    f'Runs asynchronous python interpreter through hata\'s asynchronous environment.\n'
-    f'{AWAIT_NOTE}\n'
+LOGO = (
+f'                     _      _   _       \n'
+f'                    | |    | | (_)      \n'
+f'  ___  ___ __ _ _ __| | ___| |_ _  ___  \n'
+f' / __|/ __/ _` | \'__| |/ _ \ __| |/ _ \ \n'
+f' \__ \ (_| (_| | |  | |  __/ |_| | (_) |\n'
+f' |___/\___\__,_|_|  |_|\___|\__|_|\___/ \n'
+f'                                        \n'
+f'{PACKAGE.__version__:>40}\n'
 )
 
 
@@ -179,6 +184,7 @@ def __main__(local_variables=None):
         interactive_console_locals = dict(local_variables)
     
     banner = (
+        f'{LOGO}\n\n'
         f'{PACKAGE_NAME} interactive_console {sys.version} on {sys.platform}.\n'
         f'{AWAIT_NOTE}\n'
         f'Type \'help\', \'copyright\', \'credits\' or \'license\' for more information.'
