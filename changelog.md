@@ -5,6 +5,11 @@
 - Add `__main__` file to scarletio. It starts an interactive console.
 - `sleep` now calls `get_event_loop` instead of `current_thread`. Ths change improves event loop resolution.
 - Add `scarletio.tools.asynchronous_interactive_console` for brave people.
+- Add `get_current_task`.
+- Add `get_tasks`.
+- Add `loop` parameter to `create_future`.
+- Add `loop` parameter to `create_task`.
+- Add `run_coroutine_concurrent`.
 
 ## 1.0.10 *\[2022-01-29\]*
 

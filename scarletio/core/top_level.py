@@ -1,4 +1,7 @@
-__all__ = ('create_event_loop', 'create_future', 'create_task', 'get_event_loop', 'run',)
+__all__ = (
+    'create_event_loop', 'create_future', 'create_task', 'get_current_task', 'get_event_loop', 'get_tasks', 'run',
+    'run_coroutine_concurrent'
+)
 
 from threading import current_thread, enumerate as list_threads
 
@@ -41,11 +44,16 @@ def _try_detect_event_loop(local_thread):
         return thread
 
 
-def _get_event_loop_is_current_thread():
+def _get_event_loop_is_current_thread(loop):
     """
     Gets the local event loop if applicable and whether it is indeed the current thread or nah.
     
     Used by other top level functions.
+    
+    Parameters
+    ----------
+    loop : `None`, ``EventLoop``
+        Optional event loop to use instead of auto-detecting.
     
     Returns
     -------
@@ -60,6 +68,9 @@ def _get_event_loop_is_current_thread():
         There are are no detectable event loops.
     """
     local_thread = current_thread()
+    if (loop is not None):
+        return loop, (loop is local_thread)
+    
     if isinstance(local_thread, EventThread):
         return local_thread, True
     
@@ -127,7 +138,7 @@ def create_event_loop(**kwargs):
     return EventThread(**kwargs)
 
 
-def create_task(coroutine):
+def create_task(coroutine, loop=None):
     """
     Creates a task on the local event loop.
     
@@ -135,6 +146,8 @@ def create_task(coroutine):
     ----------
     coroutine : `GeneratorType`, `CoroutineType`
         The coroutine to create task from.
+    loop : `None`, ``EventThread`` = `None`, Optional
+        The event loop to schedule the created task on.
     
     Returns
     -------
@@ -145,7 +158,7 @@ def create_task(coroutine):
     RuntimeError
         There are are no detectable event loops.
     """
-    loop, is_current_thread = _get_event_loop_is_current_thread()
+    loop, is_current_thread = _get_event_loop_is_current_thread(loop)
     task = Task(coroutine, loop)
     if (not is_current_thread):
         loop.wake_up()
@@ -153,9 +166,14 @@ def create_task(coroutine):
     return task
 
 
-def create_future():
+def create_future(loop=None):
     """
     Creates s future bound to the local event loop.
+    
+    Parameters
+    ----------
+    loop : `None`, ``EventThread`` = `None`, Optional
+        The event loop to create bound future to.
     
     Returns
     -------
@@ -166,7 +184,7 @@ def create_future():
     RuntimeError
         There are are no detectable event loops.
     """
-    loop, is_current_thread = _get_event_loop_is_current_thread()
+    loop, is_current_thread = _get_event_loop_is_current_thread(loop)
     future = Future(loop)
     if (not is_current_thread):
         loop.wake_up()
@@ -214,3 +232,90 @@ def run(awaitable, timeout=None):
     finally:
         if stop_event_loop_after:
             event_loop.stop()
+
+
+def get_current_task(loop=None):
+    """
+    Returns the currently executed task.
+    
+    Parameters
+    ----------
+    loop : `None`, ``EventThread`` = `None`, Optional
+        The event loop to get the current task of.
+    
+    Returns
+    -------
+    task : `None`, ``Task``
+    
+    Raises
+    ------
+    RuntimeError
+        There are are no detectable event loops.
+    """
+    if loop is None:
+        loop = get_event_loop()
+    
+    return loop.current_task
+
+
+def get_tasks(loop=None):
+    """
+    Returns the pending tasks.
+    
+    Parameters
+    ----------
+    loop : `None`, ``EventThread`` = `None`, Optional
+        The event loop to get the pending tasks
+    
+    Returns
+    -------
+    task : `None`, ``Task``
+    
+    Raises
+    ------
+    RuntimeError
+        There are are no detectable event loops.
+    """
+    if loop is None:
+        loop = get_event_loop()
+    
+    return loop.get_tasks()
+
+
+def run_coroutine_concurrent(coroutine, loop=None):
+    """
+    Runs the given coroutine concurrently. If the function is called from an event loop, you can await the result
+    of the returned task. If not, then it blocks till the task is finished and returns the result of the coroutine.
+    
+    Parameters
+    ----------
+    coroutine : `GeneratorType`, `CoroutineType`
+        The coroutine to create task from.
+    loop : `None`, ``EventThread`` = `None`, Optional
+        The event loop to schedule the created task on.
+    
+    Returns
+    -------
+    task : ``Task``, ``FutureAsyncWrapper``, `Any`
+    
+    Raises
+    ------
+    RuntimeError
+        There are are no detectable event loops.
+    BaseException
+        Any exception raised by `coroutine`.
+    """
+    loop, is_current_thread = _get_event_loop_is_current_thread(loop)
+    
+    task = Task(coroutine, loop)
+    
+    if is_current_thread:
+        return task
+    
+    thread = current_thread()
+    if isinstance(thread, EventThread):
+        # `.async_wrap` wakes up the event loop
+        return task.async_wrap(thread)
+    
+    loop.wake_up()
+    return task.sync_wrap().wait()

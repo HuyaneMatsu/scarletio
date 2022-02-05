@@ -277,9 +277,9 @@ def run_asynchronous_interactive_console(
     ----------
     interactive_console_locals : `None`, `dict` of (`str`, `Any`) items = `None`, Optional
         Parameters to start the console with.
-    banner : `None`, `str` = `None`, Optional (Keyword onl
+    banner : `None`, `str` = `None`, Optional (Keyword only)
         Interactive console banner.
-    exit_message : `None`, `str` = `None`, Optional (Keyword onl
+    exit_message : `None`, `str` = `None`, Optional (Keyword only)
         Interactive console exit message.
     callback : `None`, `FunctionType` = `None`, Optional (Keyword only)
         Callback to run when execution the console is closed.
