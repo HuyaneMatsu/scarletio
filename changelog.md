@@ -10,6 +10,7 @@
 - Add `loop` parameter to `create_future`.
 - Add `loop` parameter to `create_task`.
 - Add `run_coroutine_concurrent`.
+- Add `skip_poll_cycle`.
 
 ## 1.0.10 *\[2022-01-29\]*
 

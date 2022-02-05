@@ -1,4 +1,4 @@
-__all__ = ('skip_ready_cycle', 'sleep')
+__all__ = ('skip_poll_cycle', 'skip_ready_cycle', 'sleep')
 
 from ...utils import include, to_coroutine
 
@@ -15,9 +15,28 @@ def skip_ready_cycle():
     """
     Skips a ready cycle.
     
-    This function is a coroutine.
+    This function is an awaitable generator.
     """
     yield
+
+
+async def skip_poll_cycle(loop=None):
+    """
+    Skips a full poll cycle.
+    
+    This function is a coroutine.
+    
+    Parameters
+    ----------
+    loop : `None`, ``EventThread`` = `None`, Optional
+        The event loop to skip poll cycle on.
+    """
+    if loop is None:
+        loop = get_event_loop()
+    
+    future = Future(loop)
+    loop.call_at(0.0, Future.set_result_if_pending, future, None)
+    await future
 
 
 def sleep(delay, loop=None):
