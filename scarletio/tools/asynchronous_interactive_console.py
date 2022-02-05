@@ -276,7 +276,7 @@ def run_asynchronous_interactive_console(
     Parameters
     ----------
     interactive_console_locals : `None`, `dict` of (`str`, `Any`) items = `None`, Optional
-        Parameters to start th console with.
+        Parameters to start the console with.
     banner : `None`, `str` = `None`, Optional (Keyword onl
         Interactive console banner.
     exit_message : `None`, `str` = `None`, Optional (Keyword onl
