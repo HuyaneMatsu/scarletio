@@ -28,6 +28,7 @@ setup(
         'scarletio.core.traps',
         'scarletio.utils',
         'scarletio.http_client',
+        'scarletio.tools',
         'scarletio.web_common',
         'scarletio.websocket',
     ],
@@ -35,7 +36,7 @@ setup(
     license = 'MIT',
     author = 'HuyaneMatsu',
     author_email = 're.ism.tm@gmail.com',
-    description = 'Asynchronous io for weebs.',
+    description = 'Asynchronous blackmagic & Witchcraft',
     long_description = README,
     long_description_content_type = 'text/markdown',
     classifiers = [
