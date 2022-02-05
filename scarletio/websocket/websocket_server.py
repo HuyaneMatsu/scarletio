@@ -2,7 +2,7 @@ __all__ = ('WebSocketServer', )
 
 from functools import partial as partial_func
 
-from ..core import Future, Task, WaitTillAll
+from ..core import Task, WaitTillAll, skip_poll_cycle
 from ..utils import IgnoreCaseMultiValueDictionary
 
 from .websocket_server_protocol import WebSocketServerProtocol
@@ -306,9 +306,7 @@ class WebSocketServer:
         loop = self.loop
         
         # Skip 1 full loop
-        future = Future(loop)
-        loop.call_at(0.0, Future.set_result_if_pending, future, None)
-        await future
+        await skip_poll_cycle(loop)
         
         websockets = self.websockets
         if websockets:

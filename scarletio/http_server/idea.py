@@ -6,7 +6,7 @@ from importlib.util import find_spec
 from threading import current_thread
 from uuid import UUID
 
-from ..core import CancelledError, EventThread, Future, Task, WaitTillAll
+from ..core import CancelledError, EventThread, Future, Task, WaitTillAll, skip_poll_cycle
 from ..utils import CallableAnalyzer, IgnoreCaseMultiValueDictionary
 from ..web_common import HttpReadWriteProtocol, HttpVersion11, PayloadError, URL
 from ..web_common.headers import METHOD_ALL, METHOD_GET
@@ -407,9 +407,7 @@ class HTTPServer:
         loop = self.loop
         
         # Skip 1 full loop
-        future = Future(loop)
-        loop.call_at(0.0, Future.set_result_if_pending, future, None)
-        await future
+        await skip_poll_cycle(loop)
         
         handlers = self.handlers
         if handlers:

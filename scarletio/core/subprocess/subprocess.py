@@ -5,7 +5,7 @@ from socket import socketpair as create_socket_pair
 from subprocess import PIPE, Popen, TimeoutExpired
 
 from ..protocols_and_transports import ReadProtocolBase
-from ..traps import Future, Task, WaitTillAll, future_or_timeout
+from ..traps import Future, Task, WaitTillAll, future_or_timeout, skip_poll_cycle
 
 from .subprocess_protocols import SubprocessReadPipeProtocol, SubprocessWritePipeProtocol
 from .subprocess_writer import SubprocessWriter
@@ -388,10 +388,7 @@ class AsyncProcess:
         
         self.close()
         
-        loop = self._loop
-        future = Future(loop)
-        loop.call_later(0.0, Future.set_result_if_pending, future, None)
-        await future
+        await skip_poll_cycle(self._loop)
     
     
     def _pipe_connection_lost(self, file_descriptor, exception):
