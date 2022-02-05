@@ -3,7 +3,8 @@
 #### Improvements
 
 - Add `__main__` file to scarletio. It starts an interactive console.
-
+- `sleep` now calls `get_event_loop` instead of `current_thread`. Ths change improves event loop resolution.
+- Add `scarletio.tools.asynchronous_interactive_console` for brave people.
 
 ## 1.0.10 *\[2022-01-29\]*
 
@@ -25,7 +26,7 @@
 - `WeakMap.__getitem__` returned incorrect value.
 - `WeakItemDictionary.copy` didn't set all attributes.
 - `WeakKeyDictionary.copy` didn't set all attributes.
-- WeakValueDictionary`.copy` didn't set all attributes.
+- `WeakValueDictionary.copy` didn't set all attributes.
 - `_MultiValueDictionaryItemIterator.__contains__` returned incorrect value.
 - `MultiValueDictionary.__init__` could add the same item multiple times.
 - `IgnoreCaseMultiValueDictionary.__init__` could add the same item multiple times.

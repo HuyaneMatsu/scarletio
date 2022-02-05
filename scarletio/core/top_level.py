@@ -2,7 +2,7 @@ __all__ = ('create_event_loop', 'create_future', 'create_task', 'get_event_loop'
 
 from threading import current_thread, enumerate as list_threads
 
-from ..utils import WeakItemDictionary
+from ..utils import WeakItemDictionary, export
 
 from .event_loop import EventThread
 from .traps import Future, Task
@@ -72,6 +72,7 @@ def _get_event_loop_is_current_thread():
     )
 
 
+@export
 def get_event_loop():
     """
     Gets the local event loop if applicable. If not raises `RuntimeError`.

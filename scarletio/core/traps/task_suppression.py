@@ -1,7 +1,5 @@
 __all__ = ('skip_ready_cycle', 'sleep')
 
-from threading import current_thread
-
 from ...utils import include, to_coroutine
 
 from .future import Future
@@ -9,6 +7,7 @@ from .handle_cancellers import _SleepHandleCanceller
 
 
 EventThread = include('EventThread')
+get_event_loop = include('get_event_loop')
 
 
 @to_coroutine
@@ -44,11 +43,7 @@ def sleep(delay, loop=None):
         The given or the local event loop is already stopped.
     """
     if loop is None:
-        loop = current_thread()
-        if not isinstance(loop, EventThread):
-            raise RuntimeError(
-                f'`sleep` called without passing `loop` parameter from a non `{EventThread.__name__}`; thread={loop!r}.'
-            )
+        loop = get_event_loop()
     
     future = Future(loop)
     if delay <= 0.:
@@ -65,4 +60,3 @@ def sleep(delay, loop=None):
     future._callbacks.append(callback)
     callback._handle = handle
     return future
-
