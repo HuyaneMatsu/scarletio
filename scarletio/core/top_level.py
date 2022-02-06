@@ -1,6 +1,6 @@
 __all__ = (
     'create_event_loop', 'create_future', 'create_task', 'get_current_task', 'get_event_loop', 'get_tasks', 'run',
-    'run_coroutine_concurrent'
+    'run_coroutine'
 )
 
 from threading import current_thread, enumerate as list_threads
@@ -282,7 +282,7 @@ def get_tasks(loop=None):
     return loop.get_tasks()
 
 
-def run_coroutine_concurrent(coroutine, loop=None):
+def run_coroutine(coroutine, loop=None):
     """
     Runs the given coroutine concurrently. If the function is called from an event loop, you can await the result
     of the returned task. If not, then it blocks till the task is finished and returns the result of the coroutine.

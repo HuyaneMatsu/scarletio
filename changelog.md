@@ -9,7 +9,7 @@
 - Add `get_tasks`.
 - Add `loop` parameter to `create_future`.
 - Add `loop` parameter to `create_task`.
-- Add `run_coroutine_concurrent`.
+- Add `run_coroutine`. (Name by `asleep-cult`).
 - Add `skip_poll_cycle`.
 
 ## 1.0.10 *\[2022-01-29\]*
