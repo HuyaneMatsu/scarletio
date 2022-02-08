@@ -1,3 +1,8 @@
+## 1.0.12 *\[2022-02-??\]*
+
+#### Improvements
+- Add `ext.asyncio`.
+
 ## 1.0.11 *\[2022-02-08\]*
 
 #### Improvements

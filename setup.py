@@ -22,6 +22,8 @@ setup(
     packages = [
         'scarletio',
         'scarletio.core',
+        'scarletio.ext',
+        'scarletio.ext.asyncio',
         'scarletio.core.event_loop',
         'scarletio.core.subprocess',
         'scarletio.core.protocols_and_transports',
