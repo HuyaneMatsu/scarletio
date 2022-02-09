@@ -1,3 +1,10 @@
+## 1.0.13
+
+#### Improvements
+
+- Add `CallableAnalyzer.get_parameter`.
+- Add `CallableAnalyzer.has_parameter`.
+
 ## 1.0.12 *\[2022-02-09\]*
 
 #### Improvements
