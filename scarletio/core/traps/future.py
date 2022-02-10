@@ -2,7 +2,7 @@ __all__ = ('Future',)
 
 import reprlib, sys, warnings
 
-from ...utils import ignore_frame, include, set_docs, to_coroutine
+from ...utils import export, ignore_frame, include, set_docs, to_coroutine
 from ...utils.trace import format_callback
 
 from ..exceptions import CancelledError, InvalidStateError
@@ -28,7 +28,7 @@ FUTURE_STATE_TO_NAME = {
     FUTURE_STATE_RETRIEVED: 'retrieved'
 }
 
-
+@export
 def get_future_state_name(state):
     """
     Returns the given future's state's name.

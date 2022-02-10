@@ -1,7 +1,14 @@
 __all__ = ('CancelledError', 'InvalidStateError',)
 
+from ..utils import include
+
+
+get_future_state_name = include('get_future_state_name')
+
+
 class CancelledError(BaseException):
     """The Future or Task was cancelled."""
+
 
 class InvalidStateError(Exception):
     """
@@ -56,8 +63,10 @@ class InvalidStateError(Exception):
         message = self._message
         if message is None:
             future = self.future
-            message = (f'`{future.__class__.__name__}.{self.func_name}` was called, when `.state` is {future._state} '
-               f'of {future!r}')
+            message = (
+                f'`{future.__class__.__name__}.{self.func_name}` was called, when `.state` is {future._state} '
+                f'({get_future_state_name(future._state)}) of {future!r}.'
+            )
             self._message = message
         
         return message
