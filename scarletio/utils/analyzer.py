@@ -97,6 +97,7 @@ class Parameter:
         
         return ''.join(repr_parts)
     
+    
     def is_positional_only(self):
         """
         Returns whether the parameter is positional only.
@@ -110,6 +111,7 @@ class Parameter:
             return True
         
         return False
+    
     
     def is_positional(self):
         """
@@ -128,6 +130,7 @@ class Parameter:
         
         return False
     
+    
     def is_keyword(self):
         """
         Returns whether the parameter can be used as a keyword parameter.
@@ -145,6 +148,7 @@ class Parameter:
         
         return False
     
+    
     def is_keyword_only(self):
         """
         Returns whether they parameter is keyword only.
@@ -159,6 +163,7 @@ class Parameter:
         
         return False
     
+    
     def is_args(self):
         """
         Returns whether the parameter is an `*args` parameter.
@@ -172,6 +177,7 @@ class Parameter:
             return True
         
         return False
+    
     
     def is_kwargs(self):
         """
@@ -633,6 +639,7 @@ class CallableAnalyzer:
         self.instance_to_async = instance_to_async
         return self
     
+    
     def is_async(self):
         """
         Returns whether the analyzed callable is async.
@@ -646,6 +653,7 @@ class CallableAnalyzer:
         
         return False
     
+    
     def is_async_generator(self):
         """
         Returns whether the analyzed callable is an async generator.
@@ -657,6 +665,7 @@ class CallableAnalyzer:
             return True
         
         return False
+    
     
     def can_instance_to_async_callable(self):
         """
@@ -680,6 +689,7 @@ class CallableAnalyzer:
         
         return True
     
+    
     def can_instance_to_async_generator(self):
         """
         Returns whether the analyzed callable can be instanced to async.
@@ -702,6 +712,7 @@ class CallableAnalyzer:
         
         return True
     
+    
     # call `.can_instance_async_callable`, `.can_instance_to_async_generator` before
     def instance(self):
         """
@@ -714,6 +725,7 @@ class CallableAnalyzer:
         instance_to_async_callable : `Any`
         """
         return self.callable()
+    
     
     def get_non_default_keyword_only_parameter_count(self):
         """
@@ -802,6 +814,7 @@ class CallableAnalyzer:
         
         return count
     
+    
     def get_non_reserved_non_default_parameter_count(self):
         """
         Returns the amount of the non reserved non default parameters of the analyzed callable.
@@ -825,7 +838,8 @@ class CallableAnalyzer:
             continue
         
         return count
-
+    
+    
     def get_non_reserved_positional_parameter_range(self):
         """
         Returns the minimal and the maximal amount how much non reserved positional parameters the analyzed callable
@@ -873,6 +887,7 @@ class CallableAnalyzer:
         
         return start, end
     
+    
     def accepts_args(self):
         """
         Returns whether the analyzed callable accepts `*args` parameter.
@@ -883,6 +898,7 @@ class CallableAnalyzer:
         """
         return (self.args_parameter is not None)
     
+    
     def accepts_kwargs(self):
         """
         Returns whether the analyzed callable accepts `**kwargs` parameter.
@@ -892,6 +908,44 @@ class CallableAnalyzer:
         accepts_kwargs : `bool`
         """
         return (self.kwargs_parameter is not None)
+    
+    
+    def get_parameter(self, parameter_name):
+        """
+        Returns the parameter for the given name.
+        
+        Parameters
+        ----------
+        parameter_name : `str`
+            The parameter's name.
+        
+        Returns
+        -------
+        parameter : `None, ``Parameter``
+        """
+        for parameter in self.parameters:
+            if parameter.name == parameter_name:
+                return parameter
+    
+    
+    def has_parameter(self, parameter_name):
+        """
+        Returns whether the analyzed callable hast he given parameter by name.
+        
+        Parameters
+        ----------
+        parameter_name : `str`
+            The parameter's name.
+        
+        Returns
+        -------
+        has_parameter : `bool`
+        """
+        for parameter in self.parameters:
+            if parameter.name == parameter_name:
+                return True
+        
+        return False
 
 
 class RichAnalyzerParameterAccess:

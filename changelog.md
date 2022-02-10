@@ -1,3 +1,11 @@
+## 1.0.13 *\[2022-02-??\]*
+
+#### Improvements
+
+- Add `CallableAnalyzer.get_parameter`.
+- Add `CallableAnalyzer.has_parameter`.
+- Add `set_event_loop`.
+
 ## 1.0.12 *\[2022-02-09\]*
 
 #### Improvements
