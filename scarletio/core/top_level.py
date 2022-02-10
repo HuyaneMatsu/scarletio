@@ -1,6 +1,6 @@
 __all__ = (
     'create_event_loop', 'create_future', 'create_task', 'get_current_task', 'get_event_loop', 'get_tasks', 'run',
-    'run_coroutine'
+    'run_coroutine', 'set_event_loop'
 )
 
 from threading import current_thread, enumerate as list_threads
@@ -109,6 +109,31 @@ def get_event_loop():
     raise RuntimeError(
         f'No running event loop for {local_thread!r}.'
     )
+
+
+def set_event_loop(event_loop):
+    """
+    Sets the given event loop to be linked to the current thread.
+    
+    Can be used to force update event loop resolution of ``get_event_loop`` for the current thread.
+    
+    Returns
+    -------
+    event_loop : ``EventThread``
+        The event loop to set.
+    
+    Raises
+    ------
+    RuntimeError
+        Cannot set event loop from an event loop.
+    """
+    local_thread = current_thread()
+    if isinstance(local_thread, EventThread):
+        raise RuntimeError(
+            f'Cannot set event loop from an event loop. Current event loop: {local_thread!r} ;got: {event_loop!r}.'
+        )
+    
+    THREAD_TO_EVENT_LOOP_REFERENCE[local_thread] = event_loop
 
 
 def create_event_loop(**kwargs):
