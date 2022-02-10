@@ -5,6 +5,7 @@
 - Add `CallableAnalyzer.get_parameter`.
 - Add `CallableAnalyzer.has_parameter`.
 - Add `set_event_loop`.
+- State the future's state's name in `InvalidStateError.__repr__`.
 
 ## 1.0.12 *\[2022-02-09\]*
 
