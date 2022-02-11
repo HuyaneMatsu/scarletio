@@ -4,7 +4,7 @@ import base64, binascii, re
 import socket as module_socket
 from collections import namedtuple
 
-from ..core import CancelledError
+from ..core import CancelledError, Task
 
 
 sentinel = object()
@@ -311,7 +311,7 @@ class Timeout:
         task = self._loop.current_task
         if (task is None):
             raise RuntimeError(
-                f'`{self.__class__.__name__}` entered outside of a `{task.__name__}`!'
+                f'`{self.__class__.__name__}` entered outside of a `{Task.__name__}`!'
             )
         
         state = self._state

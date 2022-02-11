@@ -1,3 +1,9 @@
+## 1.0.14 *\[2022-02-11\]*
+
+#### Bug fixes
+
+- `Timeout.__enter__` could raise `AttributeError` (typo). (winwinwinwin#0001)
+
 ## 1.0.13 *\[2022-02-10\]*
 
 #### Improvements
