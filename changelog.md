@@ -1,3 +1,9 @@
+## 1.0.15 *\[2022-02-12\]*
+
+#### Bug fixes
+
+- Http version 1.0 connections were not closed by default.
+
 ## 1.0.14 *\[2022-02-11\]*
 
 #### Bug fixes

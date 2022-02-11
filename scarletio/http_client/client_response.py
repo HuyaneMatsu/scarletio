@@ -6,6 +6,7 @@ from http.cookies import CookieError, SimpleCookie
 from ..core import Task
 from ..utils import from_json
 from ..web_common.headers import CONNECTION, CONTENT_TYPE, SET_COOKIE
+from ..web_common.helpers import HttpVersion10
 from ..web_common.multipart import MimeType
 
 
@@ -141,8 +142,10 @@ class ClientResponse:
             
             payload_waiter = protocol.set_payload_reader(protocol._read_http_response())
             self.raw_message = message = await payload_waiter
-            protocol.handle_payload_waiter_cancellation()
+            
             payload_reader = protocol.get_payload_reader_task(message)
+            protocol.handle_payload_waiter_cancellation()
+            
             if (payload_reader is None):
                 payload_waiter = None
                 self._response_eof(None)
@@ -207,16 +210,19 @@ class ClientResponse:
             return
         
         headers = self.headers
-        if (headers is not None):
-            try:
-                connection_type = headers[CONNECTION]
-            except KeyError:
-                pass
-            else:
-                if connection_type == 'close':
-                    protocol = connection.protocol
-                    if (protocol is not None):
-                        protocol.close()
+        if (headers is None):
+            connection_type = None
+        else:
+            connection_type = headers.get(CONNECTION, None)
+        
+        if (
+            (self.raw_message.version <= HttpVersion10) if
+            (connection_type is None) else
+            (connection_type.lower() == 'close')
+        ):
+            protocol = connection.protocol
+            if (protocol is not None):
+                protocol.close()
         
         connection.release()
         self.connection = None
