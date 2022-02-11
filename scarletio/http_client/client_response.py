@@ -220,11 +220,9 @@ class ClientResponse:
             (connection_type is None) else
             (connection_type.lower() == 'close')
         ):
-            protocol = connection.protocol
-            if (protocol is not None):
-                protocol.close()
-        
-        connection.release()
+            connection.close()
+        else:
+            connection.release()
         self.connection = None
     
     

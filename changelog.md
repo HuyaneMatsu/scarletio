@@ -1,3 +1,9 @@
+## 1.0.16 *\[2022-02-12\]*
+
+#### Bug fixes
+
+- Http version 1.0 connections could be closed too early.
+
 ## 1.0.15 *\[2022-02-12\]*
 
 #### Bug fixes
