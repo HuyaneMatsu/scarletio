@@ -298,9 +298,9 @@ class Task(Future):
             else:
                 extracted = ['No stack for ', repr(self), '\n']
         else:
-            extracted = render_exception_into(exception)
-            extracted[0] = f'Traceback for {self!r} (most recent call last):\n'
-
+            extracted = ['Traceback for ', repr(self), ' (most recent call last):\n']
+            extracted = render_exception_into(exception, extend=extracted)
+        
         file.write(''.join(extracted))
     
     if __debug__:
@@ -525,7 +525,7 @@ class Task(Future):
     
     def _wake_up(self, future):
         """
-        Callback used by ``._step``, when the wrapped coroutine waits on a future to be marked as done.
+        Callback used by ``._step`` when the wrapped coroutine waits on a future to be marked as done.
         
         Parameters
         ----------
