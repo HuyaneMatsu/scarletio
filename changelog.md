@@ -1,3 +1,12 @@
+## 1.0.17 *\[2022-02-??\]*
+
+#### Improvements
+- Add missing `RawMessage.__new__`.
+- Add missing `RawMessage.__repr__`.
+- Add missing `RawResponseMessage.__repr__`.
+- Add missing `RawRequestMessage.__repr__`.
+- Stop trying to read `head` request response's body.
+
 ## 1.0.16 *\[2022-02-12\]*
 
 #### Bug fixes

@@ -1,5 +1,9 @@
 __all__ = ()
 
+import reprlib
+
+from ..utils import copy_docs
+
 from .headers import CONNECTION, CONTENT_ENCODING, TRANSFER_ENCODING
 
 
@@ -17,6 +21,21 @@ class RawMessage:
         The headers of the http message.
     """
     __slots__ = ('_upgraded', 'headers', )
+    
+    def __new__(cls, headers):
+        """
+        Creates a new raw http message.
+        
+        Parameters
+        ----------
+        headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
+            The headers of the http message.
+        """
+        self = object.__new__(cls)
+        self._upgraded = 2
+        self.headers = headers
+        return self
+    
     
     @property
     def upgraded(self):
@@ -78,6 +97,54 @@ class RawMessage:
             encoding = encoding.lower()
         
         return encoding
+    
+    
+    def _cursed_repr_builder(self):
+        """
+        Helper for ``__repr__`` function.
+        
+        This method is an iterable generator.
+        
+        Yields
+        ------
+        repr_parts : `list` of `str`
+        
+        Usage
+        -----
+        ```py
+        for repr_parts in self._cursed_repr_builder():
+            repr_parts.append(', your fields')
+        
+        return ''.join(repr_parts)
+        ```
+        """
+        repr_parts = ['<', self.__class__.__name__]
+        
+        yield repr_parts
+        
+        repr_parts.append(' headers=')
+        repr_parts.append(repr(self.headers))
+        
+        repr_parts.append(', upgraded=')
+        repr_parts.append(repr(self.upgraded))
+        
+        repr_parts.append(', chunked=')
+        repr_parts.append(repr(self.chunked))
+        
+        encoding = self.encoding
+        if (encoding is not None):
+            repr_parts.append(', encoding=')
+            repr_parts.append(repr(encoding))
+        
+        repr_parts.append('>')
+    
+    
+    def __repr__(self):
+        """Returns the http messages representation."""
+        for repr_parts in self._cursed_repr_builder():
+            pass
+        
+        return ''.join(repr_parts)
 
 
 class RawResponseMessage(RawMessage):
@@ -101,7 +168,7 @@ class RawResponseMessage(RawMessage):
     """
     __slots__ = ('version', 'status', 'reason',)
     
-    def __init__(self, version, status, reason, headers):
+    def __new__(cls, version, status, reason, headers):
         """
         Creates a new ``RawResponseMessage`` with the given parameters.
         
@@ -116,11 +183,31 @@ class RawResponseMessage(RawMessage):
         headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
             The headers of the http message.
         """
+        self = RawMessage.__new__(cls, headers)
+        
         self.version = version
         self.status = status
         self.reason = reason
-        self.headers = headers
-        self._upgraded = 2
+        
+        return self
+
+
+    @copy_docs(RawMessage._cursed_repr_builder)
+    def _cursed_repr_builder(self):
+        for repr_parts in RawMessage._cursed_repr_builder(self):
+            
+            repr_parts.append(', version=')
+            repr_parts.append(repr(self.version))
+            
+            repr_parts.append(', status=')
+            repr_parts.append(repr(self.status))
+            
+            reason = self.reason
+            if reason:
+                repr_parts.append(', reason=')
+                repr_parts.append(reprlib.repr(self.reason))
+            
+            yield repr_parts
 
 
 class RawRequestMessage(RawMessage):
@@ -144,7 +231,7 @@ class RawRequestMessage(RawMessage):
     """
     __slots__ = ('version', 'method', 'path',)
     
-    def __init__(self, version, method, path, headers):
+    def __new__(cls, version, method, path, headers):
         """
         Creates a new ``RawRequestMessage`` with the given parameters.
         
@@ -159,8 +246,28 @@ class RawRequestMessage(RawMessage):
         headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
             The headers of the http message.
         """
+        self = RawMessage.__new__(cls, headers)
+        
         self.version = version
         self.method = method
         self.path = path
-        self.headers = headers
-        self._upgraded = 2
+        
+        return self
+    
+    
+    @copy_docs(RawMessage._cursed_repr_builder)
+    def _cursed_repr_builder(self):
+        for repr_parts in RawMessage._cursed_repr_builder(self):
+            
+            repr_parts.append(', version=')
+            repr_parts.append(repr(self.version))
+            
+            repr_parts.append(', method=')
+            repr_parts.append(repr(self.method))
+            
+            reason = self.reason
+            if reason:
+                repr_parts.append(', reason=')
+                repr_parts.append(repr(self.path))
+            
+            yield repr_parts

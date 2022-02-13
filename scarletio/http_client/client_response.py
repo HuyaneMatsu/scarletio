@@ -5,7 +5,7 @@ from http.cookies import CookieError, SimpleCookie
 
 from ..core import Task
 from ..utils import from_json
-from ..web_common.headers import CONNECTION, CONTENT_TYPE, SET_COOKIE
+from ..web_common.headers import CONNECTION, CONTENT_TYPE, METHOD_HEAD, SET_COOKIE
 from ..web_common.helpers import HttpVersion10
 from ..web_common.multipart import MimeType
 
@@ -143,14 +143,17 @@ class ClientResponse:
             payload_waiter = protocol.set_payload_reader(protocol._read_http_response())
             self.raw_message = message = await payload_waiter
             
-            payload_reader = protocol.get_payload_reader_task(message)
-            protocol.handle_payload_waiter_cancellation()
+            if self.method == METHOD_HEAD:
+                payload_reader = None
+            else:
+                payload_reader = protocol.get_payload_reader_task(message)
             
             if (payload_reader is None):
                 payload_waiter = None
                 self._response_eof(None)
             else:
                 payload_waiter = protocol.set_payload_reader(payload_reader)
+                protocol.handle_payload_waiter_cancellation()
                 payload_waiter.add_done_callback(self._response_eof)
             
             # response status
