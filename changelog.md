@@ -1,3 +1,9 @@
+## 1.0.18 *\[2022-02-??\]*
+
+#### Improvements
+
+- Add missing `_HandleCancellerBase.__repr__`.
+
 ## 1.0.17 *\[2022-02-15\]*
 
 #### Improvements

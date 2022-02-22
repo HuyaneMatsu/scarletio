@@ -49,6 +49,27 @@ class _HandleCancellerBase:
          
         self._handle = None
         handle.cancel()
+    
+    
+    def __repr__(self):
+        """Returns the handler canceller's representation."""
+        repr_parts = ['<', self.__class__.__name__]
+        
+        handle = self._handle
+        if handle is None:
+            state = 'cancelled'
+        else:
+            state = 'alive'
+        
+        repr_parts.append(' ')
+        repr_parts.append(state)
+        
+        if (handle is not None):
+            repr_parts.append(' handle=')
+            repr_parts.append(repr(handle))
+        
+        repr_parts.append('>')
+        return ''.join(repr_parts)
 
 
 class _SleepHandleCanceller(_HandleCancellerBase):
@@ -94,7 +115,7 @@ class _TimeoutHandleCanceller(_HandleCancellerBase):
     _handle : `None`, ``Handle``
         The handle to cancel, when the future is marked as done before the respective handle ran.
     """
-    __slots__ = ('_handle',)
+    __slots__ = ()
     
     def __call__(self, future):
         """
