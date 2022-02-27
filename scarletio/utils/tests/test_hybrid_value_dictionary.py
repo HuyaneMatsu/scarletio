@@ -1,9 +1,8 @@
-import pytest
-
 from ..hybrid_value_dictionary import HybridValueDictionary
 
 from .weak_helpers import WeakReferencable, sort_by_type_first_key
 
+import vampytest
 
 
 # Test HybridValueDictionary
@@ -12,22 +11,22 @@ from .weak_helpers import WeakReferencable, sort_by_type_first_key
 
 def test_HybridValueDictionary_constructor():
     hybrid_value_dictionary = HybridValueDictionary()
-    assert len(hybrid_value_dictionary) == 0
-    assert sorted(hybrid_value_dictionary) == []
+    vampytest.assert_eq(len(hybrid_value_dictionary), 0)
+    vampytest.assert_eq(sorted(hybrid_value_dictionary), [])
 
 
 def test_HybridValueDictionary_constructor_empty():
     hybrid_value_dictionary = HybridValueDictionary([])
-    assert len(hybrid_value_dictionary) == 0
-    assert sorted(hybrid_value_dictionary) == []
+    vampytest.assert_eq(len(hybrid_value_dictionary), 0)
+    vampytest.assert_eq(sorted(hybrid_value_dictionary), [])
 
 
 def test_HybridValueDictionary_constructor_filled():
     relations = {0: WeakReferencable(0), 1: 1, 2: WeakReferencable(2)}
     
     hybrid_value_dictionary = HybridValueDictionary(relations)
-    assert len(hybrid_value_dictionary) == len(relations)
-    assert dict(hybrid_value_dictionary.items()) == relations
+    vampytest.assert_eq(len(hybrid_value_dictionary), len(relations))
+    vampytest.assert_eq(dict(hybrid_value_dictionary.items()), relations)
 
 
 # test magic methods
@@ -41,8 +40,8 @@ def test_HybridValueDictionary_contains():
     
     hybrid_value_dictionary = HybridValueDictionary(relations)
     
-    assert key_1 in hybrid_value_dictionary
-    assert not (key_2 in hybrid_value_dictionary)
+    vampytest.assert_contains(key_1, hybrid_value_dictionary)
+    vampytest.assert_not_in(key_2, hybrid_value_dictionary)
 
 
 def test_HybridValueDictionary_eq():
@@ -54,16 +53,16 @@ def test_HybridValueDictionary_eq():
     hybrid_value_dictionary_2 = HybridValueDictionary(relations_2)
     hybrid_value_dictionary_3 = HybridValueDictionary(relations_3)
     
-    assert hybrid_value_dictionary_1 == hybrid_value_dictionary_1
-    assert not (hybrid_value_dictionary_1 == hybrid_value_dictionary_2)
-    assert not (hybrid_value_dictionary_1 == hybrid_value_dictionary_3)
+    vampytest.assert_eq(hybrid_value_dictionary_1, hybrid_value_dictionary_1)
+    vampytest.assert_eq(hybrid_value_dictionary_1, hybrid_value_dictionary_2, reverse=True)
+    vampytest.assert_eq(hybrid_value_dictionary_1, hybrid_value_dictionary_3, reverse=True)
     
-    assert hybrid_value_dictionary_1 == relations_1
-    assert not (hybrid_value_dictionary_1 == relations_2)
-    assert not (hybrid_value_dictionary_1 == relations_3)
+    vampytest.assert_eq(hybrid_value_dictionary_1, relations_1)
+    vampytest.assert_eq(hybrid_value_dictionary_1, relations_2, reverse=True)
+    vampytest.assert_eq(hybrid_value_dictionary_1, relations_3, reverse=True)
     
-    assert hybrid_value_dictionary_1.__eq__([1, ]) is NotImplemented
-    assert hybrid_value_dictionary_1.__eq__(1) is NotImplemented
+    vampytest.assert_is(hybrid_value_dictionary_1.__eq__([1, ]), NotImplemented)
+    vampytest.assert_is(hybrid_value_dictionary_1.__eq__(1), NotImplemented)
 
 
 def test_HybridValueDictionary_getitem():
@@ -71,12 +70,12 @@ def test_HybridValueDictionary_getitem():
     hybrid_value_dictionary = HybridValueDictionary(relations)
     hybrid_value_dictionary_empty = HybridValueDictionary()
     
-    assert relations[2] == WeakReferencable(2)
+    vampytest.assert_eq(relations[2], WeakReferencable(2))
     
-    with pytest.raises(KeyError):
+    with vampytest.assert_raises(KeyError):
         hybrid_value_dictionary[6]
     
-    with pytest.raises(KeyError):
+    with vampytest.assert_raises(KeyError):
         hybrid_value_dictionary_empty[6]
 
 
@@ -85,8 +84,8 @@ def test_HybridValueDictionary_iter():
     hybrid_value_dictionary = HybridValueDictionary(relations)
     hybrid_value_dictionary_empty = HybridValueDictionary()
     
-    assert sorted(iter(hybrid_value_dictionary)) == sorted(hybrid_value_dictionary.keys())
-    assert sorted(iter(hybrid_value_dictionary_empty)) == sorted(hybrid_value_dictionary_empty.keys())
+    vampytest.assert_eq(sorted(iter(hybrid_value_dictionary)), sorted(hybrid_value_dictionary.keys()))
+    vampytest.assert_eq(sorted(iter(hybrid_value_dictionary_empty)), sorted(hybrid_value_dictionary_empty.keys()))
 
 
 def test_HybridValueDictionary_len():
@@ -94,8 +93,8 @@ def test_HybridValueDictionary_len():
     hybrid_value_dictionary = HybridValueDictionary(relations)
     hybrid_value_dictionary_empty = HybridValueDictionary()
     
-    assert len(hybrid_value_dictionary) == len(relations)
-    assert len(hybrid_value_dictionary_empty) == 0
+    vampytest.assert_eq(len(hybrid_value_dictionary), len(relations))
+    vampytest.assert_eq(len(hybrid_value_dictionary_empty), 0)
 
 
 def test_HybridValueDictionary_ne():
@@ -107,16 +106,16 @@ def test_HybridValueDictionary_ne():
     hybrid_value_dictionary_2 = HybridValueDictionary(relations_2)
     hybrid_value_dictionary_3 = HybridValueDictionary(relations_3)
     
-    assert not (hybrid_value_dictionary_1 != hybrid_value_dictionary_1)
-    assert hybrid_value_dictionary_1 != hybrid_value_dictionary_2
-    assert hybrid_value_dictionary_1 != hybrid_value_dictionary_3
+    vampytest.assert_ne(hybrid_value_dictionary_1, hybrid_value_dictionary_1, reverse=True)
+    vampytest.assert_ne(hybrid_value_dictionary_1, hybrid_value_dictionary_2)
+    vampytest.assert_ne(hybrid_value_dictionary_1, hybrid_value_dictionary_3)
     
-    assert not (hybrid_value_dictionary_1 != relations_1)
-    assert hybrid_value_dictionary_1 != relations_2
-    assert hybrid_value_dictionary_1 != relations_3
-
-    assert hybrid_value_dictionary_1.__ne__([1, ]) is NotImplemented
-    assert hybrid_value_dictionary_1.__ne__(1) is NotImplemented
+    vampytest.assert_ne(hybrid_value_dictionary_1, relations_1, reverse=True)
+    vampytest.assert_ne(hybrid_value_dictionary_1, relations_2)
+    vampytest.assert_ne(hybrid_value_dictionary_1, relations_3)
+    
+    vampytest.assert_is(hybrid_value_dictionary_1.__ne__([1, ]), NotImplemented)
+    vampytest.assert_is(hybrid_value_dictionary_1.__ne__(1), NotImplemented)
 
 
 def test_HybridValueDictionary_setitem():
@@ -133,18 +132,18 @@ def test_HybridValueDictionary_setitem():
     value_3 = 9
     
     hybrid_value_dictionary[key_1] = value_1
-    assert hybrid_value_dictionary[key_1] == value_1
-    assert len(hybrid_value_dictionary) == 4
+    vampytest.assert_eq(hybrid_value_dictionary[key_1], value_1)
+    vampytest.assert_eq(len(hybrid_value_dictionary), 4)
     
     
     hybrid_value_dictionary[key_2] = value_2
-    assert hybrid_value_dictionary[key_2] == value_2
-    assert len(hybrid_value_dictionary) == 4
+    vampytest.assert_eq(hybrid_value_dictionary[key_2], value_2)
+    vampytest.assert_eq(len(hybrid_value_dictionary), 4)
     
     
     hybrid_value_dictionary[key_3] = value_3
-    assert hybrid_value_dictionary[key_3] == value_3
-    assert len(hybrid_value_dictionary) == 5
+    vampytest.assert_eq(hybrid_value_dictionary[key_3], value_3)
+    vampytest.assert_eq(len(hybrid_value_dictionary), 5)
 
 
 # methods
@@ -157,14 +156,14 @@ def test_HybridValueDictionary_clear():
     
     test_case = HybridValueDictionary(relations)
     test_case.clear()
-    assert test_case == hybrid_value_dictionary_empty
-    assert len(test_case) == 0
+    vampytest.assert_eq(test_case, hybrid_value_dictionary_empty)
+    vampytest.assert_eq(len(test_case), 0)
     
     
     test_case = HybridValueDictionary()
     test_case.clear()
-    assert test_case == hybrid_value_dictionary_empty
-    assert len(test_case) == 0
+    vampytest.assert_eq(test_case, hybrid_value_dictionary_empty)
+    vampytest.assert_eq(len(test_case), 0)
 
 
 def test_HybridValueDictionary_copy():
@@ -175,12 +174,12 @@ def test_HybridValueDictionary_copy():
     
     test_case = hybrid_value_dictionary.copy()
     
-    assert test_case is not hybrid_value_dictionary
-    assert test_case == hybrid_value_dictionary
+    vampytest.assert_is_not(test_case, hybrid_value_dictionary)
+    vampytest.assert_eq(test_case, hybrid_value_dictionary)
     
     test_case = hybrid_value_dictionary_empty.copy()
-    assert test_case is not hybrid_value_dictionary_empty
-    assert test_case == hybrid_value_dictionary_empty
+    vampytest.assert_is_not(test_case, hybrid_value_dictionary_empty)
+    vampytest.assert_eq(test_case, hybrid_value_dictionary_empty)
 
 
 def test_HybridValueDictionary_get():
@@ -192,8 +191,8 @@ def test_HybridValueDictionary_get():
     
     key_2 = 6
     
-    assert hybrid_value_dictionary.get(key_1) == value_1
-    assert hybrid_value_dictionary.get(key_2) is None
+    vampytest.assert_eq(hybrid_value_dictionary.get(key_1), value_1)
+    vampytest.assert_is(hybrid_value_dictionary.get(key_2), None)
 
 
 def test_HybridValueDictionary_items():
@@ -208,23 +207,26 @@ def test_HybridValueDictionary_items():
     
     items = hybrid_value_dictionary.items()
     
-    assert len(items) == len(hybrid_value_dictionary)
-    assert sorted(items) == sorted((key, hybrid_value_dictionary[key]) for key in hybrid_value_dictionary.keys())
-    assert item_1 in items
-    assert not (item_2 in items)
-    assert not (item_3 in items)
+    vampytest.assert_eq(len(items), len(hybrid_value_dictionary))
+    vampytest.assert_eq(
+        sorted(items),
+        sorted((key, hybrid_value_dictionary[key]) for key in hybrid_value_dictionary.keys()),
+    )
+    vampytest.assert_in(item_1, items)
+    vampytest.assert_not_in(item_2, items)
+    vampytest.assert_not_in(item_3, items)
     
     hybrid_value_dictionary_empty = HybridValueDictionary()
     
     items = hybrid_value_dictionary_empty.items()
     
-    assert len(items) == len(hybrid_value_dictionary_empty)
-    assert sorted(items) == sorted(
-        (key, hybrid_value_dictionary_empty[key]) for key in hybrid_value_dictionary_empty.keys()
+    vampytest.assert_eq(len(items), len(hybrid_value_dictionary_empty))
+    vampytest.assert_eq(sorted(items), sorted(
+        (key, hybrid_value_dictionary_empty[key]) for key in hybrid_value_dictionary_empty.keys())
     )
-    assert not (item_1 in items)
-    assert not (item_2 in items)
-    assert not (item_3 in items)
+    vampytest.assert_not_in(item_1, items)
+    vampytest.assert_not_in(item_2, items)
+    vampytest.assert_not_in(item_3, items)
 
 
 def test_HybridValueDictionary_keys():
@@ -237,20 +239,20 @@ def test_HybridValueDictionary_keys():
     
     keys = hybrid_value_dictionary.keys()
     
-    assert len(keys) == len(hybrid_value_dictionary)
-    assert set(keys) == set(key for key, value in hybrid_value_dictionary.items())
-    assert key_1 in keys
-    assert not (key_2 in keys)
+    vampytest.assert_eq(len(keys), len(hybrid_value_dictionary))
+    vampytest.assert_eq(set(keys), set(key for key, value in hybrid_value_dictionary.items()))
+    vampytest.assert_in(key_1, keys)
+    vampytest.assert_not_in(key_2, keys)
 
 
     hybrid_value_dictionary_empty = HybridValueDictionary()
     
     keys = hybrid_value_dictionary_empty.keys()
     
-    assert len(keys) == len(hybrid_value_dictionary_empty)
-    assert set(keys) == set(key for key, value in hybrid_value_dictionary_empty.items())
-    assert not (key_1 in keys)
-    assert not (key_2 in keys)
+    vampytest.assert_eq(len(keys), len(hybrid_value_dictionary_empty))
+    vampytest.assert_eq(set(keys), set(key for key, value in hybrid_value_dictionary_empty.items()))
+    vampytest.assert_not_in(key_1, keys)
+    vampytest.assert_not_in(key_2, keys)
 
 
 def test_HybridValueDictionary_pop():
@@ -263,14 +265,14 @@ def test_HybridValueDictionary_pop():
     
     hybrid_value_dictionary = HybridValueDictionary(relations)
     
-    assert hybrid_value_dictionary.pop(key_1) == value_1
-    assert len(hybrid_value_dictionary) == 2
+    vampytest.assert_eq(hybrid_value_dictionary.pop(key_1), value_1)
+    vampytest.assert_eq(len(hybrid_value_dictionary), 2)
     
     
-    with pytest.raises(KeyError):
+    with vampytest.assert_raises(KeyError):
         hybrid_value_dictionary.pop(key_2)
     
-    assert len(hybrid_value_dictionary) == 2
+    vampytest.assert_eq(len(hybrid_value_dictionary), 2)
 
 
 def test_HybridValueDictionary_popitem():
@@ -282,18 +284,18 @@ def test_HybridValueDictionary_popitem():
     hybrid_value_dictionary = HybridValueDictionary(relations)
     
     popped_item_1 = hybrid_value_dictionary.popitem()
-    assert (popped_item_1 == item_1) or (popped_item_1 == item_2)
-    assert len(hybrid_value_dictionary) == 1
+    vampytest.assert_true((popped_item_1 == item_1) or (popped_item_1 == item_2))
+    vampytest.assert_eq(len(hybrid_value_dictionary), 1)
     
     popped_item_2 = hybrid_value_dictionary.popitem()
-    assert (popped_item_2 == item_1) or (popped_item_2 == item_2)
-    assert popped_item_1 != popped_item_2
-    assert len(hybrid_value_dictionary) == 0
+    vampytest.assert_true((popped_item_2 == item_1) or (popped_item_2 == item_2))
+    vampytest.assert_ne(popped_item_1, popped_item_2)
+    vampytest.assert_eq(len(hybrid_value_dictionary), 0)
     
-    with pytest.raises(KeyError):
+    with vampytest.assert_raises(KeyError):
         hybrid_value_dictionary.popitem()
     
-    assert len(hybrid_value_dictionary) == 0
+    vampytest.assert_eq(len(hybrid_value_dictionary), 0)
 
 
 def test_HybridValueDictionary_setdefault():
@@ -314,19 +316,19 @@ def test_HybridValueDictionary_setdefault():
     hybrid_value_dictionary = HybridValueDictionary(relations)
     
     value = hybrid_value_dictionary.setdefault(key_1, value_1)
-    assert value == expected_value_1
-    assert len(hybrid_value_dictionary) == 4
+    vampytest.assert_eq(value, expected_value_1)
+    vampytest.assert_eq(len(hybrid_value_dictionary), 4)
     
     
     value = hybrid_value_dictionary.setdefault(key_2, value_2)
-    assert value == expected_value_2
-    assert len(hybrid_value_dictionary) == 4
-    assert hybrid_value_dictionary[key_2] == expected_value_2
+    vampytest.assert_eq(value, expected_value_2)
+    vampytest.assert_eq(len(hybrid_value_dictionary), 4)
+    vampytest.assert_eq(hybrid_value_dictionary[key_2], expected_value_2)
     
     value = hybrid_value_dictionary.setdefault(key_3, value_3)
-    assert value == expected_value_3
-    assert len(hybrid_value_dictionary) == 5
-    assert hybrid_value_dictionary[key_3] == expected_value_3
+    vampytest.assert_eq(value, expected_value_3)
+    vampytest.assert_eq(len(hybrid_value_dictionary), 5)
+    vampytest.assert_eq(hybrid_value_dictionary[key_3], expected_value_3)
 
 
 def test_HybridValueDictionary_update():
@@ -346,51 +348,51 @@ def test_HybridValueDictionary_update():
     
     test_case = hybrid_value_dictionary_1.copy()
     test_case.update(hybrid_value_dictionary_1)
-    assert test_case == relations_1
+    vampytest.assert_eq(test_case, relations_1)
     
     test_case = hybrid_value_dictionary_1.copy()
     test_case.update(hybrid_value_dictionary_2)
-    assert test_case == relations_update_1_2
+    vampytest.assert_eq(test_case, relations_update_1_2)
     
     test_case = hybrid_value_dictionary_1.copy()
     test_case.update(hybrid_value_dictionary_3)
-    assert test_case == relations_update_1_3
+    vampytest.assert_eq(test_case, relations_update_1_3)
     
     
     test_case = hybrid_value_dictionary_1.copy()
     test_case.update(relations_1)
-    assert test_case == relations_1
+    vampytest.assert_eq(test_case, relations_1)
     
     test_case = hybrid_value_dictionary_1.copy()
     test_case.update(relations_2)
-    assert test_case == relations_update_1_2
+    vampytest.assert_eq(test_case, relations_update_1_2)
     
     test_case = hybrid_value_dictionary_1.copy()
     test_case.update(relations_3)
-    assert test_case == relations_update_1_3
+    vampytest.assert_eq(test_case, relations_update_1_3)
     
     
     test_case = hybrid_value_dictionary_1.copy()
     test_case.update(list(relations_1.items()))
-    assert test_case == relations_1
+    vampytest.assert_eq(test_case, relations_1)
     
     test_case = hybrid_value_dictionary_1.copy()
     test_case.update(list(relations_2.items()))
-    assert test_case == relations_update_1_2
+    vampytest.assert_eq(test_case, relations_update_1_2)
     
     test_case = hybrid_value_dictionary_1.copy()
     test_case.update(list(relations_3.items()))
-    assert test_case == relations_update_1_3
+    vampytest.assert_eq(test_case, relations_update_1_3)
     
 
     test_case = HybridValueDictionary()
-    with pytest.raises(TypeError):
+    with vampytest.assert_raises(TypeError):
         test_case.update([1, ])
     
-    with pytest.raises(TypeError):
+    with vampytest.assert_raises(TypeError):
         test_case.update(1)
 
-    with pytest.raises(ValueError):
+    with vampytest.assert_raises(ValueError):
         test_case.update([(1,), ])
 
 
@@ -405,23 +407,29 @@ def test_HybridValueDictionary_values():
     
     values = hybrid_value_dictionary.values()
     
-    assert len(values) == len(hybrid_value_dictionary)
-    assert sorted(values, key=sort_by_type_first_key) == sorted(
-        (value for key, value in hybrid_value_dictionary.items()),
-        key = sort_by_type_first_key,
+    vampytest.assert_eq(len(values), len(hybrid_value_dictionary))
+    vampytest.assert_eq(
+        sorted(values, key=sort_by_type_first_key),
+        sorted(
+            (value for key, value in hybrid_value_dictionary.items()),
+            key = sort_by_type_first_key,
+        ),
     )
-    assert value_1 in values
-    assert not (value_2 in values)
+    vampytest.assert_in(value_1, values)
+    vampytest.assert_not_in((value_2, values))
     
     hybrid_value_dictionary_empty = HybridValueDictionary()
     
     values = hybrid_value_dictionary_empty.values()
     
-    assert len(values) == len(hybrid_value_dictionary_empty)
-    assert sorted(values, key=sort_by_type_first_key) == sorted(
-        (value for key, value in hybrid_value_dictionary_empty.items()),
-        key = sort_by_type_first_key,
+    vampytest.assert_eq(len(values), len(hybrid_value_dictionary_empty))
+    vampytest.assert_eq(
+        sorted(values, key=sort_by_type_first_key),
+        sorted(
+            (value for key, value in hybrid_value_dictionary_empty.items()),
+            key = sort_by_type_first_key,
+        )
     )
     
-    assert not (value_1 in values)
-    assert not (value_2 in values)
+    vampytest.assert_not_in(value_1, values)
+    vampytest.assert_not_in(value_2, values)

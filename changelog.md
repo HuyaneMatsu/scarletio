@@ -3,6 +3,10 @@
 #### Improvements
 
 - Add missing `_HandleCancellerBase.__repr__`.
+- Add `filter` parameter to `render_exception_into`.
+- Add `filter` parameter to `render_frames_into`.
+- Add `line_number` parameter to `should_ignore_frame` (deprecate 3 parameter version).
+- Add `filter` parameter to `should_ignore_frame`.
 
 ## 1.0.17 *\[2022-02-15\]*
 

@@ -1,8 +1,8 @@
-import pytest
+from ..weak_key_dictionary import WeakKeyDictionary
 
-from weak_helpers import WeakReferencable
+from .weak_helpers import WeakReferencable
 
-from scarletio import WeakKeyDictionary
+import vampytest
 
 
 # Test WeakKeyDictionary
@@ -11,22 +11,22 @@ from scarletio import WeakKeyDictionary
 
 def test_WeakKeyDictionary_constructor():
     weak_key_dictionary = WeakKeyDictionary()
-    assert len(weak_key_dictionary) == 0
-    assert sorted(weak_key_dictionary) == []
+    vampytest.assert_eq(len(weak_key_dictionary), 0)
+    vampytest.assert_eq(sorted(weak_key_dictionary), [])
 
 
 def test_WeakKeyDictionary_constructor_empty():
     weak_key_dictionary = WeakKeyDictionary([])
-    assert len(weak_key_dictionary) == 0
-    assert sorted(weak_key_dictionary) == []
+    vampytest.assert_eq(len(weak_key_dictionary), 0)
+    vampytest.assert_eq(sorted(weak_key_dictionary), [])
 
 
 def test_WeakKeyDictionary_constructor_filled():
     relations = {WeakReferencable(x): x for x in range(3)}
     
     weak_key_dictionary = WeakKeyDictionary(relations)
-    assert len(weak_key_dictionary) == len(relations)
-    assert sorted(weak_key_dictionary.items()) == sorted(relations.items())
+    vampytest.assert_eq(len(weak_key_dictionary), len(relations))
+    vampytest.assert_eq(sorted(weak_key_dictionary.items()), sorted(relations.items()))
 
 
 # test magic methods
@@ -41,9 +41,9 @@ def test_WeakKeyDictionary_contains():
     
     weak_key_dictionary = WeakKeyDictionary(relations)
     
-    assert key_1 in weak_key_dictionary
-    assert not (key_2 in weak_key_dictionary)
-    assert not (key_3 in weak_key_dictionary)
+    vampytest.assert_in(key_1, weak_key_dictionary)
+    vampytest.assert_not_in(key_2, weak_key_dictionary)
+    vampytest.assert_not_in(key_3, weak_key_dictionary)
 
 
 def test_WeakKeyDictionary_eq():
@@ -55,17 +55,17 @@ def test_WeakKeyDictionary_eq():
     weak_key_dictionary_2 = WeakKeyDictionary(relations_2)
     weak_key_dictionary_3 = WeakKeyDictionary(relations_3)
     
-    assert weak_key_dictionary_1 == weak_key_dictionary_1
-    assert not (weak_key_dictionary_1 == weak_key_dictionary_2)
-    assert not (weak_key_dictionary_1 == weak_key_dictionary_3)
+    vampytest.assert_eq(weak_key_dictionary_1, weak_key_dictionary_1)
+    vampytest.assert_eq(weak_key_dictionary_1, weak_key_dictionary_2, reverse=True)
+    vampytest.assert_eq(weak_key_dictionary_1, weak_key_dictionary_3, reverse=True)
     
-    assert weak_key_dictionary_1 == relations_1
-    assert not (weak_key_dictionary_1 == relations_2)
-    assert not (weak_key_dictionary_1 == relations_3)
+    vampytest.assert_eq(weak_key_dictionary_1, relations_1)
+    vampytest.assert_eq(weak_key_dictionary_1, relations_2, reverse=True)
+    vampytest.assert_eq(weak_key_dictionary_1, relations_3, reverse=True)
 
 
-    assert weak_key_dictionary_1.__eq__([1, ]) is NotImplemented
-    assert weak_key_dictionary_1.__eq__(1) is NotImplemented
+    vampytest.assert_is(weak_key_dictionary_1.__eq__([1, ]), NotImplemented)
+    vampytest.assert_is(weak_key_dictionary_1.__eq__(1), NotImplemented)
 
 
 def test_WeakKeyDictionary_getitem():
@@ -73,12 +73,12 @@ def test_WeakKeyDictionary_getitem():
     weak_key_dictionary = WeakKeyDictionary(relations)
     weak_key_dictionary_empty = WeakKeyDictionary()
     
-    assert relations[WeakReferencable(2)] == 2
+    vampytest.assert_eq(relations[WeakReferencable(2)], 2)
     
-    with pytest.raises(KeyError):
+    with vampytest.assert_raises(KeyError):
         weak_key_dictionary[WeakReferencable(6)]
     
-    with pytest.raises(KeyError):
+    with vampytest.assert_raises(KeyError):
         weak_key_dictionary_empty[WeakReferencable(6)]
 
 
@@ -87,8 +87,8 @@ def test_WeakKeyDictionary_iter():
     weak_key_dictionary = WeakKeyDictionary(relations)
     weak_key_dictionary_empty = WeakKeyDictionary()
     
-    assert sorted(iter(weak_key_dictionary)) == sorted(weak_key_dictionary.keys())
-    assert sorted(iter(weak_key_dictionary_empty)) == sorted(weak_key_dictionary_empty.keys())
+    vampytest.assert_eq(sorted(iter(weak_key_dictionary)), sorted(weak_key_dictionary.keys()))
+    vampytest.assert_eq(sorted(iter(weak_key_dictionary_empty)), sorted(weak_key_dictionary_empty.keys()))
 
 
 def test_WeakKeyDictionary_len():
@@ -96,8 +96,8 @@ def test_WeakKeyDictionary_len():
     weak_key_dictionary = WeakKeyDictionary(relations)
     weak_key_dictionary_empty = WeakKeyDictionary()
     
-    assert len(weak_key_dictionary) == len(relations)
-    assert len(weak_key_dictionary_empty) == 0
+    vampytest.assert_eq(len(weak_key_dictionary), len(relations))
+    vampytest.assert_eq(len(weak_key_dictionary_empty), 0)
 
 
 def test_WeakKeyDictionary_ne():
@@ -109,17 +109,17 @@ def test_WeakKeyDictionary_ne():
     weak_key_dictionary_2 = WeakKeyDictionary(relations_2)
     weak_key_dictionary_3 = WeakKeyDictionary(relations_3)
     
-    assert not (weak_key_dictionary_1 != weak_key_dictionary_1)
-    assert weak_key_dictionary_1 != weak_key_dictionary_2
-    assert weak_key_dictionary_1 != weak_key_dictionary_3
+    vampytest.assert_ne(weak_key_dictionary_1, weak_key_dictionary_1, reverse=True)
+    vampytest.assert_ne(weak_key_dictionary_1, weak_key_dictionary_2)
+    vampytest.assert_ne(weak_key_dictionary_1, weak_key_dictionary_3)
     
-    assert not (weak_key_dictionary_1 != relations_1)
-    assert weak_key_dictionary_1 != relations_2
-    assert weak_key_dictionary_1 != relations_3
+    vampytest.assert_ne(weak_key_dictionary_1, relations_1, reverse=True)
+    vampytest.assert_ne(weak_key_dictionary_1, relations_2)
+    vampytest.assert_ne(weak_key_dictionary_1, relations_3)
 
 
-    assert weak_key_dictionary_1.__ne__([1, ]) is NotImplemented
-    assert weak_key_dictionary_1.__ne__(1) is NotImplemented
+    vampytest.assert_is(weak_key_dictionary_1.__ne__([1, ]), NotImplemented)
+    vampytest.assert_is(weak_key_dictionary_1.__ne__(1), NotImplemented)
 
 
 def test_WeakKeyDictionary_setitem():
@@ -130,20 +130,20 @@ def test_WeakKeyDictionary_setitem():
     value = 4
     
     weak_key_dictionary[key] = value
-    assert weak_key_dictionary[key] == value
-    assert len(weak_key_dictionary) == 4
+    vampytest.assert_eq(weak_key_dictionary[key], value)
+    vampytest.assert_eq(len(weak_key_dictionary), 4)
     
     key = WeakReferencable(3)
     value = 6
     
     weak_key_dictionary[key] = value
-    assert weak_key_dictionary[key] == value
-    assert len(weak_key_dictionary) == 4
+    vampytest.assert_eq(weak_key_dictionary[key], value)
+    vampytest.assert_eq(len(weak_key_dictionary), 4)
 
     key = 6
     value = 9
     
-    with pytest.raises(TypeError):
+    with vampytest.assert_raises(TypeError):
         weak_key_dictionary[key] = value
 
 # methods
@@ -156,14 +156,14 @@ def test_WeakKeyDictionary_clear():
     
     test_case = WeakKeyDictionary(relations)
     test_case.clear()
-    assert test_case == weak_key_dictionary_empty
-    assert len(test_case) == 0
+    vampytest.assert_eq(test_case, weak_key_dictionary_empty)
+    vampytest.assert_eq(len(test_case), 0)
     
     
     test_case = WeakKeyDictionary()
     test_case.clear()
-    assert test_case == weak_key_dictionary_empty
-    assert len(test_case) == 0
+    vampytest.assert_eq(test_case, weak_key_dictionary_empty)
+    vampytest.assert_eq(len(test_case), 0)
 
 
 def test_WeakKeyDictionary_copy():
@@ -174,12 +174,12 @@ def test_WeakKeyDictionary_copy():
     
     test_case = weak_key_dictionary.copy()
     
-    assert test_case is not weak_key_dictionary
-    assert test_case == weak_key_dictionary
+    vampytest.assert_is(test_case, not weak_key_dictionary)
+    vampytest.assert_eq(test_case, weak_key_dictionary)
     
     test_case = weak_key_dictionary_empty.copy()
-    assert test_case is not weak_key_dictionary_empty
-    assert test_case == weak_key_dictionary_empty
+    vampytest.assert_is(test_case, not weak_key_dictionary_empty)
+    vampytest.assert_eq(test_case, weak_key_dictionary_empty)
 
 
 def test_WeakKeyDictionary_get():
@@ -191,8 +191,8 @@ def test_WeakKeyDictionary_get():
     
     key_2 = WeakReferencable(6)
     
-    assert weak_key_dictionary.get(key_1) == value_1
-    assert weak_key_dictionary.get(key_2) is None
+    vampytest.assert_eq(weak_key_dictionary.get(key_1), value_1)
+    vampytest.assert_is(weak_key_dictionary.get(key_2), None)
 
 
 def test_WeakKeyDictionary_items():
@@ -207,21 +207,21 @@ def test_WeakKeyDictionary_items():
     
     items = weak_key_dictionary.items()
     
-    assert len(items) == len(weak_key_dictionary)
-    assert sorted(items) == sorted((key, weak_key_dictionary[key]) for key in weak_key_dictionary.keys())
-    assert item_1 in items
-    assert not (item_2 in items)
-    assert not (item_3 in items)
+    vampytest.assert_eq(len(items), len(weak_key_dictionary))
+    vampytest.assert_eq(sorted(items), sorted((key, weak_key_dictionary[key]) for key in weak_key_dictionary.keys()))
+    vampytest.assert_in(item_1, items)
+    vampytest.assert_not_in(item_2, items)
+    vampytest.assert_not_in(item_3, items)
     
     weak_key_dictionary_empty = WeakKeyDictionary()
     
     items = weak_key_dictionary_empty.values()
     
-    assert len(items) == len(weak_key_dictionary_empty)
-    assert sorted(items) == sorted((key, weak_key_dictionary_empty[key]) for key in weak_key_dictionary_empty.keys())
-    assert not (item_1 in items)
-    assert not (item_2 in items)
-    assert not (item_3 in items)
+    vampytest.assert_eq(len(items), len(weak_key_dictionary_empty))
+    vampytest.assert_eq(sorted(items), sorted((key, weak_key_dictionary_empty[key]) for key in weak_key_dictionary_empty.keys()))
+    vampytest.assert_not_in(item_1, items)
+    vampytest.assert_not_in(item_2, items)
+    vampytest.assert_not_in(item_3, items)
 
 
 def test_WeakKeyDictionary_keys():
@@ -234,20 +234,20 @@ def test_WeakKeyDictionary_keys():
     
     keys = weak_key_dictionary.keys()
     
-    assert len(keys) == len(weak_key_dictionary)
-    assert set(keys) == set(key for key, value in weak_key_dictionary.items())
-    assert key_1 in keys
-    assert not (key_2 in keys)
+    vampytest.assert_eq(len(keys), len(weak_key_dictionary))
+    vampytest.assert_eq(set(keys), set(key for key, value in weak_key_dictionary.items()))
+    vampytest.assert_in(key_1, keys)
+    vampytest.assert_not_in(key_2, keys)
 
 
     weak_key_dictionary_empty = WeakKeyDictionary()
     
     keys = weak_key_dictionary_empty.keys()
     
-    assert len(keys) == len(weak_key_dictionary_empty)
-    assert set(keys) == set(key for key, value in weak_key_dictionary_empty.items())
-    assert not (key_1 in keys)
-    assert not (key_2 in keys)
+    vampytest.assert_eq(len(keys), len(weak_key_dictionary_empty))
+    vampytest.assert_eq(set(keys), set(key for key, value in weak_key_dictionary_empty.items()))
+    vampytest.assert_not_in(key_1, keys)
+    vampytest.assert_not_in(key_2, keys)
 
 
 def test_WeakKeyDictionary_pop():
@@ -260,14 +260,14 @@ def test_WeakKeyDictionary_pop():
     
     weak_key_dictionary = WeakKeyDictionary(relations)
     
-    assert weak_key_dictionary.pop(key_1) == value_1
-    assert len(weak_key_dictionary) == 2
+    vampytest.assert_eq(weak_key_dictionary.pop(key_1), value_1)
+    vampytest.assert_eq(len(weak_key_dictionary), 2)
     
     
-    with pytest.raises(KeyError):
+    with vampytest.assert_raises(KeyError):
         weak_key_dictionary.pop(key_2)
     
-    assert len(weak_key_dictionary) == 2
+    vampytest.assert_eq(len(weak_key_dictionary), 2)
 
 
 def test_WeakKeyDictionary_popitem():
@@ -278,18 +278,18 @@ def test_WeakKeyDictionary_popitem():
     weak_key_dictionary = WeakKeyDictionary(relations)
     
     popped_item_1 = weak_key_dictionary.popitem()
-    assert (popped_item_1 == item_1) or (popped_item_1 == item_2)
-    assert len(weak_key_dictionary) == 1
+    vampytest.assert_true((popped_item_1 == item_1) or (popped_item_1 == item_2))
+    vampytest.assert_eq(len(weak_key_dictionary), 1)
     
     popped_item_2 = weak_key_dictionary.popitem()
-    assert (popped_item_2 == item_1) or (popped_item_2 == item_2)
-    assert popped_item_1 != popped_item_2
-    assert len(weak_key_dictionary) == 0
+    vampytest.assert_true((popped_item_2 == item_1) or (popped_item_2 == item_2))
+    vampytest.assert_ne(popped_item_1, popped_item_2)
+    vampytest.assert_eq(len(weak_key_dictionary), 0)
     
-    with pytest.raises(KeyError):
+    with vampytest.assert_raises(KeyError):
         weak_key_dictionary.popitem()
     
-    assert len(weak_key_dictionary) == 0
+    vampytest.assert_eq(len(weak_key_dictionary), 0)
 
 
 def test_WeakKeyDictionary_setdefault():
@@ -309,16 +309,16 @@ def test_WeakKeyDictionary_setdefault():
     weak_key_dictionary = WeakKeyDictionary(relations)
     
     value = weak_key_dictionary.setdefault(key_1, value_1)
-    assert value == expected_value_1
-    assert len(weak_key_dictionary) == 3
+    vampytest.assert_eq(value, expected_value_1)
+    vampytest.assert_eq(len(weak_key_dictionary), 3)
     
     
     value = weak_key_dictionary.setdefault(key_2, value_2)
-    assert value == expected_value_2
-    assert len(weak_key_dictionary) == 3
-    assert weak_key_dictionary[key_2] == expected_value_2
+    vampytest.assert_eq(value, expected_value_2)
+    vampytest.assert_eq(len(weak_key_dictionary), 3)
+    vampytest.assert_eq(weak_key_dictionary[key_2], expected_value_2)
 
-    with pytest.raises(TypeError):
+    with vampytest.assert_raises(TypeError):
         weak_key_dictionary.setdefault(key_3, value_3)
 
 
@@ -339,51 +339,51 @@ def test_WeakKeyDictionary_update():
     
     test_case = weak_key_dictionary_1.copy()
     test_case.update(weak_key_dictionary_1)
-    assert test_case == relations_1
+    vampytest.assert_eq(test_case, relations_1)
     
     test_case = weak_key_dictionary_1.copy()
     test_case.update(weak_key_dictionary_2)
-    assert test_case == relations_update_1_2
+    vampytest.assert_eq(test_case, relations_update_1_2)
     
     test_case = weak_key_dictionary_1.copy()
     test_case.update(weak_key_dictionary_3)
-    assert test_case == relations_update_1_3
+    vampytest.assert_eq(test_case, relations_update_1_3)
     
     
     test_case = weak_key_dictionary_1.copy()
     test_case.update(relations_1)
-    assert test_case == relations_1
+    vampytest.assert_eq(test_case, relations_1)
     
     test_case = weak_key_dictionary_1.copy()
     test_case.update(relations_2)
-    assert test_case == relations_update_1_2
+    vampytest.assert_eq(test_case, relations_update_1_2)
     
     test_case = weak_key_dictionary_1.copy()
     test_case.update(relations_3)
-    assert test_case == relations_update_1_3
+    vampytest.assert_eq(test_case, relations_update_1_3)
     
     
     test_case = weak_key_dictionary_1.copy()
     test_case.update(list(relations_1.items()))
-    assert test_case == relations_1
+    vampytest.assert_eq(test_case, relations_1)
     
     test_case = weak_key_dictionary_1.copy()
     test_case.update(list(relations_2.items()))
-    assert test_case == relations_update_1_2
+    vampytest.assert_eq(test_case, relations_update_1_2)
     
     test_case = weak_key_dictionary_1.copy()
     test_case.update(list(relations_3.items()))
-    assert test_case == relations_update_1_3
+    vampytest.assert_eq(test_case, relations_update_1_3)
 
 
     test_case = WeakKeyDictionary()
-    with pytest.raises(TypeError):
+    with vampytest.assert_raises(TypeError):
         test_case.update([1, ])
     
-    with pytest.raises(TypeError):
+    with vampytest.assert_raises(TypeError):
         test_case.update(1)
 
-    with pytest.raises(ValueError):
+    with vampytest.assert_raises(ValueError):
         test_case.update([(1,), ])
 
 
@@ -398,16 +398,16 @@ def test_WeakKeyDictionary_values():
     
     values = weak_key_dictionary.values()
     
-    assert len(values) == len(weak_key_dictionary)
-    assert sorted(values) == sorted(value for key, value in weak_key_dictionary.items())
-    assert value_1 in values
-    assert not (value_2 in values)
+    vampytest.assert_eq(len(values), len(weak_key_dictionary))
+    vampytest.assert_eq(sorted(values), sorted(value for key, value in weak_key_dictionary.items()))
+    vampytest.assert_in(value_1, values)
+    vampytest.assert_not_in(value_2, values)
     
     weak_key_dictionary_empty = WeakKeyDictionary()
     
     values = weak_key_dictionary_empty.values()
     
-    assert len(values) == len(weak_key_dictionary_empty)
-    assert sorted(values) == sorted(value for key, value in weak_key_dictionary_empty.items())
-    assert not (value_1 in values)
-    assert not (value_2 in values)
+    vampytest.assert_eq(len(values), len(weak_key_dictionary_empty))
+    vampytest.assert_eq(sorted(values), sorted(value for key, value in weak_key_dictionary_empty.items()))
+    vampytest.assert_not_in(value_1, values)
+    vampytest.assert_not_in(value_2, values)

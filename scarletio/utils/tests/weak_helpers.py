@@ -1,14 +1,4 @@
-import gc, sys, os
-
-if 'scarletio' not in sys.modules:
-    path = os.path.abspath(__file__)
-    index = path.rfind('scarletio')
-    if index == -1:
-        raise RuntimeError('Could not identify parent package')
-    
-    path = path[:index]
-    sys.path.append(path)
-    import scarletio
+import gc
 
 
 def gc_collect():

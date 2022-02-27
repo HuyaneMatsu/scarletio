@@ -1,6 +1,6 @@
 __all__ = ('ignore_frame', 'render_exception_into', 'render_frames_into', 'should_ignore_frame',)
 
-import linecache, reprlib
+import linecache, reprlib, warnings
 from types import CoroutineType, GeneratorType, MethodType
 
 
@@ -123,25 +123,25 @@ def ignore_frame(file, name, line):
     names.add(line)
 
 
-def should_ignore_frame(file, name, line):
+def _should_ignore_frame(file_name, name, line):
     """
     Returns whether the given frame should be ignored from rending.
     
+    Called by ``should_ignore_frame`` before calling it's `filter`.
+    
     Parameters
     ----------
-    file : `str`
+    file_name : `str`
         The frame's respective file's name.
     name : `str`
         The frame's respective function's name.
+    line_number : `int`
+        The line's index where the exception occurred.
     line : `str`
         The frame's respective stripped line.
-    
-    Returns
-    -------
-    should_ignore : `bool`
     """
     try:
-        files = IGNORED_FRAME_LINES[file]
+        files = IGNORED_FRAME_LINES[file_name]
     except KeyError:
         return False
 
@@ -151,6 +151,63 @@ def should_ignore_frame(file, name, line):
         return False
     
     return (line in names)
+
+
+def should_ignore_frame(file_name, name, line_number, line=..., filter=None):
+    """
+    Returns whether the given frame should be ignored from rending.
+    
+    Parameters
+    ----------
+    file_name : `str`
+        The frame's respective file's name.
+    name : `str`
+        The frame's respective function's name.
+    line_number : `int`
+        The line's index where the exception occurred.
+    line : `str`
+        The frame's respective stripped line.
+    filer : `None`, `callable` = `None`, Optional (Keyword only)
+        Additional filter to check whether a frame should be shown.
+        
+        Called with 4 parameters:
+        
+        +---------------+-----------+---------------------------------------------------------------+
+        | Name          | Type      | Description                                                   |
+        +===============+===========+===============================================================+
+        | file_name     | `str`     | The frame's file's name.                                      |
+        +---------------+-----------+---------------------------------------------------------------+
+        | name          | `str`     | The name of the function.                                     |
+        +---------------+-----------+---------------------------------------------------------------+
+        | line_number   | `int`     | The line's index of the file where the exception occurred.    |
+        +---------------+-----------+---------------------------------------------------------------+
+        | line          | `str`     | The line of the file.                                         |
+        +---------------+-----------+---------------------------------------------------------------+
+    
+    Returns
+    -------
+    should_ignore : `bool`
+    """
+    if line is ...:
+        line = line_number
+        line_number = 0
+        
+        warnings.warn(
+            (
+                'Please call `should_ignore_frame` with `4` parameters: `file, name, line_number, line`\n'
+                'The `3` parameter version is deprecated and will be removed in 2022 Jun.'
+            ),
+            FutureWarning,
+        )
+    
+    if _should_ignore_frame(file_name, name, line):
+        return True
+    
+    
+    if (filter is not None) and (not filter(file_name, name, line_number, line)):
+        return True
+    
+    return False
 
 
 def format_callback(func, args=None, kwargs=None):
@@ -279,7 +336,7 @@ def format_coroutine(coroutine):
     return f'{name} {state} defined at {file_name}:{line_number}'
 
 
-def render_frames_into(frames, extend=None):
+def render_frames_into(frames, extend=None, filter=None):
     """
     Renders the given frames into a list of strings.
     
@@ -287,8 +344,24 @@ def render_frames_into(frames, extend=None):
     ----------
     frames : `list` of (`frame`, ``ExceptionFrameProxy``)
         The frames to render.
-    extend : `None`, `list` of `str`
+    extend : `None`, `list` of `str` = `None`, Optional
         Whether the frames should be rendered into an already existing list.
+    filer : `None`, `callable` = `None`, Optional (Keyword only)
+        Additional filter to check whether a frame should be shown.
+        
+        Called with 4 parameters:
+        
+        +---------------+-----------+---------------------------------------------------------------+
+        | Name          | Type      | Description                                                   |
+        +===============+===========+===============================================================+
+        | file_name     | `str`     | The frame's file's name.                                      |
+        +---------------+-----------+---------------------------------------------------------------+
+        | name          | `str`     | The name of the function.                                     |
+        +---------------+-----------+---------------------------------------------------------------+
+        | line_number   | `int`     | The line's index of the file where the exception occurred.    |
+        +---------------+-----------+---------------------------------------------------------------+
+        | line          | `str`     | The line of the file.                                         |
+        +---------------+-----------+---------------------------------------------------------------+
     
     Returns
     -------
@@ -330,7 +403,7 @@ def render_frames_into(frames, extend=None):
         line = linecache.getline(file_name, line_number, None)
         line = line.strip()
         
-        if should_ignore_frame(file_name, name, line):
+        if should_ignore_frame(file_name, name, line_number, line, filter=filter):
             continue
         
         last_file_name = file_name
@@ -377,6 +450,7 @@ class ExceptionFrameProxy:
         """
         self.tb = tb
     
+    
     @property
     def f_builtins(self):
         """
@@ -387,6 +461,7 @@ class ExceptionFrameProxy:
         f_builtins : `dict` of (`str`, `Any`) items
         """
         return self.tb.tb_frame.f_builtins
+    
     
     @property
     def f_code(self):
@@ -399,6 +474,7 @@ class ExceptionFrameProxy:
         """
         return self.tb.tb_frame.f_code
     
+    
     @property
     def f_globals(self):
         """
@@ -409,6 +485,7 @@ class ExceptionFrameProxy:
         f_globals : `dict` of (`str`, `Any`)
         """
         return self.tb.tb_frame.f_globals
+    
     
     @property
     def f_lasti(self):
@@ -421,6 +498,7 @@ class ExceptionFrameProxy:
         """
         return self.tb.tb_frame.f_lasti
     
+    
     @property
     def f_lineno(self):
         """
@@ -431,6 +509,7 @@ class ExceptionFrameProxy:
         f_lineno : `int`
         """
         return self.tb.tb_lineno
+    
     
     @property
     def f_locals(self):
@@ -443,6 +522,7 @@ class ExceptionFrameProxy:
         """
         return self.tb.tb_frame.f_locals
     
+    
     @property
     def f_trace(self):
         """
@@ -454,6 +534,7 @@ class ExceptionFrameProxy:
             Defaults to `None`.
         """
         return self.tb.tb_frame.f_trace
+
 
 def _get_exception_frames(exception):
     """
@@ -481,7 +562,8 @@ def _get_exception_frames(exception):
     
     return frames
 
-def render_exception_into(exception, extend=None):
+
+def render_exception_into(exception, extend=None, *, filter=None):
     """
     Renders the given exception's frames into a list of strings.
     
@@ -489,8 +571,25 @@ def render_exception_into(exception, extend=None):
     ----------
     exception : `BaseException`
         The exception to render.
-    extend : `None`, `list` of `str`
+    extend : `None`, `list` of `str` = `None`, Optional
         Whether the frames should be rendered into an already existing list.
+    filer : `None`, `callable` = `None`, Optional (Keyword only)
+        Additional filter to check whether a frame should be shown.
+        
+        Called with 4 parameters:
+        
+        +---------------+-----------+---------------------------------------------------------------+
+        | Name          | Type      | Description                                                   |
+        +===============+===========+===============================================================+
+        | file_name     | `str`     | The frame's file's name.                                      |
+        +---------------+-----------+---------------------------------------------------------------+
+        | name          | `str`     | The name of the function.                                     |
+        +---------------+-----------+---------------------------------------------------------------+
+        | line_number   | `int`     | The line's index of the file where the exception occurred.    |
+        +---------------+-----------+---------------------------------------------------------------+
+        | line          | `str`     | The line of the file.                                         |
+        +---------------+-----------+---------------------------------------------------------------+
+    
     
     Returns
     -------
@@ -522,7 +621,7 @@ def render_exception_into(exception, extend=None):
     for exception, reason_type in reversed(exceptions):
         frames = _get_exception_frames(exception)
         extend.append('Traceback (most recent call last):\n')
-        extend = render_frames_into(frames, extend=extend)
+        extend = render_frames_into(frames, extend=extend, filter=filter)
         extend.append(get_exception_representation(exception))
         extend.append('\n')
         

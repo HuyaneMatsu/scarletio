@@ -1,6 +1,7 @@
-import pytest
+from ..ignore_case_string import IgnoreCaseString
 
-from scarletio import IgnoreCaseString
+import vampytest
+
 
 # Test IgnoreCaseString
 
@@ -8,21 +9,21 @@ from scarletio import IgnoreCaseString
 
 def test_IgnoreCaseString_constructor():
     ignore_case_string = IgnoreCaseString()
-    assert len(ignore_case_string) == 0
-    assert ignore_case_string == ''
+    vampytest.assert_eq(len(ignore_case_string), 0)
+    vampytest.assert_eq(ignore_case_string, '')
 
 
 def test_IgnoreCaseString_constructor_empty():
     ignore_case_string = IgnoreCaseString('')
-    assert len(ignore_case_string) == 0
-    assert ignore_case_string == ''
+    vampytest.assert_eq(len(ignore_case_string), 0)
+    vampytest.assert_eq(ignore_case_string, '')
 
 
 def test_IgnoreCaseString_constructor_filled():
     string = 'value'
     ignore_case_string = IgnoreCaseString(string)
-    assert len(ignore_case_string) == len(string)
-    assert ignore_case_string == string
+    vampytest.assert_eq(len(ignore_case_string), len(string))
+    vampytest.assert_eq(ignore_case_string, string)
 
 # Test magic methods
 
@@ -30,6 +31,6 @@ def test_IgnoreCaseString_eq():
     string = 'vAlUe'
 
     ignore_case_string = IgnoreCaseString(string)
-    assert ignore_case_string == string
-    assert ignore_case_string == string.lower()
-    assert ignore_case_string == string.upper()
+    vampytest.assert_eq(ignore_case_string, string)
+    vampytest.assert_eq(ignore_case_string, string.lower())
+    vampytest.assert_eq(ignore_case_string, string.upper())

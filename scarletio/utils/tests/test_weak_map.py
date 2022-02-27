@@ -1,8 +1,9 @@
-import pytest
+from ..weak_map import WeakMap
 
-from weak_helpers import WeakReferencable
+from .weak_helpers import WeakReferencable
 
-from scarletio import WeakMap
+import vampytest
+
 
 # Test WeakMap
 
@@ -10,22 +11,22 @@ from scarletio import WeakMap
 
 def test_WeakMap_constructor():
     weak_map = WeakMap()
-    assert len(weak_map) == 0
-    assert sorted(weak_map) == []
+    vampytest.assert_eq(len(weak_map), 0)
+    vampytest.assert_eq(sorted(weak_map), [])
 
 
 def test_WeakMap_constructor_empty():
     weak_map = WeakMap([])
-    assert len(weak_map) == 0
-    assert sorted(weak_map) == []
+    vampytest.assert_eq(len(weak_map), 0)
+    vampytest.assert_eq(sorted(weak_map), [])
 
 
 def test_WeakMap_constructor_filled():
     objects_ = [WeakReferencable(x) for x in range(3)]
 
     weak_map = WeakMap(objects_)
-    assert len(weak_map) == len(objects_)
-    assert sorted(weak_map) == objects_
+    vampytest.assert_eq(len(weak_map), len(objects_))
+    vampytest.assert_eq(sorted(weak_map), objects_)
 
 
 # Test magic methods
@@ -39,9 +40,9 @@ def test_WeakMap_contains():
     
     weak_map = WeakMap(objects_1)
     
-    assert object_1 in weak_map
-    assert not (object_2 in weak_map)
-    assert not (object_3 in weak_map)
+    vampytest.assert_in(object_1, weak_map)
+    vampytest.assert_not_in(object_2, weak_map)
+    vampytest.assert_not_in(object_3, weak_map)
 
 
 def test_WeakMap_delitem():
@@ -53,12 +54,12 @@ def test_WeakMap_delitem():
     weak_map = WeakMap(objects_1)
     
     del weak_map[object_1]
-    assert len(weak_map) == 2
+    vampytest.assert_eq(len(weak_map), 2)
     
-    with pytest.raises(KeyError):
+    with vampytest.assert_raises(KeyError):
         del weak_map[object_2]
     
-    assert len(weak_map) == 2
+    vampytest.assert_eq(len(weak_map), 2)
 
 
 def test_WeakMap_eq():
@@ -70,15 +71,15 @@ def test_WeakMap_eq():
     weak_map_2 = WeakMap(objects_2)
     weak_map_3 = WeakMap(objects_3)
     
-    assert weak_map_1 == weak_map_1
-    assert not (weak_map_1 == weak_map_2)
-    assert not (weak_map_1 == weak_map_3)
+    vampytest.assert_eq(weak_map_1, weak_map_1)
+    vampytest.assert_eq(weak_map_1, weak_map_2, reverse=True)
+    vampytest.assert_eq(weak_map_1, weak_map_3, reverse=True)
     
-    assert weak_map_1 == objects_1
-    assert not (weak_map_1 == objects_2)
-    assert not (weak_map_1 == objects_3)
+    vampytest.assert_eq(weak_map_1, objects_1)
+    vampytest.assert_eq(weak_map_1, objects_2, reverse=True)
+    vampytest.assert_eq(weak_map_1, objects_3, reverse=True)
 
-    assert weak_map_1.__eq__(1) is NotImplemented
+    vampytest.assert_is(weak_map_1.__eq__(1), NotImplemented)
 
 
 def test_WeakMap_getitem():
@@ -94,12 +95,12 @@ def test_WeakMap_getitem():
     
     weak_map = WeakMap(objects_1)
     
-    assert weak_map[object_1] == object_1_expected
+    vampytest.assert_eq(weak_map[object_1], object_1_expected)
     
-    with pytest.raises(KeyError):
+    with vampytest.assert_raises(KeyError):
         weak_map[object_2]
     
-    assert weak_map[object_3] == object_3_expected
+    vampytest.assert_eq(weak_map[object_3], object_3_expected)
 
 
 def test_WeakMap_iter():
@@ -109,8 +110,8 @@ def test_WeakMap_iter():
     weak_map_1 = WeakMap(objects_1)
     weak_map_2 = WeakMap(objects_2)
     
-    assert sorted(weak_map_1) == objects_1
-    assert sorted(weak_map_2) == objects_2
+    vampytest.assert_eq(sorted(weak_map_1), objects_1)
+    vampytest.assert_eq(sorted(weak_map_2), objects_2)
 
 
 def test_WeakMap_len():
@@ -120,8 +121,8 @@ def test_WeakMap_len():
     weak_map_1 = WeakMap(objects_1)
     weak_map_2 = WeakMap(objects_2)
     
-    assert len(weak_map_1) == len(objects_1)
-    assert len(weak_map_2) == len(objects_2)
+    vampytest.assert_eq(len(weak_map_1), len(objects_1))
+    vampytest.assert_eq(len(weak_map_2), len(objects_2))
 
 
 def test_WeakMap_ne():
@@ -133,15 +134,15 @@ def test_WeakMap_ne():
     weak_map_2 = WeakMap(objects_2)
     weak_map_3 = WeakMap(objects_3)
     
-    assert not (weak_map_1 != weak_map_1)
-    assert weak_map_1 != weak_map_2
-    assert weak_map_1 != weak_map_3
+    vampytest.assert_ne(weak_map_1, weak_map_1, reverse=True)
+    vampytest.assert_ne(weak_map_1, weak_map_2)
+    vampytest.assert_ne(weak_map_1, weak_map_3)
     
-    assert not (weak_map_1 != objects_1)
-    assert weak_map_1 != objects_2
-    assert weak_map_1 != objects_3
+    vampytest.assert_ne(weak_map_1, objects_1, reverse=True)
+    vampytest.assert_ne(weak_map_1, objects_2)
+    vampytest.assert_ne(weak_map_1, objects_3)
     
-    assert weak_map_1.__ne__(1) is NotImplemented
+    vampytest.assert_is(weak_map_1.__ne__(1), NotImplemented)
 
 
 # Test Methods
@@ -155,8 +156,8 @@ def test_WeakMap_clear():
     
     weak_map.clear()
     
-    assert len(weak_map) == 0
-    assert weak_map == weak_map_empty
+    vampytest.assert_eq(len(weak_map), 0)
+    vampytest.assert_eq(weak_map, weak_map_empty)
 
 
 def test_WeakMap_copy():
@@ -167,13 +168,13 @@ def test_WeakMap_copy():
     
     test_case = weak_map_1.copy()
     
-    assert weak_map_1 is not test_case
-    assert weak_map_1 == test_case
+    vampytest.assert_is(weak_map_1, not test_case)
+    vampytest.assert_eq(weak_map_1, test_case)
     
     test_case = weak_map_empty.copy()
     
-    assert weak_map_empty is not test_case
-    assert weak_map_empty == test_case
+    vampytest.assert_is(weak_map_empty, not test_case)
+    vampytest.assert_eq(weak_map_empty, test_case)
 
 
 def test_WeakMap_get():
@@ -190,10 +191,10 @@ def test_WeakMap_get():
     
     object_4 = 7
     
-    assert weak_map_1.get(object_1) is object_1_expected
-    assert weak_map_1.get(object_2) is object_2_expected
-    assert weak_map_1.get(object_3) is None
-    assert weak_map_1.get(object_4) is None
+    vampytest.assert_is(weak_map_1.get(object_1), object_1_expected)
+    vampytest.assert_is(weak_map_1.get(object_2), object_2_expected)
+    vampytest.assert_is(weak_map_1.get(object_3), None)
+    vampytest.assert_is(weak_map_1.get(object_4), None)
 
 
 def test_WeakMap_pop():
@@ -210,27 +211,27 @@ def test_WeakMap_pop():
     
     object_4 = 8
     
-    assert weak_map_1.pop(object_1) is object_1_expected
-    assert len(weak_map_1) == 2
+    vampytest.assert_is(weak_map_1.pop(object_1), object_1_expected)
+    vampytest.assert_eq(len(weak_map_1), 2)
     
-    assert weak_map_1.pop(object_2) is object_2_expected
-    assert len(weak_map_1) == 1
+    vampytest.assert_is(weak_map_1.pop(object_2), object_2_expected)
+    vampytest.assert_eq(len(weak_map_1), 1)
     
     
-    with pytest.raises(KeyError):
+    with vampytest.assert_raises(KeyError):
         weak_map_1.pop(object_3)
-    assert len(weak_map_1) == 1
+    vampytest.assert_eq(len(weak_map_1), 1)
 
-    assert weak_map_1.pop(object_3, None) is None
-    assert len(weak_map_1) == 1
+    vampytest.assert_is(weak_map_1.pop(object_3, None), None)
+    vampytest.assert_eq(len(weak_map_1), 1)
     
     
-    assert weak_map_1.pop(object_4, None) is None
-    assert len(weak_map_1) == 1
+    vampytest.assert_is(weak_map_1.pop(object_4, None), None)
+    vampytest.assert_eq(len(weak_map_1), 1)
 
-    with pytest.raises(KeyError):
+    with vampytest.assert_raises(KeyError):
         weak_map_1.pop(object_4)
-    assert len(weak_map_1) == 1
+    vampytest.assert_eq(len(weak_map_1), 1)
 
 
 def test_WeakMap_set():
@@ -248,18 +249,18 @@ def test_WeakMap_set():
     
     object_4 = 7
     
-    assert weak_map_1.set(object_1) is object_1_expected
-    assert len(weak_map_1) == 3
+    vampytest.assert_is(weak_map_1.set(object_1), object_1_expected)
+    vampytest.assert_eq(len(weak_map_1), 3)
     
-    assert weak_map_1.set(object_2) is object_2_expected
-    assert len(weak_map_1) == 3
+    vampytest.assert_is(weak_map_1.set(object_2), object_2_expected)
+    vampytest.assert_eq(len(weak_map_1), 3)
     
-    assert weak_map_1.set(object_3) is object_3_expected
-    assert len(weak_map_1) == 4
+    vampytest.assert_is(weak_map_1.set(object_3), object_3_expected)
+    vampytest.assert_eq(len(weak_map_1), 4)
     
-    with pytest.raises(TypeError):
+    with vampytest.assert_raises(TypeError):
         weak_map_1.set(object_4)
-    assert len(weak_map_1) == 4
+    vampytest.assert_eq(len(weak_map_1), 4)
 
 
 def test_WeakMap_ior():
@@ -274,33 +275,33 @@ def test_WeakMap_ior():
     
     test_case = weak_map_1.copy()
     test_case.update(weak_map_1)
-    assert test_case == weak_map_1
+    vampytest.assert_eq(test_case, weak_map_1)
     
     test_case = weak_map_1.copy()
     test_case.update(weak_map_2)
-    assert test_case == weak_map_1
+    vampytest.assert_eq(test_case, weak_map_1)
     
     test_case = weak_map_1.copy()
     test_case.update(weak_map_3)
-    assert test_case == objects_3
+    vampytest.assert_eq(test_case, objects_3)
     
 
     test_case = weak_map_1.copy()
     test_case.update(objects_1)
-    assert test_case == weak_map_1
+    vampytest.assert_eq(test_case, weak_map_1)
     
     test_case = weak_map_1.copy()
     test_case.update(objects_2)
-    assert test_case == weak_map_1
+    vampytest.assert_eq(test_case, weak_map_1)
     
     test_case = weak_map_1.copy()
     test_case.update(objects_3)
-    assert test_case == objects_3
+    vampytest.assert_eq(test_case, objects_3)
     
     
     test_case = WeakMap()
-    with pytest.raises(TypeError):
+    with vampytest.assert_raises(TypeError):
         test_case.update([1, ])
     
-    with pytest.raises(TypeError):
+    with vampytest.assert_raises(TypeError):
         test_case.update(1)

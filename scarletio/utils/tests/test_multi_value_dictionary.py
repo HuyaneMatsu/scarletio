@@ -1,6 +1,7 @@
-import pytest
+from ..multi_value_dictionary import MultiValueDictionary
 
-from scarletio import MultiValueDictionary
+import vampytest
+
 
 # Test MultiValueDictionary
 
@@ -8,22 +9,22 @@ from scarletio import MultiValueDictionary
 
 def test_MultiValueDictionary_constructor():
     multi_value_dictionary = MultiValueDictionary()
-    assert len(multi_value_dictionary) == 0
-    assert sorted(multi_value_dictionary) == []
+    vampytest.assert_eq(len(multi_value_dictionary), 0)
+    vampytest.assert_eq(sorted(multi_value_dictionary), [])
 
 
 def test_MultiValueDictionary_constructor_empty():
     multi_value_dictionary = MultiValueDictionary([])
-    assert len(multi_value_dictionary) == 0
-    assert sorted(multi_value_dictionary) == []
+    vampytest.assert_eq(len(multi_value_dictionary), 0)
+    vampytest.assert_eq(sorted(multi_value_dictionary), [])
 
 
 def test_MultiValueDictionary_constructor_filled():
     relations = [('a', 'a'), ('b', 'b'), ('a', 'c'), ('b', 'b')]
     
     multi_value_dictionary = MultiValueDictionary(relations)
-    assert len(multi_value_dictionary) == len(set(relation[0] for relation in relations))
-    assert sorted(multi_value_dictionary.items()) == sorted(set(relations))
+    vampytest.assert_eq(len(multi_value_dictionary), len(set(relation[0] for relation in relations)))
+    vampytest.assert_eq(sorted(multi_value_dictionary.items()), sorted(set(relations)))
 
 
 # Test magic methods
@@ -37,8 +38,8 @@ def test_MultiValueDictionary_contains():
     
     multi_value_dictionary = MultiValueDictionary(relations)
     
-    assert key_1 in multi_value_dictionary
-    assert not (key_2 in multi_value_dictionary)
+    vampytest.assert_in(key_1, multi_value_dictionary)
+    vampytest.assert_not_in(key_2, multi_value_dictionary)
 
 
 def test_MultiValueDictionary_eq():
@@ -50,17 +51,17 @@ def test_MultiValueDictionary_eq():
     multi_value_dictionary_2 = MultiValueDictionary(relations_2)
     multi_value_dictionary_3 = MultiValueDictionary(relations_3)
     
-    assert multi_value_dictionary_1 == multi_value_dictionary_1
-    assert not (multi_value_dictionary_1 == multi_value_dictionary_2)
-    assert not (multi_value_dictionary_1 == multi_value_dictionary_3)
+    vampytest.assert_eq(multi_value_dictionary_1, multi_value_dictionary_1)
+    vampytest.assert_eq(multi_value_dictionary_1, multi_value_dictionary_2, reverse=True)
+    vampytest.assert_eq(multi_value_dictionary_1, multi_value_dictionary_3, reverse=True)
     
-    assert multi_value_dictionary_1 == relations_1
-    assert not (multi_value_dictionary_1 == relations_2)
-    assert not (multi_value_dictionary_1 == relations_3)
+    vampytest.assert_eq(multi_value_dictionary_1, relations_1)
+    vampytest.assert_eq(multi_value_dictionary_1, relations_2, reverse=True)
+    vampytest.assert_eq(multi_value_dictionary_1, relations_3, reverse=True)
     
     
-    assert multi_value_dictionary_1.__eq__([1, ]) is NotImplemented
-    assert multi_value_dictionary_1.__eq__(1) is NotImplemented
+    vampytest.assert_is(multi_value_dictionary_1.__eq__([1, ]), NotImplemented)
+    vampytest.assert_is(multi_value_dictionary_1.__eq__(1), NotImplemented)
 
 
 def test_MultiValueDictionary_ne():
@@ -72,17 +73,17 @@ def test_MultiValueDictionary_ne():
     multi_value_dictionary_2 = MultiValueDictionary(relations_2)
     multi_value_dictionary_3 = MultiValueDictionary(relations_3)
     
-    assert not (multi_value_dictionary_1 != multi_value_dictionary_1)
-    assert multi_value_dictionary_1 != multi_value_dictionary_2
-    assert multi_value_dictionary_1 != multi_value_dictionary_3
+    vampytest.assert_ne(multi_value_dictionary_1, multi_value_dictionary_1, reverse=True)
+    vampytest.assert_ne(multi_value_dictionary_1, multi_value_dictionary_2)
+    vampytest.assert_ne(multi_value_dictionary_1, multi_value_dictionary_3)
     
-    assert not (multi_value_dictionary_1 != relations_1)
-    assert multi_value_dictionary_1 != relations_2
-    assert multi_value_dictionary_1 != relations_3
+    vampytest.assert_ne(multi_value_dictionary_1, relations_1, reverse=True)
+    vampytest.assert_ne(multi_value_dictionary_1, relations_2)
+    vampytest.assert_ne(multi_value_dictionary_1, relations_3)
     
     
-    assert multi_value_dictionary_1.__ne__([1, ]) is NotImplemented
-    assert multi_value_dictionary_1.__ne__(1) is NotImplemented
+    vampytest.assert_is(multi_value_dictionary_1.__ne__([1, ]), NotImplemented)
+    vampytest.assert_is(multi_value_dictionary_1.__ne__(1), NotImplemented)
 
 
 def test_MultiValueDictionary_iter():
@@ -90,8 +91,8 @@ def test_MultiValueDictionary_iter():
     multi_value_dictionary = MultiValueDictionary(relations)
     multi_value_dictionary_empty = MultiValueDictionary()
     
-    assert sorted(iter(multi_value_dictionary)) == sorted(multi_value_dictionary.keys())
-    assert sorted(iter(multi_value_dictionary_empty)) == sorted(multi_value_dictionary_empty.keys())
+    vampytest.assert_eq(sorted(iter(multi_value_dictionary)), sorted(multi_value_dictionary.keys()))
+    vampytest.assert_eq(sorted(iter(multi_value_dictionary_empty)), sorted(multi_value_dictionary_empty.keys()))
 
 
 def test_MultiValueDictionary_len():
@@ -99,8 +100,8 @@ def test_MultiValueDictionary_len():
     multi_value_dictionary = MultiValueDictionary(relations)
     multi_value_dictionary_empty = MultiValueDictionary()
     
-    assert len(multi_value_dictionary) == len(set(relation[0] for relation in relations))
-    assert len(multi_value_dictionary_empty) == 0
+    vampytest.assert_eq(len(multi_value_dictionary), len(set(relation[0] for relation in relations)))
+    vampytest.assert_eq(len(multi_value_dictionary_empty), 0)
 
 
 def test_MultiValueDictionary_setitem():
@@ -119,20 +120,20 @@ def test_MultiValueDictionary_setitem():
     value_3 = 'g'
     
     multi_value_dictionary[key_1] = value_1
-    assert multi_value_dictionary[key_1] == expected_value_1
-    assert len(multi_value_dictionary) == 3
+    vampytest.assert_eq(multi_value_dictionary[key_1], expected_value_1)
+    vampytest.assert_eq(len(multi_value_dictionary), 3)
     
     relations.append((key_1, value_1))
-    assert sorted(multi_value_dictionary.items()) == sorted(relations)
+    vampytest.assert_eq(sorted(multi_value_dictionary.items()), sorted(relations))
     
     multi_value_dictionary[key_2] = value_2
-    assert multi_value_dictionary[key_2] == expected_value_2
-    assert len(multi_value_dictionary) == 3
+    vampytest.assert_eq(multi_value_dictionary[key_2], expected_value_2)
+    vampytest.assert_eq(len(multi_value_dictionary), 3)
     
     relations.append((key_2, value_2))
-    assert sorted(multi_value_dictionary.items()) == sorted(relations)
+    vampytest.assert_eq(sorted(multi_value_dictionary.items()), sorted(relations))
     
-    with pytest.raises(TypeError):
+    with vampytest.assert_raises(TypeError):
         multi_value_dictionary[key_3] = value_3
 
 
@@ -141,12 +142,12 @@ def test_MultiValueDictionary_getitem():
     multi_value_dictionary = MultiValueDictionary(relations)
     multi_value_dictionary_empty = MultiValueDictionary()
     
-    assert multi_value_dictionary['a'] == 'a'
+    vampytest.assert_eq(multi_value_dictionary['a'], 'a')
     
-    with pytest.raises(KeyError):
+    with vampytest.assert_raises(KeyError):
         multi_value_dictionary['d']
     
-    with pytest.raises(KeyError):
+    with vampytest.assert_raises(KeyError):
         multi_value_dictionary_empty['d']
 
 
@@ -156,19 +157,19 @@ def test_MultiValueDictionary_delitem():
     multi_value_dictionary_empty = MultiValueDictionary()
     
     del multi_value_dictionary['a']
-    assert multi_value_dictionary['a'] == 'c'
+    vampytest.assert_eq(multi_value_dictionary['a'], 'c')
     
     del multi_value_dictionary['a']
-    assert 'a' not in multi_value_dictionary
+    vampytest.assert_not_in('a', multi_value_dictionary)
     
-    with pytest.raises(KeyError):
+    with vampytest.assert_raises(KeyError):
         del multi_value_dictionary['a']
     
     
-    with pytest.raises(KeyError):
+    with vampytest.assert_raises(KeyError):
         del multi_value_dictionary['d']
     
-    with pytest.raises(KeyError):
+    with vampytest.assert_raises(KeyError):
         del multi_value_dictionary_empty['d']
 
 
@@ -184,14 +185,14 @@ def test_MultiValueDictionary_get_all():
     
     key_2 = 'c'
     
-    assert multi_value_dictionary.get_all(key_1) == value_1
+    vampytest.assert_eq(multi_value_dictionary.get_all(key_1), value_1)
     
     # When item modified, source should not change.
     value_1.append('d')
     
-    assert multi_value_dictionary.get_all(key_1) != value_1
+    vampytest.assert_ne(multi_value_dictionary.get_all(key_1), value_1)
     
-    assert multi_value_dictionary.get_all(key_2) is None
+    vampytest.assert_is(multi_value_dictionary.get_all(key_2), None)
     
     
     
@@ -204,12 +205,12 @@ def test_MultiValueDictionary_get_one():
     
     key_2 = 'c'
     
-    assert multi_value_dictionary.get_one(key_1) == value_1
-    assert multi_value_dictionary.get_one(key_2) is None
+    vampytest.assert_eq(multi_value_dictionary.get_one(key_1), value_1)
+    vampytest.assert_is(multi_value_dictionary.get_one(key_2), None)
 
 
 def test_MultiValueDictionary_get():
-    assert MultiValueDictionary.get is MultiValueDictionary.get_one
+    vampytest.assert_is(MultiValueDictionary.get, MultiValueDictionary.get_one)
 
 
 def test_MultiValueDictionary_pop_all():
@@ -221,13 +222,13 @@ def test_MultiValueDictionary_pop_all():
     
     key_2 = 'c'
     
-    assert multi_value_dictionary.pop_all(key_1) == value_1
-    assert len(multi_value_dictionary) == 1
+    vampytest.assert_eq(multi_value_dictionary.pop_all(key_1), value_1)
+    vampytest.assert_eq(len(multi_value_dictionary), 1)
     
-    with pytest.raises(KeyError):
+    with vampytest.assert_raises(KeyError):
         multi_value_dictionary.pop_all(key_2)
     
-    assert multi_value_dictionary.pop_all(key_2, None) is None
+    vampytest.assert_is(multi_value_dictionary.pop_all(key_2, None), None)
 
 
 def test_MultiValueDictionary_pop_one():
@@ -244,24 +245,24 @@ def test_MultiValueDictionary_pop_one():
     
     key_4 = 'c'
     
-    assert multi_value_dictionary.pop_one(key_1) == value_1
-    assert len(multi_value_dictionary) == 2
+    vampytest.assert_eq(multi_value_dictionary.pop_one(key_1), value_1)
+    vampytest.assert_eq(len(multi_value_dictionary), 2)
     
-    assert multi_value_dictionary.pop_one(key_2) == value_2
-    assert len(multi_value_dictionary) == 1
+    vampytest.assert_eq(multi_value_dictionary.pop_one(key_2), value_2)
+    vampytest.assert_eq(len(multi_value_dictionary), 1)
     
-    with pytest.raises(KeyError):
+    with vampytest.assert_raises(KeyError):
         multi_value_dictionary.pop_one(key_3)
     
     
-    with pytest.raises(KeyError):
+    with vampytest.assert_raises(KeyError):
         multi_value_dictionary.pop_one(key_4)
     
-    assert multi_value_dictionary.pop_one(key_4, None) is None
+    vampytest.assert_is(multi_value_dictionary.pop_one(key_4, None), None)
 
 
 def test_MultiValueDictionary_pop():
-    assert MultiValueDictionary.pop is MultiValueDictionary.pop_one
+    vampytest.assert_is(MultiValueDictionary.pop, MultiValueDictionary.pop_one)
 
 
 def test_MultiValueDictionary_popitem():
@@ -272,20 +273,20 @@ def test_MultiValueDictionary_popitem():
     multi_value_dictionary = MultiValueDictionary(relations)
     
     popped_item_1 = multi_value_dictionary.popitem()
-    assert popped_item_1 in relations
+    vampytest.assert_in(popped_item_1, relations)
     
     popped_item_2 = multi_value_dictionary.popitem()
-    assert popped_item_2 in relations
+    vampytest.assert_in(popped_item_2, relations)
     
     popped_item_3 = multi_value_dictionary.popitem()
-    assert popped_item_3 in relations
+    vampytest.assert_in(popped_item_3, relations)
     
-    with pytest.raises(KeyError):
+    with vampytest.assert_raises(KeyError):
         multi_value_dictionary.popitem()
     
-    assert len(multi_value_dictionary) == 0
+    vampytest.assert_eq(len(multi_value_dictionary), 0)
     
-    assert sorted([popped_item_1, popped_item_2, popped_item_3]) == sorted(relations)
+    vampytest.assert_eq(sorted([popped_item_1, popped_item_2, popped_item_3]), sorted(relations))
 
 
 def test_MultiValueDictionary_setdefault():
@@ -305,16 +306,16 @@ def test_MultiValueDictionary_setdefault():
     multi_value_dictionary = MultiValueDictionary(relations)
     
     value = multi_value_dictionary.setdefault(key_1, value_1)
-    assert value == expected_value_1
-    assert len(multi_value_dictionary) == 3
+    vampytest.assert_eq(value, expected_value_1)
+    vampytest.assert_eq(len(multi_value_dictionary), 3)
     
     
     value = multi_value_dictionary.setdefault(key_2, value_2)
-    assert value == expected_value_2
-    assert len(multi_value_dictionary) == 3
-    assert multi_value_dictionary[key_2] == expected_value_2
+    vampytest.assert_eq(value, expected_value_2)
+    vampytest.assert_eq(len(multi_value_dictionary), 3)
+    vampytest.assert_eq(multi_value_dictionary[key_2], expected_value_2)
     
-    with pytest.raises(TypeError):
+    with vampytest.assert_raises(TypeError):
         multi_value_dictionary.setdefault(key_3, value_3)
 
 
@@ -326,15 +327,15 @@ def test_MultiValueDictionary_copy():
     
     test_case = multi_value_dictionary.copy()
     
-    assert test_case is not multi_value_dictionary
-    assert test_case == multi_value_dictionary
+    vampytest.assert_is(test_case, not multi_value_dictionary)
+    vampytest.assert_eq(test_case, multi_value_dictionary)
     
     test_case['a'] = 'd'
-    assert test_case != multi_value_dictionary
+    vampytest.assert_ne(test_case, multi_value_dictionary)
     
     test_case = multi_value_dictionary_empty.copy()
-    assert test_case is not multi_value_dictionary_empty
-    assert test_case == multi_value_dictionary_empty
+    vampytest.assert_is(test_case, not multi_value_dictionary_empty)
+    vampytest.assert_eq(test_case, multi_value_dictionary_empty)
 
 
 def _build_sorted_multi_value_dictionary_items_by_keys(multi_value_dictionary):
@@ -363,21 +364,21 @@ def test_MultiValueDictionary_items():
     
     items = multi_value_dictionary.items()
     
-    assert sorted(items) == _build_sorted_multi_value_dictionary_items_by_keys(multi_value_dictionary)
-    assert item_1 in items
-    assert item_2 in items
-    assert not (item_3 in items)
-    assert not (item_4 in items)
+    vampytest.assert_eq(sorted(items), _build_sorted_multi_value_dictionary_items_by_keys(multi_value_dictionary))
+    vampytest.assert_in(item_1, items)
+    vampytest.assert_in(item_2, items)
+    vampytest.assert_not_in(item_3, items)
+    vampytest.assert_not_in(item_4, items)
     
     multi_value_dictionary_empty = MultiValueDictionary()
     
     items = multi_value_dictionary_empty.items()
     
-    assert sorted(items) == _build_sorted_multi_value_dictionary_items_by_keys(multi_value_dictionary_empty)
-    assert not (item_1 in items)
-    assert not (item_2 in items)
-    assert not (item_3 in items)
-    assert not (item_4 in items)
+    vampytest.assert_eq(sorted(items), _build_sorted_multi_value_dictionary_items_by_keys(multi_value_dictionary_empty))
+    vampytest.assert_not_in(item_1, items)
+    vampytest.assert_not_in(item_2, items)
+    vampytest.assert_not_in(item_3, items)
+    vampytest.assert_not_in(item_4, items)
 
 
 def test_MultiValueDictionary_values():
@@ -391,17 +392,17 @@ def test_MultiValueDictionary_values():
     
     values = multi_value_dictionary.values()
     
-    assert sorted(values) == sorted(value for key, value in multi_value_dictionary.items())
-    assert value_1 in values
-    assert not (value_2 in values)
+    vampytest.assert_eq(sorted(values), sorted(value for key, value in multi_value_dictionary.items()))
+    vampytest.assert_in(value_1, values)
+    vampytest.assert_not_in(value_2, values)
     
     multi_value_dictionary_empty = MultiValueDictionary()
     
     values = multi_value_dictionary_empty.values()
     
-    assert sorted(values) == sorted(value for key, value in multi_value_dictionary_empty.items())
-    assert not (value_1 in values)
-    assert not (value_2 in values)
+    vampytest.assert_eq(sorted(values), sorted(value for key, value in multi_value_dictionary_empty.items()))
+    vampytest.assert_not_in(value_1, values)
+    vampytest.assert_not_in(value_2, values)
 
 
 
@@ -415,20 +416,20 @@ def test_MultiValueDictionary_keys():
     
     keys = multi_value_dictionary.keys()
     
-    assert len(keys) == len(multi_value_dictionary)
-    assert set(keys) == set(key for key, value in multi_value_dictionary.items())
-    assert key_1 in keys
-    assert not (key_2 in keys)
+    vampytest.assert_eq(len(keys), len(multi_value_dictionary))
+    vampytest.assert_eq(set(keys), set(key for key, value in multi_value_dictionary.items()))
+    vampytest.assert_in(key_1, keys)
+    vampytest.assert_not_in(key_2, keys)
 
 
     multi_value_dictionary_empty = MultiValueDictionary()
     
     keys = multi_value_dictionary_empty.keys()
     
-    assert len(keys) == len(multi_value_dictionary_empty)
-    assert set(keys) == set(key for key, value in multi_value_dictionary_empty.items())
-    assert not (key_1 in keys)
-    assert not (key_2 in keys)
+    vampytest.assert_eq(len(keys), len(multi_value_dictionary_empty))
+    vampytest.assert_eq(set(keys), set(key for key, value in multi_value_dictionary_empty.items()))
+    vampytest.assert_not_in(key_1, keys)
+    vampytest.assert_not_in(key_2, keys)
 
 
 def test_MultiValueDictionary_kwargs():
@@ -437,7 +438,7 @@ def test_MultiValueDictionary_kwargs():
     
     expected_kwargs = {key: value for key, value in relations}
     
-    assert expected_kwargs == multi_value_dictionary.kwargs()
+    vampytest.assert_eq(expected_kwargs, multi_value_dictionary.kwargs())
 
 
 def test_MultiValueDictionary_extend():
@@ -449,8 +450,8 @@ def test_MultiValueDictionary_extend():
     
     test_case = multi_value_dictionary_1.copy()
     test_case.extend(multi_value_dictionary_2)
-    assert sorted(test_case.items()) == sorted(set(relations_1)|set(relations_2))
+    vampytest.assert_eq(sorted(test_case.items()), sorted(set(relations_1)|set(relations_2)))
     
     test_case = multi_value_dictionary_1.copy()
     test_case.extend(dict(relations_2))
-    assert sorted(test_case.items()) == sorted(set(relations_1)|set(dict(relations_2).items()))
+    vampytest.assert_eq(sorted(test_case.items()), sorted(set(relations_1)|set(dict(relations_2).items())))
