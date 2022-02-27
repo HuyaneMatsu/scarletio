@@ -1,8 +1,9 @@
 import pytest
 
-from weak_helpers import WeakReferencable, sort_by_type_first_key
+from ..hybrid_value_dictionary import HybridValueDictionary
 
-from scarletio import HybridValueDictionary
+from .weak_helpers import WeakReferencable, sort_by_type_first_key
+
 
 
 # Test HybridValueDictionary
