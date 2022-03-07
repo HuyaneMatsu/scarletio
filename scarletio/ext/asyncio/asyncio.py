@@ -73,6 +73,16 @@ class EventThread:
     def add_signal_handler(self, sig, callback, *args):
         pass
     
+    # Required by aio-http 3.8
+    def remove_signal_handler(self, sig):
+        pass
+    
+    
+    # Required by aio-http 3.8
+    async def shutdown_asyncgens(self):
+        pass
+    
+    
     # Required by dead.py 3.8
     def run_forever(self):
         local_thread = current_thread()

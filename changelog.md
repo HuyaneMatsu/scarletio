@@ -1,3 +1,12 @@
+## 1.0.19 *\[2022-03-??\]*
+
+#### Bug fixes
+
+##### ext.asyncio
+
+- Add missing `EventThread.remove_signal_handler`. (Forest#2913)
+- Add missing `EventThread.shutdown_asyncgens`. (Forest#2913)
+
 ## 1.0.18 *\[2022-02-28\]*
 
 #### Improvements
