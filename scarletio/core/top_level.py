@@ -117,8 +117,8 @@ def set_event_loop(event_loop):
     
     Can be used to force update event loop resolution of ``get_event_loop`` for the current thread.
     
-    Returns
-    -------
+    Parameters
+    ----------
     event_loop : ``EventThread``
         The event loop to set.
     
@@ -132,6 +132,26 @@ def set_event_loop(event_loop):
         raise RuntimeError(
             f'Cannot set event loop from an event loop. Current event loop: {local_thread!r} ;got: {event_loop!r}.'
         )
+    
+    THREAD_TO_EVENT_LOOP_REFERENCE[local_thread] = event_loop
+
+
+def _maybe_set_event_loop(event_loop):
+    """
+    Sets the event loop linked to the current thread if possible.
+    
+    Parameters
+    ----------
+    event_loop : ``EventThread``
+        The event loop to set.
+    """
+    local_thread = current_thread()
+    if isinstance(local_thread, EventThread):
+        return
+
+    linked_event_loop = _try_detect_event_loop(local_thread)
+    if (linked_event_loop is None):
+        return
     
     THREAD_TO_EVENT_LOOP_REFERENCE[local_thread] = event_loop
 
@@ -160,7 +180,9 @@ def create_event_loop(**kwargs):
     -------
     event_loop : ``EventThread``
     """
-    return EventThread(**kwargs)
+    event_loop = EventThread(**kwargs)
+    _maybe_set_event_loop(event_loop)
+    return event_loop
 
 
 def create_task(coroutine, loop=None):

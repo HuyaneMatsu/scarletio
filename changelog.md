@@ -1,3 +1,10 @@
+## 1.0.20 *\[2022-03-??\]*
+
+#### Bug fixes
+
+- Not yet started event loops were undetectable by `get_event_loop` causing `RuntimeError`. Set them at
+`create_event_loop` if applicable.
+
 ## 1.0.19 *\[2022-03-08\]*
 
 #### Bug fixes
