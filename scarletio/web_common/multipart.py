@@ -85,7 +85,7 @@ class PayloadBase:
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : `IgnoreCaseMultiValueDictionary` of (`str`, `str`) items
+    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Payload specific headers.
     size : `None`, `int`
         The payload's size if applicable.

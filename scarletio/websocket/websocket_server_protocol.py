@@ -150,7 +150,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
         - `available_subprotocols` : `list` of `str`. The subprotocols supported by the server.
     request : `None`, ``RawRequestMessage``
         The received http request if applicable.
-    response_headers : `None`, `IgnoreCaseMultiValueDictionary` of (`str`, `str`) items
+    response_headers : `None`, ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         The server websocket's response's headers if applicable.
     """
     is_client = False

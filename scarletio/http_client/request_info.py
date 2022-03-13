@@ -6,7 +6,7 @@ class RequestInfo:
     
     Attributes
     ----------
-    headers : ``imultidict``
+    headers : ``IgnoreCaseMultiValueDictionary``
         The respective request's headers.
     method : `str`
         The respective request's method.
