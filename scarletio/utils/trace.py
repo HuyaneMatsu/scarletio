@@ -139,6 +139,11 @@ def _should_ignore_frame(file_name, name, line):
         The line's index where the exception occurred.
     line : `str`
         The frame's respective stripped line.
+    
+    Returns
+    -------
+    should_ignore_frame : `bool`
+        Whether the frame should be ignored.
     """
     try:
         files = IGNORED_FRAME_LINES[file_name]
