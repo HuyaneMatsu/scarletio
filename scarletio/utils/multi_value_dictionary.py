@@ -28,7 +28,6 @@ class _MultiValueDictionaryItemIterator(DictionaryItemIteratorBase):
     
     @copy_docs(DictionaryItemIteratorBase.__contains__)
     def __contains__(self, item):
-        print(item)
         if not isinstance(item, tuple):
             return False
         
