@@ -148,9 +148,9 @@ def _maybe_set_event_loop(event_loop):
     local_thread = current_thread()
     if isinstance(local_thread, EventThread):
         return
-
+    
     linked_event_loop = _try_detect_event_loop(local_thread)
-    if (linked_event_loop is None):
+    if (linked_event_loop is not None):
         return
     
     THREAD_TO_EVENT_LOOP_REFERENCE[local_thread] = event_loop

@@ -1,3 +1,9 @@
+## 1.0.21 *\[2022-03-26\]*
+
+#### Bug fixes
+
+- `create_event_loop` didn't set event loop correctly (typo).
+
 ## 1.0.20 *\[2022-03-15\]*
 
 #### Bug fixes
