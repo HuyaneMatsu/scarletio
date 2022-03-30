@@ -188,7 +188,11 @@ class FutureSyncWrapper:
     
     
     def cancelled(self):
-        warnings.warn(f'{self.__class__.__name__}.cancelled is deprecated.', FutureWarning)
+        warnings.warn(
+            f'`{self.__class__.__name__}.cancelled` is deprecated.',
+            FutureWarning,
+            stacklevel = 2,
+        )
         return self.is_cancelled()
     
     
@@ -198,7 +202,11 @@ class FutureSyncWrapper:
     
     
     def done(self):
-        warnings.warn(f'{self.__class__.__name__}.done is deprecated.', FutureWarning)
+        warnings.warn(
+            f'`{self.__class__.__name__}.done` is deprecated.',
+            FutureWarning,
+            stacklevel = 2,
+        )
         return self.is_done()
     
     
@@ -208,7 +216,11 @@ class FutureSyncWrapper:
     
     
     def pending(self):
-        warnings.warn(f'{self.__class__.__name__}.pending is deprecated.', FutureWarning)
+        warnings.warn(
+            f'`{self.__class__.__name__}.pending` is deprecated.',
+            FutureWarning,
+            stacklevel = 2,
+        )
         return self.is_pending()
     
     

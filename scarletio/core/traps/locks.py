@@ -88,7 +88,11 @@ class Lock:
     
     
     def locked(self):
-        warnings.warn(f'{self.__class__.__name__}.locked` is deprecated.', FutureWarning)
+        warnings.warn(
+            f'{self.__class__.__name__}.locked` is deprecated.',
+            FutureWarning,
+            stacklevel = 2,
+        )
         return self.is_locked()
     
     

@@ -45,6 +45,7 @@ def include(obj_name):
                 f'The object is not yet resolved & The file is not a module.'
             ),
             ResourceWarning,
+            stacklevel = 2,
         )
     
     else:

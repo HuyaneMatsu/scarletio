@@ -203,6 +203,7 @@ def should_ignore_frame(file_name, name, line_number, line=..., filter=None):
                 'The `3` parameter version is deprecated and will be removed in 2022 Jun.'
             ),
             FutureWarning,
+            stacklevel = 2,
         )
     
     if _should_ignore_frame(file_name, name, line):

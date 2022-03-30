@@ -17,7 +17,10 @@ def register_library_extension(extension_name):
         The library extension's name.
     """
     if extension_name in LOADED_EXTENSIONS:
-        warnings.warn(f'A library extension with name {extension_name!r} is already loaded.')
+        warnings.warn(
+            f'A library extension with name {extension_name!r} is already loaded.',
+            stacklevel = 2,
+        )
         return
     
     LOADED_EXTENSIONS.add(extension_name)
