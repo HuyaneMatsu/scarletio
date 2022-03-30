@@ -1,6 +1,6 @@
 __all__ = ('check_satisfaction', 'export', 'include',)
 
-import sys
+import sys, warnings
 from importlib.util import module_from_spec
 from types import ModuleType
 
@@ -19,14 +19,17 @@ def include(obj_name):
     
     Returns
     -------
-    placeholder : `NotImplementedType`
+    placeholder : `value` / `NotImplementedType`
         Placeholder to trick the editors.
     """
     frame = sys._getframe().f_back
-    spec = frame.f_globals['__spec__']
-    module = sys.modules.get(spec.name, None)
-    if module is None:
-        module = module_from_spec(spec)
+    spec = frame.f_globals.get('__spec__', None)
+    if spec is None:
+        module = None
+    else:
+        module = sys.modules.get(spec.name, None)
+        if module is None:
+            module = module_from_spec(spec)
     
     try:
         value = SATISFIED[obj_name]
@@ -35,12 +38,22 @@ def include(obj_name):
     else:
         return value
     
-    try:
-        modules = INCLUDED[obj_name]
-    except KeyError:
-        modules = INCLUDED[obj_name] = set()
+    if (module is None):
+        warnings.warn(
+            (
+                f'Cannot include `{obj_name!r}` into {frame.f_globals.get("__file__", None)}.\n'
+                f'The object is not yet resolved & The file is not a module.'
+            ),
+            ResourceWarning,
+        )
     
-    modules.add(module)
+    else:
+        try:
+            modules = INCLUDED[obj_name]
+        except KeyError:
+            modules = INCLUDED[obj_name] = set()
+        
+        modules.add(module)
     
     return NotImplemented
 
@@ -53,8 +66,13 @@ def export(obj, obj_name=None):
     ----------
     obj : `Any`
         The object to export.
-    obj_name : `str`, Optional
+    obj_name : `str` = `None`, Optional
         The name of the object. If not given, is detected from `obj` itself.
+    
+    Returns
+    -------
+    obj : `Any`
+        The exported object.
     """
     if obj_name is None:
         try:

@@ -1,3 +1,10 @@
+## 1.0.22 *\[2022-03-??\]*
+
+#### Bug fixes
+
+- Importing just `.websocket` didn't resolve `.http_client` causing `NotImplementedError` runtime. (Sube#0880)
+- `include` could fail when including a not yet resolved reference to a non-module file.
+
 ## 1.0.21 *\[2022-03-26\]*
 
 #### Bug fixes

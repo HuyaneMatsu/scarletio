@@ -9,3 +9,6 @@ __all__ = (
     *websocket_server.__all__,
     *websocket_server_protocol.__all__,
 )
+
+# Resolve import if http_client is not imported
+from .. import http_client
