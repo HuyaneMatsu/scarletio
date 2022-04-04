@@ -1,3 +1,13 @@
+## 1.0.23 *\[2022-04-??\]*
+
+#### Improvements
+
+- Ignore raising `RichAttributeErrorBaseType.__getattr__` frames when rending exception traceback.
+
+#### Bug fixes
+
+- `FutureSyncWrapper._future` can be nulled, meaning it's loop could also be nulled.
+
 ## 1.0.22 *\[2022-03-31\]*
 
 #### Bug fixes

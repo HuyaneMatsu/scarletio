@@ -3,6 +3,11 @@ __all__ = ('RichAttributeErrorBaseType',)
 from difflib import get_close_matches
 from itertools import permutations as permutate
 
+from .trace import ignore_frame
+
+
+ignore_frame(__spec__.origin, '__getattr__', 'raise AttributeError(attribute_name)',)
+ignore_frame(__spec__.origin, '__getattr__', 'raise AttributeError(exception_message)',)
 
 EXCEPTION_MESSAGE_CACHE = {}
 

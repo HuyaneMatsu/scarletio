@@ -17,6 +17,7 @@ from .future import (
 ignore_frame(__spec__.origin, 'result', 'raise exception',)
 ignore_frame(__spec__.origin, 'wait', 'return self.result()', )
 
+
 @export
 class FutureSyncWrapper:
     """
@@ -31,6 +32,8 @@ class FutureSyncWrapper:
         to not retrieve the result again.
     _lock : `threading.Lock`
         Threading lock to disable concurrent access to the future.
+    _loop : ``EventLoop``
+        The event loop of the future sync wrapper to which it is bound to.
     _result : `None`, `Any`
         The result of the future. Defaults to `None`.
     _state : `str`
@@ -55,7 +58,7 @@ class FutureSyncWrapper:
     _waiter : `threading.Event`
         An event, what is set, when the waited future is done.
     """
-    __slots__ = ('_exception', '_future', '_lock', '_result', '_state', '_waiter')
+    __slots__ = ('_exception', '_future', '_lock', '_loop', '_result', '_state', '_waiter')
     
     def __new__(cls, future):
         """
@@ -66,15 +69,17 @@ class FutureSyncWrapper:
         future : ``Future``
             The future on what we would want to wait from a sync thread.
         """
+        loop = future._loop
+        
         self = object.__new__(cls)
         self._future = future
         self._lock = SyncLock()
+        self._loop = loop
         self._waiter = SyncEvent()
         self._state = FUTURE_STATE_PENDING
         self._result = None
         self._exception = None
         
-        loop = future._loop
         loop.call_soon(future.add_done_callback, self._done_callback)
         loop.wake_up()
         
@@ -98,19 +103,21 @@ class FutureSyncWrapper:
             old_future = self._future
 
             if old_future is not None:
-                loop = old_future._loop
-                loop.call_soon(self._remove_callback, old_future)
-                loop.wake_up()
-
+                old_loop = self._loop
+                old_loop.call_soon(self._remove_callback, old_future)
+                old_loop.wake_up()
+            
+            new_loop = future._loop
+            
             self._future = future
             self._state = FUTURE_STATE_PENDING
             self._result = None
             self._exception = None
             self._waiter.clear()
-
-            loop = future._loop
-            loop.call_soon(future.add_done_callback, self._done_callback)
-            loop.wake_up()
+            self._loop = new_loop
+            
+            new_loop.call_soon(future.add_done_callback, self._done_callback)
+            new_loop.wake_up()
 
         return self
     
@@ -159,7 +166,7 @@ class FutureSyncWrapper:
                 self._waiter.set()
                 return 1
             
-            loop = future._loop
+            loop = self._loop
             loop.call_soon(future.cancel)
             loop.wake_up()
             return 1
@@ -176,7 +183,7 @@ class FutureSyncWrapper:
                 self._waiter.set()
                 return 1
             
-            loop = future._loop
+            loop = self._loop
             loop.call_soon(future.cancel)
             loop.wake_up()
             return 1
@@ -453,7 +460,7 @@ class FutureSyncWrapper:
                 self._waiter.set()
                 return
         
-        loop = future._loop
+        loop = self._loop
         loop.call_soon(self.__class__._set_future_result, self, future, result)
         loop.wake_up()
     
@@ -472,7 +479,7 @@ class FutureSyncWrapper:
                 self._waiter.set()
                 return 2
 
-        loop = future._loop
+        loop = self._loop
         loop.call_soon(self.__class__._set_future_result, self, future, result)
         loop.wake_up()
         return 1
@@ -524,7 +531,7 @@ class FutureSyncWrapper:
                 self._waiter.set()
                 return
         
-        loop = future._loop
+        loop = self._loop
         loop.call_soon(self._set_future_exception, future, exception)
         loop.wake_up()
     
@@ -550,7 +557,7 @@ class FutureSyncWrapper:
                 self._waiter.set()
                 return 2
         
-        loop = future._loop
+        loop = self._loop
         loop.call_soon(self._set_future_exception, future, exception)
         loop.wake_up()
         return 1
@@ -575,7 +582,7 @@ class FutureSyncWrapper:
             
             if self._state == FUTURE_STATE_FINISHED:
                 if (self._exception is not None):
-                    self._future._loop.render_exception_maybe_async(
+                    self._loop.render_exception_maybe_async(
                         self._exception,
                         [
                             self.__class__.__name__,
@@ -604,7 +611,7 @@ class FutureSyncWrapper:
         with self._lock:
             future = self._future
             if future is not None:
-                loop = future._loop
+                loop = self._loop
                 loop.call_soon(self._remove_callback, future)
                 loop.wake_up()
                 self._future = None
