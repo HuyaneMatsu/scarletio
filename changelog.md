@@ -1,3 +1,8 @@
+## 1.0.24 *\[2022-04-18\]*
+
+- Add `stop_on_interruption` parameter to `run_asynchronous_interactive_console`.
+- Add `stop_on_interruption` parameter to `AsynchronousInteractiveConsole`.
+
 ## 1.0.23 *\[2022-04-07\]*
 
 #### Improvements

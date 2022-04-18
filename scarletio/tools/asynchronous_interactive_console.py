@@ -157,9 +157,6 @@ def run_code_callback(console, code):
     try:
         coroutine = function()
     except BaseException as err:
-        if isinstance(err, KeyboardInterrupt):
-            console.interrupted = True
-        
         console.future.set_exception(err)
         return
     
@@ -184,14 +181,14 @@ class AsynchronousInteractiveConsole(InteractiveConsole):
     ----------
     future : `None`, ``Future``
         Used to forward the result of an executed code from the event loop to the console.
-    interrupted : `bool`
-        Whether the console is interrupted.
     loop : ``EventThread``
         The event loop on which the console runs it's code.
+    stop_on_interruption : `bool`
+        Whether the console should be stopped on keyboard interrupt.
     task : `None`, ``Future``
         Asynchronous task running on the event loop on what's result the console is waiting for.
     """
-    def __init__(self, local_variables, event_loop):
+    def __init__(self, local_variables, event_loop, stop_on_interruption=False):
         """
         Creates a new async interactive console.
         
@@ -201,14 +198,16 @@ class AsynchronousInteractiveConsole(InteractiveConsole):
             Initial local variables for the executed code inside of the console.
         event_loop : ``EventThread``
             The event loop to run the executed code on.
+        stop_on_interruption : `bool` = `False`, Optional (Keyword only)
+            Whether the console should be stopped on keyboard interrupt.
         """
         InteractiveConsole.__init__(self, local_variables)
         self.compile.compiler.flags |= PyCF_ALLOW_TOP_LEVEL_AWAIT
         
         self.future = None
-        self.interrupted = False
         self.task = None
         self.loop = event_loop
+        self.stop_on_interruption = stop_on_interruption
     
     
     def runcode(self, code):
@@ -231,7 +230,6 @@ class AsynchronousInteractiveConsole(InteractiveConsole):
         """
         self.future = Future(self.loop)
         self.interrupted = False
-        self.task = None
         
         self.loop.call_soon_thread_safe(partial_func(run_code_callback, self, code))
         
@@ -240,7 +238,16 @@ class AsynchronousInteractiveConsole(InteractiveConsole):
             
             task = self.task
             if (task is not None):
-                result = task.sync_wrap().wait()
+                
+                sync_wrapper = task.sync_wrap()
+                task = None
+                
+                try:
+                    result = sync_wrapper.wait()
+                except:
+                    # Cancel the sync wrapper if exception occurs. This will stop warnings.
+                    sync_wrapper.cancel()
+                    raise
         
         except BaseException as err:
             future = self.future
@@ -250,16 +257,50 @@ class AsynchronousInteractiveConsole(InteractiveConsole):
             task = self.task
             if (task is not None) and (not task.is_done()):
                 task.cancel()
+                task = None
             
             if isinstance(err, SystemExit):
                 raise
             
-            if self.interrupted:
-                self.write('\nKeyboardInterrupt\n')
-            else:
-                self.showtraceback()
+            
+            self.showtraceback()
+            
+            if isinstance(err, KeyboardInterrupt):
+                if self.stop_on_interruption:
+                    raise SystemExit() from None
+        
         else:
             return result
+        
+        finally:
+            self.task = None
+    
+    
+    def raw_input(self, prompt=""):
+        """
+        Inputs from console with the given prompt.
+        
+        Parameters
+        ----------
+        prompt : `str`
+            Prefix to start the line with.
+        
+        Returns
+        -------
+        input_value : `str`
+        
+        Raises
+        ------
+        BaseException
+        """
+        try:
+            return input(prompt)
+        except KeyboardInterrupt:
+            if self.stop_on_interruption:
+                self.write('\n')
+                raise SystemExit() from None
+            
+            raise
 
 
 def run_asynchronous_interactive_console(
@@ -269,6 +310,7 @@ def run_asynchronous_interactive_console(
     exit_message = None,
     callback = None,
     stop_event_loop_when_done = True,
+    stop_on_interruption = False,
 ):
     """
     Runs asynchronous interactive console.
@@ -287,6 +329,8 @@ def run_asynchronous_interactive_console(
         > This runs before the event loop is shut down!
     stop_event_loop_when_done : `bool` = `True`, Optional (Keyword only)
         Whether the event loop should be closed when the console is closed.
+    stop_on_interruption : `bool` = `False`, Optional (Keyword only)
+        Whether the console should be stopped on keyboard interrupt.
     """
     if interactive_console_locals is None:
         interactive_console_locals = {}
@@ -299,7 +343,11 @@ def run_asynchronous_interactive_console(
     
     event_loop = get_or_create_event_loop()
     
-    console = AsynchronousInteractiveConsole(interactive_console_locals, event_loop)
+    console = AsynchronousInteractiveConsole(
+        interactive_console_locals,
+        event_loop,
+        stop_on_interruption = stop_on_interruption,
+    )
     
     try:
         console.interact(
