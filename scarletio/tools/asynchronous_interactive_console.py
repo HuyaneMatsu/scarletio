@@ -188,7 +188,7 @@ class AsynchronousInteractiveConsole(InteractiveConsole):
     task : `None`, ``Future``
         Asynchronous task running on the event loop on what's result the console is waiting for.
     """
-    def __init__(self, local_variables, event_loop, stop_on_interruption=False):
+    def __init__(self, local_variables, event_loop, *, stop_on_interruption=False):
         """
         Creates a new async interactive console.
         
