@@ -1,3 +1,7 @@
+## 1.0.25  *\[2022-04-??\]*
+
+- Add `get_last_module_frame`.
+
 ## 1.0.24 *\[2022-04-18\]*
 
 - Add `stop_on_interruption` parameter to `run_asynchronous_interactive_console`.

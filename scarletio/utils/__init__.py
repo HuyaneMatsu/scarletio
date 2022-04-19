@@ -7,6 +7,7 @@ from .dict_iterator_bases import *
 from .dict_update_iterable_iterator import *
 from .docs import *
 from .export_include import *
+from .frame import *
 from .function_tools import *
 from .hybrid_value_dictionary import *
 from .ignore_case_multi_value_dictionary import *
@@ -40,6 +41,7 @@ __all__ = (
     *dict_update_iterable_iterator.__all__,
     *docs.__all__,
     *export_include.__all__,
+    *frame.__all__,
     *function_tools.__all__,
     *hybrid_value_dictionary.__all__,
     *ignore_case_multi_value_dictionary.__all__,
