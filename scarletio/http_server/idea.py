@@ -22,7 +22,7 @@ TASK_LOCALS = {}
 
 class TaskLocal:
     """
-    Allows instances's attributes to be accessed from the task where the ``TaskLocal`` is entered from.
+    Allows instances' attributes to be accessed from the task where the ``TaskLocal`` is entered from.
     
     Attributes
     ----------
@@ -1739,40 +1739,40 @@ def _validate_import_name(import_name):
     
     return import_name
 
-def _validate_template_folder(template_folder):
+def _validate_template_directory(template_directory):
     """
-    Validates the given `template_folder` value.
+    Validates the given `template_directory` value.
     
     Parameters
     ----------
-    template_folder : `None`, `str`
-        The template folder's value.
+    template_directory : `None`, `str`
+        The template directory's value.
     
     Returns
     -------
-    template_folder : `None`, `str`
-        The template folder's validated value.
+    template_directory : `None`, `str`
+        The template directory's validated value.
     
     Raises
     ------
     TypeError
-        If `template_folder` was not given neither as `None`, `str`.
+        If `template_directory` was not given neither as `None`, `str`.
     """
-    if (template_folder is not None):
-        if type(template_folder) is str:
+    if (template_directory is not None):
+        if type(template_directory) is str:
             pass
-        elif isinstance(template_folder, str):
-            template_folder = str(template_folder)
+        elif isinstance(template_directory, str):
+            template_directory = str(template_directory)
         else:
             raise TypeError(
-                f'`template_folder` can be `str`, got '
-                f'{template_folder.__class__.__name__}; {template_folder!r}.'
+                f'`template_directory` can be `str`, got '
+                f'{template_directory.__class__.__name__}; {template_directory!r}.'
             )
         
-        if not template_folder:
-            template_folder = None
+        if not template_directory:
+            template_directory = None
     
-    return template_folder
+    return template_directory
 
 def _validate_root_path(root_path, import_name):
     """
@@ -1846,48 +1846,48 @@ def _validate_root_path(root_path, import_name):
     return root_path
 
 
-def _validate_static_folder(static_folder):
+def _validate_static_directory(static_directory):
     """
-    Validates the given static folder value.
+    Validates the given static directory value.
     
     Parameters
     ----------
-    static_folder : `None`, `str`
-        Static folder value to validate.
+    static_directory : `None`, `str`
+        Static directory value to validate.
     
     Returns
     -------
-    static_folder : `None`, `str`
-        The validated static folder value.
+    static_directory : `None`, `str`
+        The validated static directory value.
     
     Raises
     ------
     TypeError
-        If `static_folder` was not given neither as `None`, `str`.
+        If `static_directory` was not given neither as `None`, `str`.
     ValueError
-        If `static_folder` was given as empty string.
+        If `static_directory` was given as empty string.
     """
-    if (static_folder is not None):
-        if type(static_folder) is str:
+    if (static_directory is not None):
+        if type(static_directory) is str:
             pass
-        elif isinstance(static_folder, str):
-            static_folder = str(static_folder)
+        elif isinstance(static_directory, str):
+            static_directory = str(static_directory)
         else:
             raise TypeError(
-                f'`static_folder` can be `None`, `str`, got {static_folder.__class__.__name__}; {static_folder!r}.'
+                f'`static_directory` can be `None`, `str`, got {static_directory.__class__.__name__}; {static_directory!r}.'
             )
         
-        if not static_folder:
+        if not static_directory:
             raise ValueError(
-                f'`static_folder` cannot be empty string.'
+                f'`static_directory` cannot be empty string.'
             )
     
-    return static_folder
+    return static_directory
 
 
 def _validate_static_url_path(static_url_path):
     """
-    Validates the given static folder value.
+    Validates the given static directory value.
     
     Parameters
     ----------
@@ -2027,9 +2027,9 @@ def _merge_parameters(primary_parameters, secondary_parameters):
     
     return (*primary_parameters, *extend_parameters)
 
-class RuleFolder:
+class RuleDirectory:
     """
-    Rule folder, which contains more rules enabling adding them at once.
+    Rule directory, which contains more rules enabling adding them at once.
     
     Attributes
     ----------
@@ -2054,7 +2054,7 @@ class RuleFolder:
     def __init__(self, view_func, positional_parameter_names, keyword_parameter_names, kwargs_parameter_supported,
             endpoint):
         """
-        Creates a new ``RuleFolder``.
+        Creates a new ``RuleDirectory``.
         
         Parameters
         ----------
@@ -2079,16 +2079,16 @@ class RuleFolder:
     @classmethod
     def from_rule(cls, rule):
         """
-        Creates a rule folder from a rule.
+        Creates a rule directory from a rule.
         
         Parameters
         ----------
         rule : ``Rule``
-            The rule to create the folder from.
+            The rule to create the directory from.
 
         Returns
         -------
-        self : ``RuleFolder``
+        self : ``RuleDirectory``
         """
         self = object.__new__(cls)
         
@@ -2103,7 +2103,7 @@ class RuleFolder:
     
     def add_rule(self, rule, request_methods, parameters, subdomain):
         """
-        Adds a rule to the rule folder.
+        Adds a rule to the rule directory.
         
         Parameters
         ----------
@@ -2121,11 +2121,11 @@ class RuleFolder:
     
     def copy(self):
         """
-        Copies the rule folder.
+        Copies the rule directory.
         
         Returns
         -------
-        new : ``RuleFolder``
+        new : ``RuleDirectory``
         """
         new = object.__new__(type(self))
         
@@ -2140,7 +2140,7 @@ class RuleFolder:
     
     def set_subdomain(self, subdomain):
         """
-        Sets subdomain to each rule of the rule folder.
+        Sets subdomain to each rule of the rule directory.
         
         Parameters
         ----------
@@ -2152,7 +2152,7 @@ class RuleFolder:
         
     def set_parameters(self, parameters):
         """
-        Sets parameters to each rule of the rule folder.
+        Sets parameters to each rule of the rule directory.
         
         Parameters
         ----------
@@ -2163,7 +2163,7 @@ class RuleFolder:
     
     def set_rule_prefix(self, rule):
         """
-        Extends the rule parts of the rules of the rule folder.
+        Extends the rule parts of the rules of the rule directory.
         
         Parameters
         ----------
@@ -2175,7 +2175,7 @@ class RuleFolder:
     
     def set_application(self, application):
         """
-        Sets the rule folder's rules' application inside of the rule folder
+        Sets the rule directory's rules' application inside of the rule directory
         
         Parameters
         ----------
@@ -2186,7 +2186,7 @@ class RuleFolder:
     
     def set_blueprint_state_stack(self, blueprint_state_stack):
         """
-        Sets the rule folder's rules' blueprint stack.
+        Sets the rule directory's rules' blueprint stack.
         
         Parameters
         ----------
@@ -2196,12 +2196,12 @@ class RuleFolder:
             rule.set_blueprint_state_stack(blueprint_state_stack)
     
     def __repr__(self):
-        """Returns the rule folder's representation."""
+        """Returns the rule directory's representation."""
         return f'<{self.__class__.__name__} rules={self.rules!r}>'
     
     def iter_rules(self):
         """
-        Iterates over the rules of the rule folder.
+        Iterates over the rules of the rule directory.
         
         This method is a generator.
         
@@ -2654,10 +2654,10 @@ class AppBase:
         Absolute path to the package on the filesystem.
     rules : `dict` of (`str`, `Any`)
         The added rules to the application or blueprint. The keys are their endpoint name.
-    static_folder : `None`, `str`
-        Absolute path to the static file's folder.
+    static_directory : `None`, `str`
+        Absolute path to the static file's directory.
     static_url_path : `None`, `str`
-        Url path to static files. By defaults relates to `static_folder`.
+        Url path to static files. By defaults relates to `static_directory`.
     
     teardown_request_functions : `None`, `list` of `async-callable`
         Functions which should run after a request's view func is done, even if exception occurs.
@@ -2679,8 +2679,8 @@ class AppBase:
         
         No parameters are passed to template context processors.
     
-    template_folder : `None`, `str`
-        The folder from where the templates should be loaded from.
+    template_directory : `None`, `str`
+        The directory from where the templates should be loaded from.
     
     url_default_functions : `None`, `list` of `async-callable`
         Keyword parameter preprocessors for ``url_for``.
@@ -2713,25 +2713,25 @@ class AppBase:
     """
     __slots__ = (
         'after_request_functions', 'before_request_functions', 'blueprints', 'error_handler_functions', 'import_name',
-        'root_path', 'rules', 'static_folder', 'static_url_path', 'teardown_request_functions',
-        'template_context_processors', 'template_folder', 'url_default_functions', 'url_value_preprocessors'
+        'root_path', 'rules', 'static_directory', 'static_url_path', 'teardown_request_functions',
+        'template_context_processors', 'template_directory', 'url_default_functions', 'url_value_preprocessors'
     )
     
-    def __new__(cls, import_name, template_folder, root_path, static_folder, static_url_path):
+    def __new__(cls, import_name, template_directory, root_path, static_directory, static_url_path):
         """
         Parameters
         ----------
         import_name : `str`
             The name of the package or module that this app belongs to.
-        template_folder : `None`, `str`
-            The folder from where the templates should be loaded from.
+        template_directory : `None`, `str`
+            The directory from where the templates should be loaded from.
         root_path : `None`, `str`
             Absolute path to the package on the filesystem.
-        static_folder : `None`, `str`
+        static_directory : `None`, `str`
             Path on top of the application route path for static files, which can be accessed trough the
             `static_url_path`.
         static_url_path : `None`, `str`
-            Url path to static files. Defaults to `static_folder`'s value.
+            Url path to static files. Defaults to `static_directory`'s value.
         
         Raises
         ------
@@ -2739,41 +2739,41 @@ class AppBase:
             Exception occurred meanwhile finding route path from import name.
         TypeError
             - If `import_name` was not given as `str`.
-            - If `template_folder` was not given neither as `None`, `str`.
+            - If `template_directory` was not given neither as `None`, `str`.
             - If `root_path` was not given neither as `None`, `str`.
-            - If `static_folder` was not given neither as `None` nor `str`.
+            - If `static_directory` was not given neither as `None` nor `str`.
             - If `static_url_path` was not given either as `None`, `str`.
         ValueError
             - If `import_name` was given as an empty string.
             - If `root_path` was given as an empty string.
         """
         import_name = _validate_import_name(import_name)
-        template_folder = _validate_template_folder(template_folder)
-        static_folder = _validate_static_folder(static_folder)
+        template_directory = _validate_template_directory(template_directory)
+        static_directory = _validate_static_directory(static_directory)
         static_url_path = _validate_static_url_path(static_url_path)
         
         root_path = _validate_root_path(root_path, import_name)
-        if (static_url_path is None) and (static_folder is not None):
-            if os.path.isabs(static_folder):
-                static_folder_head, static_folder_tail = ntpath.split(static_folder)
-                if not static_folder_tail:
-                    static_folder_tail = ntpath.basename(static_folder_head)
+        if (static_url_path is None) and (static_directory is not None):
+            if os.path.isabs(static_directory):
+                static_directory_head, static_directory_tail = ntpath.split(static_directory)
+                if not static_directory_tail:
+                    static_directory_tail = ntpath.basename(static_directory_head)
                 
-                static_url_path = static_folder_tail
+                static_url_path = static_directory_tail
             else:
-                static_url_path = '/'.join(os.path.normpath(static_folder).split(os.path.sep))
+                static_url_path = '/'.join(os.path.normpath(static_directory).split(os.path.sep))
         
-        if (template_folder is not None) and (not os.path.isabs(template_folder)):
-            template_folder = os.path.join(root_path, template_folder)
+        if (template_directory is not None) and (not os.path.isabs(template_directory)):
+            template_directory = os.path.join(root_path, template_directory)
             
-        if (static_folder is not None) and (not os.path.isabs(static_folder)):
-            static_folder = os.path.join(root_path, static_folder)
+        if (static_directory is not None) and (not os.path.isabs(static_directory)):
+            static_directory = os.path.join(root_path, static_directory)
         
         self = object.__new__(cls)
         self.import_name = import_name
-        self.template_folder = template_folder
+        self.template_directory = template_directory
         self.root_path = root_path
-        self.static_folder = static_folder
+        self.static_directory = static_directory
         self.static_url_path = static_url_path
         
         self.rules = {}
@@ -2852,7 +2852,7 @@ class AppBase:
             - If `defaults` contains a non `tuple` element.
             - If 0th element of an element of `defaults` is not `str`.
             - If `subdomain` was not given neither as `None`, `str`.
-            - If `view_func` is not ``Rule``, ``RuleFolder``, neither `async-callable`.
+            - If `view_func` is not ``Rule``, ``RuleDirectory``, neither `async-callable`.
         ValueError
             - If `method` is not an http request method.
             - If `methods` contains a non http request method element.
@@ -2876,10 +2876,10 @@ class AppBase:
         
         if view_func is None:
             raise TypeError(
-                f'`view_func` can be `async-callable`, `{Rule.__name__}`, `{RuleFolder.__name__}`, got `None`.'
+                f'`view_func` can be `async-callable`, `{Rule.__name__}`, `{RuleDirectory.__name__}`, got `None`.'
             )
         
-        if isinstance(view_func, (Rule, RuleFolder)):
+        if isinstance(view_func, (Rule, RuleDirectory)):
             real_func = view_func.view_func
             analyzed = CallableAnalyzer(real_func)
             
@@ -2956,7 +2956,7 @@ class AppBase:
                 )
         
         if endpoint is None:
-            if isinstance(view_func, (Rule, RuleFolder)):
+            if isinstance(view_func, (Rule, RuleDirectory)):
                 endpoint = view_func.endpoint
             else:
                 try:
@@ -3015,12 +3015,12 @@ class AppBase:
             return rule
         
         if isinstance(actual_rule, Rule):
-            folder = RuleFolder.from_rule(actual_rule)
-            folder.add_rule(rule_processed, request_methods, parameters, subdomain)
-            self.rules[endpoint] = folder
-            return folder
+            directory = RuleDirectory.from_rule(actual_rule)
+            directory.add_rule(rule_processed, request_methods, parameters, subdomain)
+            self.rules[endpoint] = directory
+            return directory
         
-        # if isinstance(actual_rule, RuleFolder):
+        # if isinstance(actual_rule, RuleDirectory):
         actual_rule.add_rule(rule_processed, request_methods, parameters, subdomain)
         return actual_rule
     
@@ -3398,10 +3398,10 @@ class Blueprint(AppBase):
         Absolute path to the package on the filesystem.
     rules : `dict` of (`str`, `Any`)
         The added rules to the application or blueprint. The keys are their endpoint name.
-    static_folder : `None`, `str`
-        Absolute path to the static file's folder.
+    static_directory : `None`, `str`
+        Absolute path to the static file's directory.
     static_url_path : `None`, `str`
-        Url path to static files. By defaults relates to `static_folder`.
+        Url path to static files. By defaults relates to `static_directory`.
     
     teardown_request_functions : `None`, `list` of `async-callable`
         Functions which should run after a request is done even if exception occurs.
@@ -3423,8 +3423,8 @@ class Blueprint(AppBase):
         
         No parameters are passed to template context processors.
     
-    template_folder : `None`, `str`
-        The folder from where the templates should be loaded from.
+    template_directory : `None`, `str`
+        The directory from where the templates should be loaded from.
     
     url_default_functions : `None`, `list` of `async-callable`
         Keyword parameter preprocessors for ``url_for``.
@@ -3464,7 +3464,7 @@ class Blueprint(AppBase):
     """
     __slots__ = ('url_prefix', 'subdomain', 'parameters')
     
-    def __new__(cls, import_name, *, template_folder=None, root_path=None, static_folder=None,
+    def __new__(cls, import_name, *, template_directory=None, root_path=None, static_directory=None,
             static_url_path=None, url_prefix=None, subdomain=None, url_defaults=None):
         """
         Creates a new ``Blueprint``.
@@ -3473,15 +3473,15 @@ class Blueprint(AppBase):
         ----------
         import_name : `str`
             The name of the package or module that this app belongs to.
-        template_folder : `None`, `str` = `None`, Optional (Keyword only)
-            The folder from where the templates should be loaded from.
+        template_directory : `None`, `str` = `None`, Optional (Keyword only)
+            The directory from where the templates should be loaded from.
         root_path : `None`, `str` = `None`, Optional (Keyword only)
             Absolute path to the package on the filesystem.
-        static_folder : `None`, `str` = `None`, Optional (Keyword only)
+        static_directory : `None`, `str` = `None`, Optional (Keyword only)
             Path on top of the application route path for static files, which can be accessed trough the
             `static_url_path`.`.
         static_url_path : `None`, `str` = `None`, Optional (Keyword only)
-            Url path to static files. Defaults to `static_folder`'s value.
+            Url path to static files. Defaults to `static_directory`'s value.
         url_prefix : `None`, `str` = `None`, Optional (Keyword only)
             Url prefix for all the routes registered to the blueprint.
         subdomain : `None`, `str` = `None`, Optional (Keyword only)
@@ -3496,9 +3496,9 @@ class Blueprint(AppBase):
             Exception occurred meanwhile finding route path from import name.
         TypeError
             - If `import_name` was not given as `str`.
-            - If `template_folder` was not given neither as `None`, `str`.
+            - If `template_directory` was not given neither as `None`, `str`.
             - If `root_path` was not given neither as `None`, `str`.
-            - If `static_folder` was not given neither as `None` nor `str`.
+            - If `static_directory` was not given neither as `None` nor `str`.
             - If `static_url_path` was not given either as `None`, `str`.
             - If `url_prefix` was neither given as `None`, `str`.
             - If `url_prefix` contains a `path` rule part.
@@ -3514,7 +3514,7 @@ class Blueprint(AppBase):
         subdomain = _validate_subdomain(subdomain)
         parameters = _validate_parameters(url_defaults, 'url_defaults')
         
-        self = AppBase.__new__(cls, import_name, template_folder, root_path, static_folder, static_url_path)
+        self = AppBase.__new__(cls, import_name, template_directory, root_path, static_directory, static_url_path)
         self.url_prefix = url_prefix
         self.subdomain = subdomain
         self.parameters = parameters
@@ -3570,10 +3570,10 @@ class WebApp(AppBase):
         Absolute path to the package on the filesystem.
     rules : `dict` of (`str`, `Any`)
         The added rules to the application or blueprint. The keys are their endpoint name.
-    static_folder : `None`, `str`
-        Absolute path to the static file's folder.
+    static_directory : `None`, `str`
+        Absolute path to the static file's directory.
     static_url_path : `None`, `str`
-        Url path to static files. By defaults relates to `static_folder`.
+        Url path to static files. By defaults relates to `static_directory`.
     
     teardown_request_functions : `None`, `list` of `async-callable`
         Functions which should run after a request is done even if exception occurs.
@@ -3595,8 +3595,8 @@ class WebApp(AppBase):
         
         No parameters are passed to template context processors.
     
-    template_folder : `None`, `str`
-        The folder from where the templates should be loaded from.
+    template_directory : `None`, `str`
+        The directory from where the templates should be loaded from.
     
     url_default_functions : `None`, `list` of `async-callable`
         Keyword parameter preprocessors for ``url_for``.
@@ -3632,7 +3632,7 @@ class WebApp(AppBase):
     """
     __slots__ = ('_server',)
     
-    def __new__(cls, import_name, *, template_folder=None, root_path=None, static_folder='static',
+    def __new__(cls, import_name, *, template_directory=None, root_path=None, static_directory='static',
             static_url_path=None):
         """
         Creates a new ``WebApp``.
@@ -3641,15 +3641,15 @@ class WebApp(AppBase):
         ----------
         import_name : `str`
             The name of the package or module that this app belongs to.
-        template_folder : `None`, `str` = `None`, Optional (Keyword only)
-            The folder from where the templates should be loaded from.
+        template_directory : `None`, `str` = `None`, Optional (Keyword only)
+            The directory from where the templates should be loaded from.
         root_path : `None`, `str` = `None`, Optional (Keyword only)
             Absolute path to the package on the filesystem.
-        static_folder : `None`, `str` = `'static'`, Optional (Keyword only)
+        static_directory : `None`, `str` = `'static'`, Optional (Keyword only)
             Path on top of the application route path for static files, which can be accessed trough the
             `static_url_path`.
         static_url_path : `None`, `str` = `None`, Optional (Keyword only)
-            Url path to static files. Defaults to `static_folder`'s value.
+            Url path to static files. Defaults to `static_directory`'s value.
         
         Raises
         ------
@@ -3657,15 +3657,15 @@ class WebApp(AppBase):
             Exception occurred meanwhile finding route path from import name.
         TypeError
             - If `import_name` was not given as `str`.
-            - If `template_folder` was not given neither as `None`, `str`.
+            - If `template_directory` was not given neither as `None`, `str`.
             - If `root_path` was not given neither as `None`, `str`.
-            - If `static_folder` was not given neither as `None` nor `str`.
+            - If `static_directory` was not given neither as `None` nor `str`.
             - If `static_url_path` was not given either as `None`, `str`.
         ValueError
             - If `import_name` was given as an empty string.
             - If `root_path` was given as an empty string.
         """
-        self = AppBase.__new__(cls, import_name, template_folder, root_path, static_folder, static_url_path)
+        self = AppBase.__new__(cls, import_name, template_directory, root_path, static_directory, static_url_path)
         
         
         self._server = None
@@ -3683,7 +3683,7 @@ def _register_rules(application, blueprint_state_stack, rules, router, router_by
         The parent application.
     blueprint_state_stack : `None`, `tuple` of ``BluePrintState``
         Blueprint stack of the rule.
-    rules : `list` of (``Rule``, ``RuleFolder``)
+    rules : `list` of (``Rule``, ``RuleDirectory``)
         Rules of a blueprint or of an application to register.
     router : ``PathRouter``
         Router where rules are registered without subdomain
