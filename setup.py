@@ -35,7 +35,7 @@ setup(
         'scarletio.websocket',
     ],
     url = 'https://github.com/HuyaneMatsu/scarletio',
-    license = 'MIT',
+    license = 'BSD',
     author = 'HuyaneMatsu',
     author_email = 're.ism.tm@gmail.com',
     description = 'Asynchronous blackmagic & Witchcraft',
@@ -44,7 +44,7 @@ setup(
     classifiers = [
         'Development Status :: 4 - Beta',
         
-        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: BSD License',
         
         'Intended Audience :: Developers',
         
