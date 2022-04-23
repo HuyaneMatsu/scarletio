@@ -583,7 +583,8 @@ class _ClaimEndedCallback:
             return NotImplemented
         
         return self.executor is other.executor
-    
+
+
 class ClaimedExecutor:
     """
     Wrapper for claimed executor threads.
@@ -680,7 +681,7 @@ class ClaimedExecutor:
         return False
 
 
-class _execution_ended_cb:
+class ExecutionEndedCallback:
     """
     Future callback set to result waiter futures when calling ``Executor.run_in_executor``.
     
@@ -695,7 +696,7 @@ class _execution_ended_cb:
     
     def __init__(self, parent, executor):
         """
-        Creates a new ``_execution_ended_cb`` with the given parameters.
+        Creates a new ``ExecutionEndedCallback`` with the given parameters.
         
         Parameters
         ----------
@@ -867,7 +868,7 @@ class Executor:
         future = self.create_future()
         executor = self._get_free_executor()
         self.running_executors.add(executor)
-        future.add_done_callback(_execution_ended_cb(self, executor))
+        future.add_done_callback(ExecutionEndedCallback(self, executor))
         executor.queue.set_result(ExecutionPair(func, future,),)
         return future
     
@@ -930,9 +931,9 @@ class Executor:
         -------
         executor : ``ExecutorThread``
         """
-        executors = self.free_executors
-        if executors:
-            executor = executors.pop()
+        free_executors = self.free_executors
+        if free_executors:
+            executor = free_executors.pop()
         else:
             executor = ExecutorThread()
         
