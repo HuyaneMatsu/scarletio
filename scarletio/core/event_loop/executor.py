@@ -312,7 +312,7 @@ class SyncQueue:
         new : ``SyncQueue``
         """
         with self._lock:
-            new = object.__init__(type(self))
+            new = object.__new__(type(self))
             
             new._results = self._results.copy()
             new._waiter = None

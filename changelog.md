@@ -1,8 +1,18 @@
+## 1.0.26 *\[2022-04-24\]*
+
+#### Bug fixes
+
+- `SyncQueue.copy` raised `AttributeError`. (WizzyGeek#2356)
+
 ## 1.0.25  *\[2022-04-23\]*
+
+#### Improvements
 
 - Add `get_last_module_frame`.
 
 ## 1.0.24 *\[2022-04-18\]*
+
+#### Improvements
 
 - Add `stop_on_interruption` parameter to `run_asynchronous_interactive_console`.
 - Add `stop_on_interruption` parameter to `AsynchronousInteractiveConsole`.
