@@ -1,5 +1,6 @@
 __all__ = ('JSONDecodeError', 'from_json', 'to_json')
 
+from enum import Enum
 from json import JSONDecodeError, dumps as dump_to_json, loads as from_json
 
 from .docs import has_docs
@@ -12,7 +13,8 @@ def added_json_serializer(obj):
     
     Parameters
     ----------
-    obj : `iterable`
+    obj : `iterable`, `Enum`
+        The value to json serialise.
     
     Returns
     -------
@@ -23,11 +25,13 @@ def added_json_serializer(obj):
     TypeError
         If the given object is not json serializable.
     """
-    obj_type = obj.__class__
-    if hasattr(obj_type, '__iter__'):
+    if hasattr(obj, '__iter__'):
         return list(obj)
     
-    raise TypeError(f'Object of type {obj_type.__name__!r} is not JSON serializable.',)
+    if isinstance(obj, Enum):
+        return obj.value
+    
+    raise TypeError(f'Object of type {obj.__class__.__name__!r} is not JSON serializable.',)
 
 
 @has_docs
