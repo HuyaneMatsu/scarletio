@@ -364,7 +364,7 @@ def is_hashable(object_):
     
     Returns
     -------
-    is_iterable : `bool`
+    is_hashable : `bool`
     """
     try:
         hasher_function = getattr(type(object_), '__hash__')
