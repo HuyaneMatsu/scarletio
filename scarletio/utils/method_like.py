@@ -9,7 +9,7 @@ from .docs import has_docs
 class SubCheckType(type):
     """
     Metaclass, which can be used for subclass checks. It's type instances should implement a `.__subclasses__`
-    class attribute, which contain's all of it's "subclasses".
+    class attribute, which contains all of it's "subclasses".
     """
     @has_docs
     def __instancecheck__(cls, instance):

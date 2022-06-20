@@ -3,6 +3,7 @@ from .async_utils import *
 from .base_method import *
 from .code import *
 from .compact import *
+from .compound_type import *
 from .dict_iterator_bases import *
 from .dict_update_iterable_iterator import *
 from .docs import *
@@ -37,6 +38,7 @@ __all__ = (
     *base_method.__all__,
     *code.__all__,
     *compact.__all__,
+    *compound_type.__all__,
     *dict_iterator_bases.__all__,
     *dict_update_iterable_iterator.__all__,
     *docs.__all__,

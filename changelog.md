@@ -1,4 +1,18 @@
+## 1.0.28 *\[2022-06-??\]*
+
+#### Improvements
+
+- Add `CallableAnalyzer.__mod__`.
+- Add `CallableAnalyzer.__eq__`.
+- Add `Parameter.__eq__`.
+- Add `CallableAnalyzer.iter_non_reserved_parameters`.
+- Add `CompoundComponent`.
+- Add `CompoundTypeMetaType`.
+- Add `Theory`.
+
 ## 1.0.27 *\[2022-05-17\]*
+
+#### Improvements
 
 - `to_json` now accepts enums.
 

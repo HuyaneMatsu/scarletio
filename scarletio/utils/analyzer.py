@@ -1,6 +1,7 @@
 __all__ = ('CallableAnalyzer', 'RichAnalyzer')
 
 import sys
+from itertools import zip_longest
 from types import FunctionType
 
 from .async_utils import is_coroutine_function, is_coroutine_generator_function
@@ -96,6 +97,46 @@ class Parameter:
         repr_parts.append('>')
         
         return ''.join(repr_parts)
+    
+    
+    def __eq__(self, other):
+        """Returns whether teh two parameters are equal."""
+        if type(self) is not type(other):
+            return NotImplemented
+        
+        # has_annotation
+        has_annotation = self.has_annotation
+        if (has_annotation != other.has_annotation):
+            return False
+        
+        if has_annotation:
+            # annotation
+            if self.annotation != other.annotation:
+                return False
+        
+        # has_default
+        has_default = self.has_default
+        if (has_default != other.has_default):
+            return False
+        
+        if has_default:
+            # default
+            if (self.default is not other.default) or (self.default != other.default):
+                return False
+        
+        # name
+        if self.name != other.name:
+            return False
+        
+        # positionality
+        if self.positionality != other.positionality:
+            return False
+        
+        # reserved
+        if self.reserved != other.reserved:
+            return False
+        
+        return True
     
     
     def is_positional_only(self):
@@ -640,6 +681,34 @@ class CallableAnalyzer:
         return self
     
     
+    def __eq__(self, other):
+        """Returns whether the two analyzers are equal."""
+        if type(self) is not type(other):
+            return NotImplemented
+        
+        if self.callable != other.callable:
+            return False
+        
+        return True
+    
+    
+    def __mod__(self, other):
+        """Returns whether the two analyzers kinda match."""
+        if type(self) is not type(other):
+            return NotImplemented
+        
+        if self.instance_to_async != other.instance_to_async:
+            return False
+        
+        for self_parameter, other_parameter in zip_longest(
+            self.iter_non_reserved_parameters(), other.iter_non_reserved_parameters()
+        ):
+            if self_parameter != other_parameter:
+                return False
+        
+        return True
+    
+    
     def is_async(self):
         """
         Returns whether the analyzed callable is async.
@@ -946,6 +1015,21 @@ class CallableAnalyzer:
                 return True
         
         return False
+    
+    
+    def iter_non_reserved_parameters(self):
+        """
+        Iterates over the non-reserved parameters of the analyzer.
+        
+        This method is an iterable generator.
+        
+        Yields
+        ------
+        parameter : ``Parameter``
+        """
+        for parameter in self.parameters:
+            if not parameter.reserved:
+                yield parameter
 
 
 class RichAnalyzerParameterAccess:
