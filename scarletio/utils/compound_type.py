@@ -190,6 +190,9 @@ def collect_attributes_per_type_from_type_attributes(type_attributes):
     
     
     for attribute_name, attribute_value in type_attributes.items():
+        if attribute_name == '__annotations__':
+            continue
+        
         if attribute_name in {'__module__', '__qualname__'}:
             leftover_type_attributes[attribute_name] = attribute_value
             continue
@@ -406,7 +409,6 @@ class CompoundMetaType(type):
                 f'`other` must be a type, got {other!r}.'
             )
         
-        
         if not issubclass(other, type):
             other = type(other)
         
@@ -424,7 +426,7 @@ class CompoundMetaType(type):
         merge_type = type(
             f'{other.__name__}CompoundMergeType',
             (
-                other,
+                cls, other,
             ), {
                 '__source_meta_type__': other,
             }
@@ -608,7 +610,7 @@ class CompoundLayer:
         
         type_directory = type_.__dict__
         for attribute_name in dir(type_):
-            if attribute_name in {'__doc__', '__slots__'}:
+            if attribute_name in {'__doc__', '__slots__', '__annotations__'}:
                 continue
             
             try:
@@ -830,7 +832,7 @@ class ImplementationDetail:
         elif self.is_get_descriptor():
             repr_parts.append('get_descriptor')
         
-        elif self.is_method:
+        elif self.is_method():
             repr_parts.append('method')
             
         
