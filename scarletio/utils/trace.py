@@ -257,9 +257,10 @@ def format_callback(func, args=None, kwargs=None):
             sub_result.append(')')
             result.append(''.join(sub_result))
         
-        try:
+        if hasattr(func, 'func'):
             wrapped = func.func
-        except AttributeError:
+        
+        else:
             if (type(func) is MethodType) and hasattr(type(func.__self__), 'get_coroutine'):
                 coroutine = func.__self__.get_coroutine()
                 coroutine_repr = getattr(coroutine, '__qualname__', None)

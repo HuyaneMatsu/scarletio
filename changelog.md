@@ -6,9 +6,13 @@
 - Add `CallableAnalyzer.__eq__`.
 - Add `Parameter.__eq__`.
 - Add `CallableAnalyzer.iter_non_reserved_parameters`.
-- Add `CompoundComponent`.
+- Add `Compound`.
 - Add `CompoundTypeMetaType`.
 - Add `Theory`.
+
+#### Bug fixes
+
+- Fix infinite recursion in `_HandleCancellerBase.__repr__` caused by circular reference.
 
 ## 1.0.27 *\[2022-05-17\]*
 

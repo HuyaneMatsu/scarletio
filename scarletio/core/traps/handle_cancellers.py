@@ -66,7 +66,7 @@ class _HandleCancellerBase:
         
         if (handle is not None):
             repr_parts.append(' handle=')
-            repr_parts.append(repr(handle))
+            repr_parts.append(handle._get_repr_without(self))
         
         repr_parts.append('>')
         return ''.join(repr_parts)

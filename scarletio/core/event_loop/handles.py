@@ -45,6 +45,37 @@ class Handle:
     
     def __repr__(self):
         """Returns the handle's representation."""
+        return self._create_repr(False, None)
+    
+    
+    def _get_repr_without(self, without):
+        """
+        Returns the representation of the handle without showing the representation of the given object.
+        
+        Parameters
+        ----------
+        without : `object`
+            The value to ignore.
+        
+        Returns
+        -------
+        representation : `str`
+        """
+        return self._create_repr(True, without)
+    
+    
+    def _create_repr(self, expect, expected_value):
+        """
+        Returns the representation of the handle.
+        
+        Parameters
+        -----------
+        expect : `bool`
+            Whether `expected_value` should be ignored.
+        expected_value : `object`
+            The value to ignore.
+        """
+
         repr_parts = [
             '<',
             self.__class__.__name__,
@@ -52,18 +83,35 @@ class Handle:
         
         if self.cancelled:
             repr_parts.append(' cancelled')
+        
         else:
             repr_parts.append(' func=')
-            repr_parts.append(repr(self.func))
+            func = self.func
+            if expect and (func is expected_value):
+                func_repr = '...'
+            
+            else:
+                func_repr = repr(func)
+            
+            repr_parts.append(func_repr)
             repr_parts.append('(')
             
-            args = self.args
-            limit = len(args)
+            parameters = self.args
+            limit = len(parameters)
             if limit:
                 index = 0
                 while True:
-                    arg = args[index]
-                    repr_parts.append(repr(arg))
+                    parameter = parameters[index]
+                    
+                    repr_parts.append(' func=')
+                    func = self.func
+                    if expect and (func is expected_value):
+                        parameter_repr = '...'
+                    
+                    else:
+                        parameter_repr = repr(parameter)
+                        
+                    repr_parts.append(parameter_repr)
                     
                     index += 1
                     if index == limit:
@@ -77,6 +125,7 @@ class Handle:
         repr_parts.append('>')
         
         return ''.join(repr_parts)
+    
     
     def cancel(self):
         """Cancels the handle if not yet cancelled."""
@@ -202,20 +251,24 @@ class TimerHandle(Handle):
         if type(self) is not type(other):
             return NotImplemented
         
-        return (self.when       == other.when       and
-                self.func       == other.func       and
-                self.args       == other.args       and
-                self.cancelled  == other.cancelled      )
+        return (
+            self.when       == other.when       and
+            self.func       == other.func       and
+            self.args       == other.args       and
+            self.cancelled  == other.cancelled
+        )
     
     def __ne__(self, other):
         """Returns whether the two timer handles are not equal."""
         if type(self) is not type(other):
             return NotImplemented
         
-        return (self.when       != other.when       or
-                self.func       != other.func       or
-                self.args       != other.args       or
-                self.cancelled  != other.cancelled      )
+        return (
+            self.when       != other.when       or
+            self.func       != other.func       or
+            self.args       != other.args       or
+            self.cancelled  != other.cancelled
+        )
     
     def __le__(self, other):
         """Returns whether this timer handle should be called earlier than the other, or whether the two are equal."""
