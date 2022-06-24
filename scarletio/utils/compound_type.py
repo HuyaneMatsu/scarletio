@@ -1,4 +1,4 @@
-__all__ = ('Compound', 'Theory')
+__all__ = ('Compound', 'CompoundMetaType', 'Theory')
 
 import reprlib
 from itertools import chain
