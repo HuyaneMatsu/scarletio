@@ -100,7 +100,7 @@ class Parameter:
     
     
     def __eq__(self, other):
-        """Returns whether teh two parameters are equal."""
+        """Returns whether the two parameters are equal."""
         if type(self) is not type(other):
             return NotImplemented
         

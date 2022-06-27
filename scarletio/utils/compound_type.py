@@ -1033,7 +1033,7 @@ class CompoundLogicUnit:
     
     def iter_all_layer(self):
         """
-        Iterates over all teh registered layers in order.
+        Iterates over all the registered layers in order.
         
         This method is an iterable generator.
         
