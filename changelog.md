@@ -1,3 +1,9 @@
+## 1.0.29 *\[2022-??-??\]*
+
+#### Bug fixes
+
+- Compound built types had a few internal attributes badly assigned.
+
 ## 1.0.28 *\[2022-06-27\]*
 
 #### Improvements
