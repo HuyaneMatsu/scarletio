@@ -168,7 +168,7 @@ def collect_attributes_per_type_from_type_attributes(type_attributes):
     implemented_type_attributes : `None`, `dict` of (`str`, `Any`) items
         Implemented type attributes.
     leftover_type_attributes : `dict` of (`str`, `Any`) items
-        Additional type attributes which should be touched.
+        Additional type attributes which should not be touched.
     """
     instance_attributes = type_attributes.pop('__slots__', None)
     if instance_attributes is None:
@@ -610,7 +610,7 @@ class CompoundLayer:
         
         type_directory = type_.__dict__
         for attribute_name in dir(type_):
-            if attribute_name in {'__doc__', '__slots__', '__annotations__'}:
+            if attribute_name in {'__doc__', '__slots__', '__annotations__', '__module__', '__qualname__', '__class__'}:
                 continue
             
             try:
@@ -679,6 +679,9 @@ class CompoundLayer:
         Returns
         -------
         self : ``ComponentLayer``
+            The created component layer.
+        leftover_type_attributes : `dict` of (`str`, `Any`) items
+            Additional type attributes which should not be touched.
         """
         (
             instance_attributes,
@@ -687,12 +690,16 @@ class CompoundLayer:
             leftover_type_attributes,
         ) = collect_attributes_per_type_from_type_attributes(type_attributes)
         
-        return cls(
-            type_name,
-            instance_attributes,
-            theoretical_type_attributes,
-            implemented_type_attributes,
-            implemented,
+        
+        return (
+            cls(
+                type_name,
+                instance_attributes,
+                theoretical_type_attributes,
+                implemented_type_attributes,
+                implemented,
+            ),
+            leftover_type_attributes,
         )
     
     
@@ -1367,7 +1374,7 @@ def build_type_structure(type_name, base_types, type_attributes):
     base_types : `tuple` of `type`
         The types to inherit from.
     type_attributes : `dict` of (`str`, `Any`) items
-            The attributes defined inside of the type body.
+        The attributes defined inside of the type body.
     
     Returns
     -------
@@ -1390,7 +1397,8 @@ def build_type_structure(type_name, base_types, type_attributes):
     """
     direct_inherit_type, components = separate_base_type_from_components(base_types)
     
-    logic = CompoundLogicUnit(CompoundLayer.from_name_and_attributes(type_name, type_attributes))
+    base_layer, new_type_attributes = CompoundLayer.from_name_and_attributes(type_name, type_attributes)
+    logic = CompoundLogicUnit(base_layer)
     
     if (direct_inherit_type is not None):
         logic.add_base_layer(CompoundLayer.from_type(direct_inherit_type, implemented=True))
@@ -1450,13 +1458,10 @@ def build_type_structure(type_name, base_types, type_attributes):
     
     new_instance_attributes.sort()
     
-    new_type_attributes = {
-        '__slots__': tuple(new_instance_attributes)
-    }
+    new_type_attributes['__slots__'] = tuple(new_instance_attributes)
     
     for attribute_name, implementation_detail in type_attribute_implementations.items():
         new_type_attributes[attribute_name] = implementation_detail.implementation
-    
     
     if direct_inherit_type is None:
         new_base_types = ()
