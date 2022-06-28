@@ -168,12 +168,12 @@ def test_WeakMap_copy():
     
     test_case = weak_map_1.copy()
     
-    vampytest.assert_is(weak_map_1, not test_case)
+    vampytest.assert_is_not(weak_map_1, test_case)
     vampytest.assert_eq(weak_map_1, test_case)
     
     test_case = weak_map_empty.copy()
     
-    vampytest.assert_is(weak_map_empty, not test_case)
+    vampytest.assert_is_not(weak_map_empty, test_case)
     vampytest.assert_eq(weak_map_empty, test_case)
 
 

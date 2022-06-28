@@ -327,14 +327,14 @@ def test_MultiValueDictionary_copy():
     
     test_case = multi_value_dictionary.copy()
     
-    vampytest.assert_is(test_case, not multi_value_dictionary)
+    vampytest.assert_is_not(test_case, multi_value_dictionary)
     vampytest.assert_eq(test_case, multi_value_dictionary)
     
     test_case['a'] = 'd'
     vampytest.assert_ne(test_case, multi_value_dictionary)
     
     test_case = multi_value_dictionary_empty.copy()
-    vampytest.assert_is(test_case, not multi_value_dictionary_empty)
+    vampytest.assert_is_not(test_case, multi_value_dictionary_empty)
     vampytest.assert_eq(test_case, multi_value_dictionary_empty)
 
 

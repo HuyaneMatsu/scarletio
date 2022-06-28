@@ -66,7 +66,7 @@ def test_WeakSet_and():
     vampytest.assert_eq(len(test_case), 0)
     
     intersection = test_case.__and__([1])
-    vampytest.assert_is(intersection, not NotImplemented)
+    vampytest.assert_is_not(intersection, NotImplemented)
     vampytest.assert_eq(len(intersection), 0)
 
 
@@ -619,12 +619,12 @@ def test_WeakSet_copy():
     
     test_case = weak_set_1.copy()
     
-    vampytest.assert_is(weak_set_1, not test_case)
+    vampytest.assert_is_not(weak_set_1, test_case)
     vampytest.assert_eq(weak_set_1, test_case)
     
     test_case = weak_set_empty.copy()
     
-    vampytest.assert_is(weak_set_empty, not test_case)
+    vampytest.assert_is_not(weak_set_empty, test_case)
     vampytest.assert_eq(weak_set_empty, test_case)
 
 

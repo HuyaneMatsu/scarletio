@@ -416,7 +416,7 @@ def test_HybridValueDictionary_values():
         ),
     )
     vampytest.assert_in(value_1, values)
-    vampytest.assert_not_in((value_2, values))
+    vampytest.assert_not_in(value_2, values)
     
     hybrid_value_dictionary_empty = HybridValueDictionary()
     

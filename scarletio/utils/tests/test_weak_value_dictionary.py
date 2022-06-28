@@ -172,11 +172,11 @@ def test_WeakValueDictionary_copy():
     
     test_case = weak_value_dictionary.copy()
     
-    vampytest.assert_is(test_case, not weak_value_dictionary)
+    vampytest.assert_is_not(test_case, weak_value_dictionary)
     vampytest.assert_eq(test_case, weak_value_dictionary)
     
     test_case = weak_value_dictionary_empty.copy()
-    vampytest.assert_is(test_case, not weak_value_dictionary_empty)
+    vampytest.assert_is_not(test_case, weak_value_dictionary_empty)
     vampytest.assert_eq(test_case, weak_value_dictionary_empty)
 
 
