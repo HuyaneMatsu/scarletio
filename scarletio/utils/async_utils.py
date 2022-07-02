@@ -1,6 +1,6 @@
 __all__ = (
     'is_awaitable', 'is_coroutine', 'is_coroutine_function', 'is_coroutine_generator',
-    'is_coroutine_generator_function', 'to_coroutine'
+    'is_coroutine_generator_function', 'is_generator', 'is_generator_function', 'to_coroutine'
 )
 
 import sys
@@ -10,10 +10,13 @@ from .code import CO_ASYNC_GENERATOR, CO_COROUTINE_ALL, CO_GENERATOR, CO_ITERABL
 from .docs import has_docs, set_docs
 
 
+FUNCTION_TYPES = (FunctionType, MethodType)
+
+
 @has_docs
 def is_coroutine_function(func):
     """
-    Returns whether the given `obj` is a coroutine function, so is created with `async def`.
+    Returns whether the given object is a coroutine function, so is created with `async def`.
     
     Parameters
     ----------
@@ -23,7 +26,7 @@ def is_coroutine_function(func):
     -------
     is_coroutine_function : `bool`
     """
-    if isinstance(func, (FunctionType, MethodType)) and func.__code__.co_flags & CO_COROUTINE_ALL:
+    if isinstance(func, FUNCTION_TYPES) and func.__code__.co_flags & CO_COROUTINE_ALL:
         return True
     else:
         return False
@@ -32,7 +35,7 @@ def is_coroutine_function(func):
 @has_docs
 def is_coroutine_generator_function(func):
     """
-    Returns whether the given `obj` is a coroutine generator function, so is created with `async def` and uses `yield`
+    Returns whether the given object is a coroutine generator function, so is created with `async def` and uses `yield`
     statement.
     
     Parameters
@@ -43,7 +46,26 @@ def is_coroutine_generator_function(func):
     -------
     is_coroutine_function_generator : `bool`
     """
-    if isinstance(func, (FunctionType, MethodType)) and func.__code__.co_flags & CO_ASYNC_GENERATOR:
+    if isinstance(func, FUNCTION_TYPES) and func.__code__.co_flags & CO_ASYNC_GENERATOR:
+        return True
+    else:
+        return False
+
+
+@has_docs
+def is_generator_function(func):
+    """
+    Returns whether the given `func` is a generator function, so is created with `def` and uses `yield` statement.
+    
+    Parameters
+    ----------
+    func : `Any`
+    
+    Returns
+    -------
+    is_generator_function : `bool`
+    """
+    if isinstance(func, FUNCTION_TYPES) and func.__code__.co_flags & CO_GENERATOR:
         return True
     else:
         return False
@@ -52,7 +74,7 @@ def is_coroutine_generator_function(func):
 @has_docs
 def is_coroutine(obj):
     """
-    Returns whether the given `obj` is a coroutine created by an `async def` function.
+    Returns whether the given object is a coroutine, so is created with an `async def`.
     
     Parameters
     ----------
@@ -62,13 +84,22 @@ def is_coroutine(obj):
     -------
     is_coroutine : `bool`
     """
-    return isinstance(obj, (CoroutineType, GeneratorType))
+    if isinstance(obj, CoroutineType):
+        return True
+
+    if isinstance(obj, GeneratorType):
+        if obj.gi_code.co_flags & CO_ITERABLE_COROUTINE:
+            return True
+        else:
+            return False
+    
+    return False
 
 
 @has_docs
 def is_awaitable(obj):
     """
-    Returns whether the given `obj` can be used in `await` expression.
+    Returns whether the given object can be used in `await` expression.
     
     Parameters
     ----------
@@ -78,7 +109,7 @@ def is_awaitable(obj):
     -------
     is_awaitable : `bool`
     """
-    if isinstance(obj, (CoroutineType, GeneratorType)):
+    if is_coroutine(obj):
         return True
     
     if hasattr(type(obj), '__await__'):
@@ -90,8 +121,12 @@ def is_awaitable(obj):
 @has_docs
 def is_coroutine_generator(obj):
     """
-    Returns whether the given `obj` is a coroutine generator created by an `async def` function, and can be used inside
-    of an `async for` loop.
+    Returns whether the given object is a coroutine generator, so is created with `async def` and uses `yield`
+    statement, and could be used inside of an `async for` loop.
+    
+    Parameters
+    ----------
+    obj : `Any`
     
     Returns
     -------
@@ -110,6 +145,23 @@ def is_coroutine_generator(obj):
         return True
     
     return False
+
+
+@has_docs
+def is_generator(obj):
+    """
+    Returns whether the given object is a generator, so is created with an `def` function and uses `yield` statement,
+    and could be used inside of a `for` loop.
+    
+    Parameters
+    ----------
+    obj : `Any`
+    
+    Returns
+    -------
+    is_coroutine_generator : `bool`
+    """
+    return isinstance(obj, GeneratorType)
 
 
 if sys.version_info >= (3, 11, 0):

@@ -708,7 +708,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             The awaitable to run.
         timeout : `None`, `float` = `None`, Optional
             Timeout after the awaitable should be cancelled. Defaults to `None`.
-
+        
         Returns
         -------
         result : `Any`

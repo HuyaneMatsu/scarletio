@@ -583,7 +583,7 @@ class CallableAnalyzer:
                     parameter.has_default = True
                     parameter.default = default
                 
-                if index<positional_only_parameter_count:
+                if index < positional_only_parameter_count:
                     parameter.positionality = PARAMETER_TYPE_POSITIONAL_ONLY
                 else:
                     parameter.positionality = PARAMETER_TYPE_POSITIONAL_AND_KEYWORD

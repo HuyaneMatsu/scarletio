@@ -1,8 +1,15 @@
-## 1.0.29 *\[2022-??-??\]*
+## 1.0.29 *\[2022-07-02\]*
+
+#### Improvements
+
+- Add `is_generator_function`.
+- Add `is_generator`.
 
 #### Bug fixes
 
 - Compound built types had a few internal attributes badly assigned.
+- `is_coroutine` could return incorrect value.
+- `is_awaitable` could return incorrect value.
 
 ## 1.0.28 *\[2022-06-27\]*
 
