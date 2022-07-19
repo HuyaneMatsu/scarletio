@@ -1,3 +1,9 @@
+## 1.0.30 *\[2022-07-19\]*
+
+#### Improvements
+
+- `AsynchronousInteractiveConsole` wont show internal frames anymore when an exception traceback is shown.
+
 ## 1.0.29 *\[2022-07-02\]*
 
 #### Improvements

@@ -9,7 +9,7 @@ from types import FunctionType
 
 from .. import __package__ as PACKAGE_NAME
 from ..core import Future, create_event_loop, get_event_loop
-from ..utils import is_awaitable
+from ..utils import is_awaitable, render_exception_into
 
 
 try:
@@ -173,6 +173,40 @@ def run_code_callback(console, code):
         console.task = task
 
 
+def _ignore_console_frames(file_name, name, line_number, line):
+    """
+    Ignores the frames of the asynchronous console.
+    
+    Parameters
+    ----------
+    file_name : `str`
+        The frame's respective file's name.
+    name : `str`
+        The frame's respective function's name.
+    line_number : `int`
+        The line's index where the exception occurred.
+    line : `str`
+        The frame's respective stripped line.
+    
+    Returns
+    -------
+    should_show_frame : `bool`
+        Whether the frame should be shown.
+    """
+    should_show_frame = True
+    
+    if file_name == __file__:
+        if name == 'run_code_callback':
+            if line == 'coroutine = function()':
+                should_show_frame = False
+        
+        elif name == 'runcode':
+            if line == 'result = self.future.sync_wrap().wait()':
+                should_show_frame = False
+    
+    return should_show_frame
+
+
 class AsynchronousInteractiveConsole(InteractiveConsole):
     """
     Asynchronous interactive console.
@@ -262,8 +296,7 @@ class AsynchronousInteractiveConsole(InteractiveConsole):
             if isinstance(err, SystemExit):
                 raise
             
-            
-            self.showtraceback()
+            sys.stdout.write(''.join(render_exception_into(err, [], filter=_ignore_console_frames)))
             
             if isinstance(err, KeyboardInterrupt):
                 if self.stop_on_interruption:

@@ -443,7 +443,7 @@ class CallableAnalyzer:
                     real_function = callable_.__init__
                     if not callable(real_function):
                         raise TypeError(
-                            f'`{callable_!r}.__init__` should be callable, got {real_function.__class__.__name__}; '
+                            f'`{callable_!r}.__init__` should be callable, got {type(real_function).__name__}; '
                             f'{real_function!r}.'
                         )
                     
