@@ -1,3 +1,12 @@
+## 1.0.31 *\[2022-07-24\]*
+
+#### Improvements
+
+- Frame accesses are now normalized with a proxy type.
+- `format_coroutine` now handles coroutine generators as expected.
+- `format_coroutine` now handles running states as expected.
+- Multiline expressions now show up correctly in tracebacks.
+
 ## 1.0.30 *\[2022-07-19\]*
 
 #### Improvements

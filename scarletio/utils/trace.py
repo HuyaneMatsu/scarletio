@@ -1,7 +1,12 @@
 __all__ = ('ignore_frame', 'render_exception_into', 'render_frames_into', 'should_ignore_frame',)
 
-import linecache, reprlib, warnings
-from types import CoroutineType, GeneratorType, MethodType
+import reprlib, warnings
+from linecache import checkcache as check_file_cache, getline as get_file_line
+from types import (
+    AsyncGeneratorType as CoroutineGeneratorType, CoroutineType, FrameType, GeneratorType, MethodType, TracebackType
+)
+
+from .docs import copy_docs
 
 
 IGNORED_FRAME_LINES = {}
@@ -292,7 +297,7 @@ def format_coroutine(coroutine):
     
     Parameters
     ----------
-    coroutine : `CoroutineType`, `GeneratorType` (or any compatible cyi or builtin)
+    coroutine : `CoroutineType`, `GeneratorType`, `CoroutineGeneratorType`
         The coroutine to get representation of.
     
     Returns
@@ -300,47 +305,281 @@ def format_coroutine(coroutine):
     result : `str`
         The formatted coroutine.
     """
-    if not (hasattr(coroutine, 'cr_code') or hasattr(coroutine, 'gi_code')):
-        # Cython or builtin
-        name = getattr(coroutine, '__qualname__', None)
-        if name is None:
-            name = getattr(coroutine, '__name__', None)
-            if name is None: # builtins might reach this part
-                name = coroutine.__class__.__name__
-        
-        if type(coroutine) is GeneratorType:
-            running = coroutine.gi_running
-        elif type(coroutine) is CoroutineType:
-            running = coroutine.cr_running
-        else:
-            running = False
-        
-        if running:
-            state = 'running'
-        else:
-            state = 'done'
-        
-        return f'{name}() {state}'
-    
-    name = format_callback(coroutine)
-    
-    if type(coroutine) is GeneratorType:
+    coroutine_type = type(coroutine)
+    if coroutine_type is GeneratorType:
         code = coroutine.gi_code
         frame = coroutine.gi_frame
-    else:
+        running = coroutine.gi_running
+    
+    elif coroutine_type is CoroutineType:
         code = coroutine.cr_code
         frame = coroutine.cr_frame
+        running = coroutine.cr_running
     
-    file_name = code.co_filename
+    elif coroutine_type is CoroutineGeneratorType:
+        code = coroutine.ag_code
+        frame = coroutine.ag_frame
+        running = coroutine.ag_running
     
-    if frame is None:
-        line_number = code.co_firstlineno
-        state = 'done'
     else:
-        line_number = frame.f_lineno
+        code = None
+        frame = None
+        running = -1
+    
+    # Cython or builtin
+    name = getattr(coroutine, '__qualname__', None)
+    if name is None:
+        name = getattr(coroutine, '__name__', None)
+        if name is None: # builtins might reach this part
+            name = coroutine_type.__name__
+    
+
+    if running == True:
         state = 'running'
     
-    return f'{name} {state} defined at {file_name}:{line_number}'
+    elif running == False:
+        if frame is None:
+            state = 'finished'
+        
+        else:
+            state = 'blocked'
+    
+    else:
+        state = 'unknown state'
+    
+    
+    if running == -1:
+        name = f'{name}()'
+    else:
+        name = format_callback(coroutine)
+    
+    if (code is None):
+        location = 'unknown location'
+    
+    else:
+        file_name = code.co_filename
+        
+        if frame is None:
+            line_number = code.co_firstlineno
+        else:
+            line_number = frame.f_lineno
+        
+        location = f'{file_name}:{line_number}'
+    
+    return f'{name} {state} defined at {location}'
+
+
+STRING_TYPE_NONE = 0
+STRING_TYPE_SINGLE_QUOTE = 1
+STRING_TYPE_DOUBLE_QUOTE = 2
+STRING_TYPE_TRIPLE_SINGLE_QUOTE = 3
+STRING_TYPE_TRIPLE_DOUBLE_QUOTE = 4
+
+PARENTHESES_RELATION = {
+    ')': '(',
+    ']': '[',
+    '}': '{',
+}
+
+def get_expression_lines(file_name, line_number):
+    """
+    Gets all the lines of the expression starting at the given position.
+    
+    Parameters
+    ----------
+    file_name : `file_name`
+        The respective file's name.
+    line_number : `int`
+        The expression's first line's index.
+    
+    Returns
+    -------
+    expression_lines : `str`
+        The lines of the expression.
+    """
+    parentheses_stack = []
+    string_type = STRING_TYPE_NONE
+    lines = []
+    
+    line_number_position = line_number
+    while True:
+        line = get_file_line(file_name, line_number_position, None)
+        if not line:
+            break
+        
+        lines.append(line)
+        
+        parsing_failed = False
+        line_escaped = False
+        
+        character_index = -1
+        character_limit = len(line)
+        
+        while True:
+            character_index += 1
+            if character_index >= character_limit:
+                break
+            
+            character = line[character_index]
+            
+            if string_type == STRING_TYPE_NONE:
+                if character in {'(', '[', '{'}:
+                    parentheses_stack.append(character)
+                    continue
+                
+                if character in {')', ']', '}'}:
+                    if not parentheses_stack:
+                        parsing_failed = True
+                        break
+                    
+                    
+                    if parentheses_stack[-1] != PARENTHESES_RELATION[character]:
+                        parsing_failed = True
+                        break
+                    
+                    del parentheses_stack[-1]
+                    continue
+                
+                if character == '\'':
+                    if (
+                        (character_index + 2 < character_limit) and
+                        (line[character_index + 1] == '\'') and
+                        (line[character_index + 2] == '\'')
+                    ):
+                        character_index += 2
+                        string_type = STRING_TYPE_TRIPLE_SINGLE_QUOTE
+                    else:
+                        string_type = STRING_TYPE_SINGLE_QUOTE
+                    
+                    continue
+                
+                if character == '"':
+                    if (
+                        (character_index + 2 < character_limit) and
+                        (line[character_index + 1] == '\"') and
+                        (line[character_index + 2] == '\"')
+                    ):
+                        character_index += 2
+                        string_type = STRING_TYPE_TRIPLE_DOUBLE_QUOTE
+                    else:
+                        string_type = STRING_TYPE_DOUBLE_QUOTE
+                    
+                    continue
+                
+                if character == '#':
+                    break
+                
+                if character == '\\':
+                    line_escaped = True
+                    break
+            
+            else:
+                if character == '\n':
+                    if string_type in (STRING_TYPE_SINGLE_QUOTE, STRING_TYPE_DOUBLE_QUOTE):
+                        parsing_failed = True
+                        break
+                    
+                    continue
+                
+                if character == '\\':
+                    character_index += 1
+                    
+                    if string_type in (STRING_TYPE_SINGLE_QUOTE, STRING_TYPE_DOUBLE_QUOTE):
+                        if (character_index >= character_limit):
+                            parsing_failed = True
+                            break
+                    
+                    continue
+                
+                
+                if character == '\'':
+                    if string_type == STRING_TYPE_SINGLE_QUOTE:
+                        string_type = STRING_TYPE_NONE
+                        continue
+                    
+                    if string_type == STRING_TYPE_TRIPLE_SINGLE_QUOTE:
+                        if (
+                            (character_index + 2 < character_limit) and
+                            (line[character_index + 1] == '\'') and
+                            (line[character_index + 2] == '\'')
+                        ):
+                            character_index += 2
+                            string_type = STRING_TYPE_NONE
+                            continue
+                    
+                    continue
+                
+                if character == '"':
+                    if string_type == STRING_TYPE_DOUBLE_QUOTE:
+                        string_type = STRING_TYPE_NONE
+                        continue
+                    
+                    if string_type == STRING_TYPE_TRIPLE_DOUBLE_QUOTE:
+                        if (
+                            (character_index + 2 < character_limit) and
+                            (line[character_index + 1] == '"') and
+                            (line[character_index + 2] == '"')
+                        ):
+                            character_index += 2
+                            
+                            string_type = STRING_TYPE_NONE
+                            continue
+                    
+                    continue
+        
+        
+        if parsing_failed:
+            break
+        
+        
+        if not line.endswith('\n'):
+            # no more lines. Simple.
+            should_continue_parsing = False
+        elif string_type in (STRING_TYPE_TRIPLE_SINGLE_QUOTE, STRING_TYPE_TRIPLE_DOUBLE_QUOTE):
+            should_continue_parsing = True
+        elif line_escaped:
+            should_continue_parsing = True
+        elif parentheses_stack:
+            should_continue_parsing = True
+        else:
+            should_continue_parsing = False
+        
+        
+        if not should_continue_parsing:
+            break
+        
+        line_number_position += 1
+        continue
+    
+    if not lines:
+        return lines
+    
+    for index in range(len(lines)):
+        lines[index] = lines[index].rstrip()
+    
+    indentation_to_remove = 0
+    
+    while True:
+        for line in lines:
+            if len(line) <= indentation_to_remove:
+                continue
+            
+            if line[indentation_to_remove] in (' ', '\t'):
+                continue
+            
+            break
+        
+        else:
+            indentation_to_remove += 1
+            continue
+        
+        break
+    
+    
+    for index in range(len(lines)):
+        lines[index] = lines[index][indentation_to_remove:]
+    
+    return lines
 
 
 def render_frames_into(frames, extend=None, filter=None):
@@ -349,7 +588,7 @@ def render_frames_into(frames, extend=None, filter=None):
     
     Parameters
     ----------
-    frames : `list` of (`frame`, ``ExceptionFrameProxy``)
+    frames : `list` of (`FrameType`, `TraceBack`, ``FrameProxyType``)
         The frames to render.
     extend : `None`, `list` of `str` = `None`, Optional
         Whether the frames should be rendered into an already existing list.
@@ -375,6 +614,8 @@ def render_frames_into(frames, extend=None, filter=None):
     extend : `list` of `str`
         The rendered frames as a `list` of it's string parts.
     """
+    frames = _convert_frames(frames)
+    
     if extend is None:
         extend = []
     
@@ -386,8 +627,8 @@ def render_frames_into(frames, extend=None, filter=None):
     count = 0
     
     for frame in frames:
-        line_number = frame.f_lineno
-        code = frame.f_code
+        line_number = frame.line_number
+        code = frame.code
         file_name = code.co_filename
         name = code.co_name
         
@@ -405,12 +646,11 @@ def render_frames_into(frames, extend=None, filter=None):
         
         if file_name not in checked:
             checked.add(file_name)
-            linecache.checkcache(file_name)
+            check_file_cache(file_name)
         
-        line = linecache.getline(file_name, line_number, None)
-        line = line.strip()
+        lines = get_expression_lines(file_name, line_number)
         
-        if should_ignore_frame(file_name, name, line_number, line, filter=filter):
+        if should_ignore_frame(file_name, name, line_number, '\n'.join(lines), filter=filter):
             continue
         
         last_file_name = file_name
@@ -423,9 +663,10 @@ def render_frames_into(frames, extend=None, filter=None):
         extend.append(str(line_number))
         extend.append(', in ')
         extend.append(name)
-        if (line is not None) and line:
+        for line in lines:
             extend.append('\n    ')
             extend.append(line)
+        
         extend.append('\n')
         
     if count > 3:
@@ -437,110 +678,284 @@ def render_frames_into(frames, extend=None, filter=None):
     return extend
 
 
-class ExceptionFrameProxy:
+class FrameProxyType:
     """
-    Wraps a `traceback` object to be `frame` compatible.
+    Base class for frame proxies.
     
-    Attributes
-    ----------
-    tb : `traceback`
-        The wrapped traceback frame.
+    Frame proxies are used to provide the same api for different types of frame representations.
     """
-    __slots__ = ('tb',)
+    __slots__ = ()
     
-    def __init__(self, tb):
+    def __new__(cls):
         """
-        Creates a new ``ExceptionFrameProxy`` with the given traceback.
-        
-        tb : `traceback`
-            The traceback to wrap.
+        Creates a new frame proxy.
         """
-        self.tb = tb
+        return object.__new__(cls)
     
     
-    @property
-    def f_builtins(self):
-        """
-        Returns the traceback's frame's builtins.
-        
-        Returns
-        -------
-        f_builtins : `dict` of (`str`, `Any`) items
-        """
-        return self.tb.tb_frame.f_builtins
+    def __repr__(self):
+        """Returns the frame proxy's representation."""
+        return f'<{self.__class__.__name__}>'
     
     
     @property
-    def f_code(self):
+    def builtins(self):
         """
-        Returns the traceback's frame's code.
+        Returns the frame's builtins.
         
         Returns
         -------
-        f_code : `code`
+        builtins : `dict` of (`str`, `Any`) items
         """
-        return self.tb.tb_frame.f_code
+        raise NotImplementedError
     
     
     @property
-    def f_globals(self):
+    def globals(self):
         """
-        Returns the traceback's frame's globals.
+        Returns the frame's globals.
         
         Returns
         -------
-        f_globals : `dict` of (`str`, `Any`)
+        globals : `dict` of (`str`, `Any`)
         """
-        return self.tb.tb_frame.f_globals
+        raise NotImplementedError
     
     
     @property
-    def f_lasti(self):
+    def locals(self):
+        """
+        Returns the local variables of the frame.
+        
+        Returns
+        -------
+        locals : `dict` of (`str`, `Any`) items
+        """
+        raise NotImplementedError
+    
+    
+    @property
+    def code(self):
+        """
+        Returns the frame's code.
+        
+        Returns
+        -------
+        code : `CodeType`
+        """
+        raise NotImplementedError
+    
+    
+    @property
+    def last_instruction_index(self):
         """
         Returns the traceback's frame's last attempted instruction index in the bytecode.
         
         Returns
         -------
-        f_lasti : `int`
+        last_instruction_index : `int`
         """
-        return self.tb.tb_frame.f_lasti
+        raise NotImplementedError
     
     
     @property
-    def f_lineno(self):
+    def line_number(self):
         """
         Returns the traceback's frame's current line number in Python source code.
         
         Returns
         -------
-        f_lineno : `int`
+        line_number : `int`
         """
-        return self.tb.tb_lineno
+        raise NotImplementedError
     
     
     @property
-    def f_locals(self):
-        """
-        Returns the local variables, what the traceback's frame can see.
-        
-        Returns
-        -------
-        f_locals : `dict` of (`str`, `Any`)
-        """
-        return self.tb.tb_frame.f_locals
-    
-    
-    @property
-    def f_trace(self):
+    def tracing_function(self):
         """
         Tracing function for the traceback's frame.
         
         Returns
         -------
-        f_trace : `Any`
+        tracing_function : `FunctionType`, `None`
             Defaults to `None`.
         """
-        return self.tb.tb_frame.f_trace
+        raise NotImplementedError
+
+
+class TracebackFrameProxy(FrameProxyType):
+    """
+    Wraps a traceback's frame.
+    
+    Attributes
+    ----------
+    _traceback : ``TracebackType``
+        The wrapped traceback frame.
+    """
+    __slots__ = ('_traceback',)
+    
+    def __new__(cls, traceback):
+        """
+        Creates a new traceback frame proxy.
+        
+        Parameters
+        ----------
+        traceback : ``TracebackType``
+            The traceback frame to wrap.
+        """
+        self = FrameProxyType.__new__(cls)
+        self._traceback = traceback
+        return self
+    
+    
+    @property
+    @copy_docs(FrameProxyType.builtins)
+    def builtins(self):
+        return self._traceback.tb_frame.f_builtins
+    
+    
+    @property
+    @copy_docs(FrameProxyType.globals)
+    def globals(self):
+        return self._traceback.tb_frame.f_globals
+    
+    
+    @property
+    @copy_docs(FrameProxyType.locals)
+    def locals(self):
+        return self._traceback.tb_frame.f_locals
+    
+    
+    @property
+    @copy_docs(FrameProxyType.code)
+    def code(self):
+        return self._traceback.tb_frame.f_code
+    
+    
+    @property
+    @copy_docs(FrameProxyType.last_instruction_index)
+    def last_instruction_index(self):
+        return self._traceback.tb_frame.f_lasti
+    
+    
+    @property
+    @copy_docs(FrameProxyType.line_number)
+    def line_number(self):
+        return self._traceback.tb_lineno
+    
+    
+    @property
+    @copy_docs(FrameProxyType.tracing_function)
+    def tracing_function(self):
+        return self._traceback.tb_frame.f_trace
+
+
+
+class FrameProxy(FrameProxyType):
+    """
+    Wraps a frame.
+    
+    Attributes
+    ----------
+    _frame : ``FrameType``
+        The wrapped frame.
+    """
+    __slots__ = ('_frame',)
+    
+    def __new__(cls, frame):
+        """
+        Creates a new frame proxy.
+        
+        Parameters
+        ----------
+        traceback : ``FrameType``
+            The frame to wrap.
+        """
+        self = FrameProxyType.__new__(cls)
+        self._frame = frame
+        return self
+    
+    
+    @property
+    @copy_docs(FrameProxyType.builtins)
+    def builtins(self):
+        return self._frame.f_builtins
+    
+    
+    @property
+    @copy_docs(FrameProxyType.globals)
+    def globals(self):
+        return self._frame.f_globals
+    
+    
+    @property
+    @copy_docs(FrameProxyType.locals)
+    def locals(self):
+        return self._frame.f_locals
+    
+    
+    @property
+    @copy_docs(FrameProxyType.code)
+    def code(self):
+        return self._frame.f_code
+    
+    
+    @property
+    @copy_docs(FrameProxyType.last_instruction_index)
+    def last_instruction_index(self):
+        return self._frame.f_lasti
+    
+    
+    @property
+    @copy_docs(FrameProxyType.line_number)
+    def line_number(self):
+        return self._frame.f_lineno
+    
+    
+    @property
+    @copy_docs(FrameProxyType.tracing_function)
+    def tracing_function(self):
+        return self._frame.f_trace
+
+
+def _convert_frames(frames):
+    """
+    Converts the given frames into frame proxies.
+    
+    Parameters
+    ----------
+    frames : `list` of `Any`
+        The frames to convert.
+    
+    Returns
+    -------
+    frame_proxies : ``FrameProxy``
+    
+    Raises
+    ------
+    TypeError
+        Unknown frame type.
+    """
+    frame_proxies = []
+    
+    for frame in frames:
+        if isinstance(frame, FrameProxyType):
+            frame_proxy = frame
+        
+        elif isinstance(frame, FrameType):
+            frame_proxy = FrameProxy(frame)
+        
+        elif isinstance(frame, TracebackType):
+            frame_proxy = TracebackFrameProxy(frame)
+        
+        else:
+            raise TypeError(
+                f'Unknown frame type, got {type(frame).__name__}; {frame!r}; frames={frames!r}.'
+            )
+        
+        frame_proxies.append(frame_proxy)
+    
+    return frame_proxies
 
 
 def _get_exception_frames(exception):
@@ -554,18 +969,19 @@ def _get_exception_frames(exception):
     
     Returns
     -------
-    frames : `list` of ``ExceptionFrameProxy``
+    frames : `list` of ``FrameProxyType``
         A list of `frame` compatible exception frames.
     """
     frames = []
-    tb = exception.__traceback__
+    traceback = exception.__traceback__
     
     while True:
-        if tb is None:
+        if traceback is None:
             break
-        frame = ExceptionFrameProxy(tb)
+        
+        frame = TracebackFrameProxy(traceback)
         frames.append(frame)
-        tb = tb.tb_next
+        traceback = traceback.tb_next
     
     return frames
 
