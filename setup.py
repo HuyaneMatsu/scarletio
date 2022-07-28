@@ -31,6 +31,7 @@ setup(
         'scarletio.http_client',
         'scarletio.tools',
         'scarletio.utils',
+        'scarletio.utils.highlight',
         'scarletio.web_common',
         'scarletio.websocket',
     ],

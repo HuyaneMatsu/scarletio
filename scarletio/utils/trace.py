@@ -7,6 +7,8 @@ from types import (
 )
 
 from .docs import copy_docs
+from .highlight import HIGHLIGHT_TOKEN_TYPES, iter_highlight_code_lines
+from .highlight.token import Token
 
 
 IGNORED_FRAME_LINES = {}
@@ -140,8 +142,6 @@ def _should_ignore_frame(file_name, name, line):
         The frame's respective file's name.
     name : `str`
         The frame's respective function's name.
-    line_number : `int`
-        The line's index where the exception occurred.
     line : `str`
         The frame's respective stripped line.
     
@@ -177,7 +177,7 @@ def should_ignore_frame(file_name, name, line_number, line=..., filter=None):
         The line's index where the exception occurred.
     line : `str`
         The frame's respective stripped line.
-    filer : `None`, `callable` = `None`, Optional (Keyword only)
+    filter : `None`, `callable` = `None`, Optional (Keyword only)
         Additional filter to check whether a frame should be shown.
         
         Called with 4 parameters:
@@ -582,7 +582,552 @@ def get_expression_lines(file_name, line_number):
     return lines
 
 
-def render_frames_into(frames, extend=None, filter=None):
+class FrameDetail:
+    """
+    Represents information about a frame.
+    
+    Used when rendering frames.
+    
+    Attributes
+    ----------
+    file_name : `str`
+        Path to the represented file.
+    line_number : `int`
+        The respective line's index.
+    lines : `None`, `list` of `str`
+        The python source code lines of the respective instruction.
+    mention_count : `int`
+        How much times this exact frame was mentioned.
+    name : `str`
+        The represented function's name.
+    produced_content : `None`, `list` of `str`
+        The produced content.
+    """
+    __slots__ = ('file_name', 'line_number', 'lines', 'mention_count', 'name', 'produced_content')
+    
+    def __new__(cls, file_name, line_number, name):
+        self = object.__new__(cls)
+        self.file_name = file_name
+        self.name = name
+        self.line_number = line_number
+        self.lines = None
+        self.produced_content = None
+        self.mention_count = 0
+        return self
+    
+    def __repr__(self):
+        """Returns the frame info's representation."""
+        return f'{self.__class__.__name__}({self.file_name!r}, {self.line_number!r}, {self.name!r})'
+    
+    
+    def __eq__(self, other):
+        """Returns whether self equals to other."""
+        if type(self) is not type(other):
+            return NotImplemented
+        
+        if self.file_name != other.file_name:
+            return False
+        
+        if self.line_number != other.line_number:
+            return False
+        
+        return True
+    
+    
+    def __hash__(self):
+        """Returns the frame info's hash value."""
+        return hash(self.file_name) ^ self.line_number ^ hash(self.name)
+    
+    
+    def do_mention(self):
+        """
+        Increments how much times the frame is mentioned.
+        """
+        self.mention_count += 1
+    
+    
+    def get_lines(self):
+        """
+        Returns the lines of the instruction of the trace.
+        
+        Returns
+        -------
+        lines : `list` of `str`
+            Can be empty.
+        """
+        lines = self.lines
+        if (lines is None):
+            lines = get_expression_lines(self.file_name, self.line_number)
+            self.lines = lines
+        
+        return lines
+    
+    
+    def get_line(self):
+        """
+        Returns the line where the exception occurred.
+        
+        Returns
+        -------
+        line : `str`
+        """
+        return '\n'.join(self.get_lines())
+    
+    
+    def _produce_file_location(self):
+        """
+        Produces file location part and their tokens.
+        
+        This method is an iterable generator.
+        
+        Yields
+        ------
+        part : `str`
+            Part to render
+        token_type : `int`
+            The part's type.
+        """
+        yield '  File ', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE
+        yield f'"{self.file_name}"', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_PATH
+        yield ', line ', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE
+        yield  str(self.line_number), HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LINE_NUMBER
+        yield ', in ', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE
+        yield self.name, HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_NAME
+    
+    
+    def _render(self, highlighter):
+        """
+        Produces each part of the frame to render.
+        
+        This method is an iterable generator.
+        
+        Parameters
+        ----------
+        highlighter : `None`, ``HighlightFormatterContext``
+            Formatter storing highlighting details.
+        
+        Yields
+        ------
+        part : `str`
+        """
+        if highlighter is None:
+            for part, token_type in self._produce_file_location():
+                yield part
+        else:
+            for part, token_type in self._produce_file_location():
+                yield from highlighter.generate_highlighted(Token(token_type, part))
+        
+        yield '\n'
+        
+        lines = self.get_lines()
+        
+        if lines:
+            if (highlighter is None):
+                for line in lines:
+                    yield '    '
+                    yield line
+                    yield '\n'
+            
+            else:
+                yield from iter_highlight_code_lines([f'    {line}\n' for line in lines], highlighter)
+    
+    
+    def render_into(self, into, highlighter):
+        """
+        Renders frame.
+        
+        Parameters
+        ----------
+        into : `list` of `str`
+            The list of strings to render the representation into.
+        highlighter : `None`, ``HighlightFormatterContext``
+            Formatter storing highlighting details.
+        
+        Returns
+        -------
+        into : `list` of `str`
+        """
+        if self.mention_count > 1:
+            produced_content = self.produced_content
+            if (produced_content is None):
+                produced_content = [*self._render(highlighter)]
+                self.produced_content = produced_content
+            
+            into.extend(produced_content)
+        else:
+            into.extend(self._render(highlighter))
+        
+        return into
+
+
+FRAME_DETAIL_GROUP_TYPE_NONE = 0
+FRAME_DETAIL_GROUP_TYPE_SINGLES = 1
+FRAME_DETAIL_GROUP_TYPE_MAYBE_REPEAT = 2
+FRAME_DETAIL_GROUP_TYPE_REPEAT = 3
+
+
+class FrameDetailGroup:
+    """
+    Represents a group of frame details.
+    
+    Attributes
+    ----------
+    details : `list` of ``FrameDetail``
+        The stored details by the group.
+    group_type : `int`
+        The group's type.
+    repeat_count : `int`
+        How much times is the group repeated.
+    """
+    __slots__ = ('details', 'group_type', 'repeat_count')
+    
+    def __new__(cls):
+        """
+        Creates a new frame detail group.
+        """
+        self = object.__new__(cls)
+        self.details = []
+        self.group_type = FRAME_DETAIL_GROUP_TYPE_NONE
+        self.repeat_count = 1
+        return self
+    
+    
+    @classmethod
+    def _create_repeated(cls, repeat_count, details):
+        """
+        Creates a repeated frame detail group.
+        
+        Parameters
+        ----------
+        repeat_count : `int`
+            How much times is the group repeated.
+        details : `list` of ``FrameDetail``
+            The stored details by the group.
+        
+        Returns
+        -------
+        self : ``FrameDetailGroup``
+        """
+        self = object.__new__(cls)
+        self.details = details
+        self.group_type = FRAME_DETAIL_GROUP_TYPE_REPEAT
+        self.repeat_count = repeat_count
+        return self
+    
+    
+    def __eq__(self, other):
+        """Returns whether the two frame detail groups are equal."""
+        if type(self) is not type(other):
+            return NotImplemented
+        
+        if len(self) != len(other):
+            return False
+        
+        for self_detail, other_detail in zip(self.iter_details(), other.iter_details()):
+            if self_detail != other_detail:
+                return False
+        
+        return True
+    
+    
+    def __len__(self):
+        """Returns how much details are in the group."""
+        return len(self.details) * self.repeat_count
+    
+    
+    def __repr__(self):
+        """Returns the frame detail group's representation."""
+        return f'<{self.__class__.__name__} details={self.details!r}>'
+    
+    
+    def __bool__(self):
+        """Returns whether the detail group has any elements."""
+        return self.group_type != FRAME_DETAIL_GROUP_TYPE_NONE
+    
+    
+    def add_initial_frame_detail(self, frame_detail):
+        """
+        Adds the given frame detail to self. Should be only used to add the first element to self.
+        
+        Parameters
+        ----------
+        frame_detail : ``FrameDetail``
+            The frame detail to add.
+        """
+        self.details.append(frame_detail)
+        
+        if frame_detail.mention_count > 1:
+            group_type = FRAME_DETAIL_GROUP_TYPE_MAYBE_REPEAT
+        else:
+            group_type = FRAME_DETAIL_GROUP_TYPE_SINGLES
+        self.group_type = group_type
+    
+    
+    def try_add_frame_detail(self, frame_detail):
+        """
+        Tries to add the given frame detail to self. On success returns `True`.
+        
+        Parameters
+        ----------
+        frame_detail : ``FrameDetail``
+            The frame detail to add.
+        
+        Returns
+        -------
+        success : `bool`
+        """
+        group_type = self.group_type
+        
+        if group_type == FRAME_DETAIL_GROUP_TYPE_NONE:
+            self.add_initial_frame_detail(frame_detail)
+            return True
+        
+        
+        if group_type == FRAME_DETAIL_GROUP_TYPE_SINGLES:
+            if frame_detail.mention_count > 1:
+                return False
+            
+            self.details.append(frame_detail)
+            return True
+        
+        
+        if group_type == FRAME_DETAIL_GROUP_TYPE_MAYBE_REPEAT:
+            self.details.append(frame_detail)
+            
+            if frame_detail.mention_count > 1:
+                group_type = FRAME_DETAIL_GROUP_TYPE_REPEAT
+            else:
+                group_type = FRAME_DETAIL_GROUP_TYPE_SINGLES
+            self.group_type = group_type
+            return True
+        
+        
+        if group_type == FRAME_DETAIL_GROUP_TYPE_REPEAT:
+            if frame_detail.mention_count <= 1:
+                return False
+            
+            self.details.append(frame_detail)
+            return True
+        
+        # No more cases
+        return False
+    
+    
+    def try_merge_single_group(self, other):
+        """
+        Tries to merge self with an other frame detail group. But only merges them if both is possibly a single-mention
+        group.
+        
+        Parameters
+        ----------
+        other : ``FrameDetailGroup``
+            The detail group to merge self with.
+        
+        Returns
+        -------
+        merged : `bool`
+        """
+        if (self.repeat_count != 1) or (other.repeat_count != 1):
+            return False
+        
+        self_group_type = self.group_type
+        other_group_type = other.group_type
+        
+        if self_group_type == FRAME_DETAIL_GROUP_TYPE_SINGLES:
+            should_merge = other_group_type in (FRAME_DETAIL_GROUP_TYPE_SINGLES, FRAME_DETAIL_GROUP_TYPE_MAYBE_REPEAT)
+        
+        elif self_group_type == FRAME_DETAIL_GROUP_TYPE_MAYBE_REPEAT:
+            should_merge = other_group_type == FRAME_DETAIL_GROUP_TYPE_SINGLES
+        
+        else:
+            should_merge = False
+        
+        if should_merge:
+            self.details.extend(other.iter_exhaust_details())
+        
+        return should_merge
+    
+    
+    def try_merge_repeat_group(self, other):
+        """
+        Tries to merge self with an other frame detail group. But only merges them if both is possibly a repeat-mention
+        group.
+        
+        Parameters
+        ----------
+        other : ``FrameDetailGroup``
+            The detail group to merge self with.
+        
+        Returns
+        -------
+        merged : `bool`
+        """
+        if (self.repeat_count != 1) or (other.repeat_count != 1):
+            return False
+        
+        self_group_type = self.group_type
+        other_group_type = other.group_type
+        
+        if self_group_type in (FRAME_DETAIL_GROUP_TYPE_MAYBE_REPEAT, FRAME_DETAIL_GROUP_TYPE_REPEAT):
+            should_merge = other_group_type in (FRAME_DETAIL_GROUP_TYPE_MAYBE_REPEAT, FRAME_DETAIL_GROUP_TYPE_REPEAT)
+        
+        else:
+            should_merge = False
+        
+        if should_merge:
+            self.details.extend(other.iter_exhaust_details())
+        
+        return should_merge
+    
+    
+    def iter_details(self):
+        """
+        Iterates over the details of the detail group.
+        
+        This method is an iterable generator.
+        
+        Yields
+        ------
+        detail : ``FrameDetail``
+        """
+        details = self.details
+        for index in range(self.repeat_count):
+            yield from details
+    
+    
+    def iter_exhaust_details(self):
+        """
+        Iterates over the details of the detail group, exhausting its own.
+        
+        This method is an iterable generator.
+        
+        Yields
+        ------
+        detail : ``FrameDetail``
+        """
+        try:
+            yield from self.iter_details()
+        finally:
+            self.details.clear()
+            self.group_type = FRAME_DETAIL_GROUP_TYPE_NONE
+    
+    
+    def iter_break_repeated_patterns(self):
+        """
+        Breaks down self to repeated patterns if possible.
+        
+        This method is an iterable generator.
+        
+        Yields
+        ------
+        detail_groups : ``FrameDetailGroup``
+        """
+        # Can we break it down?
+        if (self.group_type != FRAME_DETAIL_GROUP_TYPE_REPEAT):
+            yield self
+            return
+        
+        # If it has repeat set, it is already a broken group
+        if self.repeat_count > 1:
+            yield self
+            return
+        
+        details = self.details
+        details_length = len(details)
+        start = details_length - 1
+        detail_groups = []
+        
+        
+        while True:
+            for reverse_shift in range(start, 1, -1):
+                for chunk_length in range(1, (reverse_shift >> 1) + 2):
+                    repeat = 1
+                    for chunk_end_index in range(reverse_shift - chunk_length, -1, -chunk_length):
+                        for index in range(chunk_length):
+                            if details[reverse_shift - index] != details[chunk_end_index - index]:
+                                break
+                        else:
+                            repeat += 1
+                            continue
+                        
+                        break
+                    
+                    if repeat * chunk_length <= 2:
+                        continue
+                    
+                    if repeat > 1:
+                        if start != reverse_shift:
+                            detail_groups.append(type(self)._create_repeated(1, details[reverse_shift + 1 : start + 1]))
+                        
+                        detail_groups.append(type(self)._create_repeated(
+                            repeat, details[reverse_shift - chunk_length + 1: reverse_shift + 1]
+                        ))
+                        start = reverse_shift - repeat * chunk_length
+                        break
+                    
+                else:
+                    continue
+                break
+            else:
+                break
+        
+        # Did we match anything even?
+        if start == details_length - 1:
+            yield self
+            return
+        
+        if start != details_length:
+            detail_groups.append(type(self)._create_repeated(1 , details[0 : start + 1]))
+        
+        yield from reversed(detail_groups)
+    
+    
+    def render_into(self, into, highlighter):
+        """
+        Renders frame group.
+        
+        Parameters
+        ----------
+        into : `list` of `str`
+            The list of strings to render the representation into.
+        highlighter : `None`, ``HighlightFormatterContext``
+            Formatter storing highlighting details.
+        
+        Returns
+        -------
+        into : `list` of `str`
+        """
+        repeat_count = self.repeat_count
+        details = self.details
+        
+        if (repeat_count > 1):
+            into = _add_trace_typed_part_into(
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_FRAME_REPEAT,
+                (
+                    f'[Following {len(details)} frame{"s were" if len(details) > 1 else " was"} '
+                    f'repeated {repeat_count} times]'
+                ),
+                into,
+                highlighter
+            )
+            into.append('\n')
+        
+        for detail in details:
+            detail.render_into(into, highlighter)
+        
+        if (repeat_count > 1):
+            into = _add_trace_typed_part_into(
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_FRAME_REPEAT,
+                f'[End of repeated frames]',
+                into,
+                highlighter
+            )
+            into.append('\n')
+        
+        return into
+
+
+def render_frames_into(frames, extend=None, *, filter=None, highlighter=None):
     """
     Renders the given frames into a list of strings.
     
@@ -590,9 +1135,11 @@ def render_frames_into(frames, extend=None, filter=None):
     ----------
     frames : `list` of (`FrameType`, `TraceBack`, ``FrameProxyType``)
         The frames to render.
+    
     extend : `None`, `list` of `str` = `None`, Optional
         Whether the frames should be rendered into an already existing list.
-    filer : `None`, `callable` = `None`, Optional (Keyword only)
+    
+    filter : `None`, `callable` = `None`, Optional (Keyword only)
         Additional filter to check whether a frame should be shown.
         
         Called with 4 parameters:
@@ -609,6 +1156,9 @@ def render_frames_into(frames, extend=None, filter=None):
         | line          | `str`     | The line of the file.                                         |
         +---------------+-----------+---------------------------------------------------------------+
     
+    highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
+        Formatter storing highlighting details.
+    
     Returns
     -------
     extend : `list` of `str`
@@ -619,63 +1169,131 @@ def render_frames_into(frames, extend=None, filter=None):
     if extend is None:
         extend = []
     
-    checked = set()
+    checked_file_caches = set()
     
-    last_file_name = ''
-    last_line_number = ''
-    last_name = ''
-    count = 0
+    frame_details_ignored = set()
+    frame_details_stack = []
+    frame_details_unique = {}
+    
     
     for frame in frames:
-        line_number = frame.line_number
-        code = frame.code
-        file_name = code.co_filename
-        name = code.co_name
-        
-        if last_file_name == file_name and last_line_number == line_number and last_name == name:
-            count += 1
-            if count > 2:
-                continue
-        else:
-            if count > 3:
-                count -= 3
-                extend.append('  [Previous line repeated ')
-                extend.append(str(count))
-                extend.append(' more times]\n')
-            count = 0
-        
-        if file_name not in checked:
-            checked.add(file_name)
-            check_file_cache(file_name)
-        
-        lines = get_expression_lines(file_name, line_number)
-        
-        if should_ignore_frame(file_name, name, line_number, '\n'.join(lines), filter=filter):
+        frame_detail = FrameDetail(frame.file_name, frame.line_number, frame.name)
+        if frame_detail in frame_details_ignored:
             continue
         
-        last_file_name = file_name
-        last_line_number = line_number
-        last_name = code.co_name
+        try:
+            frame_detail_to_add = frame_details_unique[frame_detail]
+        except KeyError:
+            
+            if frame_detail.file_name not in checked_file_caches:
+                checked_file_caches.add(frame_detail.file_name)
+                check_file_cache(frame_detail.file_name)
+                
+            if should_ignore_frame(
+                frame_detail.file_name,
+                frame_detail.name,
+                frame_detail.line_number,
+                frame_detail.get_line(),
+                filter = filter
+            ):
+                frame_details_ignored.add(frame_detail)
+                continue
+            
+            frame_detail_to_add = frame_detail
+            frame_details_unique[frame_detail_to_add] = frame_detail_to_add
+        else:
+            frame_detail_to_add.do_mention()
         
-        extend.append('  File \"')
-        extend.append(file_name)
-        extend.append('\", line ')
-        extend.append(str(line_number))
-        extend.append(', in ')
-        extend.append(name)
-        for line in lines:
-            extend.append('\n    ')
-            extend.append(line)
+        frame_detail_to_add.do_mention()
+        frame_details_stack.append(frame_detail_to_add)
+    
+    
+    if len(frame_details_unique) == len(frame_details_stack):
+        for frame_detail in frame_details_stack:
+            extend = frame_detail.render_into(extend, highlighter)
+    
+    else:
+        frame_detail_group = FrameDetailGroup()
+        frame_detail_groups = [frame_detail_group]
         
-        extend.append('\n')
+        for frame_detail in frame_details_stack:
+            if not frame_detail_group.try_add_frame_detail(frame_detail):
+                frame_detail_group = FrameDetailGroup()
+                frame_detail_group.add_initial_frame_detail(frame_detail)
+                frame_detail_groups.append(frame_detail_group)
         
-    if count > 3:
-        count -= 3
-        extend.append('  [Previous line repeated ')
-        extend.append(str(count))
-        extend.append(' more times]\n')
+        
+        for index in reversed(range(1, len(frame_detail_groups))):
+            frame_detail_group_1 = frame_detail_groups[index - 1]
+            frame_detail_group_2 = frame_detail_groups[index]
+            
+            if (
+                frame_detail_group_1.try_merge_repeat_group(frame_detail_group_2) or
+                frame_detail_group_1.try_merge_single_group(frame_detail_group_2)
+            ):
+                del frame_detail_groups[index]
+                continue
+        
+        for frame_detail_group in frame_detail_groups:
+            for frame_detail_group in frame_detail_group.iter_break_repeated_patterns():
+                extend = frame_detail_group.render_into(extend, highlighter)
     
     return extend
+
+
+def _produce_file_location(file_name, line_number, name):
+    """
+    Produces file location part and their tokens.
+    
+    Parameters
+    ----------
+    file_name : `str`
+        Path of the respective file.
+    line_number : int`
+        The respective line's number.
+    name : `str`
+        The respective functions name.
+    
+    Yields
+    ------
+    part : `str`
+        Part to render
+    token_type : `int`
+        The part's type.
+    """
+    yield '  File ', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE
+    yield f'"{file_name}"', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_PATH
+    yield ', line ', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE
+    yield  str(line_number), HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LINE_NUMBER
+    yield ', in ', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE
+    yield name, HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_NAME
+
+
+def _extend_with_producer(producer, into, highlighter):
+    """
+    Extends the given `into` list of strings with the products of the given producer.
+    
+    Parameters
+    ----------
+    producer : `GeneratorType`
+        generator which produces `part - token_type` pairs.
+    into : `list` of `str`
+        The list of strings to add.
+    highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
+        Formatter storing highlighting details.
+    
+    Returns
+    -------
+    into : `list` of `str`
+    """
+    if highlighter is None:
+        for part, token_type in producer:
+            into.append(part)
+    else:
+        for part, token_type in producer:
+            into.extend(highlighter.generate_highlighted(Token(token_type, part)))
+    
+    return into
 
 
 class FrameProxyType:
@@ -781,6 +1399,30 @@ class FrameProxyType:
             Defaults to `None`.
         """
         raise NotImplementedError
+    
+    
+    @property
+    def file_name(self):
+        """
+        Returns the frame's file name-
+        
+        Returns
+        -------
+        file_name : `str`
+        """
+        return self.code.co_filename
+    
+    
+    @property
+    def name(self):
+        """
+        Returns the frame's function's name.
+        
+        Returns
+        -------
+        name : `str`
+        """
+        return self.code.co_name
 
 
 class TracebackFrameProxy(FrameProxyType):
@@ -803,7 +1445,7 @@ class TracebackFrameProxy(FrameProxyType):
         traceback : ``TracebackType``
             The traceback frame to wrap.
         """
-        self = FrameProxyType.__new__(cls)
+        self = object.__new__(cls)
         self._traceback = traceback
         return self
     
@@ -868,10 +1510,10 @@ class FrameProxy(FrameProxyType):
         
         Parameters
         ----------
-        traceback : ``FrameType``
+        frame : ``FrameType``
             The frame to wrap.
         """
-        self = FrameProxyType.__new__(cls)
+        self = object.__new__(cls)
         self._frame = frame
         return self
     
@@ -986,7 +1628,7 @@ def _get_exception_frames(exception):
     return frames
 
 
-def render_exception_into(exception, extend=None, *, filter=None):
+def render_exception_into(exception, extend=None, *, filter=None, highlighter=None):
     """
     Renders the given exception's frames into a list of strings.
     
@@ -994,9 +1636,11 @@ def render_exception_into(exception, extend=None, *, filter=None):
     ----------
     exception : `BaseException`
         The exception to render.
+    
     extend : `None`, `list` of `str` = `None`, Optional
         Whether the frames should be rendered into an already existing list.
-    filer : `None`, `callable` = `None`, Optional (Keyword only)
+    
+    filter : `None`, `callable` = `None`, Optional (Keyword only)
         Additional filter to check whether a frame should be shown.
         
         Called with 4 parameters:
@@ -1013,6 +1657,8 @@ def render_exception_into(exception, extend=None, *, filter=None):
         | line          | `str`     | The line of the file.                                         |
         +---------------+-----------+---------------------------------------------------------------+
     
+    highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
+        Formatter storing highlighting details.
     
     Returns
     -------
@@ -1042,24 +1688,87 @@ def render_exception_into(exception, extend=None, *, filter=None):
         break
     
     for exception, reason_type in reversed(exceptions):
+        extend = _add_trace_title_into('Traceback (most recent call last):', extend, highlighter)
         frames = _get_exception_frames(exception)
-        extend.append('Traceback (most recent call last):\n')
-        extend = render_frames_into(frames, extend=extend, filter=filter)
-        extend.append(get_exception_representation(exception))
+        extend.append('\n')
+        extend = render_frames_into(frames, extend, filter=filter, highlighter=highlighter)
+        
+        extend = _add_trace_typed_part_into(
+            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_EXCEPTION_REPR,
+            get_exception_representation(exception),
+            extend,
+            highlighter
+        )
+        
         extend.append('\n')
         
         if reason_type == 0:
             break
         
         if reason_type == 1:
-            extend.append('\nThe above exception was the direct cause of the following exception:\n\n')
+            extend.append('\n')
+            extend = _add_trace_title_into(
+                'The above exception was the direct cause of the following exception:', extend, highlighter
+            )
+            extend.append('\n\n')
             continue
         
         if reason_type == 2:
-            extend.append('\nDuring handling of the above exception, another exception occurred:\n\n')
+            extend.append('\n')
+            extend = _add_trace_title_into(
+                'During handling of the above exception, another exception occurred:', extend, highlighter
+            )
+            extend.append('\n\n')
             continue
         
         # no more cases
         continue
     
     return extend
+
+
+def _add_trace_title_into(title, into, highlighter):
+    """
+    Adds trace title into the given list of strings.
+    
+    Parameters
+    ----------
+    title : `str`
+        The title to add.
+    into : `list` of `str`
+        The list of strings to add.
+    highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
+        Formatter storing highlighting details.
+    
+    Returns
+    -------
+    into : `list` of `str`
+    """
+    return _add_trace_typed_part_into(HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE, title, into, highlighter)
+
+
+def _add_trace_typed_part_into(type_, part, into, highlighter):
+    """
+    Adds trace title into the given list of strings.
+    
+    Parameters
+    ----------
+    type_ : `int`
+        Token type identifier.
+    part : `str`
+        The part to add.
+    into : `list` of `str`
+        The list of strings to add.
+    highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
+        Formatter storing highlighting details.
+    
+    Returns
+    -------
+    into : `list` of `str`
+    """
+    if (highlighter is None):
+        into.append(part)
+    else:
+        into.extend(highlighter.generate_highlighted(Token(type_, part)))
+    
+    return into

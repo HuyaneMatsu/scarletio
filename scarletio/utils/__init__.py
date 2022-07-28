@@ -1,3 +1,5 @@
+from .highlight import *
+
 from .analyzer import *
 from .async_utils import *
 from .base_method import *
@@ -33,6 +35,8 @@ from .weak_set import *
 from .weak_value_dictionary import *
 
 __all__ = (
+    *highlight.__all__,
+    
     *analyzer.__all__,
     *async_utils.__all__,
     *base_method.__all__,

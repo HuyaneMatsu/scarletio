@@ -1,3 +1,11 @@
+## 1.0.32 *\[2022-07-??\]*
+
+#### Improvements
+
+- Add code highlighting support.
+- Add `highlighter` parameter for `render_frames_into`, `render_exception` into.
+- Repeated exception frames are now grouped.
+
 ## 1.0.31 *\[2022-07-24\]*
 
 #### Improvements
