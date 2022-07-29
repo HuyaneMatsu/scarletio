@@ -26,6 +26,7 @@ setup(
         'scarletio.ext.asyncio',
         'scarletio.core.event_loop',
         'scarletio.core.subprocess',
+        'scarletio.core.top_level',
         'scarletio.core.protocols_and_transports',
         'scarletio.core.traps',
         'scarletio.http_client',
