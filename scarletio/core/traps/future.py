@@ -13,6 +13,7 @@ from .handle_cancellers import _HandleCancellerBase
 FutureSyncWrapper = include('FutureSyncWrapper')
 FutureAsyncWrapper = include('FutureAsyncWrapper')
 write_exception_async = include('write_exception_async')
+write_exception_maybe_async = include('write_exception_maybe_async')
 
 ignore_frame(__spec__.origin, 'result', 'raise exception',)
 ignore_frame(__spec__.origin, '__iter__', 'yield self',)
@@ -596,9 +597,9 @@ class Future:
                 if self._callbacks:
                     
                     # ignore being silenced
-                    silence_cb = type(self).__silence_cb__
+                    silence_callback = type(self).__silence_callback__
                     for callback in self._callbacks:
-                        if callback is silence_cb:
+                        if callback is silence_callback:
                             return
                     
                     sys.stderr.write(
@@ -631,13 +632,13 @@ class Future:
             """
             state = self._state
             if state == FUTURE_STATE_PENDING:
-                self._callbacks.append(type(self).__silence_cb__)
+                self._callbacks.append(type(self).__silence_callback__)
                 return
             
             if state == FUTURE_STATE_FINISHED:
                 self._state = FUTURE_STATE_RETRIEVED
         
-        def __silence_cb__(self):
+        def __silence_callback__(self):
             """
             Callback added to the future, when ``.__silence__`` is called, when the future is still pending.
             

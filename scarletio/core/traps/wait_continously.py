@@ -533,7 +533,7 @@ class WaitContinuously(WaitTillFirst):
     # if __debug__:
     #    `__del__` is same as ``Future.__del__``
     #    `__silence__` is same as ``Future.__silence__``
-    #    `__silence_cb__` is same as ``Future.__silence_cb__``
+    #    `__silence_callback__` is same as ``Future.__silence_callback__``
     # `cancel_handles` is same as ``Future.cancel_handles``
     # `clear` same as ``WaitTilLFirst.clear``
     # `sync_wrap` is same as ``Future.sync_wrap``

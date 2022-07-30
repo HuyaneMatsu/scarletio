@@ -11,6 +11,8 @@
 - Add `write_exception_maybe_async`.
 - `Task.get_stack` now supports async generator correctly.
 - Add `write_exception_async`.
+- Add `set_default_trace_writer_highlighter`.
+- Add `set_trace_writer_highlighter`.
 
 #### Bug fixes
 

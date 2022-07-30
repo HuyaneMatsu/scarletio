@@ -1,13 +1,17 @@
 __all__ = (
-    'render_frames_into_async', 'render_exception_into_async', 'write_exception_async',
-    'write_exception_maybe_async'
+    'render_frames_into_async', 'render_exception_into_async', 'set_default_trace_writer_highlighter',
+    'set_trace_writer_highlighter', 'write_exception_async', 'write_exception_maybe_async'
 )
 
 import sys
+from os import get_terminal_size
+from sys import platform as PLATFORM
 from threading import current_thread
 
-from ...utils import alchemy_incendiary, export, include, render_exception_into, render_frames_into
-
+from ...utils import (
+    DEFAULT_ANSI_HIGHLIGHTER, HighlightFormatterContext, alchemy_incendiary, call, export, include,
+    render_exception_into, render_frames_into
+)
 from .event_loop import get_event_loop
 
 
@@ -192,6 +196,9 @@ def write_exception_sync(exception, before=None, after=None, file=None, *, filte
         extracted.append(repr(before))
         extracted.append('\n')
     
+    if (file is None) and (highlighter is None):
+        highlighter = DEFAULT_TRACE_WRITER_HIGHLIGHTER
+    
     render_exception_into(exception, extracted, filter=filter, highlighter=highlighter)
     
     if after is None:
@@ -330,3 +337,51 @@ def write_exception_maybe_async(exception, before=None, after=None, file=None, *
         write_exception_async(exception, before, after, file, filter=filter, highlighter=highlighter, loop=local_thread)
     else:
         write_exception_sync(exception, before, after, file, filter=filter, highlighter=highlighter)
+
+
+DEFAULT_TRACE_WRITER_HIGHLIGHTER = None
+
+@call
+def set_default_trace_writer_highlighter():
+    """
+    Re-sets the default highlighter for trace writer functions.
+    """
+    global DEFAULT_TRACE_WRITER_HIGHLIGHTER
+    
+    if PLATFORM != 'linux':
+        highlighter = None
+    else:
+        try:
+            get_terminal_size()
+        except OSError:
+            # If the os not supports this operation, we wont highlight
+            highlighter = None
+        else:
+            highlighter = DEFAULT_ANSI_HIGHLIGHTER
+    
+    DEFAULT_TRACE_WRITER_HIGHLIGHTER = highlighter
+
+
+def set_trace_writer_highlighter(highlighter):
+    """
+    Sets highlighter for trace writer functions.
+    
+    Parameters
+    ----------
+    highlighter : `None`, ``HighlightFormatterContext``
+        The highlighter to set.
+    
+    Raises
+    ------
+    TypeError
+        - If `highlighter`'s type is incorrect.
+    """
+    global DEFAULT_TRACE_WRITER_HIGHLIGHTER
+    
+    if (highlighter is not None) and (not isinstance(highlighter, HighlightFormatterContext)):
+        raise TypeError(
+            f'`highlighter` can be `None`, `{HighlightFormatterContext.__name__}, got '
+            f'{highlighter.__class__.__name__}; {highlighter!r}'
+        )
+    
+    DEFAULT_TRACE_WRITER_HIGHLIGHTER = highlighter
