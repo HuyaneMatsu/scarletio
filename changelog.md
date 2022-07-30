@@ -20,6 +20,7 @@
 - `WebSocketServerProtocol.lifetime_handler` now handles task cancellation correctly.
 - `WebSocketServerProtocol.handshake` now handles task cancellation correctly.
 - `WebSocketCommonProtocol.transfer_data` now handles task cancellation correctly.
+- `to_coroutine` dropped error on `python3.11`.
 
 ### ext.asyncio
 
