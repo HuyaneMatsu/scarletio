@@ -6,7 +6,7 @@ from importlib.util import find_spec
 from threading import current_thread
 from uuid import UUID
 
-from ..core import CancelledError, EventThread, Future, Task, WaitTillAll, skip_poll_cycle
+from ..core import CancelledError, EventThread, Future, Task, WaitTillAll, skip_poll_cycle, write_exception_async
 from ..utils import CallableAnalyzer, IgnoreCaseMultiValueDictionary
 from ..web_common import HttpReadWriteProtocol, HttpVersion11, PayloadError, URL
 from ..web_common.headers import METHOD_ALL, METHOD_GET
@@ -217,16 +217,21 @@ class HTTPRequestHandler(HttpReadWriteProtocol):
         """
         try:
             request_message = await self.set_payload_reader(self._read_http_request())
-        except (CancelledError, ConnectionError) as err:
-            await self._loop.render_exception_async(
+        except (GeneratorExit, CancelledError):
+            raise
+        
+        except ConnectionError as err:
+            await write_exception_async(
                 err,
-                before = [
+                [
                     'Unhandled exception occurred at `',
                     self.__class__.__name__,
                     '._try_receive_request`, when reading request.:\n'
                 ],
+                loop = self._loop,
             )
             return None
+        
         except BaseException as err:
             if isinstance(err, PayloadError):
                 status = BAD_REQUEST
@@ -249,15 +254,16 @@ class HTTPRequestHandler(HttpReadWriteProtocol):
             self.write_http_response(status, headers, body=body)
             self.close_transport(force=True)
         except BaseException as err2:
-            await self._loop.render_exception_async(
+            await write_exception_async(
                 err2,
-                before = [
+                [
                     'Unhandled exception occurred at `',
                     self.__class__.__name__,
                     '._try_receive_request`, when handling an other exception;',
                     repr(err2),
                     ':',
                 ],
+                loop = self._loop,
             )
         
         return None

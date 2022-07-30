@@ -1,6 +1,6 @@
 __all__ = ('EventThread', )
 
-import errno, os, subprocess, sys, weakref
+import errno, os, subprocess, sys, warnings
 import socket as module_socket
 from collections import deque
 from functools import partial as partial_func
@@ -12,8 +12,7 @@ from stat import S_ISSOCK
 from threading import Thread, current_thread
 from types import MethodType
 
-from ...utils import DOCS_ENABLED, IS_UNIX, alchemy_incendiary, copy_docs, export, is_coroutine
-from ...utils.trace import render_exception_into
+from ...utils import IS_UNIX, WeakSet, alchemy_incendiary, copy_docs, export, include, is_coroutine
 
 from ..exceptions import CancelledError
 from ..protocols_and_transports import (
@@ -33,6 +32,10 @@ from .event_thread_type import EventThreadType
 from .executor import Executor
 from .handles import Handle, TimerHandle, TimerWeakHandle
 from .server import Server
+
+
+write_exception_async = include('write_exception_async')
+write_exception_maybe_async = include('write_exception_maybe_async')
 
 
 @export
@@ -85,6 +88,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
     """
     time = LOOP_TIME
     time_resolution = LOOP_TIME_RESOLUTION
+    
     __slots__ = (
         '__dict__', '__weakref__', '_async_generators', '_async_generators_shutdown_called', '_self_write_socket',
         '_ready', '_scheduled', '_self_read_socket', 'context', 'current_task', 'running', 'selector', 'should_run',
@@ -114,7 +118,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         self._scheduled = []
         self.current_task = None
         
-        self._async_generators = weakref.WeakSet()
+        self._async_generators = WeakSet()
         self._async_generators_shutdown_called = False
         
         self._self_read_socket = None
@@ -730,59 +734,12 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         return self.ensure_future_thread_safe(awaitable).sync_wrap().wait(timeout, True)
     
-    if __debug__:
-        def render_exception_async(self, exception, before=None, after=None, file=None):
-            future = self.run_in_executor(
-                alchemy_incendiary(
-                    self._render_exception_sync,
-                    (exception, before, after, file),
-                )
-            )
-            
-            future.__silence__()
-            return future
-        
-        @classmethod
-        def render_exception_maybe_async(cls, exception, before=None, after=None, file=None):
-            local_thread = current_thread()
-            if isinstance(local_thread, EventThread):
-                future = local_thread.run_in_executor(
-                    alchemy_incendiary(
-                        cls._render_exception_sync,
-                        (exception, before, after, file),
-                    )
-                )
-                
-                future.__silence__()
-            else:
-                cls._render_exception_sync(exception, before, after, file)
     
-    else:
-        def render_exception_async(self, exception, before=None, after=None, file=None):
-            return self.run_in_executor(
-                alchemy_incendiary(
-                    self._render_exception_sync,
-                    (exception, before, after, file),
-                )
-            )
-        
-        @classmethod
-        def render_exception_maybe_async(cls, exception, before=None, after=None, file=None):
-            local_thread = current_thread()
-            if isinstance(local_thread, EventThread):
-                local_thread.run_in_executor(
-                    alchemy_incendiary(
-                        cls._render_exception_sync,
-                        (exception, before, after, file),
-                    )
-                )
-            else:
-                cls._render_exception_sync(exception, before, after, file)
-    
-    if DOCS_ENABLED:
-        render_exception_async.__doc__ = (
+    def render_exception_async(self, exception, before=None, after=None, file=None):
         """
         Renders the given exception's traceback in a non blocking way.
+        
+        Deprecated and will be removed in 2023.
         
         Parameters
         ----------
@@ -806,14 +763,26 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         -------
         future : ``Future``
             Returns a future, what can be awaited to wait for the rendering to be done.
-        """)
+        """
+        warnings.warn(
+            (
+                f'`{self.__class__.__name__}.render_exception_async` is deprecated and will be removed in 2023. '
+                f'Please use `.write_exception_async` instead.'
+            ),
+            FutureWarning,
+        )
+        
+        return write_exception_async(exception, before, after, file, loop=self)
     
-    if DOCS_ENABLED:
-        render_exception_maybe_async.__doc__ = (
+    
+    @classmethod
+    def render_exception_maybe_async(cls, exception, before=None, after=None, file=None):
         """
         Renders the given exception's traceback. If called from an ``EventThread``, then will not block it.
         
         This method is called from function or methods, where being on an ``EventThread`` is not guaranteed.
+        
+        Deprecated and will be removed in 2023.
         
         Parameters
         ----------
@@ -831,68 +800,17 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
 
         file : `None`, `I/O stream` = `None`, Optional
             The file to print the stack to. Defaults to `sys.stderr`.
-        """)
+        """
+        warnings.warn(
+            (
+                f'`{cls.__name__}.render_exception_maybe_async` is deprecated and will be removed in 2023. '
+                f'Please use `.write_exception_async` instead.'
+            ),
+            FutureWarning,
+        )
+        
+        return write_exception_maybe_async(exception, before, after, file)
     
-    @staticmethod
-    def _render_exception_sync(exception, before, after, file):
-        """
-        Renders the given exception in a blocking way.
-        
-        Parameters
-        ----------
-        exception : ``BaseException``
-            The exception to render.
-        before : `str`, `list` of `str`
-            Any content, what should go before the exception's traceback.
-            
-            If given as `str`, or if `list`, then the last element of it should end with linebreak.
-        after : `str`, `list` of `str`
-            Any content, what should go after the exception's traceback.
-            
-            If given as `str`, or if `list`, then the last element of it should end with linebreak.
-        file : `None`, `I/O stream`
-            The file to print the stack to. Defaults to `sys.stderr`.
-        """
-        extracted = []
-        
-        if before is None:
-            pass
-        elif isinstance(before, str):
-            extracted.append(before)
-        elif isinstance(before, list):
-            for element in before:
-                if type(element) is str:
-                    extracted.append(element)
-                else:
-                    extracted.append(repr(element))
-                    extracted.append('\n')
-        else:
-            # ignore exception cases
-            extracted.append(repr(before))
-            extracted.append('\n')
-        
-        render_exception_into(exception, extend=extracted)
-        
-        if after is None:
-            pass
-        elif isinstance(after, str):
-            extracted.append(after)
-        elif isinstance(after, list):
-            for element in after:
-                if type(element) is str:
-                    extracted.append(element)
-                else:
-                    extracted.append(repr(element))
-                    extracted.append('\n')
-        else:
-            extracted.append(repr(after))
-            extracted.append('\n')
-        
-        if file is None:
-            # ignore exception cases
-            file = sys.stderr
-        
-        file.write(''.join(extracted))
     
     def stop(self):
         """
@@ -904,7 +822,8 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             else:
                 self.call_soon(self._stop)
                 self.wake_up()
-
+    
+    
     def _stop(self):
         """
         Stops the event loop. Internal function of ``.stop``, called or queued up by it.
@@ -934,13 +853,14 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         for result, async_generator in zip(results, closing_async_generators):
             exception = result.exception
-            if (exception is not None) and (type(exception) is not CancelledError):
-                extracted = [
-                    'Exception occurred during shutting down async generator:\n',
-                    repr(async_generator),
-                ]
-                render_exception_into(exception, extend=extracted)
-                sys.stderr.write(''.join(extracted))
+            if (exception is not None) and (not isinstance(exception,CancelledError)):
+                await write_exception_async(
+                    exception, [
+                        'Exception occurred during shutting down async generator:\n',
+                        repr(async_generator),
+                    ],
+                    loop = self,
+                )
     
     
     def get_tasks(self):
@@ -1028,8 +948,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return SocketTransportLayer(self, extra, socket, protocol, waiter, server)
     
     
-    def _make_ssl_transport(self, socket, protocol, ssl, waiter=None, *, server_side=False, server_host_name=None,
-            extra=None, server=None):
+    def _make_ssl_transport(
+        self, socket, protocol, ssl, waiter=None, *, server_side=False, server_host_name=None, extra=None, server=None
+    ):
         """
         Creates an ssl transport with the given parameters.
         
@@ -1167,22 +1088,24 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                 return None
             except OSError as err:
                 # There's nowhere to send the error, so just log it.
-                if err.errno in (errno.EMFILE, errno.ENFILE, errno.ENOBUFS, errno.ENOMEM):
-                    # Some platforms (e.g. Linux keep reporting the FD as ready, so we remove the read handler
-                    # temporarily. We'll try again in a while.
-                    self.render_exception_async(
-                        err,
-                        before = [
-                            'Exception occurred at',
-                            repr(self),
-                            '._accept_connection\n',
-                        ],
-                    )
-                    
-                    self.remove_reader(socket.fileno())
-                    self.call_later(1., self._start_serving, protocol_factory, socket, ssl, server, backlog)
-                else:
+                if err.errno not in (errno.EMFILE, errno.ENFILE, errno.ENOBUFS, errno.ENOMEM):
                     raise # The event loop will catch and log it.
+                    
+                # Some platforms (e.g. Linux keep reporting the FD as ready, so we remove the read handler
+                # temporarily. We'll try again in a while.
+                self.remove_reader(socket.fileno())
+                self.call_later(1., self._start_serving, protocol_factory, socket, ssl, server, backlog)
+                
+                write_exception_async(
+                    err,
+                    [
+                        'Exception occurred at',
+                        repr(self),
+                        '._accept_connection\n',
+                    ],
+                    loop = self
+                )
+            
             else:
                 extra = {'peer_name': address}
                 Task(self._accept_connection_task(protocol_factory, connection_socket, extra, ssl, server), self)
@@ -1214,11 +1137,13 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             protocol = protocol_factory()
             waiter = Future(self)
             if (ssl is None):
-                transport = self._make_socket_transport(connection_socket, protocol, waiter=waiter, extra=extra,
-                    server=server)
+                transport = self._make_socket_transport(
+                    connection_socket, protocol, waiter=waiter, extra=extra, server=server
+                )
             else:
-                transport = self._make_ssl_transport(connection_socket, protocol, ssl, waiter=waiter, server_side=True,
-                    extra=extra, server=server)
+                transport = self._make_ssl_transport(
+                    connection_socket, protocol, ssl, waiter=waiter, server_side=True, extra=extra, server=server
+                )
             
             try:
                 await waiter
@@ -1226,14 +1151,19 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                 transport.close()
                 raise
         
+        except (GeneratorExit, CancelledError):
+            # Allow task cancellation
+            raise
+        
         except BaseException as err:
-            self.render_exception_async(
+            await write_exception_async(
                 err,
                 [
                     'Exception occurred at ',
                     self.__class__.__name__,
                     '._accept_connection2\n',
                 ],
+                loop = self,
             )
     
     
@@ -1461,8 +1391,10 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return ssl, server_host_name
     
     
-    async def create_connection_to(self, protocol_factory, host, port, *, ssl=None, socket_family=0,
-            socket_protocol=0, socket_flags=0, local_address=None, server_host_name=None):
+    async def create_connection_to(
+        self, protocol_factory, host, port, *, ssl=None, socket_family=0, socket_protocol=0, socket_flags=0,
+        local_address=None, server_host_name=None
+    ):
         """
         Open a streaming transport connection to a given address specified by `host` and `port`.
         
@@ -1524,7 +1456,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         if not infos:
             raise OSError('`get_address_info` returned empty list.')
         
-        if (future_2 is not None):
+        if (future_2 is None):
+            local_address_infos = None
+        else:
             local_address_infos = future_2.result()
             if not local_address_infos:
                 raise OSError('`get_address_info` returned empty list.')
@@ -1537,7 +1471,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             try:
                 socket.setblocking(False)
                 
-                if (future_2 is not None):
+                if (local_address_infos is not None):
                     for element in local_address_infos:
                         local_address = element[4]
                         try:
@@ -2485,8 +2419,10 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return protocol
     
     
-    async def create_datagram_connection_to(self, protocol_factory, local_address, remote_address, *, socket_family=0,
-            socket_protocol=0, socket_flags=0, reuse_port=False, allow_broadcast=False):
+    async def create_datagram_connection_to(
+        self, protocol_factory, local_address, remote_address, *, socket_family=0, socket_protocol=0, socket_flags=0,
+        reuse_port=False, allow_broadcast=False
+    ):
         """
         Creates a datagram connection. The socket type will be `SOCK_DGRAM`.
         
@@ -2740,9 +2676,11 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return ssl
     
     
-    async def create_server_to(self, protocol_factory, host, port, *, socket_family=module_socket.AF_UNSPEC,
-            socket_flags=module_socket.AI_PASSIVE, backlog=100, ssl=None,
-            reuse_address=(os.name == 'posix' and sys.platform != 'cygwin'), reuse_port=False):
+    async def create_server_to(
+        self, protocol_factory, host, port, *, socket_family=module_socket.AF_UNSPEC,
+        socket_flags=module_socket.AI_PASSIVE, backlog=100, ssl=None,
+        reuse_address=(os.name == 'posix' and sys.platform != 'cygwin'), reuse_port=False
+    ):
         """
         Creates a TCP server (socket type SOCK_STREAM) listening on port of the host address.
         
@@ -3014,9 +2952,11 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return await UnixWritePipeTransportLayer(self, pipe, protocol)
     
     
-    async def subprocess_shell(self, command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            *, extra=None, preexecution_function=None, close_fds=True, cwd=None, startup_info=None,
-            creation_flags=0, restore_signals=True, start_new_session=False, pass_fds=(), **process_open_kwargs):
+    async def subprocess_shell(
+        self, command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, *, extra=None,
+        preexecution_function=None, close_fds=True, cwd=None, startup_info=None, creation_flags=0, restore_signals=True,
+        start_new_session=False, pass_fds=(), **process_open_kwargs
+    ):
         """
         Create a subprocess from cmd.
         
@@ -3109,10 +3049,11 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return await AsyncProcess(self, command, True, stdin, stdout, stderr, 0, extra, process_open_kwargs)
     
     
-    async def subprocess_exec(self, program, *args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,  extra=None, preexecution_function=None, close_fds=True, cwd=None,
-            startup_info=None, creation_flags=0, restore_signals=True, start_new_session=False, pass_fds=(),
-            **process_open_kwargs):
+    async def subprocess_exec(
+        self, program, *args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,  extra=None,
+        preexecution_function=None, close_fds=True, cwd=None, startup_info=None, creation_flags=0,
+        restore_signals=True, start_new_session=False, pass_fds=(), **process_open_kwargs
+    ):
         """
         Create a subprocess from one or more string parameters specified by args.
         
@@ -3200,8 +3141,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             **process_open_kwargs,
         }
         
-        return await AsyncProcess(self, (program, *args), False, stdin, stdout, stderr, 0, extra,
-            process_open_kwargs)
+        return await AsyncProcess(
+            self, (program, *args), False, stdin, stdout, stderr, 0, extra, process_open_kwargs
+        )
 
     if not IS_UNIX:
         @copy_docs(connect_read_pipe)
@@ -3213,14 +3155,17 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             raise NotImplementedError
         
         @copy_docs(subprocess_shell)
-        async def subprocess_shell(self, cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, *,
-                extra=None, preexecution_function=None, close_fds=True, cwd=None, startup_info=None, creation_flags=0,
-                restore_signals=True, start_new_session=False, pass_fds=(), **process_open_kwargs):
+        async def subprocess_shell(
+            self, cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, *, extra=None,
+            preexecution_function=None, close_fds=True, cwd=None, startup_info=None, creation_flags=0,
+            restore_signals=True, start_new_session=False, pass_fds=(), **process_open_kwargs
+        ):
             raise NotImplementedError
         
         @copy_docs(subprocess_exec)
-        async def subprocess_exec(self, program, *args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, extra=None, preexecution_function=None, close_fds=True, cwd=None,
-                startup_info=None, creation_flags=0, restore_signals=True, start_new_session=False, pass_fds=(),
-                **process_open_kwargs):
+        async def subprocess_exec(
+            self, program, *args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, extra=None,
+            preexecution_function=None, close_fds=True, cwd=None, startup_info=None, creation_flags=0,
+            restore_signals=True, start_new_session=False, pass_fds=(), **process_open_kwargs
+        ):
             raise NotImplementedError

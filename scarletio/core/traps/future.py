@@ -12,6 +12,7 @@ from .handle_cancellers import _HandleCancellerBase
 
 FutureSyncWrapper = include('FutureSyncWrapper')
 FutureAsyncWrapper = include('FutureAsyncWrapper')
+write_exception_async = include('write_exception_async')
 
 ignore_frame(__spec__.origin, 'result', 'raise exception',)
 ignore_frame(__spec__.origin, '__iter__', 'yield self',)
@@ -27,6 +28,7 @@ FUTURE_STATE_TO_NAME = {
     FUTURE_STATE_FINISHED: 'finished',
     FUTURE_STATE_RETRIEVED: 'retrieved'
 }
+
 
 @export
 def get_future_state_name(state):
@@ -117,7 +119,8 @@ class Future:
         self._blocking = False
 
         return self
-
+    
+    
     def __repr__(self):
         """Returns the future's representation."""
         repr_parts = ['<', self.__class__.__name__, ' ']
@@ -154,6 +157,7 @@ class Future:
         repr_parts.append('>')
         
         return ''.join(repr_parts)
+    
     
     if __debug__:
         def cancel(self):
@@ -193,6 +197,7 @@ class Future:
         non-retrieved exceptions.
         """
     )
+    
     
     def is_cancelled(self):
         """
@@ -377,6 +382,7 @@ class Future:
         """
     )
     
+    
     def add_done_callback(self, func):
         """
         Adds the given `func` as a callback of the future.
@@ -476,7 +482,7 @@ class Future:
         
         Parameters
         ----------
-        exception : `BaseException`
+        exception : `BaseException`, `type<BaseException>`
             The exception to set as the future's exception.
         
         Raises
@@ -509,7 +515,7 @@ class Future:
         
         Parameters
         ----------
-        exception : `BaseException`
+        exception : `BaseException`, `type<BaseException>`
             The exception to set as the future's exception.
         
         Returns
@@ -595,12 +601,14 @@ class Future:
                         if callback is silence_cb:
                             return
                     
-                    sys.stderr.write(f'{self.__class__.__name__} is not finished, but still pending!\n{self!r}\n')
+                    sys.stderr.write(
+                        f'{self.__class__.__name__} is not finished, but still pending!\n{self!r}\n'
+                    )
                 return
             
             if state == FUTURE_STATE_FINISHED:
                 if (self._exception is not None):
-                    self._loop.render_exception_maybe_async(
+                    write_exception_maybe_async(
                         self._exception,
                         [
                             self.__class__.__name__,

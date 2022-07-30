@@ -2,10 +2,13 @@ __all__ = ('Cycler',)
 
 from threading import current_thread
 
-from ...utils import CallableAnalyzer
+from ...utils import CallableAnalyzer, include
 
 from ..time import LOOP_TIME
 from ..traps import Task
+
+
+write_exception_async = include('write_exception_async')
 
 
 class CyclerCallable:
@@ -253,7 +256,7 @@ class Cycler:
                 if func.is_async:
                     Task(result, self.loop)
             except BaseException as err:
-                self.loop.render_exception_async(
+                write_exception_async(
                     err,
                     [
                         self.__class__.__name__,
@@ -261,6 +264,7 @@ class Cycler:
                         repr(func),
                         '\n',
                     ],
+                    loop = self.loop,
                 )
         
         self.handle = self.loop.call_later(self.cycle_time, self.__class__._run, self)

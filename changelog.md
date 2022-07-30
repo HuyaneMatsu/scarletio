@@ -5,6 +5,28 @@
 - Add code highlighting support.
 - Add `highlighter` parameter for `render_frames_into`, `render_exception` into.
 - Repeated exception frames are now grouped.
+- Add `render_frames_into_async`.
+- Add `render_exception_into_async`.
+- Add `write_exception_async`.
+- Add `write_exception_maybe_async`.
+- `Task.get_stack` now supports async generator correctly.
+- Add `write_exception_async`.
+
+#### Bug fixes
+
+- `EventThread._accept_connection_task` now handles task cancellation correctly.
+- `WebSocketServerProtocol.lifetime_handler` now handles task cancellation correctly.
+- `WebSocketServerProtocol.handshake` now handles task cancellation correctly.
+- `WebSocketCommonProtocol.transfer_data` now handles task cancellation correctly.
+
+### ext.asyncio
+
+- `EventThread.call_exception_handler` wanted to render exception traceback when there was no exception.
+
+#### Renames, Deprecation & Removals
+
+- Deprecate `EventThread.render_exception_async`, use `write_exception_async` instead.
+- Deprecate `EventThread.render_exception_maybe_async`, use `write_exception_maybe_async` instead.
 
 ## 1.0.31 *\[2022-07-24\]*
 

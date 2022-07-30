@@ -5,7 +5,7 @@ from base64 import b64decode, b64encode
 from binascii import Error as BinasciiError
 from email.utils import formatdate
 
-from ..core import AsyncQueue, CancelledError, Future, Lock, Task
+from ..core import AsyncQueue, CancelledError, Future, Lock, Task, write_exception_async
 from ..utils import IgnoreCaseMultiValueDictionary, is_coroutine
 from ..web_common import AbortHandshake, InvalidHandshake, InvalidOrigin, InvalidUpgrade, PayloadError
 from ..web_common.header_building_and_parsing import (
@@ -219,15 +219,20 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
             
             try:
                 await self.handler(self)
+            except (GeneratorExit, CancelledError):
+                raise
+            
             except BaseException as err:
-                await self._loop.render_exception_async(err,
-                    before = [
+                write_exception_async(
+                    err,
+                    [
                         'Unhandled exception occurred at',
                         self.__class__.__name__,
                         '.lifetime_handler meanwhile running: ',
                         repr(self.handler),
                         '\n',
                     ],
+                    loop = self._loop,
                 )
                 return
             
@@ -257,7 +262,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
         Returns
         -------
         handshake_succeeded : `bool`
-            If the websocket handshake succeeded and starting's it's handler can begin, returns `True`.
+            If the websocket handshake succeeded and starting, it's handler can begin, returns `True`.
         """
         try:
             self.request = request = await self.set_payload_reader(self._read_http_request())
@@ -492,11 +497,19 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
             
             self.connection_open()
         
-        except (CancelledError, ConnectionError) as err:
-            await self._loop.render_exception_async(err, before = [
-                'Unhandled exception occurred at ',
-                self.__class__.__name__,
-                '.handshake, when handshaking:\n'])
+        except (GeneratorExit, CancelledError):
+            raise
+        
+        except ConnectionError as err:
+            write_exception_async(
+                err,
+                [
+                    'Unhandled exception occurred at ',
+                    self.__class__.__name__,
+                    '.handshake, when handshaking:\n'
+                ],
+                loop = self._loop,
+            )
             return False
         
         except BaseException as err:
@@ -548,16 +561,20 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
                 self.write_http_response(status, headers, body=body)
                 self.fail_connection()
                 await self.wait_for_connection_lost()
+            except (GeneratorExit, CancelledError):
+                raise
+            
             except BaseException as err2:
-                await self._loop.render_exception_async(
+                write_exception_async(
                     err2,
-                    before = [
+                    [
                         'Unhandled exception occurred at ',
                         self.__class__.__name__,
                         '.handshake, when handling an other exception;',
                         repr(err),
                         ':\n',
                     ],
+                    loop = self._loop,
                 )
             return False
         

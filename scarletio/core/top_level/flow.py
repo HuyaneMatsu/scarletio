@@ -59,6 +59,7 @@ def run_coroutine(coroutine, loop=None):
     ----------
     coroutine : `GeneratorType`, `CoroutineType`
         The coroutine to create task from.
+    
     loop : `None`, ``EventThread`` = `None`, Optional
         The event loop to schedule the created task on.
     

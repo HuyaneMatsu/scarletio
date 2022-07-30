@@ -5,7 +5,7 @@ import http as module_http
 from collections import OrderedDict
 from os import urandom
 
-from ..core import AsyncQueue, CancelledError, Future, Lock, Task, future_or_timeout, shield
+from ..core import AsyncQueue, CancelledError, Future, Lock, Task, future_or_timeout, shield, write_exception_async
 from ..utils import include
 from ..web_common import ConnectionClosed, HttpReadWriteProtocol, PayloadError, WebSocketFrame, WebSocketProtocolError
 from ..web_common.websocket_frame import (
@@ -33,6 +33,7 @@ EXTERNAL_CLOSE_CODES = (1000, 1001, 1002, 1003, 1007, 1008, 1009, 1010, 1011,)
 HTTPClient = include('HTTPClient')
 
 DECODER = codecs.getincrementaldecoder('utf-8')(errors='strict')
+
 
 class WebSocketCommonProtocol(HttpReadWriteProtocol):
     """
@@ -558,42 +559,56 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
                     break
                 
                 self.messages.set_result(message)
+        
+        except GeneratorExit as err:
+            exception = ConnectionClosed(1013, err)
+            self.fail_connection(self.close_code or 1013)
+            to_reraise = err
+        
         except CancelledError as err:
             # we already failed connection
             exception = ConnectionClosed(self.close_code or 1000, err, self.close_reason)
+            to_reraise = err
         
         except WebSocketProtocolError as err:
             exception = ConnectionClosed(1002, err)
             self.fail_connection(1002)
+            to_reraise = None
         
         except (ConnectionError, EOFError, TimeoutError) as err:
             exception = ConnectionClosed(1006, err)
             self.fail_connection(1006)
+            to_reraise = None
         
         except UnicodeDecodeError as err:
             exception = ConnectionClosed(1007, err)
             self.fail_connection(1007)
+            to_reraise = None
         
         except PayloadError as err:
             exception = ConnectionClosed(1009, err)
             self.fail_connection(1009)
+            to_reraise = None
         
         except BaseException as err:
-            await self._loop.render_exception_async(
+            await write_exception_async(
                 err,
                 [
                     'Unexpected exception occurred at ',
                     repr(self),
                     '.transfer_data\n',
                 ],
+                loop = self._loop,
             )
             # should not happen
             exception = ConnectionClosed(1011, err)
             self.fail_connection(1011)
+            to_reraise = None
         
         else:
             # connection was closed
             exception = ConnectionClosed(self.close_code or 1000, None, self.close_reason)
+            to_reraise = None
             
             # If we are a client and we receive this, we closed our own
             # connection, there is no reason to wait for TCP abort
@@ -603,6 +618,9 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         if self.transfer_data_exception is None:
             self.transfer_data_exception = exception
             self.messages.set_exception(exception)
+        
+        if (to_reraise is not None):
+            raise to_reraise
     
     
     async def read_message(self):

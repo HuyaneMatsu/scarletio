@@ -1,13 +1,15 @@
 __all__ = ('Handle', 'TimerHandle', 'TimerWeakHandle',)
 
-from threading import current_thread
 from types import MethodType
 
-from ...utils import WeakCallable, WeakReferer, ignore_frame, weak_method
+from ...utils import WeakCallable, WeakReferer, ignore_frame, include, weak_method
 
 
 ignore_frame(__spec__.origin, '_run', 'self.func(*self.args)', )
 ignore_frame(__spec__.origin, 'run', 'handle._run()', )
+
+
+write_exception_async = include('write_exception_async')
 
 
 class Handle:
@@ -146,13 +148,16 @@ class Handle:
         try:
             self.func(*self.args)
         except BaseException as err:
-            current_thread().render_exception_async(err, [
-                'Exception occurred at ',
-                self.__class__.__name__,
-                '._run\nAt running ',
-                repr(self.func),
-                '\n',
-            ])
+            write_exception_async(
+                err,
+                [
+                    'Exception occurred at ',
+                    self.__class__.__name__,
+                    '._run\nAt running ',
+                    repr(self.func),
+                    '\n',
+                ]
+            )
         
         self = None  # Needed to break cycles when an exception occurs.
 

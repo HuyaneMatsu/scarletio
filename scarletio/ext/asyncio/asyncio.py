@@ -31,7 +31,7 @@ from ...core import (
     skip_ready_cycle, sleep as hata_sleep
 )
 from ...core.event_loop.event_loop_functionality_helpers import _is_stream_socket
-from ...core.top_level import get_event_loop as scarletio_get_event_loop
+from ...core.top_level import get_event_loop as scarletio_get_event_loop, write_exception_async
 from ...utils import IS_UNIX, KeepType,  WeakReferer, alchemy_incendiary, is_coroutine
 
 
@@ -51,7 +51,7 @@ class EventThread:
     sock_recv = EventThread.socket_receive
     sock_sendall = EventThread.socket_send_all
     sock_connect = EventThread.socket_connect
-    sock_accept =EventThread.socket_accept
+    sock_accept = EventThread.socket_accept
     
     # Required by aio-http 3.6
     def is_running(self):
@@ -133,38 +133,46 @@ class EventThread:
         extracted.append('\n')
         
         if exception is None:
-            self.render_exception_async(exception, extracted)
-        else:
             extracted.append('*no exception provided*\n')
             sys.stderr.write(''.join(extracted))
+        else:
+            write_exception_async(exception, extracted, loop=self)
     
     
-    async def create_connection(self, protocol_factory, host=None, port=None, *, ssl=None, family=0, proto=0, flags=0,
-            sock=None, local_addr=None, server_hostname=None, ssl_handshake_timeout=None, happy_eyeballs_delay=None,
-            interleave=None):
+    async def create_connection(
+        self, protocol_factory, host=None, port=None, *, ssl=None, family=0, proto=0, flags=0, sock=None,
+        local_addr=None, server_hostname=None, ssl_handshake_timeout=None, happy_eyeballs_delay=None, interleave=None
+    ):
         
         
         if sock is None:
-            return await self._asyncio_create_connection_to(protocol_factory, host, port, ssl=ssl,
-                socket_family=family, socket_protocol=proto, socket_flags=flags, local_address=local_addr,
-                server_host_name=server_hostname)
+            return await self._asyncio_create_connection_to(
+                protocol_factory, host, port, ssl=ssl, socket_family=family, socket_protocol=proto, socket_flags=flags,
+                local_address=local_addr, server_host_name=server_hostname
+            )
         else:
             return await self._asyncio_create_connection_with(protocol_factory, sock, ssl=ssl,
                 server_host_name=server_hostname)
     
     
 
-    async def _asyncio_create_connection_to(self, protocol_factory, host, port, *, ssl=None, socket_family=0,
-            socket_protocol=0, socket_flags=0, local_address=None, server_host_name=None):
+    async def _asyncio_create_connection_to(
+        self, protocol_factory, host, port, *, ssl=None, socket_family=0, socket_protocol=0, socket_flags=0,
+        local_address=None, server_host_name=None
+    ):
         ssl, server_host_name = self._create_connection_shared_precheck(ssl, server_host_name, host)
         
-        future_1 = self._ensure_resolved((host, port), family=socket_family, type=module_socket.SOCK_STREAM,
-            protocol=socket_protocol, flags=socket_flags)
+        future_1 = self._ensure_resolved(
+            (host, port), family=socket_family, type=module_socket.SOCK_STREAM, protocol=socket_protocol,
+            flags=socket_flags
+        )
         
         futures = [future_1]
         if local_address is not None:
-            future_2 = self._ensure_resolved(local_address, family=socket_family, type=module_socket.SOCK_STREAM,
-                protocol=socket_protocol, flags=socket_flags)
+            future_2 = self._ensure_resolved(
+                local_address, family=socket_family, type=module_socket.SOCK_STREAM, protocol=socket_protocol,
+                flags=socket_flags
+            )
             
             futures.append(future_2)
         
@@ -2728,7 +2736,7 @@ class _FlowControlMixin(Transport):
             except (SystemExit, KeyboardInterrupt):
                 raise
             except BaseException as err:
-                self._loop.render_exception_async(err, 'protocol.pause_writing() failed\n')
+                write_exception_async(err, 'protocol.pause_writing() failed\n', loop=self)
     
 
     def _maybe_resume_protocol(self):
@@ -2739,7 +2747,7 @@ class _FlowControlMixin(Transport):
             except (SystemExit, KeyboardInterrupt):
                 raise
             except BaseException as err:
-                self._loop.render_exception_async(err, 'protocol.resume_writing() failed\n')
+                write_exception_async(err, 'protocol.resume_writing() failed\n', loop=self)
     
     def get_write_buffer_limits(self):
         return (self._low_water, self._high_water)

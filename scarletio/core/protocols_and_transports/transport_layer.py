@@ -4,13 +4,16 @@ import reprlib, selectors
 import socket as module_socket
 from collections import deque
 
-from ...utils import copy_docs
+from ...utils import copy_docs, include
 
 from .abstract import AbstractTransportLayerBase
 from .extra_info import (
     EXTRA_INFO_NAME_PEER_NAME, EXTRA_INFO_NAME_SOCKET, EXTRA_INFO_NAME_SOCKET_NAME, get_extra_info, has_extra_info,
     set_extra_info
 )
+
+
+write_exception_async = include('write_exception_async')
 
 
 if hasattr(module_socket, 'TCP_NODELAY'):
@@ -74,7 +77,7 @@ class TransportLayerBase(AbstractTransportLayerBase):
             Additional error message to render.
         """
         if not isinstance(exception, (BrokenPipeError, ConnectionResetError, ConnectionAbortedError)):
-            self._loop.render_exception_async(
+            write_exception_async(
                 exception,
                 [
                     message,
@@ -82,6 +85,7 @@ class TransportLayerBase(AbstractTransportLayerBase):
                     repr(self),
                     '.\n',
                 ],
+                loop = self._loop,
             )
 
 
@@ -326,13 +330,14 @@ class SocketTransportLayerBase(TransportLayerBase):
             try:
                 protocol.pause_writing()
             except BaseException as err:
-                self._loop.render_exception_async(
+                write_exception_async(
                     err,
                     [
                         'Exception occurred at:\n',
                         repr(self),
                         '._maybe_pause_protocol\n',
                     ],
+                    loop = self._loop,
                 )
     
     
@@ -425,13 +430,14 @@ class SocketTransportLayerBase(TransportLayerBase):
             try:
                 protocol.resume_writing()
             except BaseException as err:
-                self._loop.render_exception_async(
+                write_exception_async(
                     err,
                     [
                         'Exception occurred at:\n',
                         repr(self),
                         '._maybe_resume_protocol\n',
                     ],
+                    loop = self._loop,
                 )
 
 
@@ -777,14 +783,15 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
     @copy_docs(SocketTransportLayerBase._fatal_error)
     def _fatal_error(self, exception, message='Fatal error on transport'):
         if not isinstance(exception, OSError):
-            self._loop.render_exception_async(
+            write_exception_async(
                 exception,
                 [
                     message,
                     '\nException occurred at ',
                     repr(self),
                     '.\n',
-                ]
+                ],
+                loop = self._loop
             )
         
         self._force_close(exception)

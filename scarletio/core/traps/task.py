@@ -2,7 +2,7 @@ __all__ = ('Task',)
 
 import reprlib, sys
 from threading import current_thread
-from types import CoroutineType, GeneratorType
+from types import AsyncGeneratorType as CoroutineGeneratorType, CoroutineType, GeneratorType
 
 from ...utils import alchemy_incendiary, copy_docs, ignore_frame, include, render_frames_into
 from ...utils.trace import format_callback, format_coroutine, render_exception_into
@@ -12,14 +12,15 @@ from ..exceptions import CancelledError, InvalidStateError
 from .future import FUTURE_STATE_FINISHED, FUTURE_STATE_PENDING, FUTURE_STATE_RETRIEVED, Future, get_future_state_name
 
 
-ignore_frame(__spec__.origin, 'result', 'raise exception',)
-ignore_frame(__spec__.origin, '__iter__', 'yield self',)
-ignore_frame(__spec__.origin, '_step', 'result = coroutine.throw(exception)',)
-ignore_frame(__spec__.origin, '_step', 'result = coroutine.send(None)',)
-ignore_frame(__spec__.origin, '_wake_up', 'future.result()',)
-ignore_frame(__spec__.origin, '__call__', 'future.result()', )
+ignore_frame(__spec__.origin, 'result', 'raise exception')
+ignore_frame(__spec__.origin, '__iter__', 'yield self')
+ignore_frame(__spec__.origin, '_step', 'result = coroutine.throw(exception)')
+ignore_frame(__spec__.origin, '_step', 'result = coroutine.send(None)')
+ignore_frame(__spec__.origin, '_wake_up', 'future.result()')
+ignore_frame(__spec__.origin, '__call__', 'future.result()')
 
 EventThread = include('EventThread')
+
 
 class Task(Future):
     """
@@ -127,6 +128,8 @@ class Task(Future):
             frame = coroutine.gi_frame
         elif isinstance(coroutine, CoroutineType):
             frame = coroutine.cr_frame
+        elif isinstance(coroutine, CoroutineGeneratorType):
+            frame = coroutine.ag_frame
         else:
             frame = None
         
@@ -147,6 +150,8 @@ class Task(Future):
                 coroutine = coroutine.gi_yieldfrom
             elif isinstance(coroutine, CoroutineType):
                 coroutine = coroutine.cr_await
+            elif isinstance(coroutine, CoroutineGeneratorType):
+                coroutine = coroutine.ag_await
             else:
                 coroutine = None
             
@@ -155,6 +160,8 @@ class Task(Future):
                     frame = coroutine.gi_frame
                 elif isinstance(coroutine, CoroutineType):
                     frame = coroutine.cr_frame
+                elif isinstance(coroutine, CoroutineGeneratorType):
+                    frame = coroutine.ag_frame
                 else:
                     frame = None
                 
@@ -175,6 +182,8 @@ class Task(Future):
                 frame = coroutine.gi_frame
             elif isinstance(coroutine, CoroutineType):
                 frame = coroutine.cr_frame
+            elif isinstance(coroutine, CoroutineGeneratorType):
+                frame = coroutine.ag_frame
             else:
                 frame = None
                 
@@ -253,7 +262,7 @@ class Task(Future):
         """
         local_thread = current_thread()
         if isinstance(local_thread, EventThread):
-            return local_thread.run_in_executor(alchemy_incendiary(self._print_stack,(self, limit, file),))
+            return local_thread.run_in_executor(alchemy_incendiary(self._print_stack, (self, limit, file),))
         else:
             self._print_stack(self, limit, file)
     

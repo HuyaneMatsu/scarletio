@@ -4,7 +4,7 @@ import reprlib, sys, warnings
 from threading import Event as SyncEvent, Lock as SyncLock
 from types import MethodType
 
-from ...utils import copy_docs, export, ignore_frame, set_docs
+from ...utils import copy_docs, export, ignore_frame, include, set_docs
 
 from ..exceptions import CancelledError, InvalidStateError
 
@@ -14,8 +14,11 @@ from .future import (
 )
 
 
-ignore_frame(__spec__.origin, 'result', 'raise exception',)
-ignore_frame(__spec__.origin, 'wait', 'return self.result()', )
+ignore_frame(__spec__.origin, 'result', 'raise exception')
+ignore_frame(__spec__.origin, 'wait', 'return self.result()')
+
+
+write_exception_async = include('write_exception_async')
 
 
 @export
@@ -577,12 +580,14 @@ class FutureSyncWrapper:
             """
             if self._state == FUTURE_STATE_PENDING:
                 if self._future is not None:
-                    sys.stderr.write(f'{self.__class__.__name__} is not finished, but still pending!\n{self!r}\n')
+                    sys.stderr.write(
+                        f'{self.__class__.__name__} is not finished, but still pending!\n{self!r}\n'
+                    )
                 return
             
             if self._state == FUTURE_STATE_FINISHED:
                 if (self._exception is not None):
-                    self._loop.render_exception_maybe_async(
+                    write_exception_maybe_async(
                         self._exception,
                         [
                             self.__class__.__name__,

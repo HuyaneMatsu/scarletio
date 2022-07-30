@@ -1,5 +1,8 @@
 __all__ = ()
 
+from ..core.top_level import write_exception_async
+
+
 class Connection:
     """
     Reusable connection used by connectors to remember their details.
@@ -114,7 +117,7 @@ class Connection:
         try:
             callback()
         except BaseException as err:
-            self.connector.loop.render_exception_async(
+            write_exception_async(
                 err,
                 [
                     'Exception occurred at ',
@@ -123,6 +126,7 @@ class Connection:
                     repr(callback),
                     '\n',
                 ],
+                loop = self.connector.loop,
             )
     
     
@@ -137,7 +141,7 @@ class Connection:
             try:
                 callback()
             except BaseException as err:
-                self.connector.loop.render_exception_async(
+                write_exception_async(
                     err,
                     [
                         'Exception occurred at ',
@@ -146,6 +150,7 @@ class Connection:
                         repr(callback),
                         '\n',
                     ],
+                    loop = self.connector.loop,
                 )
     
     
