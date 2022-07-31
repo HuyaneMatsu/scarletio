@@ -13,6 +13,10 @@
 - Add `write_exception_async`.
 - Add `set_default_trace_writer_highlighter`.
 - Add `set_trace_writer_highlighter`.
+- Add `get_default_trace_writer_highlighter`.
+- Render syntax errors correctly.
+- Handle syntax errors correctly in console.
+- Highlight consoles too!
 
 #### Bug fixes
 

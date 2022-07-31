@@ -1,6 +1,7 @@
 __all__ = (
-    'render_frames_into_async', 'render_exception_into_async', 'set_default_trace_writer_highlighter',
-    'set_trace_writer_highlighter', 'write_exception_async', 'write_exception_maybe_async'
+    'get_default_trace_writer_highlighter', 'render_frames_into_async', 'render_exception_into_async',
+    'set_default_trace_writer_highlighter', 'set_trace_writer_highlighter', 'write_exception_async',
+    'write_exception_maybe_async'
 )
 
 import sys
@@ -197,7 +198,7 @@ def write_exception_sync(exception, before=None, after=None, file=None, *, filte
         extracted.append('\n')
     
     if (file is None) and (highlighter is None):
-        highlighter = DEFAULT_TRACE_WRITER_HIGHLIGHTER
+        highlighter = get_default_trace_writer_highlighter()
     
     render_exception_into(exception, extracted, filter=filter, highlighter=highlighter)
     
@@ -339,14 +340,26 @@ def write_exception_maybe_async(exception, before=None, after=None, file=None, *
         write_exception_sync(exception, before, after, file, filter=filter, highlighter=highlighter)
 
 
-DEFAULT_TRACE_WRITER_HIGHLIGHTER = None
+_DEFAULT_TRACE_WRITER_HIGHLIGHTER = None
+
+
+def get_default_trace_writer_highlighter():
+    """
+    Returns the default highlighter for trace writer functions.
+    
+    Returns
+    -------
+    highlighter : `None`, ``HighlightFormatterContext``
+    """
+    return _DEFAULT_TRACE_WRITER_HIGHLIGHTER
+
 
 @call
 def set_default_trace_writer_highlighter():
     """
     Re-sets the default highlighter for trace writer functions.
     """
-    global DEFAULT_TRACE_WRITER_HIGHLIGHTER
+    global _DEFAULT_TRACE_WRITER_HIGHLIGHTER
     
     if PLATFORM != 'linux':
         highlighter = None
@@ -359,7 +372,7 @@ def set_default_trace_writer_highlighter():
         else:
             highlighter = DEFAULT_ANSI_HIGHLIGHTER
     
-    DEFAULT_TRACE_WRITER_HIGHLIGHTER = highlighter
+    _DEFAULT_TRACE_WRITER_HIGHLIGHTER = highlighter
 
 
 def set_trace_writer_highlighter(highlighter):
@@ -376,7 +389,7 @@ def set_trace_writer_highlighter(highlighter):
     TypeError
         - If `highlighter`'s type is incorrect.
     """
-    global DEFAULT_TRACE_WRITER_HIGHLIGHTER
+    global _DEFAULT_TRACE_WRITER_HIGHLIGHTER
     
     if (highlighter is not None) and (not isinstance(highlighter, HighlightFormatterContext)):
         raise TypeError(
@@ -384,4 +397,4 @@ def set_trace_writer_highlighter(highlighter):
             f'{highlighter.__class__.__name__}; {highlighter!r}'
         )
     
-    DEFAULT_TRACE_WRITER_HIGHLIGHTER = highlighter
+    _DEFAULT_TRACE_WRITER_HIGHLIGHTER = highlighter

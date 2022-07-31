@@ -81,6 +81,162 @@ def try_get_raw_exception_representation(exception):
     return ''.join(raw_exception_representation_parts)
 
 
+def is_syntax_error(exception):
+    """
+    Returns whether the given exception is a syntax error with the expected structure.
+    
+    Parameters
+    ----------
+    exception : ``BaseException``
+        The exception to check.
+    
+    Returns
+    -------
+    is_syntax_error : `bool`
+    """
+    if not isinstance(exception, SyntaxError):
+        return False
+    
+    exception_parameters = exception.args
+    if (not isinstance(exception_parameters, tuple)) or (len(exception_parameters) != 2):
+        return False
+    
+    message, details = exception_parameters
+    if (message is not None) and (not isinstance(message, str)):
+        return False
+    
+    if (not isinstance(details, tuple)) or (len(details) not in (4, 6)):
+        return False
+    
+    # Pulled from C 3.11
+    #
+    #     args = Py_BuildValue("(O(OiiNii))", errmsg, tok->filename, tok->lineno,
+    #                          col_offset, errtext, tok->lineno, end_col_offset);
+    #
+    # file_name is annotated as `O`, so it probably can be `None` as well.
+    # also: line_number == end_line_number, so we can ignore it.
+    
+    file_name = details[0]
+    line_number = details[1]
+    offset = details[2]
+    line = details[3]
+    
+    if (file_name is not None) and (not isinstance(file_name, str)):
+        return False
+    
+    if not isinstance(line_number, int):
+        return False
+    
+    if not isinstance(offset, int):
+        return False
+    
+    if not isinstance(line, str):
+        return False
+    
+    if len(details) == 4:
+        return True
+    
+    end_line_number = details[4]
+    end_offset = details[5]
+    
+    if not isinstance(end_line_number, int):
+        return False
+    
+    if not isinstance(end_offset, int):
+        return False
+    
+    return True
+
+
+def _render_syntax_error_representation_into(syntax_error, into, highlighter):
+    """
+    Renders a syntax exception's representation.
+    
+    Parameters
+    ----------
+    exception : ``BaseException``
+        The respective exception instance.
+    
+    into : `list` of `str`
+        The list of strings to extend.
+    
+    highlighter : `None`, ``HighlightFormatterContext``
+        Formatter storing highlighting details.
+    
+    Returns
+    -------
+    into  : `list` of `str`
+    """
+    message, details = syntax_error.args
+    
+    file_name = details[0]
+    line_number = details[1]
+    offset = details[2]
+    line = details[3]
+    
+    if len(details) == 6:
+        end_offset = details[5]
+    else:
+        end_offset = -1
+    
+    if (file_name is None):
+        file_name = ''
+    
+    into.extend(_iter_highlight_producer(_produce_file_location(file_name, line_number, ''), highlighter))
+    
+    into.append('\n')
+    
+    line = line.lstrip()
+    
+    left_stripped_count = 0
+    for character in line:
+        if character in {' ', '\n', '\t', '\f'}:
+            left_stripped_count += 1
+            continue
+        
+        break
+    
+    line = line[left_stripped_count:]
+    
+    into.append('    ')
+    into.extend(iter_highlight_code_lines([line], highlighter))
+    if offset - 1 >= left_stripped_count:
+        
+        into.append(' ' * (3 + offset - left_stripped_count))
+        
+
+        if end_offset == -1:
+            pointer_length = 1
+        else:
+            pointer_length = end_offset - offset
+            
+            if pointer_length < 1:
+                pointer_length = 1
+        
+        pointer = '^'
+        if pointer_length != 1:
+            pointer = '^' * pointer_length
+        
+        
+        into = _add_typed_trace_part_into(
+            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_EXCEPTION_REPR, pointer, into, highlighter
+        )
+        
+        into.append('\n')
+    
+    
+    exception_representation = type(syntax_error).__name__
+    
+    if (message is not None) and message:
+        exception_representation = f'{exception_representation}: {message}'
+    
+    into = _add_typed_trace_part_into(
+        HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_EXCEPTION_REPR, exception_representation, into, highlighter
+    )
+    
+    return into
+
+
 def get_exception_representation(exception):
     """
     Gets the exception's representation.
@@ -90,12 +246,19 @@ def get_exception_representation(exception):
     exception : ``BaseException``
         The respective exception instance.
     
+    highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
+        Formatter storing highlighting details.
+        
+        Only used for formatting syntax errors.
+    
     Returns
     -------
     exception_representation : `str`
     """
     try:
         exception_representation = repr(exception)
+    except (KeyboardInterrupt, SystemExit):
+        raise
     except:
         exception_representation = try_get_raw_exception_representation(exception)
     
@@ -674,27 +837,6 @@ class FrameDetail:
         return '\n'.join(self.get_lines())
     
     
-    def _produce_file_location(self):
-        """
-        Produces file location part and their tokens.
-        
-        This method is an iterable generator.
-        
-        Yields
-        ------
-        part : `str`
-            Part to render
-        token_type : `int`
-            The part's type.
-        """
-        yield '  File ', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE
-        yield f'"{self.file_name}"', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_PATH
-        yield ', line ', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE
-        yield  str(self.line_number), HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LINE_NUMBER
-        yield ', in ', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE
-        yield self.name, HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_NAME
-    
-    
     def _render(self, highlighter):
         """
         Produces each part of the frame to render.
@@ -710,12 +852,11 @@ class FrameDetail:
         ------
         part : `str`
         """
-        if highlighter is None:
-            for part, token_type in self._produce_file_location():
-                yield part
-        else:
-            for part, token_type in self._produce_file_location():
-                yield from highlighter.generate_highlighted(Token(token_type, part))
+        
+        yield from _iter_highlight_producer(
+            _produce_file_location(self.file_name, self.line_number, self.name),
+            highlighter,
+        )
         
         yield '\n'
         
@@ -1101,7 +1242,7 @@ class FrameDetailGroup:
         details = self.details
         
         if (repeat_count > 1):
-            into = _add_trace_typed_part_into(
+            into = _add_typed_trace_part_into(
                 HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_FRAME_REPEAT,
                 (
                     f'[Following {len(details)} frame{"s were" if len(details) > 1 else " was"} '
@@ -1116,7 +1257,7 @@ class FrameDetailGroup:
             detail.render_into(into, highlighter)
         
         if (repeat_count > 1):
-            into = _add_trace_typed_part_into(
+            into = _add_typed_trace_part_into(
                 HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_FRAME_REPEAT,
                 f'[End of repeated frames]',
                 into,
@@ -1262,38 +1403,18 @@ def _produce_file_location(file_name, line_number, name):
         The part's type.
     """
     yield '  File ', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE
-    yield f'"{file_name}"', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_PATH
+    
+    if file_name:
+        yield f'"{file_name}"', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_PATH
+    else:
+        yield 'unknown location', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE
+    
     yield ', line ', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE
     yield  str(line_number), HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LINE_NUMBER
-    yield ', in ', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE
-    yield name, HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_NAME
-
-
-def _extend_with_producer(producer, into, highlighter):
-    """
-    Extends the given `into` list of strings with the products of the given producer.
     
-    Parameters
-    ----------
-    producer : `GeneratorType`
-        generator which produces `part - token_type` pairs.
-    into : `list` of `str`
-        The list of strings to add.
-    highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
-        Formatter storing highlighting details.
-    
-    Returns
-    -------
-    into : `list` of `str`
-    """
-    if highlighter is None:
-        for part, token_type in producer:
-            into.append(part)
-    else:
-        for part, token_type in producer:
-            into.extend(highlighter.generate_highlighted(Token(token_type, part)))
-    
-    return into
+    if name:
+        yield ', in ', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE
+        yield name, HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_NAME
 
 
 class FrameProxyType:
@@ -1410,7 +1531,11 @@ class FrameProxyType:
         -------
         file_name : `str`
         """
-        return self.code.co_filename
+        file_name = self.code.co_filename
+        if (file_name is None):
+            file_name = ''
+        
+        return file_name
     
     
     @property
@@ -1693,12 +1818,15 @@ def render_exception_into(exception, extend=None, *, filter=None, highlighter=No
         extend.append('\n')
         extend = render_frames_into(frames, extend, filter=filter, highlighter=highlighter)
         
-        extend = _add_trace_typed_part_into(
-            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_EXCEPTION_REPR,
-            get_exception_representation(exception),
-            extend,
-            highlighter
-        )
+        if is_syntax_error(exception):
+            extend = _render_syntax_error_representation_into(exception, extend, highlighter)
+        else:
+            extend = _add_typed_trace_part_into(
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_EXCEPTION_REPR,
+                get_exception_representation(exception),
+                extend,
+                highlighter,
+            )
         
         extend.append('\n')
         
@@ -1744,10 +1872,35 @@ def _add_trace_title_into(title, into, highlighter):
     -------
     into : `list` of `str`
     """
-    return _add_trace_typed_part_into(HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE, title, into, highlighter)
+    return _add_typed_trace_part_into(HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE, title, into, highlighter)
 
 
-def _add_trace_typed_part_into(type_, part, into, highlighter):
+def _iter_highlight_producer(producer, highlighter):
+    """
+    iterates over a producer and applies highlight to each part.
+    
+    This method is an iterable generator
+    
+    Parameters
+    ----------
+    producer : `GeneratorType`
+        Generator to produce parts.
+    highlighter : `None`, ``HighlightFormatterContext``
+        Formatter storing highlighting details.
+    
+    Yields
+    ------
+    part : `str`
+    """
+    if highlighter is None:
+        for part, token_type in producer:
+            yield part
+    else:
+        for part, token_type in producer:
+            yield from highlighter.generate_highlighted(Token(token_type, part))
+
+
+def _add_typed_trace_part_into(type_, part, into, highlighter):
     """
     Adds trace title into the given list of strings.
     

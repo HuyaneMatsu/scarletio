@@ -100,3 +100,20 @@ DEFAULT_ANSI_HIGHLIGHTER.set_highlight_ansi_code(
     HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_EXCEPTION_REPR,
     create_ansi_format_code(foreground_color = (235, 52, 113)),
 )
+
+# Add console highlights
+
+DEFAULT_ANSI_HIGHLIGHTER.set_highlight_ansi_code(
+    HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_BANNER_LOGO,
+    create_ansi_format_code(foreground_color = (137, 17, 217)),
+)
+
+DEFAULT_ANSI_HIGHLIGHTER.set_highlight_ansi_code(
+    HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_BANNER_DESCRIPTION,
+    create_ansi_format_code(foreground_color = (207, 252, 239)),
+)
+
+DEFAULT_ANSI_HIGHLIGHTER.set_highlight_ansi_code(
+    HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_BANNER_DESCRIPTION_AWAIT_UNAVAILABLE,
+    create_ansi_format_code(foreground_color = (235, 52, 113)),
+)

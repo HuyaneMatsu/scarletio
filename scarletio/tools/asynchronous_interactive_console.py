@@ -8,8 +8,9 @@ from functools import partial as partial_func
 from types import FunctionType
 
 from .. import __package__ as PACKAGE_NAME
-from ..core import Future, create_event_loop, get_event_loop
-from ..utils import is_awaitable, render_exception_into
+from ..core import Future, create_event_loop, get_default_trace_writer_highlighter, get_event_loop
+from ..utils import HIGHLIGHT_TOKEN_TYPES, is_awaitable, render_exception_into
+from ..utils.trace import _render_syntax_error_representation_into, _iter_highlight_producer, is_syntax_error
 
 
 try:
@@ -30,9 +31,9 @@ else:
 
 
 if AWAIT_AVAILABLE:
-    AWAIT_NOTE = 'Use \'await\' directly.'
+    AWAIT_NOTE = 'Use "await" directly.'
 else:
-    AWAIT_NOTE = '!!! Direct \'await\' is not available on your python version. Please use python 3.8 or newer !!!'
+    AWAIT_NOTE = '!!! Direct "await" is not available on your python version. Please use python 3.8 or newer !!!'
 
 
 def get_or_create_event_loop():
@@ -53,7 +54,77 @@ def get_or_create_event_loop():
 
 LOGO_SEPARATOR = '\n\n'
 
-def create_banner(package=None, logo=None):
+
+def _produce_banner(package, logo):
+    """
+    Produces banner parts with their tokens.
+    
+    This method is an iterable generator.
+    
+    Yields
+    ------
+    part : `str`
+        Banner part.
+    token_type : `int`
+        The part's type.
+    """
+    if package is None:
+        package = PACKAGE
+    
+    if (logo is None) and (package is PACKAGE):
+        logo = (
+            f'                     _      _   _\n'
+            f'                    | |    | | (_)\n'
+            f'  ___  ___ __ _ _ __| | ___| |_ _  ___\n'
+            f' / __|/ __/ _` | \'__| |/ _ \ __| |/ _ \\\n'
+            f' \__ \ (_| (_| | |  | |  __/ |_| | (_) |\n'
+            f' |___/\___\__,_|_|  |_|\___|\__|_|\___/\n'
+        )
+    
+    
+    if (logo is not None):
+        yield logo, HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_BANNER_LOGO
+        
+        if (package is not None):
+            yield '\n', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE
+            
+            
+            logo_length = max((len(line) for line in logo.splitlines()), default=0)
+            package_version = package.__version__
+            package_version_length = len(package_version)
+            
+            adjust = logo_length - package_version_length
+            if adjust > 0:
+                yield ' ' * adjust, HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE
+            
+            yield package_version, HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_BANNER_LOGO_VERSION
+            yield '\n', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE
+            
+        yield '\n\n', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE
+    
+    # At cpython it has a ` \n` in it, but in pypy we have just a `\n`.
+    system_version = ' '.join(sys.version.split())
+    
+    # get package name and upper case it's first character
+    package_name = package.__package__
+    if package_name and not package_name[0].isupper():
+        package_name = package_name[0].upper() + package_name[1:]
+    
+    console_description = f'{package_name} interactive console {system_version} on {sys.platform}.\n'
+    yield console_description, HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_BANNER_DESCRIPTION
+    
+    if AWAIT_AVAILABLE:
+        await_token_type = HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_BANNER_DESCRIPTION_AWAIT
+    else:
+        await_token_type = HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_BANNER_DESCRIPTION_AWAIT_UNAVAILABLE
+    
+    yield AWAIT_NOTE, await_token_type
+    
+    console_help ='\nType "help", "copyright", "credits" or "license" for more information.'
+    yield console_help, HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_BANNER_DESCRIPTION
+
+
+def create_banner(package=None, logo=None, *, highlighter=None):
     """
     helper creating console banner.
     
@@ -61,35 +132,19 @@ def create_banner(package=None, logo=None):
     ----------
     package : `None`, `ModuleType` = `None`, Optional
         The package, which runs the interactive console.
+    
     logo : `None`, `str` = `None`, Optional
         The logo of the package if any.
+    
+    highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
+        Formatter storing highlighting details.
     
     Returns
     -------
     banner : `str`
         Console banner.
     """
-    if package is None:
-        package = PACKAGE
-    
-    if (logo is None) and (package is PACKAGE):
-        logo = (
-            f'                     _      _   _       \n'
-            f'                    | |    | | (_)      \n'
-            f'  ___  ___ __ _ _ __| | ___| |_ _  ___  \n'
-            f' / __|/ __/ _` | \'__| |/ _ \ __| |/ _ \ \n'
-            f' \__ \ (_| (_| | |  | |  __/ |_| | (_) |\n'
-            f' |___/\___\__,_|_|  |_|\___|\__|_|\___/ \n'
-            f'                                        \n'
-            f'{package.__version__:>40}\n'
-        )
-    
-    return (
-        f'{"" if (logo is None) else logo}{"" if (logo is None) else LOGO_SEPARATOR}'
-        f'{package.__package__} interactive console {sys.version} on {sys.platform}.\n'
-        f'{AWAIT_NOTE}\n'
-        f'Type \'help\', \'copyright\', \'credits\' or \'license\' for more information.'
-    )
+    return ''.join([*_iter_highlight_producer(_produce_banner(package, logo), highlighter)])
 
 
 def create_exit_message(package=None):
@@ -200,7 +255,7 @@ def _ignore_console_frames(file_name, name, line_number, line):
             if line == 'coroutine = function()':
                 should_show_frame = False
         
-        elif name == 'runcode':
+        elif name == 'run_code':
             if line == 'result = self.future.sync_wrap().wait()':
                 should_show_frame = False
     
@@ -215,6 +270,8 @@ class AsynchronousInteractiveConsole(InteractiveConsole):
     ----------
     future : `None`, ``Future``
         Used to forward the result of an executed code from the event loop to the console.
+    highlighter : `None`, ``HighlightFormatterContext``
+        Formatter storing highlighting details.
     loop : ``EventThread``
         The event loop on which the console runs it's code.
     stop_on_interruption : `bool`
@@ -222,7 +279,7 @@ class AsynchronousInteractiveConsole(InteractiveConsole):
     task : `None`, ``Future``
         Asynchronous task running on the event loop on what's result the console is waiting for.
     """
-    def __init__(self, local_variables, event_loop, *, stop_on_interruption=False):
+    def __init__(self, local_variables, event_loop, *, highlighter=None, stop_on_interruption=False):
         """
         Creates a new async interactive console.
         
@@ -230,8 +287,13 @@ class AsynchronousInteractiveConsole(InteractiveConsole):
         ----------
         local_variables : `dict` of (`str`, `Any`) items
             Initial local variables for the executed code inside of the console.
+        
         event_loop : ``EventThread``
             The event loop to run the executed code on.
+        
+        highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
+            Formatter storing highlighting details.
+        
         stop_on_interruption : `bool` = `False`, Optional (Keyword only)
             Whether the console should be stopped on keyboard interrupt.
         """
@@ -239,12 +301,18 @@ class AsynchronousInteractiveConsole(InteractiveConsole):
         self.compile.compiler.flags |= PyCF_ALLOW_TOP_LEVEL_AWAIT
         
         self.future = None
+        self.highlighter = highlighter
         self.task = None
         self.loop = event_loop
         self.stop_on_interruption = stop_on_interruption
     
     
-    def runcode(self, code):
+    # Disable badly named functions. No-one loves them.
+    runcode = NotImplemented
+    showsyntaxerror = NotImplemented
+    
+    
+    def run_code(self, code):
         """
         Runs the given code object on the respective event loop.
         
@@ -296,7 +364,11 @@ class AsynchronousInteractiveConsole(InteractiveConsole):
             if isinstance(err, SystemExit):
                 raise
             
-            sys.stdout.write(''.join(render_exception_into(err, [], filter=_ignore_console_frames)))
+            sys.stdout.write(
+                ''.join(
+                    render_exception_into(err, [], filter=_ignore_console_frames, highlighter=self.highlighter)
+                )
+            )
             
             if isinstance(err, KeyboardInterrupt):
                 if self.stop_on_interruption:
@@ -334,14 +406,72 @@ class AsynchronousInteractiveConsole(InteractiveConsole):
                 raise SystemExit() from None
             
             raise
+    
+    
+    # Your name will be fixed in the future as well, gave no worries!
+    def runsource(self, source, file_name='<input>'):
+        """
+        Compiles and runs the given source in the console.
+        
+        Parameters
+        ----------
+        source : `str`
+            The source code to run.
+        
+        file_name : `str` = `'<input>'`, Optional
+            The file name to use when displaying the output.
+        
+        Returns
+        -------
+        ran_nothing : `bool`
+            Whether nothing ran. 
+        """
+        try:
+            code = self.compile(source, file_name)
+        except (OverflowError, SyntaxError, ValueError) as syntax_error:
+            self.show_syntax_error(syntax_error, file_name)
+            return False
+
+        if code is None:
+            return True
+        
+        self.run_code(code)
+        return False
+    
+    
+    def show_syntax_error(self, syntax_error, file_name):
+        """
+        Shows the given syntax error.
+        
+        Parameters
+        ----------
+        syntax_error : `SyntaxError`, `OverflowError`, `ValueError`
+            The syntax error, or other derping to show.
+        
+        file_name : `str`
+            The file name to use when displaying the output.
+        """
+        into = []
+        
+        if is_syntax_error(syntax_error):
+            message, (old_file_name, *additional_details) = syntax_error.args
+            syntax_error.args = (message, (file_name, *additional_details))
+            
+            _render_syntax_error_representation_into(syntax_error, into, self.highlighter)
+            into.append('\n')
+        else:
+            render_exception_into(syntax_error, into, filter=_ignore_console_frames, highlighter=self.highlighter)
+        
+        sys.stdout.write(''.join(into))
 
 
 def run_asynchronous_interactive_console(
     interactive_console_locals = None,
     *,
     banner = None,
-    exit_message = None,
     callback = None,
+    exit_message = None,
+    highlighter = None,
     stop_event_loop_when_done = True,
     stop_on_interruption = False,
 ):
@@ -352,24 +482,35 @@ def run_asynchronous_interactive_console(
     ----------
     interactive_console_locals : `None`, `dict` of (`str`, `Any`) items = `None`, Optional
         Parameters to start the console with.
+    
     banner : `None`, `str` = `None`, Optional (Keyword only)
         Interactive console banner.
-    exit_message : `None`, `str` = `None`, Optional (Keyword only)
-        Interactive console exit message.
+    
     callback : `None`, `FunctionType` = `None`, Optional (Keyword only)
         Callback to run when execution the console is closed.
         
         > This runs before the event loop is shut down!
+    
+    exit_message : `None`, `str` = `None`, Optional (Keyword only)
+        Interactive console exit message.
+    
+    highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
+        Formatter storing highlighting details.
+
     stop_event_loop_when_done : `bool` = `True`, Optional (Keyword only)
         Whether the event loop should be closed when the console is closed.
+    
     stop_on_interruption : `bool` = `False`, Optional (Keyword only)
         Whether the console should be stopped on keyboard interrupt.
     """
     if interactive_console_locals is None:
         interactive_console_locals = {}
     
+    if highlighter is None:
+        highlighter = get_default_trace_writer_highlighter()
+    
     if banner is None:
-        banner = create_banner()
+        banner = create_banner(highlighter=highlighter)
     
     if exit_message is None:
         exit_message = create_exit_message()
@@ -379,6 +520,7 @@ def run_asynchronous_interactive_console(
     console = AsynchronousInteractiveConsole(
         interactive_console_locals,
         event_loop,
+        highlighter = highlighter,
         stop_on_interruption = stop_on_interruption,
     )
     
