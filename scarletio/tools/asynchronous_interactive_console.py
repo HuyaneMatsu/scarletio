@@ -10,8 +10,9 @@ from types import FunctionType
 from .. import __package__ as PACKAGE_NAME
 from ..core import Future, create_event_loop, get_default_trace_writer_highlighter, get_event_loop
 from ..utils import HIGHLIGHT_TOKEN_TYPES, is_awaitable, render_exception_into
-from ..utils.trace import _render_syntax_error_representation_into, _iter_highlight_producer, is_syntax_error
-
+from ..utils.trace import (
+    CONSOLE_LINE_CACHE, _render_syntax_error_representation_into, _iter_highlight_producer, is_syntax_error
+)
 
 try:
     import readline
@@ -268,6 +269,12 @@ class AsynchronousInteractiveConsole(InteractiveConsole):
     
     Attributes
     ----------
+    _console_id : `int`
+        The console's identifier.
+    _file_name : `None`, `str`
+        cached file name.
+    _input_id : `int`
+        Incremental value to update the file name of the input for each input chunk.
     future : `None`, ``Future``
         Used to forward the result of an executed code from the event loop to the console.
     highlighter : `None`, ``HighlightFormatterContext``
@@ -279,6 +286,8 @@ class AsynchronousInteractiveConsole(InteractiveConsole):
     task : `None`, ``Future``
         Asynchronous task running on the event loop on what's result the console is waiting for.
     """
+    _console_counter = 0
+    
     def __init__(self, local_variables, event_loop, *, highlighter=None, stop_on_interruption=False):
         """
         Creates a new async interactive console.
@@ -305,11 +314,19 @@ class AsynchronousInteractiveConsole(InteractiveConsole):
         self.task = None
         self.loop = event_loop
         self.stop_on_interruption = stop_on_interruption
+        
+        self._input_id = 0
+        self._file_name = None
+        
+        console_id = type(self)._console_counter + 1
+        type(self)._console_counter = console_id
+        self._console_id = console_id
     
     
     # Disable badly named functions. No-one loves them.
     runcode = NotImplemented
     showsyntaxerror = NotImplemented
+    runsource = NotImplemented
     
     
     def run_code(self, code):
@@ -408,8 +425,52 @@ class AsynchronousInteractiveConsole(InteractiveConsole):
             raise
     
     
-    # Your name will be fixed in the future as well, gave no worries!
-    def runsource(self, source, file_name='<input>'):
+    def get_file_name(self):
+        """
+        Returns the file name of the current line.
+        
+        Returns
+        -------
+        file_name : `str`
+        """
+        file_name = self._file_name
+        if (file_name is None):
+            file_name = self._create_file_name()
+            self._file_name = file_name
+        
+        return file_name
+    
+    
+    def _create_file_name(self):
+        """
+        Creates the current file name of the console.
+        
+        Returns
+        -------
+        file_name : `str`
+        """
+        file_name_parts = ['<console']
+        
+        console_id = self._console_id
+        if self._console_counter > console_id:
+            file_name_parts.append(':')
+            file_name_parts.append(str(console_id))
+        
+        file_name_parts.append(' in:')
+        file_name_parts.append(str(self._input_id))
+        file_name_parts.append('>')
+        return ''.join(file_name_parts)
+    
+    
+    def increment_input_counter(self):
+        """
+        Increments the console's input counter.
+        """
+        self._input_id += 1
+        self._file_name = None
+    
+    
+    def run_source(self, source):
         """
         Compiles and runs the given source in the console.
         
@@ -418,25 +479,58 @@ class AsynchronousInteractiveConsole(InteractiveConsole):
         source : `str`
             The source code to run.
         
-        file_name : `str` = `'<input>'`, Optional
-            The file name to use when displaying the output.
-        
         Returns
         -------
-        ran_nothing : `bool`
-            Whether nothing ran. 
+        ran : `bool`
+            Whether code was ran. 
         """
+        file_name = self.get_file_name()
+        
         try:
             code = self.compile(source, file_name)
         except (OverflowError, SyntaxError, ValueError) as syntax_error:
             self.show_syntax_error(syntax_error, file_name)
-            return False
-
-        if code is None:
-            return True
+            ran = True
         
-        self.run_code(code)
-        return False
+        else:
+            if code is None:
+                ran = False
+            
+            else:
+                CONSOLE_LINE_CACHE.feed(file_name, source)
+                self.run_code(code)
+                ran = True
+        
+        if ran:
+            self.increment_input_counter()
+        
+        return ran
+    
+    
+    def push(self, line):
+        """
+        Pushes a line to the interpreter.
+        
+        Parameters
+        ----------
+        line : `bool`
+            the line to push.
+        
+        Returns
+        -------
+        not_ran : `bool`
+            Whether any code was not ran.
+            
+            If no code was ran, should continue inputting.
+        """
+        self.buffer.append(line)
+        source = '\n'.join(self.buffer)
+        
+        ran = self.run_source(source)
+        if ran:
+            self.resetbuffer()
+        
+        return not ran
     
     
     def show_syntax_error(self, syntax_error, file_name):

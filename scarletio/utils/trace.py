@@ -1,7 +1,8 @@
 __all__ = ('ignore_frame', 'render_exception_into', 'render_frames_into', 'should_ignore_frame',)
 
 import reprlib, warnings
-from linecache import checkcache as check_file_cache, getline as get_file_line
+from collections import OrderedDict
+from linecache import checkcache as check_file_cache, getline as _get_file_line
 from types import (
     AsyncGeneratorType as CoroutineGeneratorType, CoroutineType, FrameType, GeneratorType, MethodType, TracebackType
 )
@@ -12,6 +13,221 @@ from .highlight.token import Token
 
 
 IGNORED_FRAME_LINES = {}
+
+
+class ConsoleLineInput:
+    """
+    A cached value of ``ConsoleLineCache``. An console line instance represents an input value.
+    
+    Attributes
+    ----------
+    _content : `str`
+        The inputted content.
+    _lines : `None`, `list` of `str`
+        Cached splitted content.
+    file_name : `str`
+        The respective input's file name.
+    length : `str`
+        The content's length.
+    """
+    __slots__ = ('_content', '_lines', 'file_name','length')
+    
+    def __new__(cls, file_name, content):
+        """
+        Creates a new console line input.
+        
+        Parameters
+        ----------
+        file_name : `str`
+            The file name to reference content with.
+        content : `str`
+            The line's content.
+        """
+        self = object.__new__(cls)
+        self._content = content
+        self._lines = None
+        self.file_name = file_name
+        self.length = len(content)
+        return self
+    
+    def __repr__(self):
+        """Returns the console line input's representation."""
+        return f'<{self.__class__.__name__} file_name={self.file_name!r}, length={self.length!r}>'
+    
+    
+    def get_lines(self):
+        """
+        Gets the lines of the input.
+        
+        Returns
+        -------
+        lines : `list` of `str`
+        """
+        lines = self._lines
+        if (lines is None):
+            content = self._content
+            # should not happen
+            if (content is None):
+                lines = []
+            else:
+                lines = content.splitlines()
+                self._content = None
+        
+            self._lines = lines
+        
+        return lines
+    
+    
+    def get_line(self, line_number):
+        """
+        Tries to get the line of the input.
+        
+        Parameters
+        ----------
+        line_number : `int`
+            The line's number (1 based). 
+        
+        Returns
+        -------
+        line : `str`
+        """
+        if line_number < 1:
+            return ''
+        
+        lines = self.get_lines()
+        
+        if line_number > len(lines):
+            return ''
+        
+        return lines[line_number - 1] + '\n'
+
+
+class ConsoleLineCache:
+    """
+    Line cash, which can be for console, so line lookup wont fail for their lines.
+    
+    Attributes
+    ----------
+    max_size : `int`
+        The maximal size to cache.
+    actual_size : `int`
+        The actual stored size.
+    cache : `OrderedDict` of (`str`, ``ConsoleLineInput``) items
+        cache used to store inputs.
+    """
+    def __new__(cls, max_size = 1000000):
+        """
+        Creates a new console line cache instance.
+        
+        parameters
+        ----------
+        max_size : `int` = `1000_000`, Optional
+            The maximal amount of input to remember.
+        """
+        self = object.__new__(cls)
+        
+        self.max_size = max_size
+        self.actual_size = 0
+        self.cache = OrderedDict()
+        
+        return self
+    
+    def __repr__(self):
+        """Returns the console line cache's representation."""
+        return f'<{self.__class__.__name__} size: {self.actual_size!r} / {self.max_size!r}>'
+    
+    
+    def feed(self, file_name, content):
+        """
+        Feeds content with the given file-name.
+        
+        Feeding a new content with an old file name overwrites the old value, so make sure to always fee with a new
+        name.
+        
+        Parameters
+        ----------
+        file_name : `str`
+            The file name to feed content with.
+        content : `str`
+            The content to feed.
+        """
+        line_input = ConsoleLineInput(file_name, content)
+        actual_size = self.actual_size + line_input.length
+        max_size = self.max_size
+        cache = self.cache
+        
+        if max_size > actual_size:
+            to_pop = []
+            
+            for value in cache.values():
+                actual_size -= value.length
+                
+                if actual_size <= max_size:
+                    break
+                
+                to_pop.append(value)
+                continue
+            
+            for value in to_pop:
+                del cache[value.file_name]
+        
+        cache[file_name] = line_input
+        self.actual_size = actual_size
+    
+    
+    def get_line(self, file_name, line_number):
+        """
+        Gets the line of the given file for the given index.
+        
+        Parameters
+        ----------
+        file_name : `str`
+            The file to get it's line of.
+        line_number : `int`
+            The line's number (1 based). 
+        
+        Returns
+        -------
+        line : `str`
+        """
+        cache = self.cache
+        
+        try:
+            line_input = cache[file_name]
+        except KeyError:
+            return ''
+        
+        cache.move_to_end(file_name)
+        return line_input.get_line(line_number)
+
+
+CONSOLE_LINE_CACHE = ConsoleLineCache()
+
+
+def get_file_line(file_name, line_number):
+    """
+    Tries to get the line of the file.
+    
+    Parameters
+    ----------
+    file_name : `str`
+        The file to get it's line of.
+    line_number : `int`
+        The line's number (1 based). 
+    
+    Returns
+    -------
+    line : `str`
+    """
+    # First check file lines
+    line = _get_file_line(file_name, line_number, None)
+    
+    # Second check console lines
+    if not line:
+        line = CONSOLE_LINE_CACHE.get_line(file_name, line_number)
+    
+    return line
+
 
 def try_get_raw_exception_representation(exception):
     """
@@ -564,9 +780,8 @@ def get_expression_lines(file_name, line_number):
     string_type = STRING_TYPE_NONE
     lines = []
     
-    line_number_position = line_number
     while True:
-        line = get_file_line(file_name, line_number_position, None)
+        line = get_file_line(file_name, line_number)
         if not line:
             break
         
@@ -711,7 +926,7 @@ def get_expression_lines(file_name, line_number):
         if not should_continue_parsing:
             break
         
-        line_number_position += 1
+        line_number += 1
         continue
     
     if not lines:
