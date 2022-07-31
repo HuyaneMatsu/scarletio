@@ -370,7 +370,7 @@ def _render_syntax_error_representation_into(syntax_error, into, highlighter):
     
     Parameters
     ----------
-    exception : ``BaseException``
+    syntax_error : ``SyntaxError``
         The respective exception instance.
     
     into : `list` of `str`
@@ -453,6 +453,39 @@ def _render_syntax_error_representation_into(syntax_error, into, highlighter):
     return into
 
 
+def _get_simple_exception_representation(exception):
+    """
+    Tries to get simple exception representation.
+    
+    Parameters
+    ----------
+    exception : `BaseException`
+        The exception to get it's representation of.
+    
+    Returns
+    -------
+    exception_representation : `None`, `str`
+        Returns `None` if simple representation is not available.
+    """
+    exception_type = type(exception)
+    if exception_type.__init__ is not BaseException.__init__:
+        return None
+    
+    exception_parameters = getattr(exception, 'args', None)
+    if (exception_parameters is None) or (not isinstance(exception_parameters, tuple)) :
+        return None
+    
+    exception_parameters_length = len(exception_parameters)
+    if exception_parameters_length > 1:
+        return None
+    
+    exception_representation = exception_type.__name__
+    if (exception_parameters_length == 1):
+        exception_representation = f'{exception_representation}: {exception_parameters[0]}'
+
+    return exception_representation
+
+
 def get_exception_representation(exception):
     """
     Gets the exception's representation.
@@ -462,17 +495,14 @@ def get_exception_representation(exception):
     exception : ``BaseException``
         The respective exception instance.
     
-    highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
-        Formatter storing highlighting details.
-        
-        Only used for formatting syntax errors.
-    
     Returns
     -------
     exception_representation : `str`
     """
     try:
-        exception_representation = repr(exception)
+        exception_representation = _get_simple_exception_representation(exception)
+        if (exception_representation is None):
+            exception_representation = repr(exception)
     except (KeyboardInterrupt, SystemExit):
         raise
     except:
