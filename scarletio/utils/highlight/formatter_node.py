@@ -121,5 +121,3 @@ class FormatterNode:
         else:
             self.is_class_direct = True
             self._set_detail(detail)
-
-

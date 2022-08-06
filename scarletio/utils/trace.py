@@ -4,13 +4,16 @@ import reprlib, warnings
 from collections import OrderedDict
 from linecache import checkcache as check_file_cache, getline as _get_file_line
 from types import (
-    AsyncGeneratorType as CoroutineGeneratorType, CoroutineType, FrameType, GeneratorType, MethodType, TracebackType
+    AsyncGeneratorType as CoroutineGeneratorType, CoroutineType, FrameType, FunctionType, GeneratorType, MethodType,
+    TracebackType
 )
 
 from .docs import copy_docs
 from .highlight import HIGHLIGHT_TOKEN_TYPES, iter_highlight_code_lines
 from .highlight.token import Token
 
+
+SlotWrapperType = object.__lt__.__class__
 
 IGNORED_FRAME_LINES = {}
 
@@ -434,7 +437,7 @@ def _render_syntax_error_representation_into(syntax_error, into, highlighter):
             pointer = '^' * pointer_length
         
         
-        into = _add_typed_trace_part_into(
+        into = _add_typed_part_into(
             HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_EXCEPTION_REPR, pointer, into, highlighter
         )
         
@@ -446,7 +449,7 @@ def _render_syntax_error_representation_into(syntax_error, into, highlighter):
     if (message is not None) and message:
         exception_representation = f'{exception_representation}: {message}'
     
-    into = _add_typed_trace_part_into(
+    into = _add_typed_part_into(
         HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_EXCEPTION_REPR, exception_representation, into, highlighter
     )
     
@@ -468,8 +471,13 @@ def _get_simple_exception_representation(exception):
         Returns `None` if simple representation is not available.
     """
     exception_type = type(exception)
-    if exception_type.__init__ is not BaseException.__init__:
-        return None
+    if FunctionType is SlotWrapperType:
+        if (exception_type.__init__ is not BaseException.__init__):
+            return None
+    
+    else:
+        if exception_type.__init__.__class__ is not SlotWrapperType:
+            return None
     
     exception_parameters = getattr(exception, 'args', None)
     if (exception_parameters is None) or (not isinstance(exception_parameters, tuple)) :
@@ -1487,7 +1495,7 @@ class FrameDetailGroup:
         details = self.details
         
         if (repeat_count > 1):
-            into = _add_typed_trace_part_into(
+            into = _add_typed_part_into(
                 HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_FRAME_REPEAT,
                 (
                     f'[Following {len(details)} frame{"s were" if len(details) > 1 else " was"} '
@@ -1502,7 +1510,7 @@ class FrameDetailGroup:
             detail.render_into(into, highlighter)
         
         if (repeat_count > 1):
-            into = _add_typed_trace_part_into(
+            into = _add_typed_part_into(
                 HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_FRAME_REPEAT,
                 f'[End of repeated frames]',
                 into,
@@ -2066,7 +2074,7 @@ def render_exception_into(exception, extend=None, *, filter=None, highlighter=No
         if is_syntax_error(exception):
             extend = _render_syntax_error_representation_into(exception, extend, highlighter)
         else:
-            extend = _add_typed_trace_part_into(
+            extend = _add_typed_part_into(
                 HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_EXCEPTION_REPR,
                 get_exception_representation(exception),
                 extend,
@@ -2117,7 +2125,7 @@ def _add_trace_title_into(title, into, highlighter):
     -------
     into : `list` of `str`
     """
-    return _add_typed_trace_part_into(HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE, title, into, highlighter)
+    return _add_typed_part_into(HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE, title, into, highlighter)
 
 
 def _iter_highlight_producer(producer, highlighter):
@@ -2145,7 +2153,7 @@ def _iter_highlight_producer(producer, highlighter):
             yield from highlighter.generate_highlighted(Token(token_type, part))
 
 
-def _add_typed_trace_part_into(type_, part, into, highlighter):
+def _add_typed_part_into(type_, part, into, highlighter):
     """
     Adds trace title into the given list of strings.
     

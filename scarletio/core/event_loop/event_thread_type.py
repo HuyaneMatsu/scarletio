@@ -105,10 +105,21 @@ class EventThreadContextManager:
         
         thread.running = False
         thread.remove_reader(thread._self_read_socket.fileno())
-        thread._self_read_socket.close()
-        thread._self_read_socket = None
-        thread._self_write_socket.close()
-        thread._self_write_socket = None
+        try:
+            thread._self_read_socket.close()
+        except OSError as err:
+            if err.errno != 9:
+                raise
+        finally:
+            thread._self_read_socket = None
+        
+        try:
+            thread._self_write_socket.close()
+        except OSError as err:
+            if err.errno != 9:
+                raise
+        finally:
+            thread._self_write_socket = None
         
         thread._ready.clear()
         thread._scheduled.clear()

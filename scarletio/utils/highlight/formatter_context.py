@@ -4,6 +4,7 @@ from .ansi import create_ansi_format_code
 from .formatter_detail import FormatterDetail, formatter_ansi_code, formatter_html
 from .formatter_node import FormatterNode
 
+from .token import Token
 from .token_types import TOKEN_STRUCTURE
 
 ANSI_RESET_CODE = create_ansi_format_code()
@@ -68,6 +69,25 @@ class HighlightFormatterContext:
     def __repr__(self):
         """Returns the formatter's representation."""
         return f'<{self.__class__.__name__} nodes: {len(self.formatter_nodes)}>'
+    
+    
+    def highlight_as(self, content, token_type):
+        """
+        Highlights the given text as it would be a token of the given type.
+        
+        Parameters
+        -----------
+        content : `str`
+            The content to highlight.
+        token_type : `int`
+            The token type to use.
+        """
+        detail = self.formatter_nodes[token_type].detail
+        if (detail is None):
+            return content
+        
+        else:
+            return ''.join([*detail(Token(token_type, content))])
     
     
     def generate_highlighted(self, token):

@@ -267,7 +267,11 @@ class HighlightParserContext(HighlightParserContextBase):
     def set_line_character_index(self, line_character_index):
         lines = self.lines
         line_index = self.line_index
-        line = lines[line_index]
+        
+        if line_index >= len(lines):
+            line = ''
+        else:
+            line = lines[line_index]
         
         if (line_character_index > 0) and (len(line) > line_character_index):
             self.line_character_index = line_character_index

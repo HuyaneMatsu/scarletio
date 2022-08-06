@@ -31,6 +31,7 @@ setup(
         'scarletio.core.traps',
         'scarletio.http_client',
         'scarletio.tools',
+        'scarletio.tools.asynchronous_interactive_console',
         'scarletio.utils',
         'scarletio.utils.highlight',
         'scarletio.web_common',

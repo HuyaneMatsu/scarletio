@@ -640,7 +640,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         """
         with self.context:
             key = None
-            file_object = None
+            file_descriptor = None
             reader = None
             writer = None
             
@@ -672,23 +672,23 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                 event_list = self.selector.select(timeout)
                 if event_list:
                     for key, mask in event_list:
-                        file_object = key.fileobj
+                        file_descriptor = key.fileobj
                         reader, writer = key.data
                         if (reader is not None) and (mask & EVENT_READ):
                             if reader.cancelled:
-                                self.remove_reader(file_object)
+                                self.remove_reader(file_descriptor)
                             else:
                                 if not reader.cancelled:
                                     ready.append(reader)
                         if (writer is not None) and (mask & EVENT_WRITE):
                             if writer.cancelled:
-                                self.remove_writer(file_object)
+                                self.remove_writer(file_descriptor)
                             else:
                                 if not writer.cancelled:
                                     ready.append(writer)
                     
                     key = None
-                    file_object = None
+                    file_descriptor = None
                     reader = None
                     writer = None
                     

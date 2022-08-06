@@ -367,6 +367,9 @@ def _try_match_string(context):
         
         content_parts = []
         while True:
+            if context.done:
+                break
+            
             line = context.get_line()
             index = context.get_line_character_index()
             
@@ -426,10 +429,11 @@ def _try_match_string(context):
             else:
                 context.add_token(token_type, content)
     
-    context.add_token(token_type, encapsulator)
-    
     if set_end_later != -100:
         context.set_line_character_index(set_end_later)
+    
+    if set_end_later >= 0:
+        context.add_token(token_type, encapsulator)
     
     return True
 

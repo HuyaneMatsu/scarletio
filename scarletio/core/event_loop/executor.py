@@ -46,7 +46,7 @@ class SyncWait:
         
         Parameters
         ----------
-        exception : `BaseException`
+        exception : `BaseException`, `type<BaseException>`
             The exception to set as the future's exception.
         
         Raises
