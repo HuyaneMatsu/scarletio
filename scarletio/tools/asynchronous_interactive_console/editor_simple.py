@@ -30,10 +30,12 @@ class EditorSimple(EditorBase):
     __slots__ = ('buffer', )
     
     @copy_docs(EditorBase.__new__)
-    def __new__(cls, buffer, file_name, prefix_initial, prefix_continuous, prefix_length, highlighter):
+    def __new__(cls, buffer, file_name, prefix_initial, prefix_continuous, prefix_length, highlighter, history):
         buffer = _validate_buffer(buffer)
         
-        self = EditorBase.__new__(cls, buffer, file_name, prefix_initial, prefix_continuous, prefix_length, highlighter)
+        self = EditorBase.__new__(
+            cls, buffer, file_name, prefix_initial, prefix_continuous, prefix_length, highlighter, history
+        )
         self.buffer = buffer
         return self
     

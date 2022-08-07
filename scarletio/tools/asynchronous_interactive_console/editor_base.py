@@ -47,7 +47,7 @@ class EditorBase:
     """
     __slots__ = ('compiled_code', 'file_name', 'prefix_initial', 'prefix_continuous', 'prefix_length')
     
-    def __new__(cls, buffer, file_name, prefix_initial, prefix_continuous, prefix_length, highlighter):
+    def __new__(cls, buffer, file_name, prefix_initial, prefix_continuous, prefix_length, highlighter, history):
         """
         Creates a new editor. Initialises with given buffer.
         
@@ -65,6 +65,8 @@ class EditorBase:
             As how long should the prefix's length be interpreted.
         highlighter : `None`, ``HighlightFormatterContext``
             Formatter storing highlighting details.
+        history : ``History``
+            History used for caching inputs.
         
         Raises
         ------
@@ -124,7 +126,40 @@ class EditorBase:
         """
         for line in self.get_buffer():
             for character in line:
-                if character not in {'\n', ' ', '\t'}:
+                if character not in {'\n', ' ', '\t', '\r'}:
                     return False
         
         return True
+    
+    
+    def get_stripped_buffer(self):
+        """
+        Returns the stripped content of the editor.
+        
+        Returns
+        -------
+        buffer : `list` of `str`
+        """
+        lines = [line.rstrip() for line in self.get_buffer()]
+        
+        while lines and (not lines[0]):
+            del lines[0]
+        
+        while lines and (not lines[-1]):
+            del lines [-1]
+        
+        return lines
+    
+    
+    @classmethod
+    def has_history_support(cls):
+        """
+        Returns whether the editor supports history lookups.
+        
+        If it does not, it's input should not be saved.
+        
+        Returns
+        -------
+        has_history_support : `bool`
+        """
+        return False

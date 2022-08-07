@@ -15,6 +15,7 @@ from .console_helpers import create_banner, create_exit_message, get_or_create_e
 from .editor_advanced import EditorAdvanced
 from .editor_base import EditorBase
 from .editor_simple import EditorSimple
+from .history import History
 
 
 def _ignore_console_frames(file_name, name, line_number, line):
@@ -104,6 +105,8 @@ class AsynchronousInteractiveConsole:
         Message shown when the console is exited.
     highlighter : `None`, ``HighlightFormatterContext``
         Formatter storing highlighting details.
+    history : ``History``
+        History used for caching inputs.
     local_variables : `dict` of (`str`, `Any`) items
         Variables to run the compiled code with.
     loop : ``EventThread``
@@ -116,7 +119,7 @@ class AsynchronousInteractiveConsole:
     _console_counter = 0
     
     __slots__ = (
-        '_console_id', '_file_name', '_input_id', 'banner', 'editor_type', 'exit_message', 'highlighter',
+        '_console_id', '_file_name', '_input_id', 'banner', 'editor_type', 'exit_message', 'highlighter', 'history',
         'local_variables', 'loop', 'stop_on_interruption', 'task',
     )
     
@@ -193,6 +196,7 @@ class AsynchronousInteractiveConsole:
         console_id = cls._console_counter + 1
         cls._console_counter = console_id
         
+        history = History()
         
         self = object.__new__(cls)
         
@@ -203,6 +207,7 @@ class AsynchronousInteractiveConsole:
         self.editor_type = editor_type
         self.exit_message = exit_message
         self.highlighter = highlighter
+        self.history = history
         self.local_variables = local_variables
         self.loop = event_loop
         self.stop_on_interruption = stop_on_interruption
@@ -440,6 +445,7 @@ class AsynchronousInteractiveConsole:
                     self.get_prefix_continuous(),
                     self.get_prefix_length(),
                     self.highlighter,
+                    self.history,
                 )
                 
                 compiled_code = editor()
@@ -449,9 +455,13 @@ class AsynchronousInteractiveConsole:
                 self.increment_input_counter()
             
             except SyntaxError as err:
+                self.history.maybe_add_buffer_of(self._input_id, editor)
+                
                 self.show_syntax_error(err)
             
             except KeyboardInterrupt as err:
+                self.history.maybe_add_buffer_of(self._input_id, editor)
+                
                 if self.stop_on_interruption:
                     if (editor is None) or editor.is_empty():
                         raise SystemExit() from err
@@ -461,6 +471,9 @@ class AsynchronousInteractiveConsole:
                 else:
                     sys.stdout.write('\nKeyboardInterrupt\n')
                     sys.stdout.flush()
+            
+            else:
+                self.history.maybe_add_buffer_of(self._input_id, editor)
             
             finally:
                 editor = None

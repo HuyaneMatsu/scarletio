@@ -41,6 +41,8 @@ DEDENT_WORDS = frozenset((
     'break'
 ))
 
+EMPTY_CHARACTERS = frozenset((' ', '\t', '\n'))
+
 
 def create_command_move_cursor(position):
     """
@@ -338,69 +340,371 @@ def _get_line_line_count_changed(line_length, content_width, new_content_width, 
     return line_line_count
 
 
-def _check_should_try_compile(editor):
+def _check_is_line_empty(line):
+    """
+    Returns whether the given line is empty.
+    
+    Parameters
+    ----------
+    line : `str`
+        The line to check out.
+    
+    Returns
+    -------
+    is_empty : `bool`
+    """
+    for character in line:
+        if character not in EMPTY_CHARACTERS:
+            return False
+    
+    return True
+
+
+def _check_is_line_empty_at(line, index):
+    """
+    Returns whether the line is empty at the given position.
+    
+    Parameters
+    ----------
+    line : `str`
+        The line to check out.
+    index : `int`
+        The exact position.
+    
+    Returns
+    -------
+    is_line_empty_at : `bool`
+    """
+    line_length = len(line)
+    if (index < line_length) and (index >= 0):
+        if line[index] not in EMPTY_CHARACTERS:
+            return False
+    
+    return True
+
+
+def _check_is_buffer_line_empty_at(buffer, line_index, index):
+    """
+    Returns whether the buffer's specified line is empty at the given index.
+    
+    Parameters
+    ----------
+    buffer : `list` of `str`
+        The buffer to check out.
+    line_index : `int`
+        The line's index to check out.
+    index : `int`
+        The exact position.
+    
+    Returns
+    -------
+    is_buffer_line_empty_at : `bool`
+    """
+    buffer_length = len(buffer)
+    if (line_index < buffer_length) and (line_index >= 0):
+        return _check_is_line_empty_at(buffer[line_index], index)
+    
+    return True
+
+
+def _check_is_line_empty_after(line, index):
+    """
+    Returns whether the line is empty after the given index. Excluding the character at `index` position.
+    
+    Parameters
+    ----------
+    line : `str`
+        The line to check out.
+    index : `int`
+        The starting position.
+    
+    Returns
+    -------
+    is_line_empty_after : `bool`
+    """
+    index += 1
+    
+    line_length = len(line)
+    while index < line_length:
+        if line[index] not in EMPTY_CHARACTERS:
+            return False
+        
+        index += 1
+    
+    return True
+
+
+def _check_is_buffer_line_empty_after(buffer, line_index, index):
+    """
+    Returns whether the buffer's specified line is empty after the given index.
+    Excluding the character at `index` position.
+    
+    Parameters
+    ----------
+    buffer : `list` of `str`
+        The buffer to check out.
+    line_index : `int`
+        The line's index to check out.
+    index : `int`
+        The starting position.
+    
+    Returns
+    -------
+    is_buffer_line_empty_after : `bool`
+    """
+    buffer_length = len(buffer)
+    if (line_index < buffer_length) and (line_index >= 0):
+        return _check_is_line_empty_after(buffer[line_index], index)
+    
+    return True
+
+
+def _check_is_line_empty_before(line, index):
+    """
+    Returns whether the line is empty before the given index. Excluding the character at `index` position.
+    
+    Parameters
+    ----------
+    line : `str`
+        The line to check out.
+    index : `int`
+        The starting position.
+    
+    Returns
+    -------
+    is_line_empty_before : `bool`
+    """
+    index -= 1
+    
+    line_length = len(line)
+    if index >= line_length:
+        index = line_length - 1
+    
+    while index >= 0:
+        if line[index] not in EMPTY_CHARACTERS:
+            return False
+        
+        index -= 1
+        continue
+
+    return True
+
+
+def _check_is_buffer_line_empty_before(buffer, line_index, index):
+    """
+    Returns whether the buffer's specified line is empty before the given index.
+    Excluding the character at `index` position.
+    
+    Parameters
+    ----------
+    buffer : `list` of `str`
+        The buffer to check out.
+    line_index : `int`
+        The line's index to check out.
+    index : `int`
+        The starting position.
+    
+    Returns
+    -------
+    is_buffer_line_empty_before : `bool`
+    """
+    buffer_length = len(buffer)
+    if (line_index < buffer_length) and (line_index >= 0):
+        return _check_is_line_empty_before(buffer[line_index], index)
+    
+    return True
+
+
+def _check_is_buffer_empty_at(buffer, index):
+    """
+    Returns whether the exact line of the buffer is empty.
+    
+    Parameters
+    ----------
+    buffer : `list` of `str`
+        The buffer to check out.
+    index : `int`
+        The line's index to check out.
+    
+    Returns
+    -------
+    is buffer_empty_at : `bool`
+    """
+    buffer_length = len(buffer)
+    if (index < buffer_length) and (index >= 0):
+        return _check_is_line_empty(buffer[index])
+    
+    return True
+
+
+def _check_is_buffer_empty_before(buffer, index):
+    """
+    Returns whether the buffer is empty before the given index. Excluding the `index`'s exact position.
+    
+    Parameters
+    ----------
+    buffer : `list` of `str`
+        The buffer to check out.
+    index : `int`
+        The starting position.
+    
+    Returns
+    -------
+    is_buffer_empty_before : `bool`
+    """
+    index -= 1
+    
+    buffer_length = len(buffer)
+    if index >= buffer_length:
+        index = buffer_length - 1
+    
+    
+    while index >= 0:
+        if not _check_is_line_empty(buffer[index]):
+            return False
+        
+        index -= 1
+        continue
+    
+    return True
+
+
+def _check_is_buffer_empty_after(buffer, index):
+    """
+    Returns whether the buffer is empty after the given index. Excluding the `index`'s exact position.
+    
+    Parameters
+    ----------
+    buffer : `list` of `str`
+        The buffer to check out.
+    index : `int`
+        The starting position.
+    
+    Returns
+    -------
+    is_buffer_empty_after : `bool`
+    """
+    buffer_length = len(buffer)
+    
+    index += 1
+    
+    while index < buffer_length:
+        if not _check_is_line_empty(buffer[index]):
+            return False
+        
+        index += 1
+        continue
+    
+    return True
+
+
+def _check_should_try_compile_one_line(display_state):
+    """
+    Checks whether the current input should be tried to be compiled.
+    
+    This function is called when the buffer's length is `exactly 1`.
+    
+    Parameters
+    ----------
+    display_state : ``DisplayState``
+        The respective input.
+    
+    Returns
+    -------
+    should_try_compile : `bool`
+    """
+    line = display_state.buffer[display_state.cursor_line_index]
+    cursor_index = display_state.cursor_index
+    
+    if not _check_is_line_empty_after(line, cursor_index):
+        return False
+    
+    if not _check_is_line_empty_at(line, cursor_index):
+        return False
+    
+    if _check_is_line_empty_before(line, cursor_index):
+        return False
+    
+    return True
+
+
+def _check_should_try_compile_multi_line(display_state):
+    """
+    Checks whether the current input should be tried to be compiled.
+    
+    This function is called when the buffer's length is `over 1`.
+    
+    Parameters
+    ----------
+    display_state : ``DisplayState``
+        The respective input.
+    
+    Returns
+    -------
+    should_try_compile : `bool`
+    """
+    buffer = display_state.buffer
+    
+    # If we are checking multi-line
+    
+    if len(buffer) < 3:
+        return False
+    
+    cursor_index = display_state.cursor_index
+    cursor_line_index = display_state.cursor_line_index
+    
+    # If there is anything after our current position return false.
+    
+    if (
+        not _check_is_buffer_line_empty_at(buffer, cursor_line_index, cursor_index) or
+        not _check_is_buffer_line_empty_after(buffer, cursor_line_index, cursor_index) or
+        not _check_is_buffer_empty_after(buffer, cursor_line_index)
+    ):
+        return False
+    
+    # If there is no code before the current position return false.
+    
+    if (
+        _check_is_buffer_line_empty_before(buffer, cursor_line_index, cursor_index) and
+        _check_is_buffer_empty_before(buffer, cursor_line_index)
+    ):
+        return False
+    
+    # We should only compile when we have 1 free line above us and our current line is empty too.
+    if (
+        _check_is_buffer_empty_after(buffer, cursor_line_index) and
+        _check_is_buffer_empty_at(buffer, cursor_line_index) and
+        _check_is_buffer_empty_at(buffer, cursor_line_index - 1)
+    ):
+        return True
+    
+    return False
+
+
+def _check_should_try_compile(display_state):
     """
     Tries whether based on the current input, we should try to compile the input.
     
     Parameters
     ----------
-    editor : ``EditorAdvanced``
-        The respective editor.
+    display_state : ``DisplayState``
+        The respective input.
+    
+    Returns
+    -------
+    should_try_compile : `bool`
     """
-    display_state = editor.display_state
+    buffer_length = len(display_state.buffer)
     
-    buffer = display_state.buffer
-    buffer_length = len(buffer)
-    cursor_index = display_state.cursor_index
-    cursor_line_index = display_state.cursor_line_index
+    if buffer_length == 0:
+        # Should not happen
+        return False
     
-    index = cursor_index
+    if buffer_length == 1:
+        return _check_should_try_compile_one_line(display_state)
     
-    while True:
-        line = buffer[cursor_line_index]
-        line_length = len(line)
-        
-        while index < line_length:
-            if line[index] != ' ':
-                return False
-            
-            index += 1
-            continue
-        
-        index = 0
-        cursor_line_index += 1
-        if cursor_line_index >= buffer_length:
-            break
-        
-        continue
+    return _check_should_try_compile_multi_line(display_state)
     
-    cursor_index = display_state.cursor_index
-    cursor_line_index = display_state.cursor_line_index
-    
-    line = buffer[cursor_line_index]
-    line_length = len(line)
-    
-    index = cursor_index
-    if index == line_length:
-        index = line_length - 1
-    
-    while True:
-        while index >= 0:
-            if line[index] != ' ':
-                return True
-            
-            index -= 1
-            continue
-        
-        cursor_line_index -= 1
-        if cursor_line_index < 0:
-            return False
-        
-        line = buffer[cursor_line_index]
-        line_length = len(line)
-        index = line_length - 1
-        continue
-
 
 class DisplayState:
     """
@@ -761,12 +1065,16 @@ class EditorAdvanced(EditorBase):
         File name of the code produced by the editor.
     highlighter : `None`, ``HighlightFormatterContext``
         Formatter storing highlighting details.
+    history : ``History``
+        History used for caching inputs.
     input_stream : `file-like`
         Input stream to read.
     input_stream_blocking_original : `bool`
         The original value of input stream's blockedness.
     input_stream_settings_original : `list` (`int`, `int`, `int`, `int`, `int`, `int`, `list` of `bytes`)
         The original settings og the input stream.
+    modified : `bool`
+        Whether the input is modified.
     output_proxy_read_socket : `Socket`
         Read pair socket of ``.output_proxy_write_socket``.
     output_proxy_write_socket : `Socket`
@@ -783,13 +1091,13 @@ class EditorAdvanced(EditorBase):
         Selector used to poll from `stdin`, `stdout` and `stderr`.
     """
     __slots__ = (
-        'alive', 'async_output_written', 'display_state', 'file_name', 'highlighter', 'input_stream',
-        'input_stream_blocking_original', 'input_stream_settings_original', 'output_proxy_read_socket',
+        'alive', 'async_output_written', 'display_state', 'file_name', 'highlighter', 'history', 'input_stream',
+        'input_stream_blocking_original', 'input_stream_settings_original', 'modified', 'output_proxy_read_socket',
         'output_proxy_write_socket', 'output_stream', 'selector'
     )
     
     @copy_docs(EditorBase.__new__)
-    def __new__(cls, buffer, file_name, prefix_initial, prefix_continuous, prefix_length, highlighter):
+    def __new__(cls, buffer, file_name, prefix_initial, prefix_continuous, prefix_length, highlighter, history):
         
         display_state = DisplayState(buffer)
         
@@ -803,14 +1111,18 @@ class EditorAdvanced(EditorBase):
         set_blocking(output_proxy_read_socket.fileno(), False)
         
         
-        self = EditorBase.__new__(cls, buffer, file_name, prefix_initial, prefix_continuous, prefix_length, highlighter)
+        self = EditorBase.__new__(
+            cls, buffer, file_name, prefix_initial, prefix_continuous, prefix_length, highlighter, history
+        )
         
         self.alive = False
         self.async_output_written = False
         self.display_state = display_state
+        self.history = history
         self.input_stream = input_stream
         self.input_stream_blocking_original = input_stream_blocking_original
         self.input_stream_settings_original = input_stream_settings_original
+        self.modified = False
         self.output_proxy_read_socket = output_proxy_read_socket
         self.output_proxy_write_socket = output_proxy_write_socket
         self.output_stream = sys.stdout
@@ -879,6 +1191,12 @@ class EditorAdvanced(EditorBase):
         return self.display_state.buffer
     
     
+    @classmethod
+    @copy_docs(EditorBase.has_history_support)
+    def has_history_support(cls):
+        return True
+    
+    
     def execute_enter(self):
         """
         Executes an enter key press.
@@ -919,6 +1237,9 @@ class EditorAdvanced(EditorBase):
         
         display_state.cursor_index = new_line_starter_space_count
         display_state.cursor_line_index = cursor_line_index
+        
+        self.modified = True
+        
         return display_state
     
     
@@ -977,6 +1298,7 @@ class EditorAdvanced(EditorBase):
         
         display_state.cursor_index = cursor_index
         display_state.cursor_line_index = cursor_line_index
+        
         return display_state
     
     
@@ -989,6 +1311,10 @@ class EditorAdvanced(EditorBase):
         new_display_state : `None`, ``DisplayState``
             The new display state.
         """
+        display_state = self.try_rewind_in_history()
+        if (display_state is not None):
+            return display_state
+        
         display_state = self.display_state.copy()
         buffer = display_state.buffer
         cursor_index = display_state.cursor_index
@@ -1009,6 +1335,7 @@ class EditorAdvanced(EditorBase):
         
         display_state.cursor_index = cursor_index
         display_state.cursor_line_index = cursor_line_index
+        
         return display_state
     
     
@@ -1021,6 +1348,10 @@ class EditorAdvanced(EditorBase):
         new_display_state : `None`, ``DisplayState``
             The new display state.
         """
+        display_state = self.try_forward_in_history()
+        if (display_state is not None):
+            return display_state
+        
         display_state = self.display_state.copy()
         buffer = display_state.buffer
         cursor_index = display_state.cursor_index
@@ -1042,6 +1373,7 @@ class EditorAdvanced(EditorBase):
         
         display_state.cursor_index = cursor_index
         display_state.cursor_line_index = cursor_line_index
+        
         return display_state
     
     
@@ -1074,6 +1406,9 @@ class EditorAdvanced(EditorBase):
         
         display_state.cursor_index = cursor_index
         display_state.cursor_line_index = cursor_line_index
+        
+        self.modified = True
+        
         return display_state
     
     
@@ -1110,6 +1445,9 @@ class EditorAdvanced(EditorBase):
         
         display_state.cursor_index = cursor_index
         display_state.cursor_line_index = cursor_line_index
+        
+        self.modified = True
+        
         return display_state
     
     
@@ -1144,6 +1482,9 @@ class EditorAdvanced(EditorBase):
         
         display_state.cursor_index = cursor_index
         display_state.cursor_line_index = cursor_line_index
+        
+        self.modified = True
+        
         return display_state
     
     
@@ -1177,6 +1518,9 @@ class EditorAdvanced(EditorBase):
         
         display_state.cursor_index = cursor_index
         display_state.cursor_line_index = cursor_line_index
+        
+        self.modified = True
+        
         return display_state
     
     
@@ -1205,6 +1549,9 @@ class EditorAdvanced(EditorBase):
         
         display_state.cursor_index = cursor_index
         display_state.cursor_line_index = cursor_line_index
+        
+        self.modified = True
+        
         return display_state
     
     
@@ -1404,7 +1751,7 @@ class EditorAdvanced(EditorBase):
         ------
         SyntaxError
         """
-        if _check_should_try_compile(self):
+        if _check_should_try_compile(self.display_state):
             compiled_code = maybe_compile(self.display_state.buffer, self.file_name)
             if (compiled_code is not None):
                 self.compiled_code = compiled_code
@@ -1412,3 +1759,78 @@ class EditorAdvanced(EditorBase):
                 return True
         
         return False
+    
+    
+    def should_move_in_history(self):
+        """
+        Returns whether history moving can be executed.
+        """
+        display_state = self.display_state
+        if display_state.cursor_line_index != 0:
+            return False
+        
+        display_state = self.display_state
+        if display_state.cursor_index != 0:
+            return False
+        
+        return self.can_move_in_history()
+        
+    
+    def can_move_in_history(self):
+        """
+        Returns whether history moving can be executed.
+        
+        Returns
+        -------
+        can_move_in_history : `bool`
+        """
+        if not self.modified:
+            return True
+        
+        if self.is_empty():
+            self.modified = False
+            return True
+        
+        return False
+    
+    
+    def try_rewind_in_history(self):
+        """
+        Tries to go back in history if applicable.
+        
+        Returns
+        -------
+        new_display_state : `None`, ``DisplayState``
+            The new display state.
+        """
+        if not self.should_move_in_history():
+            return None
+        
+        buffer = self.history.get_previous()
+        if buffer is None:
+            buffer = ['']
+        
+        display_state = self.display_state.copy()
+        display_state.buffer = buffer.copy()
+        return display_state
+    
+    
+    def try_forward_in_history(self):
+        """
+        Tries to go forward in history if applicable.
+        
+        Returns
+        -------
+        new_display_state : `None`, ``DisplayState``
+            The new display state.
+        """
+        if not self.should_move_in_history():
+            return None
+        
+        buffer = self.history.get_next()
+        if buffer is None:
+            buffer = ['']
+        
+        display_state = self.display_state.copy()
+        display_state.buffer = buffer.copy()
+        return display_state
