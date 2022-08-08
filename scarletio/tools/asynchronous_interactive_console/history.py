@@ -108,9 +108,25 @@ class History:
         self._cursor_index = self._size + 1
     
     
+    def get_at(self, index):
+        """
+        Returns the element at the specified position.
+        
+        Parameters
+        ----------
+        index : `list` of `int`
+            The parameter's index to get.
+        
+        Returns
+        -------
+        element : `None`, `list` of `str`
+        """
+        return self._elements.get(index, None)
+    
+    
     def get_at_cursor_index_position(self):
         """
-        Returns the value at the cursor's current position.
+        Returns the element at the cursor's current position.
         
         Returns
         -------

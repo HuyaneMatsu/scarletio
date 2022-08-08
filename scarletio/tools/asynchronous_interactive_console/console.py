@@ -451,16 +451,16 @@ class AsynchronousInteractiveConsole:
                 compiled_code = editor()
                 if (compiled_code is not None):
                     self.run_code(compiled_code)
-                
-                self.increment_input_counter()
             
             except SyntaxError as err:
                 self.history.maybe_add_buffer_of(self._input_id, editor)
+                self.increment_input_counter()
                 
                 self.show_syntax_error(err)
             
             except KeyboardInterrupt as err:
                 self.history.maybe_add_buffer_of(self._input_id, editor)
+                self.increment_input_counter()
                 
                 if self.stop_on_interruption:
                     if (editor is None) or editor.is_empty():
@@ -474,6 +474,7 @@ class AsynchronousInteractiveConsole:
             
             else:
                 self.history.maybe_add_buffer_of(self._input_id, editor)
+                self.increment_input_counter()
             
             finally:
                 editor = None

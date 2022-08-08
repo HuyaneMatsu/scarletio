@@ -1,6 +1,6 @@
 __all__ = ()
 
-import sys, termios, tty
+import sys, re, termios, tty
 from os import get_blocking, get_terminal_size, set_blocking
 from selectors import DefaultSelector, EVENT_READ
 from socket import socketpair as create_socket_pair
@@ -42,6 +42,8 @@ DEDENT_WORDS = frozenset((
 ))
 
 EMPTY_CHARACTERS = frozenset((' ', '\t', '\n'))
+
+INDEXED_INPUT_RP = re.compile('\s*in\s*\[\s*(\d+)\s*\]\s*', re.I)
 
 
 def create_command_move_cursor(position):
@@ -704,7 +706,7 @@ def _check_should_try_compile(display_state):
         return _check_should_try_compile_one_line(display_state)
     
     return _check_should_try_compile_multi_line(display_state)
-    
+
 
 class DisplayState:
     """
@@ -1212,6 +1214,11 @@ class EditorAdvanced(EditorBase):
         """
         if self.check_exit_conditions():
             return None
+        
+        display_state = self.checkout_indexed_input()
+        if (display_state is not None):
+            return display_state
+        
         
         display_state = self.display_state.copy()
         buffer = display_state.buffer
@@ -1834,3 +1841,31 @@ class EditorAdvanced(EditorBase):
         display_state = self.display_state.copy()
         display_state.buffer = buffer.copy()
         return display_state
+    
+    
+    def checkout_indexed_input(self):
+        display_state = self.display_state
+        
+        # The current line after the cursor should be empty
+        
+        index = -1
+        
+        for line in display_state.buffer:
+            if _check_is_line_empty(line):
+                continue
+            
+            if index != -1:
+                return None
+            
+            matched = INDEXED_INPUT_RP.fullmatch(line)
+            if matched is None:
+                return None
+            
+            index = int(matched.group(1))
+            continue
+        
+        if index == -1:
+            return None
+        
+        buffer = self.history.get_at(index)
+        return DisplayState(buffer)
