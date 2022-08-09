@@ -1049,6 +1049,68 @@ class DisplayState:
             continue
 
 
+
+class InputIterator:
+    """
+    Helper class for processing a bigger chunk of input data at once.
+    
+    Attributes
+    ----------
+    iterator : `None, `str_iterator`
+        Content iterator.
+    """
+    __slots__ = ('iterator', )
+    
+    def __new__(cls, content):
+        """
+        Creates a new input iterator.
+        
+        Parameters
+        ----------
+        content : `str`
+            The content to iterate over.
+        """
+        if content:
+            iterator = iter(content)
+        else:
+            iterator = None
+        
+        self = object.__new__(cls)
+        self.iterator = iterator
+        return self
+    
+    
+    def __iter__(self):
+        """Returns self."""
+        return self
+    
+    
+    def __next__(self):
+        """Gets the next element of the input iterator."""
+        iterator = self.iterator
+        if iterator is not None:
+            next_ = next(iterator, None)
+            if next_ is not None:
+                return next_
+            
+            self.iterator = None
+        
+        raise StopIteration()
+    
+    
+    def get_next(self):
+        """Manually reads the next element."""
+        iterator = self.iterator
+        if iterator is not None:
+            next_ = next(iterator, None)
+            if next_ is not None:
+                return next_
+            
+            self.iterator = None
+        
+        return None
+
+
 class EditorAdvanced(EditorBase):
     """
     A simple repl command editor.
@@ -1148,11 +1210,19 @@ class EditorAdvanced(EditorBase):
             self.alive = True
             self.initialise_display()
             
-            while self.alive:
-                new_display_state = self.input_once()
-                if (new_display_state is not None):
-                    self.update_display(new_display_state)
-            
+            while True:
+                for new_display_state in self.poll_and_process_input():
+                    if (new_display_state is not None):
+                        self.update_display(new_display_state)
+                    
+                    if not self.alive:
+                        break
+                
+                else:
+                    continue
+                
+                break
+        
         finally:
             self.alive = False
             self.display_state.jump_to_end(self)
@@ -1568,10 +1638,10 @@ class EditorAdvanced(EditorBase):
         
         Returns
         -------
-        character_string : `str`
+        content : `str`
             The inputted string into `sys.stdin`.
         """
-        character_string = None
+        content = None
         
         while True:
             # We force flush every second.
@@ -1599,25 +1669,27 @@ class EditorAdvanced(EditorBase):
                 
                 if (file_descriptor == self.input_stream.fileno()) and (mask & EVENT_READ):
                     try:
-                        character_string = self.input_stream.read(1)
+                        content = self.input_stream.read()
                     except (BlockingIOError, InterruptedError):
                         pass
                     
                     continue
-                
             
-            if (character_string is not None):
-                if character_string:
-                    return character_string
+            
+            if (content is not None):
+                if content:
+                    return content
                 
-                character_string = None
+                content = None
     
     
-    def input_once(self):
+    def poll_and_process_input(self):
         """
         Inputs one action and returns whether any actions took place.
         
-        Returns
+        This method is an iterable generator.
+        
+        Yields
         -------
         new_display_state : `None`, ``DisplayState``
             The new display state.
@@ -1628,7 +1700,28 @@ class EditorAdvanced(EditorBase):
         SystemExit
         SyntaxError
         """
-        character_string = self.poll()
+        content = self.poll()
+        input_iterator = InputIterator(content)
+        for character_string in input_iterator:
+            yield self.process_input(character_string, input_iterator)
+    
+    
+    def process_input(self, character_string, input_iterator):
+        """
+        Processes one input.
+        
+        Parameters
+        ----------
+        character_string : `str`
+            The input string.
+        input_iterator : ``InputIterator``
+            The input iterator to pull additional characters if required.
+        
+        Returns
+        -------
+        new_display_state : `None`, ``DisplayState``
+            The new display state.
+        """
         character_int = ord(character_string)
         
         if character_int == KEY_KEYBOARD_INTERRUPT:
@@ -1641,10 +1734,10 @@ class EditorAdvanced(EditorBase):
             return self.execute_enter()
         
         if character_int == KEY_ARROW_ALL_INITIAL:
-            next_1_string = self.input_stream.read(1)
-            next_2_string = self.input_stream.read(1)
+            next_1_string = input_iterator.get_next()
+            next_2_string = input_iterator.get_next()
             
-            if (not next_1_string) or (not next_2_string):
+            if (next_1_string is None) or (next_2_string is None):
                 # Escape was pressed.
                 return None
             

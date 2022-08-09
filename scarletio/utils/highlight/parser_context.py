@@ -343,6 +343,7 @@ class HighlightParserContext(HighlightParserContextBase):
             yield from formatter.generate_highlighted(token)
 
 
+
 @export
 class FormatStringParserContext(HighlightParserContextBase):
     """
