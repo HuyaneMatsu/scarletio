@@ -31,7 +31,7 @@ class Token:
     
     def __repr__(self):
         """Returns the token's representation."""
-        return f'{self.__class__.__name__}({self.type}, {self.value})'
+        return f'{self.__class__.__name__}({self.type}, {self.value!r})'
 
 
 def _merge_tokens(tokens, start_index, end_index):
@@ -56,5 +56,5 @@ def _merge_tokens(tokens, start_index, end_index):
     
     value = ''.join(values)
     
-    del tokens[start_index + 1:end_index]
+    del tokens[start_index + 1 : end_index]
     tokens[start_index].value = value

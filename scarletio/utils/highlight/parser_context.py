@@ -302,12 +302,12 @@ class HighlightParserContext(HighlightParserContextBase):
             del tokens[-1]
         
         # Optimize tokens with merging sames into each other if applicable
-        same_count = 1
+        same_count = 0
         last_type = TOKEN_TYPE_ALL
         token_index = len(tokens) - 1
         
         while True:
-            if token_index <= 0:
+            if token_index < 0:
                 if same_count > 1:
                     # Merge tokens
                     _merge_tokens(tokens, 0, same_count)
@@ -324,7 +324,7 @@ class HighlightParserContext(HighlightParserContextBase):
             
             if (last_type == token_type):
                 token_index -= 1
-                same_count +=1
+                same_count += 1
                 continue
             
             if same_count > 1:
@@ -335,7 +335,7 @@ class HighlightParserContext(HighlightParserContextBase):
             last_type = token_type
             token_index -= 1
             continue
-    
+        
     
     @copy_docs(HighlightParserContextBase.generate_highlighted)
     def generate_highlighted(self, formatter):
