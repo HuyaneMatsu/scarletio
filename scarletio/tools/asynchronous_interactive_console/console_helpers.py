@@ -8,7 +8,7 @@ from ...core import create_event_loop, get_event_loop
 from ...utils import HIGHLIGHT_TOKEN_TYPES
 from ...utils.trace import _iter_highlight_producer
 
-from .compilation import PYTHON_COMPILE_FLAG_ALLOW_TOP_LEVEL_AWAIT
+from .editors.compilation import PYTHON_COMPILE_FLAG_ALLOW_TOP_LEVEL_AWAIT
 
 
 PACKAGE = __import__(PACKAGE_NAME)

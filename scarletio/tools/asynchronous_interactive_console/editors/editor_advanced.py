@@ -5,7 +5,7 @@ from os import get_blocking, get_terminal_size, set_blocking
 from selectors import DefaultSelector, EVENT_READ
 from socket import socketpair as create_socket_pair
 
-from ...utils import DEFAULT_ANSI_HIGHLIGHTER, copy_docs, create_ansi_format_code, iter_highlight_code_lines
+from ....utils import DEFAULT_ANSI_HIGHLIGHTER, copy_docs, create_ansi_format_code, iter_highlight_code_lines
 
 from .compilation import maybe_compile
 from .editor_base import EditorBase, _validate_buffer

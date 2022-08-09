@@ -3,8 +3,6 @@ __all__ = ('run_asynchronous_interactive_console',)
 import sys, warnings
 from functools import partial as partial_func
 from math import floor, log
-from os import get_terminal_size
-from sys import platform as PLATFORM
 from types import FunctionType
 
 from ...core import Future, get_default_trace_writer_highlighter, get_event_loop
@@ -12,9 +10,7 @@ from ...utils import HIGHLIGHT_TOKEN_TYPES, is_awaitable, render_exception_into
 from ...utils.trace import _render_syntax_error_representation_into, is_syntax_error
 
 from .console_helpers import create_banner, create_exit_message, get_or_create_event_loop
-from .editor_advanced import EditorAdvanced
-from .editor_base import EditorBase
-from .editor_simple import EditorSimple
+from .editors import EditorAdvanced, EditorBase, EditorSimple, can_use_advanced_editor
 from .history import History
 
 
@@ -164,15 +160,11 @@ class AsynchronousInteractiveConsole:
             event_loop = get_event_loop()
         
         if editor_type is None:
-            if PLATFORM != 'linux':
-                editor_type = EditorSimple
+            if can_use_advanced_editor():
+                editor_type = EditorAdvanced
+            
             else:
-                try:
-                    get_terminal_size()
-                except OSError:
-                    editor_type = EditorSimple
-                else:
-                    editor_type = EditorAdvanced
+                editor_type = EditorSimple
         
         else:
             if (not isinstance(editor_type, type)) or (not issubclass(editor_type, EditorBase)):

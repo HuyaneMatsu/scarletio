@@ -5,7 +5,7 @@ import sys
 from .compilation import maybe_compile
 from .editor_base import _validate_buffer, EditorBase
 
-from ...utils import copy_docs
+from ....utils import copy_docs
 
 
 class EditorSimple(EditorBase):

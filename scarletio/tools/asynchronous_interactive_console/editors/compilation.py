@@ -2,7 +2,7 @@ __all__ = ()
 
 import sys, warnings
 
-from ...utils.trace import CONSOLE_LINE_CACHE
+from ....utils.trace import CONSOLE_LINE_CACHE
 
 
 PYTHON_COMPILE_FLAG_DONT_IMPLY_DEDENT = 1 << 9
