@@ -2,9 +2,9 @@ __all__ = ()
 
 import sys, re, termios, tty
 from os import get_blocking, get_terminal_size, set_blocking
+from select import poll as Poller, POLLOUT as EVENT_POLL_WRITE
 from selectors import DefaultSelector, EVENT_READ
 from socket import socketpair as create_socket_pair
-
 from ....utils import DEFAULT_ANSI_HIGHLIGHTER, copy_docs, create_ansi_format_code, iter_highlight_code_lines
 
 from .compilation import maybe_compile
@@ -46,6 +46,8 @@ EMPTY_CHARACTERS = frozenset((' ', '\t', '\n'))
 INDEXED_INPUT_RP = re.compile('\s*in\s*\[\s*(\d+)\s*\]\s*', re.I)
 
 CHARACTER_CHAINED_OPERATION = chr(KEY_ARROW_ALL_INITIAL)
+
+STDOUT_WRITE_TIMEOUT = 30.0
 
 
 def create_command_move_cursor(position):
@@ -884,7 +886,7 @@ class DisplayState:
         output_stream = editor.output_stream
         
         for _ in range(self.get_cursor_till_end_display_line_count(new_content_width, editor.prefix_length)):
-            output_stream.write(COMMAND_NEXT_LINE)
+            write_to_io(output_stream, COMMAND_NEXT_LINE)
     
     
     def clear(self, editor):
@@ -919,13 +921,13 @@ class DisplayState:
         """
         output_stream = editor.output_stream
         
-        output_stream.write(COMMAND_START_LINE)
-        output_stream.write(COMMAND_CLEAR_LINE)
+        write_to_io(output_stream, COMMAND_START_LINE)
+        write_to_io(output_stream, COMMAND_CLEAR_LINE)
         
         for _ in range(self.get_start_till_end_display_line_count(new_content_width, editor.prefix_length) - 1):
-            output_stream.write(COMMAND_PREVIOUS_LINE)
-            output_stream.write(COMMAND_START_LINE)
-            output_stream.write(COMMAND_CLEAR_LINE)
+            write_to_io(output_stream, COMMAND_PREVIOUS_LINE)
+            write_to_io(output_stream, COMMAND_START_LINE)
+            write_to_io(output_stream, COMMAND_CLEAR_LINE)
     
     
     def write_cursor(self, editor):
@@ -943,9 +945,9 @@ class DisplayState:
         output_stream = editor.output_stream
         
         for _ in range(self.get_cursor_till_end_display_line_count(-1, editor.prefix_length)):
-            output_stream.write(COMMAND_PREVIOUS_LINE)
+            write_to_io(output_stream, COMMAND_PREVIOUS_LINE)
         
-        output_stream.write(COMMAND_START_LINE)
+        write_to_io(output_stream, COMMAND_START_LINE)
         
         cursor_index = self.cursor_index
         if cursor_index == 0:
@@ -955,7 +957,7 @@ class DisplayState:
         
         line_cursor_index += editor.prefix_length
         
-        output_stream.write(create_command_move_cursor(line_cursor_index))
+        write_to_io(output_stream, create_command_move_cursor(line_cursor_index))
     
     
     def write(self, editor):
@@ -982,10 +984,10 @@ class DisplayState:
         self.content_width = content_width
         
         if len(buffer) == 1 and not buffer[0]:
-            output_stream.write(COMMAND_START_LINE)
-            output_stream.write(COMMAND_CLEAR_LINE)
-            output_stream.write(COMMAND_FORMAT_RESET)
-            output_stream.write(prefix_initial)
+            write_to_io(output_stream, COMMAND_START_LINE)
+            write_to_io(output_stream, COMMAND_CLEAR_LINE)
+            write_to_io(output_stream, COMMAND_FORMAT_RESET)
+            write_to_io(output_stream, prefix_initial)
             return
         
         line_index = 0
@@ -1004,9 +1006,11 @@ class DisplayState:
             
             if is_new_line:
                 leftover_line_length = content_width
-                output_stream.write(COMMAND_START_LINE)
-                output_stream.write(COMMAND_CLEAR_LINE)
-                output_stream.write(COMMAND_FORMAT_RESET)
+                
+                write_to_io(output_stream, COMMAND_START_LINE)
+                write_to_io(output_stream, COMMAND_CLEAR_LINE)
+                write_to_io(output_stream, COMMAND_FORMAT_RESET)
+                
                 is_new_line = False
                 
                 if line_index == 0:
@@ -1014,27 +1018,27 @@ class DisplayState:
                 else:
                     prefix = prefix_continuous
                 
-                output_stream.write(prefix)
+                write_to_io(output_stream, prefix)
             
             if part:
                 if is_command(part):
-                    output_stream.write(part)
+                    write_to_io(output_stream, part)
                 
                 else:
                     while True:
                         part_length = len(part)
                         leftover_line_length -= part_length
                         if leftover_line_length >= 0:
-                            output_stream.write(part)
+                            write_to_io(output_stream, part)
                             break
                         
-                        output_stream.write(part[:leftover_line_length])
+                        write_to_io(output_stream, part[:leftover_line_length])
                         part = part[leftover_line_length:]
                         
-                        output_stream.write(CONTINUOUS_LINE_POSTFIX)
-                        output_stream.write(COMMAND_NEXT_LINE)
-                        output_stream.write(COMMAND_START_LINE)
-                        output_stream.write(EMPTY_LINE_PREFIX_CHARACTER * prefix_length)
+                        write_to_io(output_stream, CONTINUOUS_LINE_POSTFIX)
+                        write_to_io(output_stream, COMMAND_NEXT_LINE)
+                        write_to_io(output_stream, COMMAND_START_LINE)
+                        write_to_io(output_stream, EMPTY_LINE_PREFIX_CHARACTER * prefix_length)
                         leftover_line_length = content_width
                         continue
             
@@ -1045,7 +1049,7 @@ class DisplayState:
                     break
                 
                 is_new_line = True
-                output_stream.write(COMMAND_NEXT_LINE)
+                write_to_io(output_stream, COMMAND_NEXT_LINE)
                 continue
             
             continue
@@ -1116,6 +1120,35 @@ class InputIterator:
             self.iterator = None
         
         return None
+
+
+def write_to_io(io, content):
+    """
+    Writes to the given `io`
+    
+    Parameters
+    ----------
+    io : `file-like`
+        The io to write to.
+    content : `str`
+        The content to write.
+    
+    Raises
+    ------
+    RuntimeError
+        - If the `io` did not became writable within timeout.
+    """
+    file_descriptor = io.fileno()
+    if not get_blocking(file_descriptor):
+        poller = Poller()
+        poller.register(file_descriptor, EVENT_POLL_WRITE)
+        events = poller.poll(STDOUT_WRITE_TIMEOUT)
+        if not events:
+            raise RuntimeError(
+                f'The io did not became writable within timeout ({STDOUT_WRITE_TIMEOUT}).'
+            )
+        
+    io.write(content)
 
 
 class EditorAdvanced(EditorBase):
@@ -1228,9 +1261,9 @@ class EditorAdvanced(EditorBase):
         finally:
             self.alive = False
             self.display_state.jump_to_end(self)
-            self.output_stream.write('\n')
-            self.output_stream.write(COMMAND_START_LINE)
-            self.output_stream.write(COMMAND_FORMAT_RESET)
+            write_to_io(self.output_stream, '\n')
+            write_to_io(self.output_stream, COMMAND_START_LINE)
+            write_to_io(self.output_stream, COMMAND_FORMAT_RESET)
             self.output_stream.flush()
             
             termios.tcsetattr(self.input_stream, termios.TCSADRAIN, self.input_stream_settings_original)
@@ -1911,14 +1944,14 @@ class EditorAdvanced(EditorBase):
         async_output_written = self.async_output_written
         
         if async_output_written:
-            self.output_stream.write(COMMAND_PREVIOUS_LINE)
+            write_to_io(self.output_stream, COMMAND_PREVIOUS_LINE)
         
         termios.tcsetattr(self.input_stream, termios.TCSADRAIN, self.input_stream_settings_original)
-        self.output_stream.write(content)
+        write_to_io(self.output_stream, content)
         tty.setraw(self.input_stream)
         
-        self.output_stream.write(COMMAND_NEXT_LINE)
-        self.output_stream.write(COMMAND_START_LINE)
+        write_to_io(self.output_stream, COMMAND_NEXT_LINE)
+        write_to_io(self.output_stream, COMMAND_START_LINE)
         
         if not async_output_written:
             self.async_output_written = True
