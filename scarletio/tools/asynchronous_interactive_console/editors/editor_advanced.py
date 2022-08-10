@@ -1218,17 +1218,12 @@ class EditorAdvanced(EditorBase):
             self.initialise_display()
             
             while True:
-                for new_display_state in self.poll_and_process_input():
-                    if (new_display_state is not None):
-                        self.update_display(new_display_state)
-                    
-                    if not self.alive:
-                        break
+                if not self.alive:
+                    break
                 
-                else:
-                    continue
-                
-                break
+                new_display_state = self.poll_and_process_input()
+                if (new_display_state is not None):
+                    self.update_display(new_display_state)
         
         finally:
             self.alive = False
@@ -1276,12 +1271,14 @@ class EditorAdvanced(EditorBase):
         return True
     
     
-    def execute_enter(self, should_auto_format):
+    def execute_enter(self, old_display_state, should_auto_format):
         """
         Executes an enter key press.
         
         Parameters
         ----------
+        old_display_state : ``DisplayState``
+            The old display state to work from.
         should_auto_format : `bool`
             Whether auto formatting should be applied.
         
@@ -1295,17 +1292,17 @@ class EditorAdvanced(EditorBase):
         SyntaxError
         """
         if should_auto_format:
-            if self.check_exit_conditions():
+            if self.check_exit_conditions(old_display_state):
                 return None
+            
+            new_display_state = self.checkout_indexed_input(old_display_state)
+            if (new_display_state is not None):
+                return new_display_state
         
-        display_state = self.checkout_indexed_input()
-        if (display_state is not None):
-            return display_state
-        
-        display_state = self.display_state.copy()
-        buffer = display_state.buffer
-        cursor_index = display_state.cursor_index
-        cursor_line_index = display_state.cursor_line_index
+        new_display_state = old_display_state.copy()
+        buffer = new_display_state.buffer
+        cursor_index = new_display_state.cursor_index
+        cursor_line_index = new_display_state.cursor_line_index
         
         line = buffer[cursor_line_index]
         current_line_new = line[:cursor_index]
@@ -1331,27 +1328,32 @@ class EditorAdvanced(EditorBase):
         cursor_line_index += 1
         buffer.insert(cursor_line_index, next_line)
         
-        display_state.cursor_index = new_line_starter_space_count
-        display_state.cursor_line_index = cursor_line_index
+        new_display_state.cursor_index = new_line_starter_space_count
+        new_display_state.cursor_line_index = cursor_line_index
         
         self.modified = True
         
-        return display_state
+        return new_display_state
     
     
-    def execute_arrow_left(self):
+    def execute_arrow_left(self, old_display_state):
         """
         Executes an arrow-left key press.
+        
+        Parameters
+        ----------
+        old_display_state : ``DisplayState``
+            The old display state to work from.
         
         Returns
         -------
         new_display_state : `None`, ``DisplayState``
             The new display state.
         """
-        display_state = self.display_state.copy()
-        buffer = display_state.buffer
-        cursor_index = display_state.cursor_index
-        cursor_line_index = display_state.cursor_line_index
+        new_display_state = old_display_state.copy()
+        buffer = new_display_state.buffer
+        cursor_index = new_display_state.cursor_index
+        cursor_line_index = new_display_state.cursor_line_index
         
         if (cursor_index == 0):
             if (cursor_line_index == 0):
@@ -1363,24 +1365,29 @@ class EditorAdvanced(EditorBase):
         else:
             cursor_index -= 1
         
-        display_state.cursor_index = cursor_index
-        display_state.cursor_line_index = cursor_line_index
-        return display_state
+        new_display_state.cursor_index = cursor_index
+        new_display_state.cursor_line_index = cursor_line_index
+        return new_display_state
     
     
-    def execute_arrow_right(self):
+    def execute_arrow_right(self, old_display_state):
         """
         Executes an arrow-right key press.
+        
+        Parameters
+        ----------
+        old_display_state : ``DisplayState``
+            The old display state to work from.
         
         Returns
         -------
         new_display_state : `None`, ``DisplayState``
             The new display state.
         """
-        display_state = self.display_state.copy()
-        buffer = display_state.buffer
-        cursor_index = display_state.cursor_index
-        cursor_line_index = display_state.cursor_line_index
+        new_display_state = old_display_state.copy()
+        buffer = new_display_state.buffer
+        cursor_index = new_display_state.cursor_index
+        cursor_line_index = new_display_state.cursor_line_index
         
         line_length = len(buffer[cursor_line_index])
         if cursor_index == line_length:
@@ -1392,29 +1399,37 @@ class EditorAdvanced(EditorBase):
         else:
             cursor_index += 1
         
-        display_state.cursor_index = cursor_index
-        display_state.cursor_line_index = cursor_line_index
+        new_display_state.cursor_index = cursor_index
+        new_display_state.cursor_line_index = cursor_line_index
         
-        return display_state
+        return new_display_state
     
     
-    def execute_arrow_up(self):
+    def execute_arrow_up(self, old_display_state, should_auto_format):
         """
         Executes an arrow-up key press.
+        
+        Parameters
+        ----------
+        old_display_state : ``DisplayState``
+            The old display state to work from.
+        should_auto_format : `bool`
+            Whether the content should be auto formatted.
         
         Returns
         -------
         new_display_state : `None`, ``DisplayState``
             The new display state.
         """
-        display_state = self.try_rewind_in_history()
-        if (display_state is not None):
-            return display_state
+        if should_auto_format:
+            new_display_state = self.try_rewind_in_history()
+            if (new_display_state is not None):
+                return new_display_state
         
-        display_state = self.display_state.copy()
-        buffer = display_state.buffer
-        cursor_index = display_state.cursor_index
-        cursor_line_index = display_state.cursor_line_index
+        new_display_state = old_display_state.copy()
+        buffer = new_display_state.buffer
+        cursor_index = new_display_state.cursor_index
+        cursor_line_index = new_display_state.cursor_line_index
         
         if cursor_line_index == 0:
             if (cursor_index == 0):
@@ -1429,29 +1444,37 @@ class EditorAdvanced(EditorBase):
             if line_length < cursor_index:
                 cursor_index = line_length
         
-        display_state.cursor_index = cursor_index
-        display_state.cursor_line_index = cursor_line_index
+        new_display_state.cursor_index = cursor_index
+        new_display_state.cursor_line_index = cursor_line_index
         
-        return display_state
+        return new_display_state
     
     
-    def execute_arrow_down(self):
+    def execute_arrow_down(self, old_display_state, should_auto_format):
         """
         Executes an arrow-down key press.
+        
+        Parameters
+        ----------
+        old_display_state : ``DisplayState``
+            The old display state to work from.
+        should_auto_format : `bool`
+            Whether the content should be auto formatted.
         
         Returns
         -------
         new_display_state : `None`, ``DisplayState``
             The new display state.
         """
-        display_state = self.try_forward_in_history()
-        if (display_state is not None):
-            return display_state
+        if should_auto_format:
+            new_display_state = self.try_forward_in_history()
+            if (new_display_state is not None):
+                return new_display_state
         
-        display_state = self.display_state.copy()
-        buffer = display_state.buffer
-        cursor_index = display_state.cursor_index
-        cursor_line_index = display_state.cursor_line_index
+        new_display_state = old_display_state.copy()
+        buffer = new_display_state.buffer
+        cursor_index = new_display_state.cursor_index
+        cursor_line_index = new_display_state.cursor_line_index
         
         if cursor_line_index == len(buffer) - 1:
             line_length = len(buffer[cursor_line_index])
@@ -1467,25 +1490,30 @@ class EditorAdvanced(EditorBase):
             if line_length < cursor_index:
                 cursor_index = line_length
         
-        display_state.cursor_index = cursor_index
-        display_state.cursor_line_index = cursor_line_index
+        new_display_state.cursor_index = cursor_index
+        new_display_state.cursor_line_index = cursor_line_index
         
-        return display_state
+        return new_display_state
     
     
-    def execute_back_tab(self):
+    def execute_back_tab(self, old_display_state):
         """
         Executes a back-tab key press (shift + tab).
+        
+        Parameters
+        ----------
+        old_display_state : ``DisplayState``
+            The old display state to work from.
         
         Returns
         -------
         new_display_state : `None`, ``DisplayState``
             The new display state.
         """
-        display_state = self.display_state.copy()
-        buffer = display_state.buffer
-        cursor_index = display_state.cursor_index
-        cursor_line_index = display_state.cursor_line_index
+        new_display_state = old_display_state.copy()
+        buffer = new_display_state.buffer
+        cursor_index = new_display_state.cursor_index
+        cursor_line_index = new_display_state.cursor_line_index
         
         line = buffer[cursor_line_index]
         
@@ -1500,20 +1528,22 @@ class EditorAdvanced(EditorBase):
         line = line[remove_space_count:]
         buffer[cursor_line_index] = line
         
-        display_state.cursor_index = cursor_index
-        display_state.cursor_line_index = cursor_line_index
+        new_display_state.cursor_index = cursor_index
+        new_display_state.cursor_line_index = cursor_line_index
         
         self.modified = True
         
-        return display_state
+        return new_display_state
     
     
-    def execute_tab(self, should_auto_format):
+    def execute_tab(self, old_display_state, should_auto_format):
         """
         Executes a tab key press.
         
         Parameters
         ----------
+        old_display_state : ``DisplayState``
+            The old display state to work from.
         should_auto_format : `bool`
             Whether auto formatting should be applied.
         
@@ -1522,10 +1552,10 @@ class EditorAdvanced(EditorBase):
         new_display_state : `None`, ``DisplayState``
             The new display state.
         """
-        display_state = self.display_state.copy()
-        buffer = display_state.buffer
-        cursor_index = display_state.cursor_index
-        cursor_line_index = display_state.cursor_line_index
+        new_display_state = old_display_state.copy()
+        buffer = new_display_state.buffer
+        cursor_index = new_display_state.cursor_index
+        cursor_line_index = new_display_state.cursor_line_index
         line = buffer[cursor_line_index]
         
         if should_auto_format:
@@ -1548,27 +1578,32 @@ class EditorAdvanced(EditorBase):
             cursor_index += add_spaces_count
         
         
-        display_state.cursor_index = cursor_index
-        display_state.cursor_line_index = cursor_line_index
+        new_display_state.cursor_index = cursor_index
+        new_display_state.cursor_line_index = cursor_line_index
         
         self.modified = True
         
-        return display_state
+        return new_display_state
     
     
-    def execute_delete_left(self):
+    def execute_delete_left(self, old_display_state):
         """
         Executes a delete-left key press (backspace).
+        
+        Parameters
+        ----------
+        old_display_state : ``DisplayState``
+            The old display state to work from.
         
         Returns
         -------
         new_display_state : `None`, ``DisplayState``
             The new display state.
         """
-        display_state = self.display_state.copy()
-        buffer = display_state.buffer
-        cursor_index = display_state.cursor_index
-        cursor_line_index = display_state.cursor_line_index
+        new_display_state = old_display_state.copy()
+        buffer = new_display_state.buffer
+        cursor_index = new_display_state.cursor_index
+        cursor_line_index = new_display_state.cursor_line_index
         
         if cursor_index == 0:
             if cursor_line_index == 0:
@@ -1585,27 +1620,32 @@ class EditorAdvanced(EditorBase):
             buffer[cursor_line_index] = f'{line[:cursor_index - 1]}{line[cursor_index:]}'
             cursor_index -= 1
         
-        display_state.cursor_index = cursor_index
-        display_state.cursor_line_index = cursor_line_index
+        new_display_state.cursor_index = cursor_index
+        new_display_state.cursor_line_index = cursor_line_index
         
         self.modified = True
         
-        return display_state
+        return new_display_state
     
     
-    def execute_delete_right(self):
+    def execute_delete_right(self, old_display_state):
         """
         Executes a delete-right key press (delete).
+        
+        Parameters
+        ----------
+        old_display_state : ``DisplayState``
+            The old display state to work from.
         
         Returns
         -------
         new_display_state : `None`, ``DisplayState``
             The new display state.
         """
-        display_state = self.display_state.copy()
-        buffer = display_state.buffer
-        cursor_index = display_state.cursor_index
-        cursor_line_index = display_state.cursor_line_index
+        new_display_state = old_display_state.copy()
+        buffer = new_display_state.buffer
+        cursor_index = new_display_state.cursor_index
+        cursor_line_index = new_display_state.cursor_line_index
         
         line = buffer[cursor_line_index]
         line_length = len(line)
@@ -1621,20 +1661,22 @@ class EditorAdvanced(EditorBase):
             line = f'{line[:cursor_index]}{line[cursor_index + 1:]}'
             buffer[cursor_line_index] = line
         
-        display_state.cursor_index = cursor_index
-        display_state.cursor_line_index = cursor_line_index
+        new_display_state.cursor_index = cursor_index
+        new_display_state.cursor_line_index = cursor_line_index
         
         self.modified = True
         
-        return display_state
+        return new_display_state
     
     
-    def execute_print(self, character_string):
+    def execute_print(self, old_display_state, character_string):
         """
         Executes a printable character key press.
         
         Parameters
         ----------
+        old_display_state : ``DisplayState``
+            The old display state to work from.
         character_string : `str`
             The character to print out.
         
@@ -1643,21 +1685,21 @@ class EditorAdvanced(EditorBase):
         new_display_state : `None`, ``DisplayState``
             The new display state.
         """
-        display_state = self.display_state.copy()
-        buffer = display_state.buffer
-        cursor_index = display_state.cursor_index
-        cursor_line_index = display_state.cursor_line_index
+        new_display_state = old_display_state.copy()
+        buffer = new_display_state.buffer
+        cursor_index = new_display_state.cursor_index
+        cursor_line_index = new_display_state.cursor_line_index
         
         line = buffer[cursor_line_index]
         buffer[cursor_line_index] = f'{line[:cursor_index]}{character_string}{line[cursor_index:]}'
         cursor_index += 1
         
-        display_state.cursor_index = cursor_index
-        display_state.cursor_line_index = cursor_line_index
+        new_display_state.cursor_index = cursor_index
+        new_display_state.cursor_line_index = cursor_line_index
         
         self.modified = True
         
-        return display_state
+        return new_display_state
     
     
     def poll(self):
@@ -1715,9 +1757,7 @@ class EditorAdvanced(EditorBase):
         """
         Inputs one action and returns whether any actions took place.
         
-        This method is an iterable generator.
-        
-        Yields
+        Returns
         -------
         new_display_state : `None`, ``DisplayState``
             The new display state.
@@ -1732,16 +1772,30 @@ class EditorAdvanced(EditorBase):
         input_iterator = InputIterator(content)
         should_auto_format = input_iterator.length <= 1
         
+        old_display_state = self.display_state
+        new_display_state = old_display_state
+        
         for character_string in input_iterator:
-            yield self.process_input(input_iterator, character_string, should_auto_format)
+            received_display_state = self.process_input(
+                new_display_state, input_iterator, character_string, should_auto_format
+            )
+            if (received_display_state is not None):
+                new_display_state = received_display_state
+        
+        if (new_display_state is old_display_state):
+            new_display_state = None
+        
+        return new_display_state
     
     
-    def process_input(self, input_iterator, character_string, should_auto_format):
+    def process_input(self, old_display_state, input_iterator, character_string, should_auto_format):
         """
         Processes one input.
         
         Parameters
         ----------
+        old_display_state : ``DisplayState``
+            The old display state to work from.
         input_iterator : ``InputIterator``
             The input iterator to pull additional characters if required.
         character_string : `str`
@@ -1763,7 +1817,7 @@ class EditorAdvanced(EditorBase):
             raise SystemExit()
         
         if character_int in KEY_NEW_LINE_ALL:
-            return self.execute_enter(should_auto_format)
+            return self.execute_enter(old_display_state, should_auto_format)
         
         if character_int == KEY_ARROW_ALL_INITIAL:
             next_1_string = input_iterator.get_next()
@@ -1780,33 +1834,33 @@ class EditorAdvanced(EditorBase):
                 return None
             
             if next_2_int == KEY_ARROW_LEFT:
-                return self.execute_arrow_left()
+                return self.execute_arrow_left(old_display_state)
             
             if next_2_int == KEY_ARROW_RIGHT:
-                return self.execute_arrow_right()
+                return self.execute_arrow_right(old_display_state)
             
             if next_2_int == KEY_ARROW_UP:
-                return self.execute_arrow_up()
+                return self.execute_arrow_up(old_display_state, should_auto_format)
             
             if next_2_int == KEY_ARROW_DOWN:
-                return self.execute_arrow_down()
+                return self.execute_arrow_down(old_display_state, should_auto_format)
             
             if next_2_int == KEY_ARROW_BACK_TAB:
-                return self.execute_back_tab()
+                return self.execute_back_tab(old_display_state)
             
             return None
         
         if character_int == KEY_TAB:
-            return self.execute_tab(should_auto_format)
+            return self.execute_tab(old_display_state, should_auto_format)
         
         if character_int == KEY_DELETE_LEFT:
-            return self.execute_delete_left()
+            return self.execute_delete_left(old_display_state)
         
         if character_int == KEY_DELETE_RIGHT:
-            return self.execute_delete_right()
+            return self.execute_delete_right(old_display_state)
         
         if character_string.isprintable():
-            return self.execute_print(character_string)
+            return self.execute_print(old_display_state, character_string)
         
         return None
     
@@ -1875,16 +1929,21 @@ class EditorAdvanced(EditorBase):
         self.output_stream.flush()
     
     
-    def check_exit_conditions(self):
+    def check_exit_conditions(self, old_display_state):
         """
         Checks whether any exit conditions are met.
+        
+        Parameters
+        ----------
+        old_display_state : ``DisplayState``
+            The old display state to work from.
         
         Raises
         ------
         SyntaxError
         """
-        if _check_should_try_compile(self.display_state):
-            compiled_code = maybe_compile(self.display_state.buffer, self.file_name)
+        if _check_should_try_compile(old_display_state):
+            compiled_code = maybe_compile(old_display_state.buffer, self.file_name)
             if (compiled_code is not None):
                 self.compiled_code = compiled_code
                 self.alive = False
@@ -1968,14 +2027,25 @@ class EditorAdvanced(EditorBase):
         return display_state
     
     
-    def checkout_indexed_input(self):
-        display_state = self.display_state
+    def checkout_indexed_input(self, old_display_state):
+        """
+        Checks out whether an index of the history. If it is returns a new display state.
         
+        Parameters
+        ----------
+        old_display_state : ``DisplayState``
+            The old display state to work from.
+        
+        Returns
+        -------
+        new_display_state : `None`, ``DisplayState``
+            The new display state.
+        """
         # The current line after the cursor should be empty
         
         index = -1
         
-        for line in display_state.buffer:
+        for line in old_display_state.buffer:
             if _check_is_line_empty(line):
                 continue
             
