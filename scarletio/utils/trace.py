@@ -418,7 +418,11 @@ def _render_syntax_error_representation_into(syntax_error, into, highlighter):
     line = line[left_stripped_count:]
     
     into.append('    ')
-    into.extend(iter_highlight_code_lines([line], highlighter))
+    if highlighter is None:
+        into.append(line)
+    else:
+        into.extend(iter_highlight_code_lines([line], highlighter))
+    
     if offset - 1 >= left_stripped_count:
         
         into.append(' ' * (3 + offset - left_stripped_count))
