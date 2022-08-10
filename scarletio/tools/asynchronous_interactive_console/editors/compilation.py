@@ -66,8 +66,11 @@ def maybe_compile(buffer, file_name):
                 exception_1 = err
             
             else:
-                CONSOLE_LINE_CACHE.feed(file_name, source)
-                return code_object
+                if (code_object is not None):
+                    CONSOLE_LINE_CACHE.feed(file_name, source)
+                    return code_object
+                
+                exception_1 = None
             
             try:
                 code_object = _try_compile(source, file_name, False)
@@ -76,12 +79,22 @@ def maybe_compile(buffer, file_name):
             
             except SyntaxError as err:
                 exception_2 = err
-            else:
-                CONSOLE_LINE_CACHE.feed(file_name, source)
-                return code_object
             
-            if exception_1.args == exception_2.args:
-                raise SyntaxError(*exception_1.args)
+            else:
+                if (code_object is not None):
+                    CONSOLE_LINE_CACHE.feed(file_name, source)
+                    return code_object
+                
+                exception_2 = None
+            
+            if (exception_1 is None):
+                if (exception_2 is not None):
+                    raise exception_2
+            
+            else:
+                if (exception_2 is not None):
+                    if exception_1.args == exception_2.args:
+                        raise SyntaxError(*exception_1.args)
         
         finally:
             exception_1 = None
@@ -119,14 +132,22 @@ def _try_compile(source, file_name, single_expression_mode):
             PYTHON_COMPILE_FLAGS_USED,
         )
     except SyntaxError as err:
+        exception_representation = repr(err)
+        
+        if single_expression_mode:
+            if 'multiple statements' in exception_representation:
+                return None
+        
         if PYTHON_COMPILE_FLAG_ALLOW_INCOMPLETE_INPUT:
             reason = 'incomplete input'
         else:
             reason = 'unexpected EOF'
         
-        if reason not in repr(err):
-            raise
+        if reason in exception_representation:
+            return None
         
+        raise
+    
     # Memory error if: too many nested parentheses
     # Value error if: cannot convert a value
     except (MemoryError, ValueError, OverflowError) as err:
