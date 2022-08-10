@@ -45,6 +45,8 @@ EMPTY_CHARACTERS = frozenset((' ', '\t', '\n'))
 
 INDEXED_INPUT_RP = re.compile('\s*in\s*\[\s*(\d+)\s*\]\s*', re.I)
 
+CHARACTER_CHAINED_OPERATION = chr(KEY_ARROW_ALL_INITIAL)
+
 
 def create_command_move_cursor(position):
     """
@@ -1058,8 +1060,10 @@ class InputIterator:
     ----------
     iterator : `None, `str_iterator`
         Content iterator.
+    length : `int`
+        The estimated length of the input.
     """
-    __slots__ = ('iterator', )
+    __slots__ = ('iterator', 'length')
     
     def __new__(cls, content):
         """
@@ -1075,8 +1079,11 @@ class InputIterator:
         else:
             iterator = None
         
+        length = len(content) - (content.count(CHARACTER_CHAINED_OPERATION) << 1)
+        
         self = object.__new__(cls)
         self.iterator = iterator
+        self.length = length
         return self
     
     
@@ -1269,9 +1276,14 @@ class EditorAdvanced(EditorBase):
         return True
     
     
-    def execute_enter(self):
+    def execute_enter(self, should_auto_format):
         """
         Executes an enter key press.
+        
+        Parameters
+        ----------
+        should_auto_format : `bool`
+            Whether auto formatting should be applied.
         
         Returns
         -------
@@ -1282,13 +1294,13 @@ class EditorAdvanced(EditorBase):
         ------
         SyntaxError
         """
-        if self.check_exit_conditions():
-            return None
+        if should_auto_format:
+            if self.check_exit_conditions():
+                return None
         
         display_state = self.checkout_indexed_input()
         if (display_state is not None):
             return display_state
-        
         
         display_state = self.display_state.copy()
         buffer = display_state.buffer
@@ -1296,21 +1308,28 @@ class EditorAdvanced(EditorBase):
         cursor_line_index = display_state.cursor_line_index
         
         line = buffer[cursor_line_index]
-        new_line_starter_space_count = get_starting_space_count(line)
         current_line_new = line[:cursor_index]
+        next_line = line[cursor_index:]
         
-        # In which order should we check this?
-        if line_ends_with(current_line_new, ':'):
-            new_line_starter_space_count += 4
-        elif line_starts_with_word_any(current_line_new, DEDENT_WORDS):
-            new_line_starter_space_count -= 4
+        if should_auto_format:
+            new_line_starter_space_count = get_starting_space_count(line)
+            # In which order should we check this?
+            if line_ends_with(current_line_new, ':'):
+                new_line_starter_space_count += 4
+            elif line_starts_with_word_any(current_line_new, DEDENT_WORDS):
+                new_line_starter_space_count -= 4
+            
+            if new_line_starter_space_count < 0:
+                new_line_starter_space_count = 0
+            
+            next_line = ' ' * new_line_starter_space_count + next_line
         
-        if new_line_starter_space_count < 0:
+        else:
             new_line_starter_space_count = 0
         
         buffer[cursor_line_index] = current_line_new
         cursor_line_index += 1
-        buffer.insert(cursor_line_index, ' ' * new_line_starter_space_count + line[cursor_index:])
+        buffer.insert(cursor_line_index, next_line)
         
         display_state.cursor_index = new_line_starter_space_count
         display_state.cursor_line_index = cursor_line_index
@@ -1489,9 +1508,14 @@ class EditorAdvanced(EditorBase):
         return display_state
     
     
-    def execute_tab(self):
+    def execute_tab(self, should_auto_format):
         """
         Executes a tab key press.
+        
+        Parameters
+        ----------
+        should_auto_format : `bool`
+            Whether auto formatting should be applied.
         
         Returns
         -------
@@ -1502,23 +1526,27 @@ class EditorAdvanced(EditorBase):
         buffer = display_state.buffer
         cursor_index = display_state.cursor_index
         cursor_line_index = display_state.cursor_line_index
-        
-        add_spaces_count =  4 - (cursor_index & 3)
         line = buffer[cursor_line_index]
-        line_length = len(line)
-        while add_spaces_count:
-            if cursor_index >= line_length:
-                break
-            
-            if line[cursor_index] != ' ':
-                break
-            
-            cursor_index += 1
-            add_spaces_count -= 1
+        
+        if should_auto_format:
+            add_spaces_count =  4 - (cursor_index & 3)
+            line_length = len(line)
+            while add_spaces_count:
+                if cursor_index >= line_length:
+                    break
+                
+                if line[cursor_index] != ' ':
+                    break
+                
+                cursor_index += 1
+                add_spaces_count -= 1
+        else:
+            add_spaces_count = 4
         
         if add_spaces_count:
             buffer[cursor_line_index] = f'{line[:cursor_index]}{" " * add_spaces_count}{line[cursor_index:]}'
             cursor_index += add_spaces_count
+        
         
         display_state.cursor_index = cursor_index
         display_state.cursor_line_index = cursor_line_index
@@ -1702,20 +1730,24 @@ class EditorAdvanced(EditorBase):
         """
         content = self.poll()
         input_iterator = InputIterator(content)
+        should_auto_format = input_iterator.length <= 1
+        
         for character_string in input_iterator:
-            yield self.process_input(character_string, input_iterator)
+            yield self.process_input(input_iterator, character_string, should_auto_format)
     
     
-    def process_input(self, character_string, input_iterator):
+    def process_input(self, input_iterator, character_string, should_auto_format):
         """
         Processes one input.
         
         Parameters
         ----------
-        character_string : `str`
-            The input string.
         input_iterator : ``InputIterator``
             The input iterator to pull additional characters if required.
+        character_string : `str`
+            The input string.
+        should_auto_format : `bool`
+            Whether the content should be auto formatted.
         
         Returns
         -------
@@ -1731,7 +1763,7 @@ class EditorAdvanced(EditorBase):
             raise SystemExit()
         
         if character_int in KEY_NEW_LINE_ALL:
-            return self.execute_enter()
+            return self.execute_enter(should_auto_format)
         
         if character_int == KEY_ARROW_ALL_INITIAL:
             next_1_string = input_iterator.get_next()
@@ -1765,7 +1797,7 @@ class EditorAdvanced(EditorBase):
             return None
         
         if character_int == KEY_TAB:
-            return self.execute_tab()
+            return self.execute_tab(should_auto_format)
         
         if character_int == KEY_DELETE_LEFT:
             return self.execute_delete_left()

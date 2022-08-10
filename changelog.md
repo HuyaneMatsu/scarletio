@@ -17,6 +17,7 @@
 - Render syntax errors correctly.
 - Handle syntax errors correctly in console.
 - Highlight consoles too!
+- Add and use `resume_gateway_url`.
 
 #### Bug fixes
 
