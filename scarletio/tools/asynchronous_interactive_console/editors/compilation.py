@@ -2,7 +2,7 @@ __all__ = ()
 
 import sys, warnings
 
-from ....utils.trace import CONSOLE_LINE_CACHE
+from ....utils.trace import CONSOLE_LINE_CACHE, is_syntax_error, right_strip_syntax_error_line
 
 
 PYTHON_COMPILE_FLAG_DONT_IMPLY_DEDENT = 1 << 9
@@ -93,6 +93,12 @@ def maybe_compile(buffer, file_name):
             
             else:
                 if (exception_2 is not None):
+                    if is_syntax_error(exception_1):
+                        right_strip_syntax_error_line(exception_1)
+                    
+                    if is_syntax_error(exception_2):
+                        right_strip_syntax_error_line(exception_2)
+                    
                     if exception_1.args == exception_2.args:
                         raise SyntaxError(*exception_1.args)
         

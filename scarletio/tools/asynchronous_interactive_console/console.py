@@ -7,7 +7,9 @@ from types import FunctionType
 
 from ...core import Future, get_default_trace_writer_highlighter, get_event_loop
 from ...utils import HIGHLIGHT_TOKEN_TYPES, is_awaitable, render_exception_into
-from ...utils.trace import _render_syntax_error_representation_into, is_syntax_error
+from ...utils.trace import (
+    _render_syntax_error_representation_into, fixup_syntax_error_line_from_buffer, is_syntax_error
+)
 
 from .console_helpers import create_banner, create_exit_message, get_or_create_event_loop
 from .editors import EditorAdvanced, EditorBase, EditorSimple, can_use_advanced_editor
@@ -448,7 +450,7 @@ class AsynchronousInteractiveConsole:
                 self.history.maybe_add_buffer_of(self._input_id, editor)
                 self.increment_input_counter()
                 
-                self.show_syntax_error(err)
+                self.show_syntax_error(err, editor)
             
             except KeyboardInterrupt as err:
                 self.history.maybe_add_buffer_of(self._input_id, editor)
@@ -479,7 +481,7 @@ class AsynchronousInteractiveConsole:
         sys.stdout.flush()
     
     
-    def show_syntax_error(self, syntax_error):
+    def show_syntax_error(self, syntax_error, editor):
         """
         Shows the given syntax error.
         
@@ -487,12 +489,17 @@ class AsynchronousInteractiveConsole:
         ----------
         syntax_error : `SyntaxError`, `OverflowError`, `ValueError`
             The syntax error, or other derping to show.
+        editor : `None`, ``EditorBase``
+            The respective editor.
         """
         into = []
         
         if is_syntax_error(syntax_error):
-            message, (old_file_name, *additional_details) = syntax_error.args
-            syntax_error.args = (message, (self.get_file_name(), *additional_details))
+            # message, (old_file_name, *additional_details) = syntax_error.args
+            # syntax_error.args = (message, (self.get_file_name(), *additional_details))
+            
+            if (editor is not None):
+                fixup_syntax_error_line_from_buffer(syntax_error, editor.get_buffer())
             
             _render_syntax_error_representation_into(syntax_error, into, self.highlighter)
             into.append('\n')

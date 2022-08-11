@@ -334,6 +334,8 @@ def is_syntax_error(exception):
     #
     # file_name is annotated as `O`, so it probably can be `None` as well.
     # also: line_number == end_line_number, so we can ignore it.
+    #
+    # On older Python versions `line` can also be `None`. How stupid!
     
     file_name = details[0]
     line_number = details[1]
@@ -349,7 +351,7 @@ def is_syntax_error(exception):
     if not isinstance(offset, int):
         return False
     
-    if not isinstance(line, str):
+    if (line is not None) and (not isinstance(line, str)):
         return False
     
     if len(details) == 4:
@@ -365,6 +367,53 @@ def is_syntax_error(exception):
         return False
     
     return True
+
+
+def fixup_syntax_error_line_from_buffer(syntax_error, buffer):
+    """
+    Tries to fix up the syntax error's missing line.
+    
+    Should be only called if ``is_syntax_error`` returned `True` on the given exception.
+    
+    Parameters
+    ----------
+    syntax_error : ``SyntaxError``
+        Respective SyntaxError
+    buffer : `list` of `str`
+        Buffer containing the respective lines.
+    """
+    message, (file_name, line_number, offset, line, *end) = syntax_error.args
+    if line is not None:
+        return
+    
+    buffer_length = len(buffer)
+    # `line_number` means `line_index + 1`
+    if (line_number > buffer_length) or (line_number < 1):
+        return
+    
+    line = buffer[line_number - 1]
+    syntax_error.args = (message, (file_name, line_number, offset, line, *end))
+
+
+def right_strip_syntax_error_line(syntax_error):
+    """
+    Right strips the syntax error's line. This can be useful when comparing two syntax errors, but one has new line
+    character at the end.
+    
+    Should be only called if ``is_syntax_error`` returned `True` on the given exception.
+    
+    Parameters
+    ----------
+    syntax_error : `SyntaxError`
+        The syntax error to strip.
+    """
+    message, (file_name, line_number, offset, line, *end) = syntax_error.args
+    if line is None:
+        return
+    
+    line = line.rstrip()
+    
+    syntax_error.args = (message, (file_name, line_number, offset, line, *end))
 
 
 def _render_syntax_error_representation_into(syntax_error, into, highlighter):
@@ -402,50 +451,50 @@ def _render_syntax_error_representation_into(syntax_error, into, highlighter):
         file_name = ''
     
     into.extend(_iter_highlight_producer(_produce_file_location(file_name, line_number, ''), highlighter))
-    
     into.append('\n')
     
-    line = line.lstrip()
-    
-    left_stripped_count = 0
-    for character in line:
-        if character in {' ', '\n', '\t', '\f'}:
-            left_stripped_count += 1
-            continue
+    if (line is not None):
+        line = line.strip()
         
-        break
-    
-    line = line[left_stripped_count:]
-    
-    into.append('    ')
-    if highlighter is None:
-        into.append(line)
-    else:
-        into.extend(iter_highlight_code_lines([line], highlighter))
-    
-    if offset - 1 >= left_stripped_count:
-        
-        into.append(' ' * (3 + offset - left_stripped_count))
-        
-
-        if end_offset == -1:
-            pointer_length = 1
-        else:
-            pointer_length = end_offset - offset
+        left_stripped_count = 0
+        for character in line:
+            if character in {' ', '\n', '\t', '\f'}:
+                left_stripped_count += 1
+                continue
             
-            if pointer_length < 1:
-                pointer_length = 1
+            break
         
-        pointer = '^'
-        if pointer_length != 1:
-            pointer = '^' * pointer_length
+        line = line[left_stripped_count:]
         
-        
-        into = _add_typed_part_into(
-            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_EXCEPTION_REPR, pointer, into, highlighter
-        )
+        into.append('    ')
+        if highlighter is None:
+            into.append(line)
+        else:
+            into.extend(iter_highlight_code_lines([line], highlighter))
         
         into.append('\n')
+        
+        if offset - 1 >= left_stripped_count:
+            into.append(' ' * (3 + offset - left_stripped_count))
+            
+            if end_offset == -1:
+                pointer_length = 1
+            else:
+                pointer_length = end_offset - offset
+                
+                if pointer_length < 1:
+                    pointer_length = 1
+            
+            pointer = '^'
+            if pointer_length != 1:
+                pointer = '^' * pointer_length
+            
+            
+            into = _add_typed_part_into(
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_EXCEPTION_REPR, pointer, into, highlighter
+            )
+            
+            into.append('\n')
     
     
     exception_representation = type(syntax_error).__name__
