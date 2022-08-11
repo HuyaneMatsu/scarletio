@@ -392,15 +392,17 @@ def _try_match_string(context):
             format_string_context = FormatStringParserContext(content)
             format_string_context.match()
             context.add_tokens(format_string_context.tokens)
+        
         else:
             limit = len(content_parts)
             if limit:
                 index = 0
                 while True:
                     content = content_parts[index]
-                    context.add_token(token_type, content)
                     
                     index += 1
+                    context.add_token(token_type, content)
+                    
                     if index == limit:
                         break
                     
@@ -426,14 +428,15 @@ def _try_match_string(context):
                 format_string_context = FormatStringParserContext(content)
                 format_string_context.match()
                 context.add_tokens(format_string_context.tokens)
+            
             else:
                 context.add_token(token_type, content)
     
-    if set_end_later != -100:
-        context.set_line_character_index(set_end_later)
-    
     if set_end_later >= 0:
         context.add_token(token_type, encapsulator)
+    
+    if set_end_later != -100:
+        context.set_line_character_index(set_end_later)
     
     return True
 

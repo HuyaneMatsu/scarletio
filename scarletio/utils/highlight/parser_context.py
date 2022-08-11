@@ -191,7 +191,7 @@ class HighlightParserContextBase:
             token_value = '\\'
         else:
             token_type = TOKEN_TYPE_LINEBREAK
-            token_value = ''
+            token_value = None
         
         token = Token(token_type, token_value)
         tokens.append(token)
@@ -335,7 +335,7 @@ class HighlightParserContext(HighlightParserContextBase):
             last_type = token_type
             token_index -= 1
             continue
-        
+    
     
     @copy_docs(HighlightParserContextBase.generate_highlighted)
     def generate_highlighted(self, formatter):

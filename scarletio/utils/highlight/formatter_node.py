@@ -7,18 +7,18 @@ class FormatterNode:
     
     Attributes
     ----------
-    id : `int`
-        The node's identifier.
     detail : `None`, ``FormatterDetail``
         Details of the node for formatting.
-    is_class_direct : `bool`
+    direct : `bool`
         Whether ``.type`` is set directly or is inherited.
+    id : `int`
+        The node's identifier.
     nodes : `None`, `dict` of (`int`, ``FormatterNode``) items
         Sub-nodes branching out from the source one.
     parent : `None`, ``FormatterNode``
         The parent node.
     """
-    __slots__ = ('detail', 'id', 'is_class_direct', 'nodes', 'parent')
+    __slots__ = ('detail', 'direct', 'id', 'nodes', 'parent')
     
     def __new__(cls, formatter, id_):
         """
@@ -32,9 +32,9 @@ class FormatterNode:
             The identifier of the token.
         """
         self = object.__new__(cls)
-        self.id = id_
         self.detail = None
-        self.is_class_direct = False
+        self.direct = False
+        self.id = id_
         self.nodes = None
         self.parent = None
         
@@ -47,7 +47,7 @@ class FormatterNode:
         """Returns the token type node's representation."""
         result = ['<', self.__class__.__name__, ' id=', repr(self.id)]
         
-        if self.is_class_direct:
+        if self.direct:
             result.append(', detail=')
             result.append(repr(self.detail))
         
@@ -95,11 +95,11 @@ class FormatterNode:
         nodes = self.nodes
         if (nodes is not None):
             for node in nodes.values():
-                if not node.is_class_direct:
+                if not node.direct:
                     node._set_detail(detail)
     
     
-    def set_detail(self, detail):
+    def set_detail(self, detail, *, direct=True):
         """
         Sets html class to the node.
         
@@ -107,17 +107,19 @@ class FormatterNode:
         ----------
         detail : `None`, ``FormatterDetail``
             Details for formatting, set or `None` to remove.
+        direct : `bool` = `True`, Optional (Keyword only)
+            Whether we are marking it as a direct set.
         """
         if detail is None:
-            if self.is_class_direct:
-                self.is_class_direct = False
+            if self.direct:
+                self.direct = False
                 parent = self.parent
                 if (parent is not None):
                     detail = parent.detail
                     # Only continue if the html classes are different
-                    if self.detail != detail:
+                    if (self.detail != detail):
                         self._set_detail(detail)
         
         else:
-            self.is_class_direct = True
+            self.direct = direct
             self._set_detail(detail)

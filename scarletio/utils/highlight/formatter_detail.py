@@ -88,8 +88,6 @@ def formatter_html(html_class, token):
     content : `str`
     """
     token_type = token.type
-    if (token_type == TOKEN_TYPE_LINEBREAK) or (token_type == TOKEN_TYPE_LINEBREAK_ESCAPED):
-        yield '<br>'
     
     token_value = token.value
     if (token_value is not None):
@@ -102,6 +100,9 @@ def formatter_html(html_class, token):
         
         if (html_class is not None):
             yield '</span>'
+    
+    if (token_type == TOKEN_TYPE_LINEBREAK) or (token_type == TOKEN_TYPE_LINEBREAK_ESCAPED):
+        yield '<br>'
 
 
 def formatter_ansi_code(format_and_reset_code, token):
