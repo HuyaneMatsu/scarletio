@@ -1,4 +1,4 @@
-## 1.0.32 *\[2022-07-??\]*
+## 1.0.32 *\[2022-08-13\]*
 
 #### Improvements
 
@@ -17,7 +17,6 @@
 - Render syntax errors correctly.
 - Handle syntax errors correctly in console.
 - Highlight consoles too!
-- Add and use `resume_gateway_url`.
 
 #### Bug fixes
 
