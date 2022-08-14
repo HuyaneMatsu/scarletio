@@ -1,3 +1,10 @@
+## 1.0.33 *\[2022-08-??\]*
+
+#### Improvements
+
+- Handle io race condition when invoking `EditorAdvanced` within interactive console.
+- Improve `repr(Task)` with updating `format_coroutine` function.
+
 ## 1.0.32 *\[2022-08-13\]*
 
 #### Improvements
