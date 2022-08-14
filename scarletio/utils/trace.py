@@ -822,7 +822,7 @@ def format_coroutine(coroutine):
             state = 'finished'
         
         else:
-            state = 'paused'
+            state = 'pending'
     
     else:
         state = 'unknown state'
@@ -847,9 +847,9 @@ def format_coroutine(coroutine):
         location = f'"{file_name}", line {line_number}'
         
         if (definition_scope_location is not None):
-            location = f'{location} {definition_scope_location}'
+            location = f'{location}, in {definition_scope_location}'
     
-    return f'{name} {state} from {location}'
+    return f'<{name} from {location}; {state}>'
 
 
 STRING_TYPE_NONE = 0

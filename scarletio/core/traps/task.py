@@ -203,7 +203,7 @@ class Task(Future):
         if self._must_cancel:
             repr_parts.append(' (cancelling)')
         
-        repr_parts.append(' coroutine: ')
+        repr_parts.append(' coroutine=')
         repr_parts.append(format_coroutine(self._coroutine))
         
         waited_future = self._waited_future
