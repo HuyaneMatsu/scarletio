@@ -46,6 +46,9 @@ def _ignore_console_frames(file_name, name, line_number, line):
         elif name == 'run_code':
             if line == 'result = future.sync_wrap().wait()':
                 should_show_frame = False
+            
+            elif line == 'result = sync_wrapper.wait()':
+                should_show_frame = False
     
     return should_show_frame
 
