@@ -4,6 +4,8 @@
 
 - Handle io race condition when invoking `EditorAdvanced` within interactive console.
 - Improve `repr(Task)` with updating `format_coroutine` function.
+- Add `Future.get_result` and `Future.get_exception` and to related types as well in favor of moving away from
+    `.result` and `.exception`, as they not intuitive.
 
 ## 1.0.32 *\[2022-08-13\]*
 

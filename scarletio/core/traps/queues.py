@@ -94,7 +94,7 @@ class AsyncQueue:
         
         Returns
         -------
-        set_result : `int` (`0`, `1`, `2`)
+        set_result_state : `int` (`0`, `1`, `2`)
             If the result was set instantly, return `0`. If the result was not set, returns `1`.
         """
         # should we raise InvalidStateError?
@@ -126,9 +126,9 @@ class AsyncQueue:
         element : `Any`
             The object to put on the queue.
         
-        Results
+        Returns
         -------
-        set_result : `int` (`0`, `1`, `2`)
+        set_result_state : `int` (`0`, `1`, `2`)
             If the result was set instantly, return `0`. If the result was not set, returns `1`. If you needed to wait
             for setting the result, returns `2`.
         """
@@ -272,7 +272,7 @@ class AsyncQueue:
                     break
     
     
-    def result_no_wait(self):
+    def get_result_no_wait(self):
         """
         Returns the queue's next element if applicable.
         Waits till the next element of the queue is set. If the queue has elements set, yields the next of them, or if
@@ -301,6 +301,11 @@ class AsyncQueue:
             raise IndexError('The queue is empty')
         
         raise exception
+    
+    
+    @property
+    def result_no_wait(self):
+        return self.get_result_no_wait
     
     
     def __repr__(self):
@@ -503,7 +508,7 @@ class AsyncLifoQueue(AsyncQueue):
         return (yield from waiter)
     
     @copy_docs(AsyncQueue.result_no_wait)
-    def result_no_wait(self):
+    def get_result_no_wait(self):
         results = self._results
         if results:
             return results.pop()
@@ -513,6 +518,12 @@ class AsyncLifoQueue(AsyncQueue):
             raise IndexError('The queue is empty')
         
         raise exception
+    
+    
+    @property
+    def result_no_wait(self):
+        return self.result_no_wait
+    
     
     @copy_docs(AsyncQueue.__anext__)
     async def __anext__(self):

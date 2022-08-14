@@ -261,7 +261,7 @@ class Future:
     
     
     if __debug__:
-        def result(self):
+        def get_result(self):
             state = self._state
             
             if state == FUTURE_STATE_FINISHED:
@@ -283,7 +283,7 @@ class Future:
             # still pending
             raise InvalidStateError(self, 'result')
     else:
-        def result(self):
+        def get_result(self):
             state = self._state
             
             if state == FUTURE_STATE_FINISHED:
@@ -299,7 +299,7 @@ class Future:
             raise InvalidStateError(self, 'result')
     
     
-    set_docs(result,
+    set_docs(get_result,
         """
         Returns the result of the future.
         
@@ -330,14 +330,18 @@ class Future:
         """
     )
     
+    @property
+    def result(self):
+        return self.get_result
+    
     
     if __debug__:
-        def exception(self):
+        def get_exception(self):
             state = self._state
             if state == FUTURE_STATE_FINISHED:
                 self._state = FUTURE_STATE_RETRIEVED
                 return self._exception
-
+            
             if state == FUTURE_STATE_RETRIEVED:
                 return self._exception
             
@@ -348,9 +352,9 @@ class Future:
             raise InvalidStateError(self, 'exception')
         
     else:
-        def exception(self):
+        def get_exception(self):
             state = self._state
-
+            
             if state == FUTURE_STATE_FINISHED:
                 return self._exception
             
@@ -360,7 +364,7 @@ class Future:
             # still pending
             raise InvalidStateError(self, 'exception')
     
-    set_docs(exception,
+    set_docs(get_exception,
         """
         Returns the future's exception.
         
@@ -382,6 +386,11 @@ class Future:
             The futures is not done yet.
         """
     )
+    
+    
+    @property
+    def exception(self):
+        return self.get_exception
     
     
     def add_done_callback(self, func):

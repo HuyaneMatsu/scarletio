@@ -325,7 +325,7 @@ class WaitContinuously(WaitTillFirst):
     # `is_done` is same as ``Future.is_done``
     # `is_pending` is same as ``Future.is_pending``
     
-    def result(self):
+    def get_result(self):
         """
         Returns the last done future.
         
@@ -454,7 +454,7 @@ class WaitContinuously(WaitTillFirst):
         
         Parameters
         ----------
-        exception : `BaseException`
+        exception : `BaseException`, `type<BaseException>`
             The exception to set as the future's exception.
         
         Raises
@@ -492,7 +492,7 @@ class WaitContinuously(WaitTillFirst):
         
         Parameters
         ----------
-        exception : `BaseException`
+        exception : `BaseException`, `type<BaseException>`
             The exception to set as the future's exception.
         
         Returns

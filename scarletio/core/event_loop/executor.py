@@ -191,7 +191,7 @@ class SyncQueue:
                 self._waiter = None
     
     
-    def result(self):
+    def get_result(self):
         """
         Gets the next result of the sync queue. If the queue is empty, blocks till a new result is set with
         ``.set_result``.
@@ -216,7 +216,12 @@ class SyncQueue:
         return waiter.wait()
     
     
-    def result_no_wait(self):
+    @property
+    def result(self):
+        return self.get_result
+    
+    
+    def get_result_no_wait(self):
         """
         Gets the next result of the sync queue instantly.
         
@@ -242,6 +247,10 @@ class SyncQueue:
                 raise IndexError('The queue is empty.')
             
             raise exception
+    
+    @property
+    def result_no_wait(self):
+        return self.get_result_no_wait
     
     wait = result
     

@@ -236,7 +236,7 @@ class FutureSyncWrapper:
     
     if __debug__:
         @copy_docs(Future.result)
-        def result(self):
+        def get_result(self):
             with self._lock:
                 state = self._state
                 
@@ -261,7 +261,7 @@ class FutureSyncWrapper:
     
     else:
         @copy_docs(Future.result)
-        def result(self):
+        def get_result(self):
             with self._lock:
                 if self._state == FUTURE_STATE_FINISHED:
                     exception = self._exception
@@ -275,10 +275,14 @@ class FutureSyncWrapper:
             # still pending
             raise InvalidStateError(self, 'result')
     
+    @property
+    def result(self):
+        return self.get_result
+    
     
     if __debug__:
         @copy_docs(Future.exception)
-        def exception(self):
+        def get_exception(self):
             with self._lock:
                 state = self._state
                 if state == FUTURE_STATE_FINISHED:
@@ -296,7 +300,7 @@ class FutureSyncWrapper:
 
     else:
         @copy_docs(Future.exception)
-        def exception(self):
+        def get_exception(self):
             with self._lock:
                 if self._state == FUTURE_STATE_FINISHED:
                     return self._exception
@@ -306,6 +310,11 @@ class FutureSyncWrapper:
 
             # still pending
             raise InvalidStateError(self, 'exception')
+    
+    
+    @property
+    def exception(self):
+        return self.get_exception
     
     
     if __debug__:
