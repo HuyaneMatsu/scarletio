@@ -605,6 +605,7 @@ class Future:
                     sys.stderr.write(
                         f'{self.__class__.__name__} is not finished, but still pending!\n{self!r}\n'
                     )
+                    sys.stderr.flush()
                 return
             
             if state == FUTURE_STATE_FINISHED:

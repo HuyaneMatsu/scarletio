@@ -222,6 +222,7 @@ def write_exception_sync(exception, before=None, after=None, file=None, *, filte
         file = sys.stderr
     
     file.write(''.join(extracted))
+    file.flush()
 
 
 @export

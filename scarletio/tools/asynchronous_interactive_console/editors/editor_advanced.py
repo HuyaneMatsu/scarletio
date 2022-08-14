@@ -1237,13 +1237,14 @@ class EditorAdvanced(EditorBase):
     
     @copy_docs(EditorBase.__call__)
     def __call__(self):
-        tty.setraw(self.input_stream)
-        self.selector.register(self.input_stream.fileno(), EVENT_READ)
-        self.selector.register(self.output_proxy_read_socket.fileno(), EVENT_READ)
         new_stdout = open(self.output_proxy_write_socket.fileno(), 'w')
         old_stderr = sys.stderr
         sys.stdout = new_stdout
         sys.stderr = new_stdout
+        
+        tty.setraw(self.input_stream)
+        self.selector.register(self.input_stream.fileno(), EVENT_READ)
+        self.selector.register(self.output_proxy_read_socket.fileno(), EVENT_READ)
         self.output_stream.flush()
         
         try:
