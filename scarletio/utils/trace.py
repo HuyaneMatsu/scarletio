@@ -802,8 +802,18 @@ def format_coroutine(coroutine):
         name = getattr(coroutine, '__name__', None)
         if name is None: # builtins might reach this part
             name = coroutine_type.__name__
+        
+        definition_scope_location = None
     
-
+    else:
+        dot_index = name.rfind('.')
+        if dot_index == -1:
+            definition_scope_location = None
+        
+        else:
+            definition_scope_location = name[:dot_index]
+            name = name[dot_index + 1:]
+    
     if running == True:
         state = 'running'
     
@@ -812,7 +822,7 @@ def format_coroutine(coroutine):
             state = 'finished'
         
         else:
-            state = 'blocked'
+            state = 'paused'
     
     else:
         state = 'unknown state'
@@ -834,9 +844,12 @@ def format_coroutine(coroutine):
         else:
             line_number = frame.f_lineno
         
-        location = f'{file_name}:{line_number}'
+        location = f'"{file_name}", line {line_number}'
+        
+        if (definition_scope_location is not None):
+            location = f'{location} {definition_scope_location}'
     
-    return f'{name} {state} defined at {location}'
+    return f'{name} {state} from {location}'
 
 
 STRING_TYPE_NONE = 0

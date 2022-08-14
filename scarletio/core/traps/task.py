@@ -203,7 +203,7 @@ class Task(Future):
         if self._must_cancel:
             repr_parts.append(' (cancelling)')
         
-        repr_parts.append(' coroutine=')
+        repr_parts.append(' coroutine: ')
         repr_parts.append(format_coroutine(self._coroutine))
         
         waited_future = self._waited_future
@@ -297,7 +297,7 @@ class Task(Future):
                 recursive = (frames[-1] is None)
                 if recursive:
                     del frames[-1]
-
+                
                 extracted = ['Stack for ', repr(self), ' (most recent call last):\n']
                 extracted = render_frames_into(frames, extend=extracted)
                 if recursive:
