@@ -181,12 +181,12 @@ class EventThread:
         
         await WaitTillAll(futures, self)
         
-        infos = future_1.result()
+        infos = future_1.get_result()
         if not infos:
             raise OSError('`get_address_info` returned empty list')
         
         if (future_2 is not None):
-            local_address_infos = future_2.result()
+            local_address_infos = future_2.get_result()
             if not local_address_infos:
                 raise OSError('`get_address_info` returned empty list')
         
@@ -1229,7 +1229,7 @@ class Queue(AsyncQueue):
         self.set_result(element)
     
     async def get(self):
-        return await self.result()
+        return await self.get_result()
     
     def get_nowait(self):
         try:
@@ -1267,7 +1267,7 @@ class LifoQueue(AsyncLifoQueue):
         self.set_result(element)
     
     async def get(self):
-        return await self.result()
+        return await self.get_result()
     
     
     def get_nowait(self):
@@ -1635,7 +1635,7 @@ class StreamReaderProtocol(FlowControlMixin, Protocol):
     def __del__(self):
         closed = self._closed
         if closed.done() and not closed.cancelled():
-            closed.exception()
+            closed.get_exception()
 
 
 class StreamWriter:
@@ -2160,7 +2160,7 @@ async def wait_for(future, timeout, *, loop=None):
     future = loop.ensure_future(future)
     if timeout <= 0.0:
         if future.done():
-            return future.result()
+            return future.get_result()
     
     future_or_timeout(future, timeout)
     return await future
@@ -2295,14 +2295,14 @@ class _gatherer_done_cb_return_exceptions:
         results = []
         
         try:
-            done, pending = gatherer.result()
+            done, pending = gatherer.get_result()
         except BaseException as err:
             future.set_exception(err)
             return
         
         for done_future in done:
             try:
-                result = done_future.result()
+                result = done_future.get_result()
             except BaseException as err:
                 result = err
             
@@ -2322,7 +2322,7 @@ class _gatherer_done_cb_raise:
             return
         
         try:
-            done, pending = gatherer.result()
+            done, pending = gatherer.get_result()
         except BaseException as err:
             future.set_exception(err)
             return
@@ -2330,7 +2330,7 @@ class _gatherer_done_cb_raise:
         results = []
         for done_future in done:
             try:
-                result = done_future.result()
+                result = done_future.get_result()
             except BaseException as err:
                 exception = err
                 break

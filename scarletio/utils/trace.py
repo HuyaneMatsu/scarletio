@@ -822,7 +822,7 @@ def format_coroutine(coroutine):
             state = 'finished'
         
         else:
-            state = 'pending'
+            state = 'suspended'
     
     else:
         state = 'unknown state'

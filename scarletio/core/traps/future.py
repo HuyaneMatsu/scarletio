@@ -565,7 +565,7 @@ class Future:
             self._blocking = True
             yield self
         
-        return self.result()
+        return self.get_result()
     
     __await__ = __iter__
     

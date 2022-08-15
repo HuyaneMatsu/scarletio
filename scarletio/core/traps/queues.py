@@ -252,7 +252,11 @@ class AsyncQueue:
         finally:
             self._poll_from_set_result_waiters()
     
-    result = to_coroutine(copy_func(__await__))
+    get_result = to_coroutine(copy_func(__await__))
+    
+    @property
+    def result(self):
+        return self.get_result
     
     
     def _poll_from_set_result_waiters(self):
@@ -522,7 +526,7 @@ class AsyncLifoQueue(AsyncQueue):
     
     @property
     def result_no_wait(self):
-        return self.result_no_wait
+        return self.get_result_no_wait
     
     
     @copy_docs(AsyncQueue.__anext__)

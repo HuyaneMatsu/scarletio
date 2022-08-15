@@ -805,17 +805,17 @@ class AsyncProcess:
                 raise TimeoutExpired(args, timeout)
             
             if (stdin_task is not None):
-                stdin_task.result()
+                stdin_task.get_result()
             
             if (stdout_task is None):
                 stdout = None
             else:
-                stdout = stdout_task.result()
+                stdout = stdout_task.get_result()
             
             if (stderr_task is None):
                 stderr = None
             else:
-                stderr = stderr_task.result()
+                stderr = stderr_task.get_result()
         else:
             stdout = None
             stderr = None
@@ -827,7 +827,7 @@ class AsyncProcess:
     
     def poll(self):
         """
-        Returns the subprocess's return code if terminated.
+        Returns the subprocess' return code if terminated.
         
         Returns
         -------

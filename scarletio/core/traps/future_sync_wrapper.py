@@ -15,7 +15,7 @@ from .future import (
 
 
 ignore_frame(__spec__.origin, 'result', 'raise exception')
-ignore_frame(__spec__.origin, 'wait', 'return self.result()')
+ignore_frame(__spec__.origin, 'wait', 'return self.get_result()')
 
 
 write_exception_async = include('write_exception_async')
@@ -425,7 +425,7 @@ class FutureSyncWrapper:
             raise
         
         if result_set:
-            return self.result()
+            return self.get_result()
         
         if propagate_cancellation:
             self.cancel()

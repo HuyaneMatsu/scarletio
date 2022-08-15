@@ -11,7 +11,7 @@ from .future import Future
 
 ignore_frame(__spec__.origin, 'result', 'raise exception',)
 ignore_frame(__spec__.origin, '__iter__', 'yield self',)
-ignore_frame(__spec__.origin, '__call__', 'future.result()', )
+ignore_frame(__spec__.origin, '__call__', 'future.get_result()', )
 
 EventThread = include('EventThread')
 
@@ -61,7 +61,7 @@ class ScarletExecutorCallback:
         active.discard(future)
         
         try:
-            future.result()
+            future.get_result()
         except CancelledError:
             pass
         except BaseException as err:

@@ -1452,14 +1452,14 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         await WaitTillAll(futures, self)
         
-        infos = future_1.result()
+        infos = future_1.get_result()
         if not infos:
             raise OSError('`get_address_info` returned empty list.')
         
         if (future_2 is None):
             local_address_infos = None
         else:
-            local_address_infos = future_2.result()
+            local_address_infos = future_2.get_result()
             if not local_address_infos:
                 raise OSError('`get_address_info` returned empty list.')
         
@@ -2164,7 +2164,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             resolved = self._ensure_resolved(address, family=socket.family, protocol=socket.proto)
             if not resolved.is_done():
                 await resolved
-            address = resolved.result()[0][4]
+            address = resolved.get_result()[0][4]
         
         future = Future(self)
         
@@ -2784,7 +2784,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                 done, pending = await WaitTillFirst(futures, self)
                 for future in done:
                     futures.discard(future)
-                    address_infos = future.result()
+                    address_infos = future.get_result()
                     
                     for (
                         socket_family,

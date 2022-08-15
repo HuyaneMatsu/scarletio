@@ -9,7 +9,7 @@ from .result_gathering_future import ResultGatheringFuture
 
 
 ignore_frame(__spec__.origin, '__call__', 'raise exception',)
-ignore_frame(__spec__.origin, '__call__', 'future.result()',)
+ignore_frame(__spec__.origin, '__call__', 'future.get_result()',)
 
 class GathererElement:
     """
@@ -92,7 +92,7 @@ class GathererCallback:
         """
         parent = self._parent
         try:
-            result = future.result()
+            result = future.get_result()
         except BaseException as err:
             parent.set_exception_if_pending(err)
         else:

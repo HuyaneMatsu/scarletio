@@ -296,7 +296,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             The future returns `bytes`, `str` respective to the received payload's type. If the websocket
             is closed, ``ConnectionClosed`` is raised.
         """
-        return self.messages.result()
+        return self.messages.get_result()
     
     def receive_no_wait(self):
         """

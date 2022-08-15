@@ -16,8 +16,8 @@ ignore_frame(__spec__.origin, 'result', 'raise exception')
 ignore_frame(__spec__.origin, '__iter__', 'yield self')
 ignore_frame(__spec__.origin, '_step', 'result = coroutine.throw(exception)')
 ignore_frame(__spec__.origin, '_step', 'result = coroutine.send(None)')
-ignore_frame(__spec__.origin, '_wake_up', 'future.result()')
-ignore_frame(__spec__.origin, '__call__', 'future.result()')
+ignore_frame(__spec__.origin, '_wake_up', 'future.get_result()')
+ignore_frame(__spec__.origin, '__call__', 'future.get_result()')
 
 EventThread = include('EventThread')
 
@@ -542,7 +542,7 @@ class Task(Future):
             The future for what's completion the task is waiting for.
         """
         try:
-            future.result()
+            future.get_result()
         except BaseException as err:
             self._step(err)
         else:
