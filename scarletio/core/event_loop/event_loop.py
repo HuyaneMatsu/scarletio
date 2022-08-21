@@ -38,9 +38,6 @@ write_exception_async = include('write_exception_async')
 write_exception_maybe_async = include('write_exception_maybe_async')
 
 
-DNS_CACHE_TIMEOUT = 900.0
-
-
 @export
 class EventThread(Executor, Thread, metaclass=EventThreadType):
     """
