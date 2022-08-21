@@ -21,7 +21,7 @@ from ..protocols_and_transports import (
 )
 from ..subprocess import AsyncProcess
 from ..time import LOOP_TIME, LOOP_TIME_RESOLUTION
-from ..traps import Future, FutureAsyncWrapper, Gatherer, Task, WaitTillAll, WaitTillFirst
+from ..traps import Future, FutureAsyncWrapper, Gatherer, Task, WaitTillAll, WaitTillFirst, shield
 
 from .cycler import Cycler
 from .event_loop_functionality_helpers import (
@@ -38,6 +38,9 @@ write_exception_async = include('write_exception_async')
 write_exception_maybe_async = include('write_exception_maybe_async')
 
 
+DNS_CACHE_TIMEOUT = 900.0
+
+
 @export
 class EventThread(Executor, Thread, metaclass=EventThreadType):
     """
@@ -48,12 +51,16 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
     
     Attributes
     ----------
+    _kept_executor_count : `int`
+        The minimal amount of executors to keep alive (or not close).
+    _kept_executor_last_schedule : `float`
+        When was last time cleanup scheduled.
+    _kept_executor_release_handle : `None`, ``TimerHandle``
+        Executor release handle.
     claimed_executors : `set` of ``ExecutorThread``
         Claimed executors, which are given back to the executor on release.
     free_executors : `deque`
         The free (or not used) executors of the executor.
-    keep_executor_count : `int`
-        The minimal amount of executors to keep alive (or not close).
     running_executors : `set` of ``ExecutorThread``
         The executors under use.
     _async_generators: `WeakSet` of `async_generator`
@@ -95,7 +102,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         'started',
     )
     
-    def __init__(self, keep_executor_count=1):
+    def __init__(self, keep_executor_count=...):
         """
         Creates a new ``EventThread`` with the given parameters.
         
@@ -108,7 +115,17 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         -----
         This magic method is called by ``EventThreadType.__call__``, what does the other steps of the initialization.
         """
-        Executor.__init__(self, keep_executor_count)
+        if keep_executor_count is not ...:
+            warnings.warn(
+                (
+                    f'`{self.__class__.__name__}`\'s `keep_executor_count` parameter is deprecated and will be removed '
+                    f'in 2023 January. The kept executor count is now auto-calculated.'
+                ),
+                FutureWarning,
+                stacklevel = 2,
+            )
+        
+        Executor.__init__(self)
         self.should_run = True
         self.running = False
         self.started = False
@@ -219,11 +236,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             repr_parts.append(str(ident))
         
         repr_parts.append(' executor info: free=')
-        repr_parts.append(str(self.free_executor_count))
+        repr_parts.append(str(self.get_free_executor_count()))
         repr_parts.append(', used=')
-        repr_parts.append(str(self.used_executor_count))
-        repr_parts.append(', keep=')
-        repr_parts.append(str(self.keep_executor_count))
+        repr_parts.append(str(self.get_used_executor_count()))
         repr_parts.append(')>')
 
         return ''.join(repr_parts)
@@ -695,10 +710,11 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                 event_list = None
                 
                 # process callbacks
-                for _ in range(len(ready)):
+                while ready:
                     handle = ready.popleft()
                     if not handle.cancelled:
                         handle._run()
+                
                 handle = None # remove from locals or the gc derps out.
     
     
@@ -1437,13 +1453,23 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         """
         ssl, server_host_name = self._create_connection_shared_precheck(ssl, server_host_name, host)
         
-        future_1 = self._ensure_resolved((host, port), family=socket_family, type=module_socket.SOCK_STREAM,
-            protocol=socket_protocol, flags=socket_flags)
+        future_1 = self._ensure_resolved(
+            (host, port),
+            family = socket_family,
+            type = module_socket.SOCK_STREAM,
+            protocol = socket_protocol,
+            flags = socket_flags,
+        )
         
         futures = [future_1]
         if local_address is not None:
-            future_2 = self._ensure_resolved(local_address, family=socket_family, type=module_socket.SOCK_STREAM,
-                protocol=socket_protocol, flags=socket_flags)
+            future_2 = self._ensure_resolved(
+                local_address,
+                family = socket_family,
+                type = module_socket.SOCK_STREAM,
+                protocol = socket_protocol,
+                flags = socket_flags,
+            )
             
             futures.append(future_2)
         
@@ -1606,8 +1632,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         if ssl is None:
             transport = self._make_socket_transport(socket, protocol, waiter)
         else:
-            transport = self._make_ssl_transport(socket, protocol, ssl, waiter, server_side=server_side,
-                server_host_name=server_host_name)
+            transport = self._make_ssl_transport(
+                socket, protocol, ssl, waiter, server_side=server_side, server_host_name = server_host_name
+            )
         
         try:
             await waiter
@@ -2016,8 +2043,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             - `canonical_name` : `str`. Represents the canonical name of the host.
             - `socket_address` : `tuple` (`str, `int`). Socket address containing the `host` and the `port`.
         """
-        return self.run_in_executor(alchemy_incendiary(
-            module_socket.getaddrinfo, (host, port, family, type, protocol, flags,),))
+        return self.run_in_executor(
+            alchemy_incendiary(module_socket.getaddrinfo, (host, port, family, type, protocol, flags))
+        )
     
     # await it
     def get_name_info(self, socket_address, flags=0):

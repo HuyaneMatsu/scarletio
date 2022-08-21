@@ -154,20 +154,10 @@ class EventThreadType(type):
         **kwargs : keyword parameters
             Additional event thread specific parameters.
         
-        Other Parameters
-        ----------------
-        keep_executor_count : `int`, Optional (Keyword only)
-            The minimal amount of executors, what the event thread should keep alive. Defaults to `1`.
-        
         Returns
         -------
         obj : ``EventThread``
             The created event loop.
-        
-        Notes
-        -----
-        ``EventThread`` supports only an additional, `keep_executor_count` parameter, but it's subclass's might
-        support other ones as well.
         """
         obj = Thread.__new__(cls)
         cls.__init__(obj, **kwargs)

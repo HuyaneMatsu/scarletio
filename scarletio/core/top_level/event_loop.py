@@ -169,8 +169,6 @@ def create_event_loop(**kwargs):
         The event loop's name.
     start_later : `bool` = `True`, Optional (Keyword only)
         Whether the event loop should be started only later.
-    keep_executor_count : `int` = `1`, Optional (Keyword only)
-        The minimal amount of executors, what the event thread should keep alive.
 
     Returns
     -------

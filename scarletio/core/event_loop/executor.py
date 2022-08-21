@@ -1,6 +1,6 @@
 __all__ = ('ClaimedExecutor', 'Executor', 'ExecutorThread', 'SyncQueue', 'SyncWait', )
 
-import sys
+import sys, warnings
 from collections import deque
 from threading import Event as SyncEvent, Lock as SyncLock, Thread, current_thread
 
@@ -8,14 +8,21 @@ from ...utils import ignore_frame, include
 from ...utils.trace import render_exception_into
 
 from ..exceptions import CancelledError
+from ..time import LOOP_TIME
 from ..traps import Future
 
 
 EventThread = include('EventThread')
+get_event_loop = include('get_event_loop')
 
 ignore_frame(__spec__.origin, 'wait', 'raise exception',)
 ignore_frame(__spec__.origin, 'result_no_wait', 'raise exception',)
 ignore_frame(__spec__.origin, 'run', 'result = func()',)
+
+
+EXECUTOR_RELEASE_INTERVAL = 0.6
+EXECUTOR_RELEASE_MULTIPLIER = 2.5
+
 
 class SyncWait:
     """
@@ -23,52 +30,19 @@ class SyncWait:
     
     Attributes
     ----------
-    _exception : `None`, `BaseException`
-        The waiter's exception if applicable. defaults to `None`.
     _result : `Any`
         The waiter's result if applicable. Defaults to `None`.
     _waiter : `threading.SyncEvent`
         Threading event, what is set, when the waiter's result is set.
     """
-    __slots__ = ('_exception', '_result', '_waiter',)
+    __slots__ = ('_result', '_waiter',)
+    
     def __init__(self):
         """
         Creates a new ``SyncWait``.
         """
-        self._exception = None
         self._result = None
         self._waiter = SyncEvent()
-    
-    
-    def set_exception(self, exception):
-        """
-        Sets an exception as the waiter's result.
-        
-        Parameters
-        ----------
-        exception : `BaseException`, `type<BaseException>`
-            The exception to set as the future's exception.
-        
-        Raises
-        ------
-        TypeError
-            If `StopIteration` is given as `exception`.
-        """
-        if isinstance(exception, type):
-            exception = exception()
-        
-        if type(exception) is StopIteration:
-             raise TypeError(
-                 f'{exception} cannot be raised to a {self.__class__.__name__}: {self!r}.'
-             )
-        
-        if self._exception is None:
-            self._exception = exception
-            self._waiter.set()
-        else:
-            if type(exception) is CancelledError and type(self._exception) is not CancelledError:
-                self._exception = exception
-    
     
     def set_result(self, result):
         """
@@ -99,25 +73,8 @@ class SyncWait:
             The set exception.
         """
         self._waiter.wait()
-        exception = self._exception
-        if exception is None:
-            return self._result
-        raise exception
-    
-    
-    def cancel(self):
-        """
-        Cancels the waiter by setting it's exception as ``CancelledError`` if not yet set.
-        """
-        exception = self._exception
-        if exception is None:
-            self._waiter.set()
-        else:
-            if type(exception) is CancelledError:
-                return
-        
-        self._exception = CancelledError()
-    
+        return self._result
+
 
 class SyncQueue:
     """
@@ -252,7 +209,6 @@ class SyncQueue:
     def result_no_wait(self):
         return self.get_result_no_wait
     
-    wait = result
     
     def __repr__(self):
         """Returns the sync queue's representation."""
@@ -403,9 +359,8 @@ class ExecutorThread(Thread):
         
         while self.state == EXECUTOR_THREAD_RUNNING:
             try:
-                try:
-                    pair = queue.wait()
-                except CancelledError:
+                pair = queue.get_result()
+                if pair is None:
                     return
                 
                 future = pair.future
@@ -485,17 +440,17 @@ class ExecutorThread(Thread):
         self.state = EXECUTOR_THREAD_STOPPED
         queue = self.queue
         while queue:
-            future = queue.result_no_wait().future
+            future = queue.get_result_no_wait().future
             future._loop.call_soon_thread_safe(future.cancel)
         
-        queue.cancel()
+        queue.set_result(None)
     
     
     def release(self):
         """
         Cancels the executor thread's queue.
         """
-        self.queue.cancel()
+        self.queue.set_result(None)
     
     
     def _shrink_queue(self):
@@ -503,7 +458,6 @@ class ExecutorThread(Thread):
         Removes all the done elements from the executor's queue.
         """
         results = self.queue._results
-        
         index = 0
         limit = len(results)
         while index < limit:
@@ -620,7 +574,7 @@ class ClaimedExecutor:
         """
         self.parent = parent
         self.executor = executor
-        
+    
     def execute(self, func):
         """
         Runs the given function in an executor thread. When the function is done, it's result or exception is set to
@@ -652,7 +606,7 @@ class ClaimedExecutor:
         executor.queue.set_result(ExecutionPair(func, future,),)
         
         return future
-
+    
     def release(self):
         """
         Releases the claimed executor. Gives back it's executor thread to the parent executor, when all of it's
@@ -736,18 +690,25 @@ class Executor:
     
     Attributes
     ----------
+    _kept_executor_count : `int`
+        The minimal amount of executors to keep alive (or not close).
+    _kept_executor_last_schedule : `float`
+        When was last time cleanup scheduled.
+    _kept_executor_release_handle : `None`, ``TimerHandle``
+        Executor release handle.
     claimed_executors : `set` of ``ExecutorThread``
         Claimed executors, which are given back to the executor on release.
     free_executors : `deque`
         The free (or not used) executors of the executor.
-    keep_executor_count : `int`
-        The minimal amount of executors to keep alive (or not close).
     running_executors : `set` of ``ExecutorThread``
         The executors under use.
     """
-    __slots__ = ('claimed_executors', 'free_executors', 'keep_executor_count', 'running_executors',)
+    __slots__ = (
+        '_kept_executor_count', '_kept_executor_last_schedule', '_kept_executor_release_handle', 'claimed_executors',
+        'free_executors', 'running_executors'
+    )
     
-    def __init__(self, keep_executor_count=1):
+    def __init__(self, keep_executor_count=...):
         """
         Initializes the executor.
         
@@ -756,15 +717,29 @@ class Executor:
         keep_executor_count : `int` = `1`, Optional
             The minimal amount of executors to keep alive (or not close).
         """
+        if keep_executor_count is not ...:
+            warnings.warn(
+                (
+                    f'`{self.__class__.__name__}`\'s `keep_executor_count` parameter is deprecated and will be removed '
+                    f'in 2023 January. The kept executor count is now auto-calculated.'
+                ),
+                FutureWarning,
+                stacklevel = 2,
+            )
+        
+        self._kept_executor_count = 0
+        self._kept_executor_last_schedule = 0.0
+        self._kept_executor_release_handle = None
+        self.claimed_executors = set()
         self.free_executors = deque()
         self.running_executors = set()
-        self.claimed_executors = set()
-        self.keep_executor_count = keep_executor_count
+        
+    
     
     def __repr__(self):
         """Returns the executor's representation."""
-        return (f'<{self.__class__.__name__} free={self.free_executor_count}, used={self.used_executor_count}, keep='
-            f'{self.keep_executor_count}>')
+        return f'<{self.__class__.__name__} free={self.get_free_executor_count()}, used={self.get_used_executor_count()}>'
+    
     
     @property
     def used_executor_count(self):
@@ -773,7 +748,27 @@ class Executor:
         
         Returns
         -------
-        used_executor_count : `int`
+        executor_count : `int`
+        """
+        warnings.warn(
+            (
+                f'`{self.__class__.__name__}.used_executor_count` parameter is deprecated and will be removed in '
+                f'2023 January. Please use `.get_used_executor_count()` instead.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
+        
+        return self.get_used_executor_count()
+    
+    
+    def get_used_executor_count(self):
+        """
+        Returns how much executor threads of the executors are currently under use.
+        
+        Returns
+        -------
+        executor_count : `int`
         """
         return len(self.running_executors) + len(self.claimed_executors)
     
@@ -781,10 +776,45 @@ class Executor:
     @property
     def free_executor_count(self):
         """
-        Returns how much free executors
+        Returns how much executor threads of the executors are currently under use.
+        
+        Returns
+        -------
+        executor_count : `int`
+        """
+        warnings.warn(
+            (
+                f'`{self.__class__.__name__}.free_executor_count` parameter is deprecated and will be removed in '
+                f'2023 January. Please use `.get_free_executor_count()` instead.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
+        
+        return self.get_free_executor_count()
+    
+    
+    def get_free_executor_count(self):
+        """
+        Returns how much free executors the executor has.
+        
+        Returns
+        -------
+        executor_count : `int`
         """
         return len(self.free_executors)
     
+    
+    def get_total_executor_count(self):
+        """
+        Returns the total amount of executors.
+        
+        Returns
+        -------
+        executor_count : `int`
+        """
+        return len(self.running_executors) + len(self.claimed_executors) + len(self.free_executors)
+        
     
     def cancel_executors(self):
         """
@@ -792,7 +822,8 @@ class Executor:
         
         Raises ``CancelledError`` to the not yet started tasks.
         """
-        self.keep_executor_count = 0
+        self._reset_kept_executor_count()
+        
         executors = self.free_executors
         while executors:
             executor = executors.pop()
@@ -815,7 +846,8 @@ class Executor:
         
         Raises no exception to the already started tasks,
         """
-        self.keep_executor_count = 0
+        self._reset_kept_executor_count()
+        
         executors = self.free_executors
         while executors:
             executor = executors.pop()
@@ -831,7 +863,21 @@ class Executor:
             executor = executors.pop()
             executor.release()
     
+    
     __del__ = release_executors
+    
+    
+    def _reset_kept_executor_count(self):
+        """
+        Resets the kept executor count of the executor.        
+        """
+        self._kept_executor_count = 0
+        
+        kept_executor_release_handle = self._kept_executor_release_handle
+        if (kept_executor_release_handle is not None):
+            self._kept_executor_release_handle = None
+            kept_executor_release_handle.cancel()
+    
     
     def create_future(self):
         """
@@ -845,7 +891,7 @@ class Executor:
         Raises
         ------
         RuntimeError
-            If the method was not called from an ``SyncEventLoop``.
+            If the method was not called from an ``EventLoop``.
         """
         local_thread = current_thread()
         if not isinstance(local_thread, EventThread):
@@ -949,20 +995,102 @@ class Executor:
         return executor
     
     
+    def call_at(self, *args):
+        """
+        Placeholder method.
+        
+        Forwards all the parameters to the local ``EventThread``'s `.call_at` method.
+        
+        Parameters
+        ----------
+        *args : parameters
+            The forwarded parameters.
+        
+        Returns
+        -------
+        handle : `None`, ``TimerHandle``
+        """
+        return get_event_loop().call_at(*args)
+    
+    
     def _sync_keep(self, executor):
         """
         Called when an executor thread is given back to the executor.
-        
-        The method decides whether the executor should be kept or released.
         
         Parameters
         ----------
         executor : ``ExecutorThread``
             The given back executor.
         """
-        executors = self.free_executors
-        if len(executors) < self.keep_executor_count:
-            executors.append(executor)
+        self.free_executors.append(executor)
+        
+        previously_used_executor_count = len(self.running_executors) + 1
+        if previously_used_executor_count < self._kept_executor_count:
             return
         
-        executor.release()
+        self._kept_executor_count = previously_used_executor_count
+        current_time = LOOP_TIME()
+        self._kept_executor_last_schedule = current_time
+        
+        handle = self._kept_executor_release_handle
+        if (handle is None):
+            self._kept_executor_release_handle = self.call_at(
+                current_time + EXECUTOR_RELEASE_INTERVAL,
+                type(self)._release_executor_step,
+                self,
+                current_time,
+                EXECUTOR_RELEASE_INTERVAL,
+            )
+    
+    
+    def _release_executor_step(self, schedule_time, schedule_interval):
+        """
+        The method decides whether the executor should be kept or released.
+        
+        Parameters
+        ----------
+        schedule_time : `bool`
+            When the step was scheduled.
+        schedule_interval : `float`
+            The interval between the new and the last scheduling.
+        """
+        last_schedule = self._kept_executor_last_schedule
+        if last_schedule <= schedule_time:
+            free_executors = self.free_executors
+            if free_executors:
+                executor = free_executors.pop()
+                executor.release()
+                
+                kept_executor_count = self._kept_executor_count
+                if kept_executor_count <= 0:
+                    self._kept_executor_release_handle = None
+                    return
+                    
+                self._kept_executor_count = kept_executor_count - 1
+                current_time = LOOP_TIME()
+                self._kept_executor_last_schedule = current_time
+                
+                self._kept_executor_release_handle = self.call_at(
+                    current_time + EXECUTOR_RELEASE_INTERVAL,
+                    type(self)._release_executor_step,
+                    self,
+                    current_time,
+                    EXECUTOR_RELEASE_INTERVAL,
+                )
+            return
+            
+            # should not happen
+            last_schedule = LOOP_TIME()
+            self._kept_executor_last_schedule = last_schedule
+        
+        else:
+            schedule_interval *= EXECUTOR_RELEASE_MULTIPLIER
+        
+        # Reschedule on the same way
+        self._kept_executor_release_handle = self.call_at(
+            last_schedule + schedule_interval,
+            type(self)._release_executor_step,
+            self,
+            last_schedule,
+            schedule_interval,
+        )

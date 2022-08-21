@@ -1,3 +1,20 @@
+## 1.0.34 *\[2022-08-??\]*
+
+#### Improvements
+
+- Add `Executor.get_used_executor_count`.
+- Add `Executor.get_free_executor_count`.
+- Add `Executor.get_total_executor_count`.
+- `Executor` now auto adjusts it's executor count.
+- Fix a slow loop in `EventThread.runner` caused by ignoring continuously queued callbacks.
+- Fix a slow loop in `EventThread.run_in_executor` caused by not adjusting kept executor count.
+
+#### Renames, Deprecation & Removals
+
+- Deprecate `keep_executor_count` parameter everywhere.
+- Deprecate `Executor.used_executor_count`. Please use `.get_used_executor_count()` instead.
+- Deprecate `Executor.free_executor_count`. Please use `.get_free_executor_count()` instead.
+
 ## 1.0.33 *\[2022-08-18\]*
 
 #### Improvements
