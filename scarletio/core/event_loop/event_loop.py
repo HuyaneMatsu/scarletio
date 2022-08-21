@@ -21,7 +21,7 @@ from ..protocols_and_transports import (
 )
 from ..subprocess import AsyncProcess
 from ..time import LOOP_TIME, LOOP_TIME_RESOLUTION
-from ..traps import Future, FutureAsyncWrapper, Gatherer, Task, WaitTillAll, WaitTillFirst, shield
+from ..traps import Future, FutureAsyncWrapper, Gatherer, Task, WaitTillAll, WaitTillFirst
 
 from .cycler import Cycler
 from .event_loop_functionality_helpers import (
@@ -2589,6 +2589,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         exception = None
         
         for socket_family, socket_protocol, local_address, remote_address in address_info:
+            socket = None
             try:
                 socket = module_socket.socket(
                     family = socket_family,
