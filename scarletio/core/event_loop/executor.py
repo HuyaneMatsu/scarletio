@@ -16,7 +16,7 @@ EventThread = include('EventThread')
 get_event_loop = include('get_event_loop')
 
 ignore_frame(__spec__.origin, 'wait', 'raise exception',)
-ignore_frame(__spec__.origin, 'result_no_wait', 'raise exception',)
+ignore_frame(__spec__.origin, 'get_result_no_wait', 'raise exception',)
 ignore_frame(__spec__.origin, 'run', 'result = func()',)
 
 

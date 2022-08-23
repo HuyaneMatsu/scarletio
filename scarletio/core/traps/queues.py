@@ -9,7 +9,7 @@ from ..exceptions import CancelledError
 from .future import Future
 
 
-ignore_frame(__spec__.origin, 'result_no_wait', 'raise exception',)
+ignore_frame(__spec__.origin, 'get_result_no_wait', 'raise exception',)
 ignore_frame(__spec__.origin, '__aexit__', 'raise exception',)
 
 class AsyncQueue:

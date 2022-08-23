@@ -8,7 +8,7 @@ from .future import FUTURE_STATE_CANCELLED, FUTURE_STATE_FINISHED, FUTURE_STATE_
 from .wait_till_first import WaitTillFirst
 
 
-ignore_frame(__spec__.origin, 'result', 'raise exception',)
+ignore_frame(__spec__.origin, 'get_result', 'raise exception',)
 
 class WaitContinuously(WaitTillFirst):
     """

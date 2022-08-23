@@ -14,7 +14,7 @@ from .future import (
 )
 
 
-ignore_frame(__spec__.origin, 'result', 'raise exception',)
+ignore_frame(__spec__.origin, 'get_result', 'raise exception',)
 ignore_frame(__spec__.origin, '__iter__', 'yield self',)
 
 @export

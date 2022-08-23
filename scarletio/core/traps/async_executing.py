@@ -9,7 +9,7 @@ from ..exceptions import CancelledError
 from .future import Future
 
 
-ignore_frame(__spec__.origin, 'result', 'raise exception',)
+ignore_frame(__spec__.origin, 'get_result', 'raise exception',)
 ignore_frame(__spec__.origin, '__iter__', 'yield self',)
 ignore_frame(__spec__.origin, '__call__', 'future.get_result()', )
 

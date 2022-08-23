@@ -12,7 +12,7 @@ from ..exceptions import CancelledError, InvalidStateError
 from .future import FUTURE_STATE_FINISHED, FUTURE_STATE_PENDING, FUTURE_STATE_RETRIEVED, Future, get_future_state_name
 
 
-ignore_frame(__spec__.origin, 'result', 'raise exception')
+ignore_frame(__spec__.origin, 'get_result', 'raise exception')
 ignore_frame(__spec__.origin, '__iter__', 'yield self')
 ignore_frame(__spec__.origin, '_step', 'result = coroutine.throw(exception)')
 ignore_frame(__spec__.origin, '_step', 'result = coroutine.send(None)')

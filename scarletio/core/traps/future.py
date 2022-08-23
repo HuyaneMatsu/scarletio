@@ -15,7 +15,7 @@ FutureAsyncWrapper = include('FutureAsyncWrapper')
 write_exception_async = include('write_exception_async')
 write_exception_maybe_async = include('write_exception_maybe_async')
 
-ignore_frame(__spec__.origin, 'result', 'raise exception',)
+ignore_frame(__spec__.origin, 'get_result', 'raise exception',)
 ignore_frame(__spec__.origin, '__iter__', 'yield self',)
 
 FUTURE_STATE_PENDING = 0

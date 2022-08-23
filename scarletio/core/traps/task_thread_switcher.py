@@ -10,7 +10,7 @@ from .future import FUTURE_STATE_CANCELLED, FUTURE_STATE_PENDING, Future
 from .task import Task
 
 
-ignore_frame(__spec__.origin, 'result', 'raise exception',)
+ignore_frame(__spec__.origin, 'get_result', 'raise exception',)
 ignore_frame(__spec__.origin, '__iter__', 'yield self',)
 
 EventThread = include('EventThread')
