@@ -25,8 +25,8 @@ def test__format_coroutine__0():
         result = format_coroutine(generator)
         
         vampytest.assert_in(_example_generator_function.__name__, result)
-        vampytest.assert_in('defined', result)
-        vampytest.assert_in('blocked', result)
+        vampytest.assert_in(' from ', result)
+        vampytest.assert_in(' suspended', result)
         
     finally:
         generator.close()
@@ -42,8 +42,8 @@ def test__format_coroutine__1():
         result = format_coroutine(coroutine)
         
         vampytest.assert_in(_example_coroutine_function.__name__, result)
-        vampytest.assert_in('defined', result)
-        vampytest.assert_in('blocked', result)
+        vampytest.assert_in(' from ', result)
+        vampytest.assert_in(' suspended', result)
         
     finally:
         coroutine.close()
@@ -59,8 +59,8 @@ def test__format_coroutine__2():
         result = format_coroutine(coroutine_generator)
         
         vampytest.assert_in(_example_coroutine_generator_function.__name__, result)
-        vampytest.assert_in('defined', result)
-        vampytest.assert_in('blocked', result)
+        vampytest.assert_in(' from ', result)
+        vampytest.assert_in(' suspended', result)
         
     finally:
         coroutine_generator.aclose()
@@ -73,7 +73,7 @@ def test__format_coroutine__3():
     result = format_coroutine(object())
     
     vampytest.assert_in(object.__name__, result)
-    vampytest.assert_in('defined', result)
+    vampytest.assert_in(' from ', result)
     vampytest.assert_in('unknown state', result)
     vampytest.assert_in('unknown location', result)
 
