@@ -5,6 +5,7 @@ __all__ = ()
 from .compilation import *
 from .editor_base import *
 from .editor_simple import *
+from .prefix_trimming import *
 
 # only import advanced editor when it supposed to work
 

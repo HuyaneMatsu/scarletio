@@ -9,6 +9,7 @@ from ....utils import DEFAULT_ANSI_HIGHLIGHTER, copy_docs, create_ansi_format_co
 
 from .compilation import maybe_compile
 from .editor_base import EditorBase, _validate_buffer
+from .prefix_trimming import trim_console_prefix
 
 
 KEY_KEYBOARD_INTERRUPT = 3
@@ -1055,6 +1056,28 @@ class DisplayState:
             continue
 
 
+def _get_input_content_length(content):
+    """
+    Gets the input content's length.
+    
+    Parameter
+    ---------
+    content : `str`
+        Input content.
+    
+    Returns
+    -------
+    length : `int`
+    """
+    length = len(content)
+    if length:
+        length -= (content.count(CHARACTER_CHAINED_OPERATION) << 1)
+        
+        if length < 1:
+            length = 1
+    
+    return length
+
 
 class InputIterator:
     """
@@ -1078,12 +1101,17 @@ class InputIterator:
         content : `str`
             The content to iterate over.
         """
-        if content:
+        length = _get_input_content_length(content)
+        if length:
+            trimmed_content = trim_console_prefix(content)
+            if (trimmed_content is not None):
+                content = trimmed_content
+                length = _get_input_content_length(content)
+        
+        if length:
             iterator = iter(content)
         else:
             iterator = None
-        
-        length = len(content) - (content.count(CHARACTER_CHAINED_OPERATION) << 1)
         
         self = object.__new__(cls)
         self.iterator = iterator
