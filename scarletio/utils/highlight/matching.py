@@ -588,6 +588,7 @@ def _try_match_console_prefix(context):
 
 PYTHON_PARSERS = (
     _try_match_empty_line,
+    _try_match_console_prefix,
     _try_match_space,
     _try_match_comment,
     _try_match_string,
@@ -598,7 +599,6 @@ PYTHON_PARSERS = (
     _try_match_integer_octal,
     _try_match_integer_binary,
     _try_match_identifier,
-    _try_match_console_prefix,
     _try_match_punctuation,
     _try_match_operator,
     _try_match_anything,

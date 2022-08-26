@@ -92,7 +92,7 @@ SPACE_MATCH_RP = re.compile('([ \t]+)')
 
 FORMAT_STRING_MATCH_STRING = re.compile('(.*?)(\{\{|\{|\n|\}\}|\})')
 
-CONSOLE_PREFIX_RP = re.compile('(>>>>?)( [ \t]*)')
+CONSOLE_PREFIX_RP = re.compile('(>>>>?|\.\.\.\.?| *\.\.\.\:|In \[\d+\]\:)( [ \t]*)')
 
 FORMAT_STRING_POSTFIX_RP = re.compile('(![sraSRA])\}')
 
