@@ -9,6 +9,8 @@ class PrefixTrimmer:
     
     Attributes
     ----------
+    excludes : `None`, `frozenset` of `str`
+        Strings to exclude from matching.
     prefix_continuous_pattern : `re.Pattern`
         Prefix pattern matching continuous lines.
     prefix_initial_pattern : `re.Pattern`
@@ -16,9 +18,9 @@ class PrefixTrimmer:
     prefix_last_pattern : `str`
         Prefix pattern matching the last line only if ``.prefix_continuous_pattern`` fails.
     """
-    __slots__ = ('prefix_continuous_pattern', 'prefix_initial_pattern', 'prefix_last_pattern')
+    __slots__ = ('excludes', 'prefix_continuous_pattern', 'prefix_initial_pattern', 'prefix_last_pattern')
     
-    def __new__(cls, prefix_initial_pattern, prefix_continuous_pattern, prefix_last_pattern):
+    def __new__(cls, prefix_initial_pattern, prefix_continuous_pattern, prefix_last_pattern, excludes ):
         """
         Creates a new prefix trimmer.
         
@@ -38,12 +40,21 @@ class PrefixTrimmer:
             Prefix pattern matching the last line only if ``.prefix_continuous_pattern`` fails.
             
             > Not compiled.
+        
+        excludes  : `None`, `list` of `str`
+            Strings to exclude from matching.
         """
         prefix_continuous_pattern = re_compile(prefix_continuous_pattern)
         prefix_initial_pattern = re_compile(prefix_initial_pattern)
         prefix_last_pattern = re_compile(prefix_last_pattern)
         
+        if (excludes is not None):
+            excludes = frozenset(excludes )
+            if not excludes:
+                excludes  = None
+        
         self = object.__new__(cls)
+        self.excludes  = excludes 
         self.prefix_continuous_pattern = prefix_continuous_pattern
         self.prefix_initial_pattern = prefix_initial_pattern
         self.prefix_last_pattern = prefix_last_pattern
@@ -139,6 +150,27 @@ class PrefixTrimmer:
             break
         
         return True
+    
+    
+    def check_is_excluded(self, string):
+        """
+        Checks whether the given string is excluded from the trimmer.
+        
+        Parameters
+        ----------
+        string : `str`
+            The string to check.
+        
+        Returns
+        -------
+        is_excluded : `bool`
+        """
+        excludes = self.excludes
+        if (excludes is not None):
+            if string in excludes:
+                return True
+        
+        return False
     
     
     def apply(self, lines):
@@ -262,9 +294,9 @@ class PrefixTrimmer:
 
 
 PREFIX_TRIMMERS = (
-    PrefixTrimmer('In \[\d+\]\: ', ' +\.\.\.\: ', ' +\.\.\.\: ?'), # scarletio
-    PrefixTrimmer('\>\>\> ', '\.\.\.\: ', '\.\.\.\: ?'), # cpython
-    PrefixTrimmer('\>\>\>\> ', '\.\.\.\.\: ', '\.\.\.\.\: ?'), # pypy
+    PrefixTrimmer('In \[\d+\]\: ', ' +\.\.\.\: ', ' +\.\.\.\: ?', None), # scarletio
+    PrefixTrimmer('\>\>\> ', '\.\.\. ', '\.\.\. ?', ['...']), # cpython
+    PrefixTrimmer('\>\>\>\> ', '\.\.\.\. ', '\.\.\.\. ?', None), # pypy
 )
 
 
@@ -280,9 +312,13 @@ def trim_console_prefix(content):
     trimmed_content : `None`, `str`
         Returns `None` if nothing was trimmed.
     """
+    prefix_trimmers = [
+        prefix_trimmer for prefix_trimmer in PREFIX_TRIMMERS if not prefix_trimmer.check_is_excluded(content)
+    ]
+    
     lines = content.splitlines()
     
-    for prefix_trimmer in PREFIX_TRIMMERS:
+    for prefix_trimmer in prefix_trimmers:
         if prefix_trimmer.checkout(lines):
             lines = prefix_trimmer.apply(lines)
             break
