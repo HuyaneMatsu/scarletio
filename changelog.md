@@ -1,3 +1,10 @@
+## 1.0.35 *\[2022-08-26\]*
+
+#### Improvements
+
+- `EditorAdvanced` now ignores the pasted console prefixes.
+- Highlighter now handles not only the default console prefix.
+
 ## 1.0.34 *\[2022-08-23\]*
 
 #### Improvements

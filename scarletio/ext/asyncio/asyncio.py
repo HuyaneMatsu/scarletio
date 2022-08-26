@@ -606,14 +606,25 @@ class ReadProtocolBase:
 
 @KeepType(HataFuture)
 class HataFuture:
+    @property
     def done(self):
-        return self.is_done()
+        return self.is_done
     
+    @property
     def cancelled(self):
-        return self.is_cancelled()
+        return self.is_cancelled
     
+    @property
     def pending(self):
-        return self.is_pending()
+        return self.is_pending
+    
+    @property
+    def result(self):
+        return self.get_result
+    
+    @property
+    def exception(self):
+        return self.get_exception
 
 
 @KeepType(HataTask)
