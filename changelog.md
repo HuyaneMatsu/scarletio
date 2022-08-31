@@ -1,3 +1,9 @@
+## 1.0.36 *\[2022-09-??\]*
+
+#### Improvements
+
+- Add `ExceptionWriterContextmanager` with `catching` shortcut.
+
 ## 1.0.35 *\[2022-08-26\]*
 
 #### Improvements

@@ -1,12 +1,12 @@
 __all__ = (
-    'get_default_trace_writer_highlighter', 'render_frames_into_async', 'render_exception_into_async',
-    'set_default_trace_writer_highlighter', 'set_trace_writer_highlighter', 'write_exception_async',
-    'write_exception_maybe_async'
+    'ExceptionWriterContextmanager', 'get_default_trace_writer_highlighter', 'render_frames_into_async',
+    'render_exception_into_async', 'set_default_trace_writer_highlighter', 'set_trace_writer_highlighter',
+    'write_exception_async', 'write_exception_maybe_async'
 )
 
 import sys
 from os import get_terminal_size
-from sys import platform as PLATFORM
+from sys import _getframe as get_frame, platform as PLATFORM
 from threading import current_thread
 
 from ...utils import (
@@ -293,7 +293,7 @@ def write_exception_async(exception, before=None, after=None, file=None, *, filt
 @export
 def write_exception_maybe_async(exception, before=None, after=None, file=None, *, filter=None, highlighter=None):
     """
-    Writes the given exception's traceback on a blocking thread. If called from an async thread will use an executor.
+    Writes the given exception's traceback on a non-async thread. If called from an async thread will use an executor.
     If called from a sync thread, will block instead.
     
     Parameters
@@ -399,3 +399,304 @@ def set_trace_writer_highlighter(highlighter):
         )
     
     _DEFAULT_TRACE_WRITER_HIGHLIGHTER = highlighter
+
+
+EXCEPTION_MESSAGE_TITLE_STANDALONE = 'Ignoring occurred exception.'
+EXCEPTION_MESSAGE_TITLE_BASE = 'Ignoring occurred exception at:'
+
+
+class ExceptionWriterContextmanager:
+    """
+    
+    exclude : `None`, ``BaseException``, `tuple` of `BaseException`
+        The exception types to not catch.
+        
+        > By default ignores `GeneratorExit` if inside of a task.
+        
+    filter : `None`, `callable`
+        Additional filter to check whether a frame should be shown.
+        
+        Called with 4 parameters:
+        
+        +---------------+-----------+---------------------------------------------------------------+
+        | Name          | Type      | Description                                                   |
+        +===============+===========+===============================================================+
+        | file_name     | `str`     | The frame's file's name.                                      |
+        +---------------+-----------+---------------------------------------------------------------+
+        | name          | `str`     | The name of the function.                                     |
+        +---------------+-----------+---------------------------------------------------------------+
+        | line_number   | `int`     | The line's index of the file where the exception occurred.    |
+        +---------------+-----------+---------------------------------------------------------------+
+        | line          | `str`     | The line of the file.                                         |
+        +---------------+-----------+---------------------------------------------------------------+
+    
+    highlighter : `None`, ``HighlightFormatterContext``
+        Formatter storing highlighting details.
+    
+    include : `None`, ``BaseException``, `tuple` of `BaseException`
+        The exception types to catch.
+        
+        > By default catches everything.
+    
+    location : `None`, `str`
+        The place where the exception might be occurring.
+    
+    """
+    __slots__ = ('exclude', 'filter', 'highlighter', 'include', 'location')
+    
+    def __new__(cls, include=None, location=None, *, exclude=None, filter=None, highlighter=None):
+        """
+        Parameters
+        ----------
+        include : `None`, ``BaseException``, `tuple` of `BaseException` = `None`, Optional
+            The exception types to catch.
+            
+            > By default catches everything.
+        
+        location : `None`, `str` = `None`, Optional
+            The place where the exception might be occurring.
+        
+        exclude : `None`, ``BaseException``, `tuple` of `BaseException` = `None`, Optional (Keyword only)
+            The exception types to not catch.
+            
+            > By default ignores `GeneratorExit` if inside of a task.
+            
+        filter : `None`, `callable` = `None`, Optional (Keyword only)
+            Additional filter to check whether a frame should be shown.
+            
+            Called with 4 parameters:
+            
+            +---------------+-----------+---------------------------------------------------------------+
+            | Name          | Type      | Description                                                   |
+            +===============+===========+===============================================================+
+            | file_name     | `str`     | The frame's file's name.                                      |
+            +---------------+-----------+---------------------------------------------------------------+
+            | name          | `str`     | The name of the function.                                     |
+            +---------------+-----------+---------------------------------------------------------------+
+            | line_number   | `int`     | The line's index of the file where the exception occurred.    |
+            +---------------+-----------+---------------------------------------------------------------+
+            | line          | `str`     | The line of the file.                                         |
+            +---------------+-----------+---------------------------------------------------------------+
+        
+        highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
+            Formatter storing highlighting details.
+        """
+        self = object.__new__(cls)
+        self.exclude = exclude
+        self.filter = filter
+        self.highlighter = highlighter
+        self.include = include
+        self.location = location
+        return self
+    
+    
+    def __enter__(self):
+        """
+        Enters the catching block as an synchronous context manager.
+        
+        Returns
+        -------
+        self : ``catch`` 
+        """
+        return self
+    
+    
+    async def __aenter__(self):
+        """
+        Enters the catching block as an asynchronous context manager.
+        
+        This method is a coroutine.
+        
+        Returns
+        -------
+        self : ``catch`` 
+        """
+        return self
+    
+    
+    def __exit__(self, exception_type, exception, exception_traceback):
+        """
+        Exits the context manager.
+        
+        Parameters
+        ----------
+        exception_type : `None`, `type<BaseException>`
+            The occurred exception's type if any.
+        
+        exception : `None`, `BaseException`
+            The occurred exception if any.
+        
+        exception_traceback : `None`, `TracebackType`
+            the exception's traceback if any.
+        
+        Returns
+        -------
+        captured : `bool`
+            Whether the exception was captured.
+        """
+        if not self._should_capture(exception, False):
+            return True
+        
+        write_exception_maybe_async(
+            exception,
+            before = self._get_location_message(),
+            filter = self.filter,
+            highlighter = self.highlighter,
+        )
+        return False
+    
+    
+    async def __aexit__(self, exception_type, exception, exception_traceback):
+        """
+        Exits the context manager.
+        
+        Parameters
+        ----------
+        exception_type : `None`, `type<BaseException>`
+            The occurred exception's type if any.
+        
+        exception : `None`, `BaseException`
+            The occurred exception if any.
+        
+        exception_traceback : `None`, `TracebackType`
+            the exception's traceback if any.
+        
+        Returns
+        -------
+        captured : `bool`
+            Whether the exception was captured.
+        """
+        if not self._should_capture(exception, True):
+            return True
+        
+        await write_exception_async(
+            exception,
+            before = self._get_location_message(),
+            filter = self.filter,
+            highlighter = self.highlighter,
+        )
+        return False
+    
+    
+    def _should_capture(self, exception, asynchronous):
+        """
+        Returns whether the given exception should be captured.
+        
+        Parameters
+        ----------
+        exception : `None`, `BaseException`
+            The exception to check.
+        asynchronous : `bool`
+            Whether we are at an exit of an asynchronous context manager.
+        
+        Returns
+        -------
+        should_capture : `bool`
+        """
+        # If we have no exception we should not capture.
+        if exception is None:
+            return False
+        
+        if not asynchronous:
+            thread = current_thread()
+            if isinstance(thread, EventThread) and (thread.current_task is not None):
+                asynchronous = True
+            
+            else:
+                asynchronous = False
+        
+        if asynchronous:
+            # If we are inside of a task, we ignore `GeneratorExit`
+            if isinstance(exception, GeneratorExit):
+                return False
+        
+        # If we exclude the exception we should not capture
+        exclude = self.exclude
+        if (exclude is not None) and isinstance(exception, exclude):
+            return False
+        
+        # If we not include the exception we should not capture.
+        include = self.include
+        if (include is not None) and (not isinstance(exception, include)):
+            return False
+        
+        return True
+    
+    
+    def _get_location_message(self):
+        """
+        Creates the location message of the context.
+        
+        Returns
+        -------
+        location_message : `str`
+        """
+        for location_message in self._iter_location_messages():
+            if (location_message is not None):
+                return location_message
+        
+        return EXCEPTION_MESSAGE_TITLE_STANDALONE
+    
+    
+    def _iter_location_messages(self):
+        """
+        Iterates over the location messages.
+        
+        This method is an iterable generator.
+        
+        Yields
+        ------
+        location_message : `None`, `str`
+        """
+        yield self._create_location_message_from_location()
+        yield self._create_location_message_from_task_name()
+        yield self._create_location_message_from_tracing()
+    
+    
+    def _create_location_message_from_location(self):
+        """
+        Creates location message using ``.location``
+        
+        Returns
+        -------
+        location_message : `None`, `str`
+        """
+        location = self.location
+        if (location is not None):
+            return EXCEPTION_MESSAGE_TITLE_BASE + location
+    
+    def _create_location_message_from_task_name(self):
+        """
+        Creates location message from the current task's qualname.
+        
+        Returns
+        -------
+        location_message : `None`, `str`
+        """
+        thread = current_thread()
+        if isinstance(thread, EventThread):
+            current_task = thread.current_task
+            if (current_task is not None):
+                return EXCEPTION_MESSAGE_TITLE_BASE + current_task.qualname
+    
+    
+    def _create_location_message_from_tracing():
+        """
+        Creates location message by tracing back to the first non-local frame.
+        
+        Returns
+        -------
+        location_message : `None`, `str`
+        """
+        frame = get_frame()
+        while True:
+            if frame is None:
+                return
+            
+            if frame.f_code.co_filename != __file__:
+                break
+            
+            frame = frame.f_back
+            continue
+        
+        return EXCEPTION_MESSAGE_TITLE_BASE + frame.f_code.co_name

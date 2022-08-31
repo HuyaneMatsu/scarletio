@@ -553,7 +553,7 @@ class Task(Future):
     
     def _must_exception(self, exception):
         """
-        Returns the exception, what should be raised into the tasks's wrapped coroutine.
+        Returns the exception, what should be raised into the tasks' wrapped coroutine.
         
         Parameters
         ----------

@@ -2,6 +2,7 @@ __all__ = ('get_last_module_frame',)
 
 from sys import _getframe as get_frame
 
+
 MODULE_FRAME_NAME = '<module>'
 
 def get_last_module_frame():

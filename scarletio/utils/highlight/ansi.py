@@ -37,7 +37,7 @@ def create_ansi_format_code(text_decoration=None, background_color=None, foregro
         
         red, green, blue = background_color
         
-        format_code_parst.append('38;2;')
+        format_code_parst.append('48;2;')
         format_code_parst.append(str(red))
         format_code_parst.append(';')
         format_code_parst.append(str(green))
