@@ -402,7 +402,7 @@ def set_trace_writer_highlighter(highlighter):
 
 
 EXCEPTION_MESSAGE_TITLE_STANDALONE = 'Ignoring occurred exception.\n'
-EXCEPTION_MESSAGE_TITLE_BASE = 'Ignoring occurred exception at:'
+EXCEPTION_MESSAGE_TITLE_BASE = 'Ignoring occurred exception at: '
 
 
 class ExceptionWriterContextmanager:
