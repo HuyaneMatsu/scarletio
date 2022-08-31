@@ -401,7 +401,7 @@ def set_trace_writer_highlighter(highlighter):
     _DEFAULT_TRACE_WRITER_HIGHLIGHTER = highlighter
 
 
-EXCEPTION_MESSAGE_TITLE_STANDALONE = 'Ignoring occurred exception.'
+EXCEPTION_MESSAGE_TITLE_STANDALONE = 'Ignoring occurred exception.\n'
 EXCEPTION_MESSAGE_TITLE_BASE = 'Ignoring occurred exception at:'
 
 
@@ -663,7 +663,8 @@ class ExceptionWriterContextmanager:
         """
         location = self.location
         if (location is not None):
-            return EXCEPTION_MESSAGE_TITLE_BASE + location
+            return f'{EXCEPTION_MESSAGE_TITLE_BASE}{location}\n'
+    
     
     def _create_location_message_from_task_name(self):
         """
@@ -677,7 +678,7 @@ class ExceptionWriterContextmanager:
         if isinstance(thread, EventThread):
             current_task = thread.current_task
             if (current_task is not None):
-                return EXCEPTION_MESSAGE_TITLE_BASE + current_task.qualname
+                return f'{EXCEPTION_MESSAGE_TITLE_BASE}{current_task.qualname}\n'
     
     
     def _create_location_message_from_tracing():
