@@ -1,5 +1,5 @@
 __all__ = (
-    'ExceptionWriterContextmanager', 'get_default_trace_writer_highlighter', 'render_frames_into_async',
+    'ExceptionWriterContextManager', 'get_default_trace_writer_highlighter', 'render_frames_into_async',
     'render_exception_into_async', 'set_default_trace_writer_highlighter', 'set_trace_writer_highlighter',
     'write_exception_async', 'write_exception_maybe_async', 'write_exception_sync'
 )
@@ -405,9 +405,24 @@ EXCEPTION_MESSAGE_TITLE_STANDALONE = 'Ignoring occurred exception.\n'
 EXCEPTION_MESSAGE_TITLE_BASE = 'Ignoring occurred exception at: '
 
 
-class ExceptionWriterContextmanager:
+class ExceptionWriterContextManager:
     """
+    Exception catcher which can be used to catch and write occurred exceptions captured by it!
     
+    Examples
+    --------
+    ```py
+    from scarletio import catching
+    
+    def i_raise():
+        raise ValueError
+    
+    with catching(ValueError, location="right here"):
+        i_raise()
+    ```
+    
+    Attributes
+    ----------
     exclude : `None`, ``BaseException``, `tuple` of `BaseException`
         The exception types to not catch.
         
@@ -444,22 +459,24 @@ class ExceptionWriterContextmanager:
     """
     __slots__ = ('exclude', 'filter', 'highlighter', 'include', 'location')
     
-    def __new__(cls, include=None, location=None, *, exclude=None, filter=None, highlighter=None):
+    def __new__(cls, include=None, exclude=None, *, location=None, filter=None, highlighter=None):
         """
+        Creates a new exception catcher.
+        
         Parameters
         ----------
         include : `None`, ``BaseException``, `tuple` of `BaseException` = `None`, Optional
             The exception types to catch.
             
-            > By default catches everything.
+            > By default allows all exceptions.
         
-        location : `None`, `str` = `None`, Optional
-            The place where the exception might be occurring.
-        
-        exclude : `None`, ``BaseException``, `tuple` of `BaseException` = `None`, Optional (Keyword only)
+        exclude : `None`, ``BaseException``, `tuple` of `BaseException` = `None`, Optional 
             The exception types to not catch.
             
-            > By default ignores `GeneratorExit` if inside of a task.
+            > By default excludes only `GeneratorExit` if inside of a task.
+        
+        location : `None`, `str` = `None`, Optional (Keyword only)
+            The place where the exception might be occurring.
             
         filter : `None`, `callable` = `None`, Optional (Keyword only)
             Additional filter to check whether a frame should be shown.
@@ -488,6 +505,66 @@ class ExceptionWriterContextmanager:
         self.include = include
         self.location = location
         return self
+    
+    
+    def __repr__(self):
+        """Returns the exception catcher's representation."""
+        repr_parts = ['<', self.__class__.__name__]
+        
+        # location
+        location = self.location
+        if (location is not None):
+            repr_parts.append(' location=')
+            repr_parts.append(repr(location))
+            
+            field_added = True
+        else:
+            field_added = False
+        
+        # include
+        include = self.include
+        if (include is not None):
+            if field_added:
+                repr_parts.append(',')
+            else:
+                field_added = True
+            
+            repr_parts.append(' include=')
+            repr_parts.append(repr(include))
+        
+        # exclude
+        exclude = self.exclude
+        if (exclude is not None):
+            if field_added:
+                repr_parts.append(',')
+            else:
+                field_added = True
+            
+            repr_parts.append(' exclude=')
+            repr_parts.append(repr(exclude))
+        
+        # filter
+        filter = self.filter
+        if (filter is not None):
+            if field_added:
+                repr_parts.append(',')
+            else:
+                field_added = True
+            
+            repr_parts.append(' filter=')
+            repr_parts.append(repr(filter))
+        
+        # highlighter
+        highlighter = self.highlighter
+        if (highlighter is not None):
+            if field_added:
+                repr_parts.append(',')
+            
+            repr_parts.append(' highlighter=')
+            repr_parts.append(repr(highlighter))
+        
+        repr_parts.append('>')
+        return ''.join(repr_parts)
     
     
     def __enter__(self):

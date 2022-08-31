@@ -15,4 +15,4 @@ __all__ = (
 
 # Define shortcuts
 
-from .trace import ExceptionWriterContextmanager as catching
+from .trace import ExceptionWriterContextManager as catching
