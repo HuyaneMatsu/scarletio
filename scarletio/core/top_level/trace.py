@@ -535,7 +535,7 @@ class ExceptionWriterContextmanager:
             Whether the exception was captured.
         """
         if not self._should_capture(exception, False):
-            return True
+            return False
         
         write_exception_maybe_async(
             exception,
@@ -543,7 +543,7 @@ class ExceptionWriterContextmanager:
             filter = self.filter,
             highlighter = self.highlighter,
         )
-        return False
+        return True
     
     
     async def __aexit__(self, exception_type, exception, exception_traceback):
@@ -567,7 +567,7 @@ class ExceptionWriterContextmanager:
             Whether the exception was captured.
         """
         if not self._should_capture(exception, True):
-            return True
+            return False
         
         await write_exception_async(
             exception,
@@ -575,7 +575,7 @@ class ExceptionWriterContextmanager:
             filter = self.filter,
             highlighter = self.highlighter,
         )
-        return False
+        return True
     
     
     def _should_capture(self, exception, asynchronous):
