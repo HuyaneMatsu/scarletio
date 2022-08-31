@@ -1,7 +1,7 @@
 __all__ = (
     'ExceptionWriterContextmanager', 'get_default_trace_writer_highlighter', 'render_frames_into_async',
     'render_exception_into_async', 'set_default_trace_writer_highlighter', 'set_trace_writer_highlighter',
-    'write_exception_async', 'write_exception_maybe_async'
+    'write_exception_async', 'write_exception_maybe_async', 'write_exception_sync'
 )
 
 import sys

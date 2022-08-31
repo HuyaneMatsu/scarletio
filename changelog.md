@@ -3,6 +3,7 @@
 #### Improvements
 
 - Add `ExceptionWriterContextmanager` with `catching` shortcut.
+- Make `write_exception_sync` directly importable.
 
 ## 1.0.35 *\[2022-08-26\]*
 
