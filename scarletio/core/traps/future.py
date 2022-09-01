@@ -641,7 +641,7 @@ class Future:
                 if (self._exception is not None):
                     write_exception_maybe_async(
                         self._exception,
-                        f'{self.__class__.__name__} exception was never retrieved: {self!r}',
+                        f'{self.__class__.__name__} exception was never retrieved: {self!r}\n',
                     )
                 return
             
