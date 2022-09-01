@@ -632,7 +632,7 @@ class Future:
                             return
                     
                     sys.stderr.write(
-                        f'{self.__class__.__name__} is not finished, but still pending!\n{self!r}\n'
+                        f'{self.__class__.__name__} is not finished, but still pending: {self!r}\n',
                     )
                     sys.stderr.flush()
                 return
@@ -641,12 +641,7 @@ class Future:
                 if (self._exception is not None):
                     write_exception_maybe_async(
                         self._exception,
-                        [
-                            self.__class__.__name__,
-                            ' exception was never retrieved\n',
-                            repr(self),
-                            '\n',
-                        ]
+                        f'{self.__class__.__name__} exception was never retrieved: {self!r}',
                     )
                 return
             
