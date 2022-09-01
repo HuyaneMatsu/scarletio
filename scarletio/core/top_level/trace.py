@@ -10,9 +10,11 @@ from sys import _getframe as get_frame, platform as PLATFORM
 from threading import current_thread
 
 from ...utils import (
-    DEFAULT_ANSI_HIGHLIGHTER, HighlightFormatterContext, alchemy_incendiary, call, export, include,
-    render_exception_into, render_frames_into
+    DEFAULT_ANSI_HIGHLIGHTER, HIGHLIGHT_TOKEN_TYPES, HighlightFormatterContext, alchemy_incendiary, call, export,
+    include, render_exception_into, render_frames_into
 )
+from ...utils.trace import _add_typed_part_into
+
 from .event_loop import get_event_loop
 
 
@@ -137,6 +139,106 @@ async def render_exception_into_async(exception, extend=None, *, filter=None, hi
     )
 
 
+def _build_additional_title(title):
+    """
+    Builds additional title represented by `before` and `after` parameters of ``write_exception_sync``.
+    
+    Parameters
+    ----------
+    title : `str`, `list` of `str`
+        The title to put before or after an exception traceback.
+    
+    Returns
+    -------
+    built_title : `None`, `str`
+    """
+    if title is None:
+        return None
+    
+    if isinstance(title, str):
+        return _build_additional_title_str(title)
+    
+    if isinstance(title, list):
+        return _build_additional_title_list(title)
+    
+    return _build_additional_title_object(title)
+
+
+def _build_additional_title_str(title):
+    """
+    Builds additional title represented by `before` and `after` parameters of ``write_exception_sync``.
+    
+    > This function is a type specific version called by ``_build_additional_title``.
+    
+    Parameters
+    ----------
+    title : `str`
+        The title to put before or after an exception traceback.
+    
+    Returns
+    -------
+    built_title : `None`, `str`
+    """
+    if not title:
+        return None
+    
+    if title.endswith('\n'):
+        return title
+        
+    return title + '\n'
+
+
+def _build_additional_title_list(title_parts):
+    """
+    Builds additional title represented by `before` and `after` parameters of ``write_exception_sync``.
+    
+    > This function is a type specific version called by ``_build_additional_title``.
+    
+    Parameters
+    ----------
+    title_parts : `list` of `str`
+        The title to put before or after an exception traceback.
+    
+    Returns
+    -------
+    built_title : `None`, `str`
+    """
+    title_elements = []
+    
+    for element in title_parts:
+        if not isinstance(element, str):
+            element = repr(element)
+        
+        if element:
+            title_elements.append(element)
+    
+    if not title_elements:
+        return None
+    
+    if not title_elements[-1].endswith('\n'):
+        title_elements.append('\n')
+    
+    return ''.join(title_elements)
+
+
+def _build_additional_title_object(title_object):
+    """
+    Builds additional title represented by `before` and `after` parameters of ``write_exception_sync``.
+    
+    > This function is a type specific version called by ``_build_additional_title``.
+    
+    Parameters
+    ----------
+    title_object : `object`
+        The title to put before or after an exception traceback.
+    
+    Returns
+    -------
+    built_title : `None`, `str`
+    """
+    return _build_additional_title_str(repr(title_object))
+
+
 def write_exception_sync(exception, before=None, after=None, file=None, *, filter=None, highlighter=None):
     """
     Writes the given exception's traceback.
@@ -146,12 +248,12 @@ def write_exception_sync(exception, before=None, after=None, file=None, *, filte
     exception : ``BaseException``
         The exception to render.
     
-    before : `str`, `list` of `str` = `None`, Optional
+    before : `None`, `str`, `list` of `str` = `None`, Optional
         Any content, what should go before the exception's traceback.
         
         If given as `str`, or if `list`, then the last element of it should end with linebreak.
     
-    after : `str`, `list` of `str` = `None`, Optional
+    after : `None`, `str`, `list` of `str` = `None`, Optional
         Any content, what should go after the exception's traceback.
         
         If given as `str`, or if `list`, then the last element of it should end with linebreak.
@@ -179,49 +281,38 @@ def write_exception_sync(exception, before=None, after=None, file=None, *, filte
     highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
         Formatter storing highlighting details.
     """
-    extracted = []
     
-    if before is None:
-        pass
-    elif isinstance(before, str):
-        extracted.append(before)
-    elif isinstance(before, list):
-        for element in before:
-            if isinstance(element, str):
-                extracted.append(element)
-            else:
-                extracted.append(repr(element))
-                extracted.append('\n')
-    else:
-        # ignore exception cases
-        extracted.append(repr(before))
-        extracted.append('\n')
+    before = _build_additional_title(before)
+    after = _build_additional_title(after)
     
     if (file is None) and (highlighter is None):
         highlighter = get_default_trace_writer_highlighter()
     
-    render_exception_into(exception, extracted, filter=filter, highlighter=highlighter)
+    extend = []
     
-    if after is None:
-        pass
-    elif isinstance(after, str):
-        extracted.append(after)
-    elif isinstance(after, list):
-        for element in after:
-            if isinstance(element, str):
-                extracted.append(element)
-            else:
-                extracted.append(repr(element))
-                extracted.append('\n')
-    else:
-        extracted.append(repr(after))
-        extracted.append('\n')
+    if (before is not None):
+        _add_typed_part_into(
+            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_ADDITIONAL_BEFORE,
+            before,
+            extend,
+            highlighter,
+        )
+    
+    render_exception_into(exception, extend, filter=filter, highlighter=highlighter)
+    
+    if (after is not None):
+        _add_typed_part_into(
+            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_ADDITIONAL_AFTER,
+            after,
+            extend,
+            highlighter,
+        )
     
     if file is None:
         # ignore exception cases
         file = sys.stderr
     
-    file.write(''.join(extracted))
+    file.write(''.join(extend))
     file.flush()
 
 

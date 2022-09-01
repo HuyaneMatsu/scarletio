@@ -10,15 +10,14 @@ from ..exceptions import CancelledError, InvalidStateError
 
 from .future import (
     FUTURE_STATE_CANCELLED, FUTURE_STATE_FINISHED, FUTURE_STATE_PENDING, FUTURE_STATE_RETRIEVED, Future,
-    get_future_state_name
+    get_future_state_name, get_exception_short_representation
 )
 
 
 ignore_frame(__spec__.origin, 'get_result', 'raise exception')
 ignore_frame(__spec__.origin, 'wait', 'return self.get_result()')
 
-
-write_exception_async = include('write_exception_async')
+write_exception_maybe_async = include('write_exception_maybe_async')
 
 
 @export
@@ -140,7 +139,7 @@ class FutureSyncWrapper:
                 repr_parts.append(reprlib.repr(self._result))
             else:
                 repr_parts.append(' exception=')
-                repr_parts.append(repr(exception))
+                repr_parts.append(get_exception_short_representation(exception))
         
         future = self._future
         if future is not None:

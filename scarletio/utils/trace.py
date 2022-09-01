@@ -491,7 +491,7 @@ def _render_syntax_error_representation_into(syntax_error, into, highlighter):
             
             
             into = _add_typed_part_into(
-                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_EXCEPTION_REPR, pointer, into, highlighter
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR, pointer, into, highlighter
             )
             
             into.append('\n')
@@ -503,7 +503,7 @@ def _render_syntax_error_representation_into(syntax_error, into, highlighter):
         exception_representation = f'{exception_representation}: {message}'
     
     into = _add_typed_part_into(
-        HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_EXCEPTION_REPR, exception_representation, into, highlighter
+        HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR, exception_representation, into, highlighter
     )
     
     return into
@@ -1562,7 +1562,7 @@ class FrameDetailGroup:
         
         if (repeat_count > 1):
             into = _add_typed_part_into(
-                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_FRAME_REPEAT,
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_DETAIL_FRAME_REPEAT,
                 (
                     f'[Following {len(details)} frame{"s were" if len(details) > 1 else " was"} '
                     f'repeated {repeat_count} times]'
@@ -1577,7 +1577,7 @@ class FrameDetailGroup:
         
         if (repeat_count > 1):
             into = _add_typed_part_into(
-                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_FRAME_REPEAT,
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_DETAIL_FRAME_REPEAT,
                 f'[End of repeated frames]',
                 into,
                 highlighter
@@ -1721,19 +1721,19 @@ def _produce_file_location(file_name, line_number, name):
     token_type : `int`
         The part's type.
     """
-    yield '  File ', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE
+    yield '  File ', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LOCATION
     
     if file_name:
-        yield f'"{file_name}"', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_PATH
+        yield f'"{file_name}"', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LOCATION_PATH
     else:
-        yield 'unknown location', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE
+        yield 'unknown location', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LOCATION
     
-    yield ', line ', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE
-    yield  str(line_number), HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LINE_NUMBER
+    yield ', line ', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LOCATION
+    yield  str(line_number), HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LOCATION_LINE_NUMBER
     
     if name:
-        yield ', in ', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE
-        yield name, HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_NAME
+        yield ', in ', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LOCATION
+        yield name, HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LOCATION_NAME
 
 
 class FrameProxyType:
@@ -2141,7 +2141,7 @@ def render_exception_into(exception, extend=None, *, filter=None, highlighter=No
             extend = _render_syntax_error_representation_into(exception, extend, highlighter)
         else:
             extend = _add_typed_part_into(
-                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_EXCEPTION_REPR,
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
                 get_exception_representation(exception),
                 extend,
                 highlighter,

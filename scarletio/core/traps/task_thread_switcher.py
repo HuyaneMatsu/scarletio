@@ -51,7 +51,7 @@ class enter_executor:
     
     async def __aenter__(self):
         """
-        Moves the current tasks's execution to an executor thread.
+        Moves the current tasks' execution to an executor thread.
         
         This method is a coroutine.
         
@@ -126,7 +126,7 @@ class enter_executor:
     
     def _executor_task(self):
         """
-        Wraps the tasks's section's running inside of an executor, still allowing it to use `await`-s.
+        Wraps the tasks' section's running inside of an executor, still allowing it to use `await`-s.
         """
         task = self._task
         # relink future task

@@ -85,20 +85,16 @@ DEFAULT_ANSI_HIGHLIGHTER.set_highlight_ansi_code(
     create_ansi_format_code(foreground_color = (235, 52, 113)),
 )
 DEFAULT_ANSI_HIGHLIGHTER.set_highlight_ansi_code(
-    HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_PATH,
+    HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LOCATION_PATH,
     create_ansi_format_code(foreground_color = (174, 230, 151)),
 )
 DEFAULT_ANSI_HIGHLIGHTER.set_highlight_ansi_code(
-    HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LINE_NUMBER,
+    HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LOCATION_LINE_NUMBER,
     create_ansi_format_code(foreground_color = (151, 174, 230)),
 )
 DEFAULT_ANSI_HIGHLIGHTER.set_highlight_ansi_code(
-    HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_NAME,
+    HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LOCATION_NAME,
     create_ansi_format_code(foreground_color = (151, 174, 230)),
-)
-DEFAULT_ANSI_HIGHLIGHTER.set_highlight_ansi_code(
-    HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_EXCEPTION_REPR,
-    create_ansi_format_code(foreground_color = (235, 52, 113)),
 )
 
 # Add console highlights

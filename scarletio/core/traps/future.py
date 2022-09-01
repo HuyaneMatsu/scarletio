@@ -53,6 +53,26 @@ def get_future_state_name(state):
     return state_name
 
 
+def get_exception_short_representation(exception):
+    """
+    Gets the exception's representation. If it is too long builds a shorter one instead.
+    
+    Parameters
+    ----------
+    exception : ``BaseException``
+        The exception to get representation of.
+    
+    Returns
+    -------
+    exception_representation : `str`
+    """
+    exception_representation = repr(exception)
+    if (len(exception_representation) > 80) or ('\n' in exception_representation):
+        exception_representation = f'<{exception.__class__.__name__} ...>'
+    
+    return exception_representation
+
+
 class Future:
     """
     A Future represents an eventual result of an asynchronous operation.
@@ -136,7 +156,7 @@ class Future:
                 repr_parts.append(reprlib.repr(self._result))
             else:
                 repr_parts.append(', exception=')
-                repr_parts.append(repr(exception))
+                repr_parts.append(get_exception_short_representation(exception))
         
         callbacks = self._callbacks
         limit = len(callbacks)

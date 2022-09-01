@@ -9,7 +9,10 @@ from ...utils.trace import format_callback, format_coroutine, render_exception_i
 
 from ..exceptions import CancelledError, InvalidStateError
 
-from .future import FUTURE_STATE_FINISHED, FUTURE_STATE_PENDING, FUTURE_STATE_RETRIEVED, Future, get_future_state_name
+from .future import (
+    FUTURE_STATE_FINISHED, FUTURE_STATE_PENDING, FUTURE_STATE_RETRIEVED, Future, get_exception_short_representation,
+    get_future_state_name
+)
 
 
 ignore_frame(__spec__.origin, 'get_result', 'raise exception')
@@ -221,7 +224,7 @@ class Task(Future):
                 repr_parts.append(reprlib.repr(self._result))
             else:
                 repr_parts.append(', exception=')
-                repr_parts.append(repr(exception))
+                repr_parts.append(get_exception_short_representation(exception))
         
         callbacks = self._callbacks
         limit = len(callbacks)

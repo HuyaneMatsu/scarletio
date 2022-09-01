@@ -4,6 +4,9 @@
 
 - Add `ExceptionWriterContextmanager` with `catching` shortcut.
 - Make `write_exception_sync` directly importable.
+- Add more traceback highlight options. (This also means some changed)
+- `before` and `after` parameters when writing a traceback are now also highlighted.
+- `Future.__repr__` now wont contain the full exception representation if too long.
 
 ## 1.0.35 *\[2022-08-26\]*
 
