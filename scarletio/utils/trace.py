@@ -1,8 +1,9 @@
 __all__ = ('ignore_frame', 'render_exception_into', 'render_frames_into', 'should_ignore_frame',)
 
-import reprlib, warnings
+import reprlib, sys, warnings
 from collections import OrderedDict
 from linecache import checkcache as check_file_cache, getline as _get_file_line
+from os.path import sep as PATH_SEPARATOR
 from types import (
     AsyncGeneratorType as CoroutineGeneratorType, CoroutineType, FrameType, FunctionType, GeneratorType, MethodType,
     TracebackType
@@ -52,6 +53,7 @@ class ConsoleLineInput:
         self.file_name = file_name
         self.length = len(content)
         return self
+    
     
     def __repr__(self):
         """Returns the console line input's representation."""
@@ -761,6 +763,50 @@ def format_callback(func, args=None, kwargs=None):
     return ''.join(result)
 
 
+def _cut_file_name(file_name):
+    """
+    Cuts the given file name.
+    
+    Parameters
+    ----------
+    file_name : `str`
+        The file name to cut.
+    
+    Returns
+    -------
+    file_name : `str`
+    """
+    for path in sys.path:
+        if file_name.startswith(path + PATH_SEPARATOR):
+            return '...' + file_name[len(path):]
+    
+    return file_name
+
+
+def format_builtin(func):
+    """
+    Formats the given built-in's name.
+    
+    Parameters
+    ----------
+    func : `callable`
+        The builtin to format.
+    
+    Returns
+    -------
+    result : `str`
+        The formatted builtin.
+    """
+    # Cython or builtin
+    name = getattr(func, '__qualname__', None)
+    if name is None:
+        name = getattr(func, '__name__', None)
+        if name is None: # builtins might reach this part
+            name = type(func).__name__
+    
+    return f'{name}()'
+
+
 def format_coroutine(coroutine):
     """
     Formats the given coroutine to a more user friendly representation.
@@ -796,24 +842,6 @@ def format_coroutine(coroutine):
         frame = None
         running = -1
     
-    # Cython or builtin
-    name = getattr(coroutine, '__qualname__', None)
-    if name is None:
-        name = getattr(coroutine, '__name__', None)
-        if name is None: # builtins might reach this part
-            name = coroutine_type.__name__
-        
-        definition_scope_location = None
-    
-    else:
-        dot_index = name.rfind('.')
-        if dot_index == -1:
-            definition_scope_location = None
-        
-        else:
-            definition_scope_location = name[:dot_index]
-            name = name[dot_index + 1:]
-    
     if running == True:
         state = 'running'
     
@@ -827,9 +855,8 @@ def format_coroutine(coroutine):
     else:
         state = 'unknown state'
     
-    
     if running == -1:
-        name = f'{name}()'
+        name = format_builtin(coroutine)
     else:
         name = format_callback(coroutine)
     
@@ -837,7 +864,7 @@ def format_coroutine(coroutine):
         location = 'unknown location'
     
     else:
-        file_name = code.co_filename
+        file_name = _cut_file_name(code.co_filename)
         
         if frame is None:
             line_number = code.co_firstlineno
@@ -845,9 +872,6 @@ def format_coroutine(coroutine):
             line_number = frame.f_lineno
         
         location = f'"{file_name}", line {line_number}'
-        
-        if (definition_scope_location is not None):
-            location = f'{location}, in {definition_scope_location}'
     
     return f'<{name} from {location}; {state}>'
 
