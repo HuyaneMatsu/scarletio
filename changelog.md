@@ -8,6 +8,7 @@
 - `before` and `after` parameters when writing a traceback are now also highlighted.
 - `Future.__repr__` now wont contain the full exception representation if too long.
 - Update `format_coroutine` function to produce shorter representation.
+- Replace default exception hooks.
 
 ## 1.0.35 *\[2022-08-26\]*
 

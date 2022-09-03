@@ -4,10 +4,10 @@ __all__ = (
     'write_exception_async', 'write_exception_maybe_async', 'write_exception_sync'
 )
 
-import sys
+import sys, threading
 from os import get_terminal_size
 from sys import _getframe as get_frame, platform as PLATFORM
-from threading import current_thread
+from threading import current_thread, get_ident
 
 from ...utils import (
     DEFAULT_ANSI_HIGHLIGHTER, HIGHLIGHT_TOKEN_TYPES, HighlightFormatterContext, alchemy_incendiary, call, export,
@@ -311,6 +311,10 @@ def write_exception_sync(exception, before=None, after=None, file=None, *, filte
     if file is None:
         # ignore exception cases
         file = sys.stderr
+        
+        # On shutdown `sys.stderr` can be set to `None`
+        if (file is None):
+            return
     
     file.write(''.join(extend))
     file.flush()
@@ -869,3 +873,58 @@ class ExceptionWriterContextManager:
             continue
         
         return EXCEPTION_MESSAGE_TITLE_BASE + frame.f_code.co_name
+
+
+# Blackmagic
+
+def __system_exception_hook__(exception_type, exception, exception_traceback):
+    """
+    Displays the given exception. Used to replace the system default.
+
+    Parameters
+    ----------
+    exception_type : `None`, `type<BaseException>`
+        The occurred exception's type if any.
+    
+    exception : `None`, `BaseException`
+        The occurred exception if any.
+    
+    exception_traceback : `None`, `TracebackType`
+        the exception's traceback if any.
+    """
+    if (exception is not None):
+        write_exception_sync(exception)
+
+
+def __threading_exception_hook__(threading_exception_hook_parameters):
+    """
+    Displays the given exception. Used to replace threading default.
+    
+    Parameters
+    ----------
+    threading_exception_hook_parameters : `tuple`
+        Threading exception hook parameters, which are:
+        - exception_type
+        - exception
+        - exception_traceback
+        - thread
+    """
+    exception_type, exception, exception_traceback, thread = threading_exception_hook_parameters
+    if (exception is not None):
+        if thread is None:
+            thread_name = str(get_ident())
+        else:
+            thread_name = thread.name
+        
+        write_exception_sync(exception, before=f'Exception in thread: {thread_name}\n')
+
+
+@call
+def set_exception_hooks():
+    """
+    Replaces python's exception hooks.
+    """
+    attribute_name = f'{"except"}{"hook"}' # We do this, so we do not get typo error
+    
+    setattr(sys, attribute_name, __system_exception_hook__)
+    setattr(threading, attribute_name, __threading_exception_hook__)
