@@ -954,7 +954,7 @@ class DisplayState:
         if cursor_index == 0:
             line_cursor_index = 0
         else:
-            line_cursor_index = ((cursor_index - 1 ) % self.content_width) + 1
+            line_cursor_index = ((cursor_index - 1 ) % self.content_width)
         
         line_cursor_index += editor.prefix_length
         
@@ -1354,12 +1354,12 @@ class EditorAdvanced(EditorBase):
         SyntaxError
         """
         if should_auto_format:
-            if self.check_exit_conditions(old_display_state):
-                return None
-            
             new_display_state = self.checkout_indexed_input(old_display_state)
             if (new_display_state is not None):
                 return new_display_state
+            
+            if self.check_exit_conditions(old_display_state):
+                return None
         
         new_display_state = old_display_state.copy()
         buffer = new_display_state.buffer
@@ -2103,8 +2103,6 @@ class EditorAdvanced(EditorBase):
         new_display_state : `None`, ``DisplayState``
             The new display state.
         """
-        # The current line after the cursor should be empty
-        
         index = -1
         
         for line in old_display_state.buffer:

@@ -1,3 +1,11 @@
+## 1.0.37 *\[2022-09-07\]*
+
+#### Bug fixes
+
+- Editor line breaking was not working as expected. (Gilgamesh#8939)
+- Editor `in [n]` command had lower priority than compiling.
+- Edit prefix length was incorrectly calculated.
+
 ## 1.0.36 *\[2022-09-03\]*
 
 #### Improvements

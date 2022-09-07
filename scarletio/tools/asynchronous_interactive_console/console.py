@@ -395,7 +395,7 @@ class AsynchronousInteractiveConsole:
         else:
             input_id_representation_length = 1 + floor(log(input_id, 10))
         
-        return input_id_representation_length + 6
+        return input_id_representation_length + 7
     
     
     def get_prefix_continuous(self):
@@ -406,7 +406,7 @@ class AsynchronousInteractiveConsole:
         -------
         continuous_prefix : `str`
         """
-        marker_length = self.get_prefix_length() - 4
+        marker_length = self.get_prefix_length() - 5
         
         indention = ' ' * marker_length
         marker = '...'
