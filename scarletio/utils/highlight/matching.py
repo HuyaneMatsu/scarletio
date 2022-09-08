@@ -406,7 +406,7 @@ def _try_match_string(context):
                     if index == limit:
                         break
                     
-                    context.add_token(TOKEN_TYPE_LINEBREAK, None)
+                    context.add_token(TOKEN_TYPE_LINEBREAK, '\n')
                     continue
     
     else:
@@ -500,7 +500,7 @@ def _try_match_comment(context):
     else:
         content = line[index:line_break_index]
         context.add_token(TOKEN_TYPE_COMMENT, content)
-        context.add_token(TOKEN_TYPE_LINEBREAK, None)
+        context.add_token(TOKEN_TYPE_LINEBREAK, '\n')
         context.set_line_character_index(line_break_index + 1)
     
     return True
@@ -548,7 +548,7 @@ def _try_match_empty_line(context):
     if index < len(line):
         return False
     
-    context.add_token(TOKEN_TYPE_LINEBREAK, None)
+    context.add_token(TOKEN_TYPE_LINEBREAK, '\n')
     context.set_line_character_index(-1)
     return True
 
@@ -648,7 +648,7 @@ def _try_match_till_format_string_expression(context):
         if ender == '\n':
             # Multi-line string line break, need to add a linebreak.
             context.add_token(TOKEN_TYPE_STRING_UNICODE_FORMAT, content)
-            context.add_token(TOKEN_TYPE_LINEBREAK, None)
+            context.add_token(TOKEN_TYPE_LINEBREAK, '\n')
             index += len(content) + 1
             continue
         
@@ -696,7 +696,7 @@ def _try_match_linebreak(context):
     if line[index] != '\n':
         return False
     
-    context.add_token(TOKEN_TYPE_LINEBREAK, None)
+    context.add_token(TOKEN_TYPE_LINEBREAK, '\n')
     context.set_line_character_index(index + 1)
     
     return True

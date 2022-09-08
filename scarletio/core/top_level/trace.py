@@ -853,7 +853,7 @@ class ExceptionWriterContextManager:
                 return f'{EXCEPTION_MESSAGE_TITLE_BASE}{current_task.qualname}\n'
     
     
-    def _create_location_message_from_tracing():
+    def _create_location_message_from_tracing(self):
         """
         Creates location message by tracing back to the first non-local frame.
         

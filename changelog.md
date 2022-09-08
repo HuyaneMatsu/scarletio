@@ -1,3 +1,10 @@
+## 1.0.39 *\[2022-09-08\]*
+
+#### Bug fixes
+
+- `ExceptionWriterContextManager._create_location_message_from_tracing` dropped `TypeError`. (Gilgamesh#8939)
+- Highlighter could not render linebreaks after specific tokens.
+
 ## 1.0.38 *\[2022-09-08\]*
 
 #### Bug fixes
