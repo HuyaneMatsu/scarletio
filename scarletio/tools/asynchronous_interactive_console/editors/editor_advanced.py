@@ -952,9 +952,9 @@ class DisplayState:
         
         cursor_index = self.cursor_index
         if cursor_index == 0:
-            line_cursor_index = 0
+            line_cursor_index = -1
         else:
-            line_cursor_index = ((cursor_index - 1 ) % self.content_width)
+            line_cursor_index = ((cursor_index - 1) % self.content_width)
         
         line_cursor_index += editor.prefix_length
         

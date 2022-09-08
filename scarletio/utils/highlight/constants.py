@@ -85,10 +85,10 @@ OPERATORS = {
 }
 
 STRING_STARTER_RP = re.compile('(r[fb]?|[fb]r?|b|f)?(\'{3}|\"{3}|\'|\")')
-STRING_END_SINGLE_RP = re.compile('(.*?[^\\\\])\'|\'')
-STRING_END_DOUBLE_RP = re.compile('(.*?[^\\\\])\"|\'')
-STRING_MULTI_LINE_END_SINGLE_RP = re.compile('(.*?[^\\\\])\'\'\'|\'\'\'')
-STRING_MULTI_LINE_END_DOUBLE_RP = re.compile('(.*?[^\\\\])\"\"\"|\"\"\"')
+STRING_END_SINGLE_RP = re.compile('(.*?)(?<!\\\\)\'|\'')
+STRING_END_DOUBLE_RP = re.compile('(.*?)(?<!\\\\)\"|\'')
+STRING_MULTI_LINE_END_SINGLE_RP = re.compile('(.*?)(?<!\\\\)\'\'\'|\'\'\'')
+STRING_MULTI_LINE_END_DOUBLE_RP = re.compile('(.*?)(?<!\\\\)\"\"\"|\"\"\"')
 
 SPACE_MATCH_RP = re.compile('([ \t]+)')
 

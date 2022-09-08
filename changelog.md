@@ -1,3 +1,10 @@
+## 1.0.38 *\[2022-09-08\]*
+
+#### Bug fixes
+
+- The editor cursor after moving back to 0th position showed up visually at 1st.
+- 0 length string highlights were broken. (Gilgamesh#8939)
+
 ## 1.0.37 *\[2022-09-07\]*
 
 #### Bug fixes
