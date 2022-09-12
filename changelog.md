@@ -1,3 +1,12 @@
+## 1.0.40 *\[2022-09-13\]*
+
+#### Bug fixes
+
+- Highlighting returned incorrect output on line-ending back-slash characters. (Gilgamesh#8939)
+- Editor could skip new-line prefix when the line was empty. (Showed up by fixing previous bug.)
+- Highlighter built multi-line format strings with too much internal linebreaks.
+- Highlighting returned incorrect output on escaped non-closed format strings.
+
 ## 1.0.39 *\[2022-09-08\]*
 
 #### Bug fixes

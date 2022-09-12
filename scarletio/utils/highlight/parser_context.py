@@ -163,7 +163,7 @@ class HighlightParserContextBase:
         yield
     
     
-    def _add_linebreak_token(self):
+    def _end_of_line(self):
         """
         Adds a linebreak token to the context.
         """
@@ -178,23 +178,9 @@ class HighlightParserContextBase:
                 continue
             
             if (token_type == TOKEN_TYPE_SPECIAL_OPERATOR) and (token.value == '\\'):
-                last_token_is_escape = True
-                break
+                token.type = TOKEN_TYPE_LINEBREAK_ESCAPED
             
-            last_token_is_escape = False
             break
-        else:
-            last_token_is_escape = False
-        
-        if last_token_is_escape:
-            token_type = TOKEN_TYPE_LINEBREAK_ESCAPED
-            token_value = '\\'
-        else:
-            token_type = TOKEN_TYPE_LINEBREAK
-            token_value = None
-        
-        token = Token(token_type, token_value)
-        tokens.append(token)
 
 
 class HighlightParserContext(HighlightParserContextBase):
@@ -273,10 +259,7 @@ class HighlightParserContext(HighlightParserContextBase):
         else:
             line = lines[line_index]
         
-        if (line_character_index > 0) and (len(line) > line_character_index):
-            self.line_character_index = line_character_index
-        else:
-            self.line_character_index = 0
+        if (line_character_index < 0) or (len(line) <= line_character_index):
             line_index += 1
             
             if len(lines) > line_index:
@@ -286,7 +269,11 @@ class HighlightParserContext(HighlightParserContextBase):
                 self.done = True
             
             if line_character_index != -2:
-                self._add_linebreak_token()
+                self._end_of_line()
+            
+            line_character_index = 0
+        
+        self.line_character_index = line_character_index
     
     
     @copy_docs(HighlightParserContextBase.match)
@@ -298,7 +285,7 @@ class HighlightParserContext(HighlightParserContextBase):
         
         # Make sure the last token is not linebreak
         tokens = self.tokens
-        if tokens and (tokens[-1].type == TOKEN_TYPE_LINEBREAK):
+        if (len(tokens) > 2) and (tokens[-1].type == TOKEN_TYPE_LINEBREAK) and (tokens[-2].type == TOKEN_TYPE_LINEBREAK):
             del tokens[-1]
         
         # Optimize tokens with merging sames into each other if applicable
@@ -357,14 +344,14 @@ class FormatStringParserContext(HighlightParserContextBase):
         The generated tokens.
     brace_level : `int`
         The internal brace level to un-match before entering a string.
-    is_in_code : `bool`
+    in_code : `bool`
         Whether we are parsing format code.
     line : `str`
         The internal content of the format string.
     line_character_index : `int`
         The index of the character of the processed line.
     """
-    __slots__ = ('brace_level', 'is_in_code', 'line', 'line_character_index', )
+    __slots__ = ('brace_level', 'in_code', 'line', 'line_character_index', )
     
     def __new__(cls, line):
         """
@@ -387,7 +374,7 @@ class FormatStringParserContext(HighlightParserContextBase):
         self.tokens = []
         self.line_character_index = 0
         self.brace_level = 0
-        self.is_in_code = False
+        self.in_code = False
         
         return self
     
@@ -406,28 +393,27 @@ class FormatStringParserContext(HighlightParserContextBase):
     def set_line_character_index(self, line_character_index):
         line = self.line
         
-        if (line_character_index > 0) and (len(line) > line_character_index):
-            self.line_character_index = line_character_index
-        else:
-            self.line_character_index = 0
+        if (line_character_index < 0) or (len(line) <= line_character_index):
+            line_character_index = 0
             self.done = True
+        
+        self.line_character_index = line_character_index
     
     
     @copy_docs(HighlightParserContextBase.add_token)
     def add_token(self, token_type, token_value):
         if token_type == TOKEN_TYPE_LINEBREAK:
-            self._add_linebreak_token()
-            return
+            self._end_of_line()
         
         # Check braces and such ~ Nya!
-        if token_type == TOKEN_TYPE_STRING_UNICODE_FORMAT:
-            if self.is_in_code:
+        elif token_type == TOKEN_TYPE_STRING_UNICODE_FORMAT:
+            if self.in_code:
                 token_type = TOKEN_TYPE_STRING_UNICODE_FORMAT_CODE
         
         elif token_type == TOKEN_TYPE_SPECIAL_PUNCTUATION and (token_value is not None):
             brace_level = self.brace_level
             if token_value == '{':
-                if brace_level == self.is_in_code:
+                if brace_level == self.in_code:
                     token_type = TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK
                 
                 brace_level += 1
@@ -438,18 +424,18 @@ class FormatStringParserContext(HighlightParserContextBase):
                     # Random `}`- may be added as well, so if we are outside of f string internal, leave it alone.
                     token_type = TOKEN_TYPE_STRING_UNICODE_FORMAT
                 else:
-                    is_in_code = self.is_in_code
-                    if brace_level <= is_in_code + 1:
+                    in_code = self.in_code
+                    if brace_level <= in_code + 1:
                         token_type = TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK
-                        if (brace_level == 1) and is_in_code:
-                            self.is_in_code = False
+                        if (brace_level == 1) and in_code:
+                            self.in_code = False
                     
                     brace_level -= 1
                     self.brace_level = brace_level
             
             elif token_value == ':':
-                if (self.brace_level == 1) and (not self.is_in_code):
-                    self.is_in_code = True
+                if (self.brace_level == 1) and (not self.in_code):
+                    self.in_code = True
                     token_type = TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK
         
         HighlightParserContextBase.add_token(self, token_type, token_value)
@@ -461,7 +447,7 @@ class FormatStringParserContext(HighlightParserContextBase):
             if self.done:
                 break
             
-            if (self.brace_level == self.is_in_code):
+            if (self.brace_level == self.in_code):
                 _try_match_till_format_string_expression(self)
             else:
                 while True:
@@ -474,5 +460,5 @@ class FormatStringParserContext(HighlightParserContextBase):
                         break
                     
                     # Need goto!
-                    if self.brace_level == self.is_in_code:
+                    if self.brace_level == self.in_code:
                         break

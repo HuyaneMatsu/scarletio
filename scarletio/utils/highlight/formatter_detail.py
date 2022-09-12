@@ -101,7 +101,7 @@ def formatter_html(html_class, token):
         if (html_class is not None):
             yield '</span>'
     
-    if (token_type == TOKEN_TYPE_LINEBREAK) or (token_type == TOKEN_TYPE_LINEBREAK_ESCAPED):
+    if (token_type == TOKEN_TYPE_LINEBREAK):
         yield '<br>'
 
 

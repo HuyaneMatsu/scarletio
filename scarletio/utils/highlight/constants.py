@@ -92,7 +92,7 @@ STRING_MULTI_LINE_END_DOUBLE_RP = re.compile('(.*?)(?<!\\\\)\"\"\"|\"\"\"')
 
 SPACE_MATCH_RP = re.compile('([ \t]+)')
 
-FORMAT_STRING_MATCH_STRING = re.compile('(.*?)(\{\{|\{|\n|\}\}|\})')
+FORMAT_STRING_MATCH_STRING = re.compile('(.*?)(\{\{?|\}\}?|\n)')
 
 CONSOLE_PREFIX_RP = re.compile('(>>>>?|\.\.\.\.?| *\.\.\.\:|In \[\d+\]\:)( [ \t]*)')
 

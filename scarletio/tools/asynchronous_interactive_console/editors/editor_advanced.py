@@ -996,7 +996,6 @@ class DisplayState:
         is_new_line = True
         leftover_line_length = content_width
         
-        
         for part in iter_highlighted_buffer_parts(buffer, DEFAULT_ANSI_HIGHLIGHTER):
             
             if part.endswith('\n'):
@@ -1051,6 +1050,8 @@ class DisplayState:
                 
                 is_new_line = True
                 write_to_io(output_stream, COMMAND_NEXT_LINE)
+                write_to_io(output_stream, COMMAND_START_LINE)
+                write_to_io(output_stream, prefix_continuous)
                 continue
             
             continue

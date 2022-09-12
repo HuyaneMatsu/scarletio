@@ -388,7 +388,7 @@ def _try_match_string(context):
         
         # Add content
         if token_type == TOKEN_TYPE_STRING_UNICODE_FORMAT:
-            content = '\n'.join(content_parts)
+            content = ''.join(content_parts)
             format_string_context = FormatStringParserContext(content)
             format_string_context.match()
             context.add_tokens(format_string_context.tokens)
@@ -586,96 +586,6 @@ def _try_match_console_prefix(context):
     return True
 
 
-PYTHON_PARSERS = (
-    _try_match_empty_line,
-    _try_match_console_prefix,
-    _try_match_space,
-    _try_match_comment,
-    _try_match_string,
-    _try_match_complex,
-    _try_match_float,
-    _try_match_integer_hexadecimal,
-    _try_match_integer_decimal,
-    _try_match_integer_octal,
-    _try_match_integer_binary,
-    _try_match_identifier,
-    _try_match_punctuation,
-    _try_match_operator,
-    _try_match_anything,
-)
-
-
-def _try_match_till_format_string_expression(context):
-    """
-    Tries to match a format string's internal content, till reaches the first code part.
-    
-    Parameters
-    ----------
-    context : ``FormatStringParserContext``
-        The context to use.
-    
-    Returns
-    -------
-    success : `bool`
-        Whether anything was matched.
-        
-        Always returns `True`.
-    """
-    line = context.get_line()
-    line_length = len(line)
-    start_index = index = context.get_line_character_index()
-    
-    while True:
-        if index > line_length:
-            break
-        
-        matched = FORMAT_STRING_MATCH_STRING.match(line, index)
-        if matched is None:
-            # We are at the end, we done, yay.
-            content = line[start_index:]
-            context.add_token(TOKEN_TYPE_STRING_UNICODE_FORMAT, content)
-            context.set_line_character_index(-1)
-            break
-        
-        content, ender = matched.groups()
-        if ender == '{{':
-            # Escaped `{`
-            context.add_token(TOKEN_TYPE_STRING_UNICODE_FORMAT, content)
-            context.add_token(TOKEN_TYPE_STRING_UNICODE_FORMAT, ender)
-            index += len(content) + 2
-            continue
-        
-        if ender == '\n':
-            # Multi-line string line break, need to add a linebreak.
-            context.add_token(TOKEN_TYPE_STRING_UNICODE_FORMAT, content)
-            context.add_token(TOKEN_TYPE_LINEBREAK, '\n')
-            index += len(content) + 1
-            continue
-        
-        if ender == '{':
-            context.add_token(TOKEN_TYPE_STRING_UNICODE_FORMAT, content)
-            context.add_token(TOKEN_TYPE_SPECIAL_PUNCTUATION, ender)
-            index += len(content) + 1
-            context.set_line_character_index(index)
-            break
-        
-        if ender == '}}':
-            context.add_token(TOKEN_TYPE_STRING_UNICODE_FORMAT, content)
-            context.add_token(TOKEN_TYPE_STRING_UNICODE_FORMAT, ender)
-            index += len(content) + 2
-            context.set_line_character_index(index)
-            continue
-        
-        if ender == '}':
-            context.add_token(TOKEN_TYPE_STRING_UNICODE_FORMAT, content)
-            context.add_token(TOKEN_TYPE_SPECIAL_PUNCTUATION, ender)
-            index += len(content) + 1
-            context.set_line_character_index(index)
-            break
-    
-    return True
-
-
 def _try_match_linebreak(context):
     """
     Tries to match a linebreak.
@@ -702,6 +612,80 @@ def _try_match_linebreak(context):
     return True
 
 
+PYTHON_PARSERS = (
+    _try_match_empty_line,
+    _try_match_console_prefix,
+    _try_match_space,
+    _try_match_comment,
+    _try_match_string,
+    _try_match_complex,
+    _try_match_float,
+    _try_match_integer_hexadecimal,
+    _try_match_integer_decimal,
+    _try_match_integer_octal,
+    _try_match_integer_binary,
+    _try_match_identifier,
+    _try_match_punctuation,
+    _try_match_operator,
+    _try_match_linebreak,
+    _try_match_anything,
+)
+
+
+def _try_match_till_format_string_expression(context):
+    """
+    Tries to match a format string's internal content, till reaches the first code part.
+    
+    Parameters
+    ----------
+    context : ``FormatStringParserContext``
+        The context to use.
+    
+    Returns
+    -------
+    success : `bool`
+        Whether anything was matched.
+        
+        Always returns `True`.
+    """
+    line = context.get_line()
+    line_length = len(line)
+    index = context.get_line_character_index()
+    
+    while True:
+        if index >= line_length:
+            break
+        
+        matched = FORMAT_STRING_MATCH_STRING.match(line, index)
+        if matched is None:
+            # We are at the end, we done, yay.
+            content = line[index:]
+            context.add_token(TOKEN_TYPE_STRING_UNICODE_FORMAT, content)
+            index = -1
+            break
+        
+        content, ender = matched.groups()
+        index += len(content) + len(ender)
+        context.add_token(TOKEN_TYPE_STRING_UNICODE_FORMAT, content)
+        
+        if (ender == '{{') or (ender == '}}'):
+            # Escaped `{` or '}'
+            context.add_token(TOKEN_TYPE_STRING_UNICODE_FORMAT, ender)
+            continue
+        
+        if ender == '\n':
+            # Multi-line string line break, need to add a linebreak.
+            context.add_token(TOKEN_TYPE_LINEBREAK, '\n')
+            continue
+        
+        if (ender == '{') or (ender == '}'):
+            context.add_token(TOKEN_TYPE_SPECIAL_PUNCTUATION, ender)
+            break
+    
+    context.set_line_character_index(index)
+    return True
+
+
 def _try_match_format_string_postfix(context):
     """
     Tries to match format string postfix.
@@ -716,7 +700,7 @@ def _try_match_format_string_postfix(context):
     success : `bool`
         Whether postfix was matched.
     """
-    if context.is_in_code:
+    if context.in_code:
         return False
     
     if context.brace_level != 1:
