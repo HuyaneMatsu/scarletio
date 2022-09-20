@@ -211,6 +211,8 @@ class HighlightParserContext(HighlightParserContextBase):
         lines : `list` of `str`
             The lines what the highlight context should match.
         """
+        lines = [line for line in lines if line]
+        
         if len(lines) == 0:
             done = True
         else:
@@ -262,10 +264,8 @@ class HighlightParserContext(HighlightParserContextBase):
         if (line_character_index < 0) or (len(line) <= line_character_index):
             line_index += 1
             
-            if len(lines) > line_index:
-                self.line_index = line_index
-            else:
-                self.line_index = line_index
+            self.line_index = line_index
+            if len(lines) <= line_index:
                 self.done = True
             
             if line_character_index != -2:
@@ -283,11 +283,7 @@ class HighlightParserContext(HighlightParserContextBase):
                 if parser(self):
                     break
         
-        # Make sure the last token is not linebreak
         tokens = self.tokens
-        if (len(tokens) > 2) and (tokens[-1].type == TOKEN_TYPE_LINEBREAK) and (tokens[-2].type == TOKEN_TYPE_LINEBREAK):
-            del tokens[-1]
-        
         # Optimize tokens with merging sames into each other if applicable
         same_count = 0
         last_type = TOKEN_TYPE_ALL

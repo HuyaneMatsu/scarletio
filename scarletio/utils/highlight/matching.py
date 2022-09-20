@@ -545,7 +545,7 @@ def _try_match_empty_line(context):
     line = context.get_line()
     index = context.get_line_character_index()
     
-    if index < len(line):
+    if index or line:
         return False
     
     context.add_token(TOKEN_TYPE_LINEBREAK, '\n')

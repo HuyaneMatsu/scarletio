@@ -1,3 +1,8 @@
+## 1.0.41 *\[2022-09-13\]*
+
+#### Bug fixes
+- Highlighter now removes empty strings from "lines". Keeping them could cause incorrect line break amount.
+
 ## 1.0.40 *\[2022-09-13\]*
 
 #### Bug fixes
