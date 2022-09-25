@@ -1,3 +1,11 @@
+## 1.0.42 *\[2022-09-??\]*
+
+#### Bug fixes
+
+- Fix: When long data is read by the editor to redirect, it is chunked to multiple parts. If the chunk is at the
+    middle of a line, it will break the output.
+- Fix a case when editor redirection failed at partially duped unicodes.
+
 ## 1.0.41 *\[2022-09-21\]*
 
 #### Bug fixes

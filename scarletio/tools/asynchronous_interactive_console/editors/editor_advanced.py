@@ -1180,6 +1180,71 @@ def write_to_io(io, content):
     io.write(content)
 
 
+
+def try_decode(data):
+    """
+    Tries to decode the given bytes data. On decode error changes decode error handling for that specific part.
+    
+    Parameters
+    ----------
+    data : `bytes`
+        The data to decode.
+    
+    Returns
+    -------
+    content : `str`
+        The decoded content.
+    data_continuous : `None`, `bytes`
+        Undecodable data at the end.
+    """
+    content_chunk_parts = None
+    data_continuous = None
+    content = ''
+    
+    while True:
+        try:
+            content = data.decode()
+        except UnicodeDecodeError as err:
+            
+            end = err.end
+            start = err.start
+            length = len(data)
+            
+            if end == length:
+                if start > 0:
+                    content = data[:start].decode()
+                    
+                    if (content_chunk_parts is not None):
+                        content_chunk_parts.append(content)
+                
+                data_continuous = data[start:]
+                break
+            
+            if content_chunk_parts is None:
+                content_chunk_parts = []
+            
+            if start > 0:
+                content_chunk_parts.append(data[:start].decode())
+            
+            content_chunk_parts.append(data[start:end].decode(errors = 'backslashreplace'))
+            data = data[end:]
+            continue
+        
+        else:
+            if (content_chunk_parts is not None):
+                content_chunk_parts.append(content)
+            break
+    
+    
+    if content_chunk_parts is None:
+        content = content
+    
+    else:
+        content = ''.join(content_chunk_parts)
+    
+    return content, data_continuous
+
+
 class EditorAdvanced(EditorBase):
     """
     A simple repl command editor.
@@ -1188,6 +1253,10 @@ class EditorAdvanced(EditorBase):
     ----------
     alive : `str`
         Whether the input loop is alive.
+    async_output_content_continuous : `None`, `str`
+        Async content to write. Set if the last async content chunk did not end with linebreak.
+    async_output_data_continuous : `None`, `bytes`
+        Async content to write. Set if the end of content is not decodable.
     async_output_written : `bool`
         Whether async output was already written.
     compiled_code : `None`, ``CodeType``
@@ -1224,9 +1293,10 @@ class EditorAdvanced(EditorBase):
         Selector used to poll from `stdin`, `stdout` and `stderr`.
     """
     __slots__ = (
-        'alive', 'async_output_written', 'display_state', 'file_name', 'highlighter', 'history', 'input_stream',
-        'input_stream_blocking_original', 'input_stream_settings_original', 'modified', 'output_proxy_read_socket',
-        'output_proxy_write_socket', 'output_stream', 'selector'
+        'alive', 'async_output_content_continuous', 'async_output_data_continuous', 'async_output_written',
+        'display_state', 'file_name', 'highlighter', 'history', 'input_stream', 'input_stream_blocking_original',
+        'input_stream_settings_original', 'modified', 'output_proxy_read_socket', 'output_proxy_write_socket',
+        'output_stream', 'selector'
     )
     
     @copy_docs(EditorBase.__new__)
@@ -1249,6 +1319,8 @@ class EditorAdvanced(EditorBase):
         )
         
         self.alive = False
+        self.async_output_content_continuous = None
+        self.async_output_data_continuous = None
         self.async_output_written = False
         self.display_state = display_state
         self.history = history
@@ -1290,6 +1362,7 @@ class EditorAdvanced(EditorBase):
         
         finally:
             self.alive = False
+            self._maybe_display_continuous_content()
             self.display_state.jump_to_end(self)
             write_to_io(self.output_stream, '\n')
             write_to_io(self.output_stream, COMMAND_START_LINE)
@@ -1794,7 +1867,7 @@ class EditorAdvanced(EditorBase):
                         pass
                     else:
                         if data:
-                            self._display_async_content(data.decode())
+                            self._process_async_content(data)
                         
                         data = None
                     
@@ -1960,9 +2033,66 @@ class EditorAdvanced(EditorBase):
         self.output_stream.flush()
     
     
+    def _process_async_content(self, data):
+        """
+        Processes the given async content and decides whether it should be flushed before the editor's input.
+        
+        Parameters
+        ----------
+        content : `bytes`
+            Raw content to write.
+        """
+        async_output_data_continuous = self.async_output_data_continuous
+        if (async_output_data_continuous is not None):
+            data = async_output_data_continuous + data
+            self.async_output_data_continuous = None
+        
+        content, self.async_output_data_continuous = try_decode(data)
+        
+        async_output_content_continuous = self.async_output_content_continuous
+        if (async_output_content_continuous is not None):
+            content = async_output_content_continuous + content
+            self.async_output_content_continuous = None
+        
+        if not content.endswith('\n'):
+            line_break_index = content.rfind('\n')
+            if line_break_index == -1:
+                self.async_output_content_continuous = content
+                return
+            
+            line_break_index += 1
+            self.async_output_content_continuous = content[line_break_index:]
+            content = content[:line_break_index]
+        
+        if content:
+            self._display_async_content(content)
+    
+    
+    def _maybe_display_continuous_content(self):
+        """
+        If there is async content to display, displays it.
+        """
+        content = None
+        
+        async_output_data_continuous = self.async_output_data_continuous
+        if (async_output_data_continuous is not None):
+            content = async_output_data_continuous.decode(errors = 'backslashreplace')
+            self.async_output_data_continuous = None
+        
+        async_output_content_continuous = self.async_output_content_continuous
+        if (async_output_content_continuous is not None):
+            if content is None:
+                content = async_output_content_continuous
+            else:
+                content = async_output_content_continuous + content
+        
+        if (content is not None):
+            self._display_async_content(content)
+    
+    
     def _display_async_content(self, content):
         """
-        Writes the given data before the editor.
+        Writes the given content before the editor's input.
         
         Parameters
         ----------
