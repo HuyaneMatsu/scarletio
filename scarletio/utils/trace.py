@@ -9,6 +9,7 @@ from types import (
     TracebackType
 )
 
+from .cause_group import CauseGroup
 from .docs import copy_docs
 from .highlight import HIGHLIGHT_TOKEN_TYPES, iter_highlight_code_lines
 from .highlight.token import Token
@@ -2096,6 +2097,12 @@ def _get_exception_frames(exception):
     return frames
 
 
+REASON_TYPE_NONE = 0
+REASON_TYPE_CAUSE = 1
+REASON_TYPE_CONTEXT = 2
+REASON_TYPE_CAUSE_GROUP = 3
+
+
 def render_exception_into(exception, extend=None, *, filter=None, highlighter=None):
     """
     Renders the given exception's frames into a list of strings.
@@ -2137,62 +2144,88 @@ def render_exception_into(exception, extend=None, *, filter=None, highlighter=No
         extend = []
     
     exceptions = []
-    reason_type = 0
+    reason_type = REASON_TYPE_NONE
     while True:
         exceptions.append((exception, reason_type))
+        
         cause_exception = exception.__cause__
         if (cause_exception is not None):
             exception = cause_exception
-            reason_type = 1
+            if isinstance(exception, CauseGroup):
+                reason_type = REASON_TYPE_CAUSE_GROUP
+            else:
+                reason_type = REASON_TYPE_CAUSE
             continue
         
         context_exception = exception.__context__
         if (context_exception is not None):
             exception = context_exception
-            reason_type = 2
+            reason_type = REASON_TYPE_CONTEXT
             continue
         
         # no other cases
         break
     
+    
     for exception, reason_type in reversed(exceptions):
-        extend = _add_trace_title_into('Traceback (most recent call last):', extend, highlighter)
-        frames = _get_exception_frames(exception)
-        extend.append('\n')
-        extend = render_frames_into(frames, extend, filter=filter, highlighter=highlighter)
-        
-        if is_syntax_error(exception):
-            extend = _render_syntax_error_representation_into(exception, extend, highlighter)
-        else:
-            extend = _add_typed_part_into(
-                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
-                get_exception_representation(exception),
+        if reason_type == REASON_TYPE_CAUSE_GROUP:
+            extend = _add_trace_title_into(
+                f'The following {len(exceptions)} exceptions where the reason of the exception following them:',
                 extend,
                 highlighter,
             )
+            extend.append('\n\n')
+            
+            for index, cause in enumerate(exception, 1):
+                extend = _add_trace_title_into(f'[Exception {index}] ', extend, highlighter)
+                extend = render_exception_into(cause, extend = extend, filter = filter, highlighter = highlighter)
+                
+                if index != len(exception):
+                    extend.append('\n')
+        
+        else:
+            extend = _add_trace_title_into('Traceback (most recent call last):', extend, highlighter)
+            extend.append('\n')
+            
+            extend = render_frames_into(
+                _get_exception_frames(exception),
+                extend,
+                filter = filter,
+                highlighter = highlighter,
+            )
+            
+            if is_syntax_error(exception):
+                extend = _render_syntax_error_representation_into(exception, extend, highlighter)
+            else:
+                extend = _add_typed_part_into(
+                    HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
+                    get_exception_representation(exception),
+                    extend,
+                    highlighter,
+                )
+            
+            extend.append('\n')
+            
+            if reason_type == REASON_TYPE_NONE:
+                break
+        
+        if reason_type == REASON_TYPE_CAUSE:
+            title = 'The above exception was the direct cause of the following exception:'
+        
+        elif reason_type == REASON_TYPE_CONTEXT:
+            title = 'During handling of the above exception, another exception occurred:'
+        
+        elif reason_type == REASON_TYPE_CAUSE_GROUP:
+            title = f'The above {len(exception)} exception was the direct cause of the following exception:'
+        
+        else:
+            title = None
         
         extend.append('\n')
         
-        if reason_type == 0:
-            break
-        
-        if reason_type == 1:
-            extend.append('\n')
-            extend = _add_trace_title_into(
-                'The above exception was the direct cause of the following exception:', extend, highlighter
-            )
+        if (title is not None):
+            extend = _add_trace_title_into(title, extend, highlighter)
             extend.append('\n\n')
-            continue
-        
-        if reason_type == 2:
-            extend.append('\n')
-            extend = _add_trace_title_into(
-                'During handling of the above exception, another exception occurred:', extend, highlighter
-            )
-            extend.append('\n\n')
-            continue
-        
-        # no more cases
         continue
     
     return extend

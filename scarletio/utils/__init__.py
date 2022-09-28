@@ -3,6 +3,7 @@ from .highlight import *
 from .analyzer import *
 from .async_utils import *
 from .base_method import *
+from .cause_group import *
 from .code import *
 from .compact import *
 from .compound_type import *
@@ -40,6 +41,7 @@ __all__ = (
     *analyzer.__all__,
     *async_utils.__all__,
     *base_method.__all__,
+    *cause_group.__all__,
     *code.__all__,
     *compact.__all__,
     *compound_type.__all__,
