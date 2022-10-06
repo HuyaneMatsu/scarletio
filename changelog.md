@@ -1,3 +1,9 @@
+## 1.0.43 *\[2022-10-??\]*
+
+#### Bug fixes
+
+- Html highlighter formatter will now prefer linebreak token conversion over other tokens.
+
 ## 1.0.42 *\[2022-09-28\]*
 
 - Add `CauseGroup`.

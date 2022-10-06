@@ -88,21 +88,23 @@ def formatter_html(html_class, token):
     content : `str`
     """
     token_type = token.type
-    
-    token_value = token.value
-    if (token_value is not None):
-        if (html_class is not None):
-            yield '<span class="'
-            yield html_class
-            yield '">'
-        
-        yield html_escape(token_value)
-        
-        if (html_class is not None):
-            yield '</span>'
-    
     if (token_type == TOKEN_TYPE_LINEBREAK):
         yield '<br>'
+        return
+    
+    token_value = token.value
+    if (token_value is None):
+        return
+    
+    if (html_class is not None):
+        yield '<span class="'
+        yield html_class
+        yield '">'
+    
+    yield html_escape(token_value)
+    
+    if (html_class is not None):
+        yield '</span>'
 
 
 def formatter_ansi_code(format_and_reset_code, token):

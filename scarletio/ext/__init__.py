@@ -20,6 +20,7 @@ def register_library_extension(extension_name):
     if extension_name in LOADED_EXTENSIONS:
         warnings.warn(
             f'A library extension with name {extension_name!r} is already loaded.',
+            RuntimeWarning,
             stacklevel = 2,
         )
         return
