@@ -1176,7 +1176,7 @@ def write_to_io(io, content):
             raise RuntimeError(
                 f'The io did not became writable within timeout ({STDOUT_WRITE_TIMEOUT}).'
             )
-        
+    
     io.write(content)
 
 

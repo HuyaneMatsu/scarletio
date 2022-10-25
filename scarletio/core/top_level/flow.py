@@ -2,10 +2,16 @@ __all__ = ('run', 'run_coroutine')
 
 from threading import current_thread
 
+from ...utils import ignore_frame
+
 from ..event_loop import EventThread
 from ..traps import Task
 
 from .event_loop import _get_event_loop_is_current_thread, _try_detect_event_loop
+
+
+ignore_frame(__spec__.origin, 'run_coroutine', 'return task.async_wrap(thread)',)
+ignore_frame(__spec__.origin, 'run_coroutine', 'return task.sync_wrap().wait()',)
 
 
 def run(awaitable, timeout=None):

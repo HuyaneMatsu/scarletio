@@ -17,6 +17,8 @@ write_exception_maybe_async = include('write_exception_maybe_async')
 
 ignore_frame(__spec__.origin, 'get_result', 'raise exception',)
 ignore_frame(__spec__.origin, '__iter__', 'yield self',)
+ignore_frame(__spec__.origin, '__iter__', 'return self.get_result()',)
+
 
 FUTURE_STATE_PENDING = 0
 FUTURE_STATE_CANCELLED = 1

@@ -2170,7 +2170,7 @@ def render_exception_into(exception, extend=None, *, filter=None, highlighter=No
     for exception, reason_type in reversed(exceptions):
         if reason_type == REASON_TYPE_CAUSE_GROUP:
             extend = _add_trace_title_into(
-                f'The following {len(exceptions)} exceptions where the reason of the exception following them:',
+                f'The following {len(exception)} exceptions where the reason of the exception following them:',
                 extend,
                 highlighter,
             )
