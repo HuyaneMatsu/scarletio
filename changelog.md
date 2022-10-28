@@ -1,3 +1,9 @@
+## 1.0.43 *\[2022-1?-??\]*
+
+#### Improvements
+
+- Add `include_with_callback`.
+
 ## 1.0.43 *\[2022-10-25\]*
 
 #### Bug fixes
