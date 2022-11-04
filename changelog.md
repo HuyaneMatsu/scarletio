@@ -1,8 +1,9 @@
-## 1.0.43 *\[2022-1?-??\]*
+## 1.0.44 *\[2022-11-??\]*
 
 #### Improvements
 
 - Add `include_with_callback`.
+- Add `RichAttributeErrorBaseType` now handles the case correctly when the object indeed has the attribute.
 
 ## 1.0.43 *\[2022-10-25\]*
 
