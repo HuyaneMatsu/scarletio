@@ -1261,13 +1261,13 @@ class AbortRequest(BaseException):
     reason : `None`, `str`
         Abortion reason to send.
     """
-    def __init__(self, response_code, reason=None):
+    def __init__(self, response_code, reason = None):
         
         self.response_code = response_code
         self.reason = reason
         BaseException.__init__(self)
 
-def abort(response_code, reason=None):
+def abort(response_code, reason = None):
     """
     Aborts the request when.
     
@@ -3471,7 +3471,7 @@ class Blueprint(AppBase):
     __slots__ = ('url_prefix', 'subdomain', 'parameters')
     
     def __new__(cls, import_name, *, template_directory=None, root_path=None, static_directory=None,
-            static_url_path=None, url_prefix=None, subdomain=None, url_defaults=None):
+            static_url_path=None, url_prefix = None, subdomain=None, url_defaults=None):
         """
         Creates a new ``Blueprint``.
         

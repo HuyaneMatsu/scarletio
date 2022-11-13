@@ -141,7 +141,7 @@ class ReadProtocolBase(AbstractProtocolBase):
     
     
     @copy_docs(AbstractProtocolBase.get_extra_info)
-    def get_extra_info(self, name, default=None):
+    def get_extra_info(self, name, default = None):
         transport = self._transport
         if transport is None:
             info = default
@@ -1011,7 +1011,7 @@ class DatagramAddressedReadProtocol(AbstractProtocolBase):
         pass
     
     
-    async def wait_for_receive(self, address=None, timeout=None):
+    async def wait_for_receive(self, address=None, timeout = None):
         """
         Can be used to wait for payload to receive. Note, that this method should be used only initially, because the
         reader protocols implement the reading.

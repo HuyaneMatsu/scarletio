@@ -83,15 +83,15 @@ class Parameter:
         
         repr_parts.append(PARAMETER_TYPE_NAMES[self.positionality])
         
-        repr_parts.append(', name=')
+        repr_parts.append(', name = ')
         repr_parts.append(repr(self.name))
         
         if self.has_default:
-            repr_parts.append(', default=')
+            repr_parts.append(', default = ')
             repr_parts.append(repr(self.default))
         
         if self.has_annotation:
-            repr_parts.append(', annotation=')
+            repr_parts.append(', annotation = ')
             repr_parts.append(repr(self.annotation))
         
         repr_parts.append('>')

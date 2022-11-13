@@ -7,7 +7,7 @@ class AbstractTransportLayerBase:
     __slots__ = ()
     
     
-    def get_extra_info(self, name, default=None):
+    def get_extra_info(self, name, default = None):
         """
         Gets optional transport information.
         
@@ -317,7 +317,7 @@ class AbstractProtocolBase:
         pass
     
     
-    def get_extra_info(self, name, default=None):
+    def get_extra_info(self, name, default = None):
         """
         Gets optional transport information.
         

@@ -43,12 +43,12 @@ class HttpProcessingError(Exception):
     headers : `None`, ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Respective headers.
     """
-    def __init__(self, message='', code=0, headers=None):
+    def __init__(self, message = '', code=0, headers=None):
         self.code = code
         self.headers = headers
         self.message = message
         
-        Exception.__init__(self, f'HTTP {code}, message={message!r}, headers={headers!r}')
+        Exception.__init__(self, f'HTTP {code}, message = {message!r}, headers = {headers!r}')
 
 
 class AbortHandshake(HttpProcessingError, InvalidHandshake):
@@ -68,14 +68,14 @@ class AbortHandshake(HttpProcessingError, InvalidHandshake):
     request : ``RawRequestMessage``
         Received raw http request.
     """
-    def __init__(self, message='', code=0, headers=None, *, response=None, request=None):
+    def __init__(self, message = '', code=0, headers=None, *, response=None, request=None):
         self.response = response
         self.message = message
         self.request = request
         self.code = code
         self.headers = headers
         
-        Exception.__init__(self, f'HTTP {code}, message={message!r}, headers={headers!r}')
+        Exception.__init__(self, f'HTTP {code}, message = {message!r}, headers={headers!r}')
 
 
 class ProxyError(HttpProcessingError):
@@ -121,7 +121,7 @@ class ContentEncodingError(HttpProcessingError, PayloadError):
     headers : `None`, ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Respective headers.
     """
-    def __init__(self, message='Bad Request', headers=None):
+    def __init__(self, message = 'Bad Request', headers=None):
         HttpProcessingError.__init__(self, message, 400, headers)
 
 
@@ -188,7 +188,7 @@ class ConnectionClosed(Exception):
         Web socket close reason if any.
     """
     
-    def __init__(self, code, exception, reason=None):
+    def __init__(self, code, exception, reason = None):
         """
         Creates a new ``ConnectionClosed`` exception from the given parameters.
         
@@ -223,7 +223,7 @@ class ConnectionClosed(Exception):
     
     def __repr__(self):
         """Returns the exception's representation."""
-        return f'<{self.__class__.__name__}, code={self.code!r}, reason={self.reason!r}, exception={self.exception!r}>'
+        return f'<{self.__class__.__name__}, code={self.code!r}, reason = {self.reason!r}, exception={self.exception!r}>'
     
     __str__ = __repr__
 

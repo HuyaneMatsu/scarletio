@@ -70,7 +70,7 @@ def _produce_banner(package, logo):
             yield '\n', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE
             
             
-            logo_length = max((len(line) for line in logo.splitlines()), default=0)
+            logo_length = max((len(line) for line in logo.splitlines()), default = 0)
             package_version = package.__version__
             package_version_length = len(package_version)
             

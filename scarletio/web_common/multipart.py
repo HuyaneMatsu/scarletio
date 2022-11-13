@@ -945,7 +945,7 @@ def parse_content_disposition(header):
     return disposition_type.lower(), parameters
 
 
-def get_content_disposition_filename(parameters, name='filename'):
+def get_content_disposition_filename(parameters, name = 'filename'):
     """
     Gets the file's name from content disposition parameters.
     

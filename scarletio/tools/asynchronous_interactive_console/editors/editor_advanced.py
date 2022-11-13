@@ -22,6 +22,8 @@ KEY_ARROW_UP = 65
 KEY_ARROW_DOWN = 66
 KEY_ARROW_RIGHT = 67
 KEY_ARROW_LEFT = 68
+KEY_ARROW_END = 70
+KEY_ARROW_HOME = 72
 KEY_ARROW_BACK_TAB = 90
 KEY_DELETE_LEFT = 127
 KEY_DELETE_RIGHT = 126
@@ -1506,6 +1508,32 @@ class EditorAdvanced(EditorBase):
         return new_display_state
     
     
+    def execute_arrow_home(self, old_display_state):
+        """
+        Executes a `home` key press.
+        
+        Parameters
+        ----------
+        old_display_state : ``DisplayState``
+            The old display state to work from.
+        
+        Returns
+        -------
+        new_display_state : `None`, ``DisplayState``
+            The new display state.
+        """
+        new_display_state = old_display_state.copy()
+        cursor_index = new_display_state.cursor_index
+        
+        if (cursor_index == 0):
+            return 0
+        
+        cursor_index = 0
+        
+        new_display_state.cursor_index = cursor_index
+        return new_display_state
+        
+    
     def execute_arrow_right(self, old_display_state):
         """
         Executes an arrow-right key press.
@@ -1537,7 +1565,35 @@ class EditorAdvanced(EditorBase):
         
         new_display_state.cursor_index = cursor_index
         new_display_state.cursor_line_index = cursor_line_index
+        return new_display_state
+    
+    
+    def execute_arrow_end(self, old_display_state):
+        """
+        Executes an `end` key press.
         
+        Parameters
+        ----------
+        old_display_state : ``DisplayState``
+            The old display state to work from.
+        
+        Returns
+        -------
+        new_display_state : `None`, ``DisplayState``
+            The new display state.
+        """
+        new_display_state = old_display_state.copy()
+        buffer = new_display_state.buffer
+        cursor_index = new_display_state.cursor_index
+        cursor_line_index = new_display_state.cursor_line_index
+        
+        line_length = len(buffer[cursor_line_index])
+        if cursor_index == line_length:
+            return None
+        
+        cursor_index = line_length
+        
+        new_display_state.cursor_index = cursor_index
         return new_display_state
     
     
@@ -1632,7 +1688,7 @@ class EditorAdvanced(EditorBase):
         return new_display_state
     
     
-    def execute_back_tab(self, old_display_state):
+    def execute_arrow_back_tab(self, old_display_state):
         """
         Executes a back-tab key press (shift + tab).
         
@@ -1981,8 +2037,14 @@ class EditorAdvanced(EditorBase):
             if next_2_int == KEY_ARROW_DOWN:
                 return self.execute_arrow_down(old_display_state, should_auto_format)
             
+            if next_2_int == KEY_ARROW_END:
+                return self.execute_arrow_end(old_display_state)
+            
+            if next_2_int == KEY_ARROW_HOME:
+                return self.execute_arrow_home(old_display_state)
+            
             if next_2_int == KEY_ARROW_BACK_TAB:
-                return self.execute_back_tab(old_display_state)
+                return self.execute_arrow_back_tab(old_display_state)
             
             return None
         

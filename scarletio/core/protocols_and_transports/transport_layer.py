@@ -61,11 +61,11 @@ class TransportLayerBase(AbstractTransportLayerBase):
         return self
     
     @copy_docs(AbstractTransportLayerBase.get_extra_info)
-    def get_extra_info(self, name, default=None):
+    def get_extra_info(self, name, default = None):
         return get_extra_info(self._extra, name, default)
     
     
-    def _fatal_error(self, exception, message='Fatal error on transport layer'):
+    def _fatal_error(self, exception, message = 'Fatal error on transport layer'):
         """
         If a fatal error occurs on the transport, renders its traceback and closes itself.
         
@@ -609,7 +609,7 @@ class SocketTransportLayer(SocketTransportLayerBase):
     
     
     @copy_docs(SocketTransportLayerBase._fatal_error)
-    def _fatal_error(self, exception, message='Fatal error on transport layer'):
+    def _fatal_error(self, exception, message = 'Fatal error on transport layer'):
         SocketTransportLayerBase._fatal_error(self, exception, message)
         
         self._force_close(exception)
@@ -781,7 +781,7 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
     
     
     @copy_docs(SocketTransportLayerBase._fatal_error)
-    def _fatal_error(self, exception, message='Fatal error on transport'):
+    def _fatal_error(self, exception, message = 'Fatal error on transport'):
         if not isinstance(exception, OSError):
             write_exception_async(
                 exception,

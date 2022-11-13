@@ -224,7 +224,7 @@ class MultiValueDictionary(dict):
     
     
     @has_docs
-    def get_all(self, key, default=None):
+    def get_all(self, key, default = None):
         """
         Returns all the values matching the given `key`.
         
@@ -247,7 +247,7 @@ class MultiValueDictionary(dict):
     
     
     @has_docs
-    def get_one(self, key, default=None):
+    def get_one(self, key, default = None):
         """
         Returns the 0th value matching the given `key`.
         
@@ -273,7 +273,7 @@ class MultiValueDictionary(dict):
     get = get_one
     
     @has_docs
-    def setdefault(self, key, default=None):
+    def setdefault(self, key, default = None):
         """
         Returns the value for the given `key`.
         
@@ -303,7 +303,7 @@ class MultiValueDictionary(dict):
     
     
     @has_docs
-    def pop_all(self, key, default=...):
+    def pop_all(self, key, default = ...):
         """
         Removes all the values from the dictionary which the given `key` matched.
         
@@ -333,7 +333,7 @@ class MultiValueDictionary(dict):
     
     
     @has_docs
-    def pop_one(self, key, default=...):
+    def pop_one(self, key, default = ...):
         """
         Removes the first value from the dictionary, which matches the given `key`.
         

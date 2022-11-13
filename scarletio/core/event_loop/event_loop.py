@@ -715,7 +715,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                 handle = None # remove from locals or the gc derps out.
     
     
-    def caller(self, awaitable, timeout=None):
+    def caller(self, awaitable, timeout = None):
         """
         Ensures the given awaitable on the event loop and returns it's result when done.
         

@@ -351,7 +351,7 @@ class WeakMap(dict):
     
     
     @has_docs
-    def get(self, key, default=None):
+    def get(self, key, default = None):
         """
         Gets the key of the weak map, which matches the given one.
         
@@ -393,7 +393,7 @@ class WeakMap(dict):
     
     
     @has_docs
-    def pop(self, key, default=...):
+    def pop(self, key, default = ...):
         """
         Pops a key from the weak map which matches the given one.
         

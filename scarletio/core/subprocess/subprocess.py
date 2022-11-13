@@ -275,7 +275,7 @@ class AsyncProcess:
         return ''.join(repr_parts)
     
     
-    def get_extra_info(self, name, default=None):
+    def get_extra_info(self, name, default = None):
         """
         Gets optional transport information.
         
@@ -587,7 +587,7 @@ class AsyncProcess:
         self.close()
     
     
-    async def wait(self, timeout=None):
+    async def wait(self, timeout = None):
         """
         Wait for child process to terminate.
         
@@ -736,7 +736,7 @@ class AsyncProcess:
         return result
     
     
-    async def communicate(self, input_=None, timeout=None):
+    async def communicate(self, input_=None, timeout = None):
         """
         Sends data to stdin and reads data from stdout and stderr.
         

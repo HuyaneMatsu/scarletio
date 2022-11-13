@@ -33,4 +33,4 @@ class RequestInfo:
     
     def __repr__(self):
         """Returns the request info's representation."""
-        return f'<{self.__class__.__name__} url={self.url!r}>'
+        return f'<{self.__class__.__name__} url = {self.url!r}>'

@@ -23,7 +23,7 @@ if sys.platform == 'win32':
         
         I do not take credit for any misbehaviour.
         """
-        def _select(self, r, w, _, timeout=None):
+        def _select(self, r, w, _, timeout = None):
             try:
                 result_r, result_w, result_x = select(r, w, w, timeout)
             except ValueError:

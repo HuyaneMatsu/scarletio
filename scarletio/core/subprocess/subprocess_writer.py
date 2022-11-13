@@ -74,7 +74,7 @@ class SubprocessWriter(AbstractTransportLayerBase):
     
     
     @copy_docs(AbstractTransportLayerBase.get_extra_info)
-    def get_extra_info(self, name, default=None):
+    def get_extra_info(self, name, default = None):
         return self._transport.get_extra_info(name, default)
     
     

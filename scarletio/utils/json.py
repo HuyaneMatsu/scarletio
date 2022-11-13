@@ -52,4 +52,4 @@ def to_json(data):
     TypeError
         If the given object is /or contains an object with a non convertible type.
     """
-    return dump_to_json(data, separators=(',', ':'), ensure_ascii=True, default=added_json_serializer)
+    return dump_to_json(data, separators=(',', ':'), ensure_ascii=True, default = added_json_serializer)

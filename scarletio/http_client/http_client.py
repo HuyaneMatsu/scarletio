@@ -36,7 +36,7 @@ class HTTPClient:
     """
     __slots__ = ('loop', 'connector', 'proxy_url', 'proxy_auth', 'cookie_jar')
     
-    def __init__(self, loop, proxy_url=None, proxy_auth=None, *, connector=None):
+    def __init__(self, loop, proxy_url = None, proxy_auth=None, *, connector=None):
         """
         Creates a new ``HTTPClient`` with the given parameters.
         
@@ -197,7 +197,7 @@ class HTTPClient:
         return response
         
     async def _request2(self, method, url, headers=None, data=None, params=None, redirects=3, auth=None,
-            proxy_url=..., proxy_auth=..., timeout=DEFAULT_TIMEOUT, ssl=None):
+            proxy_url = ..., proxy_auth=..., timeout = DEFAULT_TIMEOUT, ssl=None):
         """
         Internal method for executing an http request with extra parameters
         

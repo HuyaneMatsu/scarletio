@@ -136,7 +136,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
     
     is_client = True # placeholder for subclasses
     
-    def __new__(cls, loop, host, port, *, is_ssl=False, close_timeout=10.0, max_size=1 << 26, max_queue=None):
+    def __new__(cls, loop, host, port, *, is_ssl=False, close_timeout = 10.0, max_size=1 << 26, max_queue=None):
         """
         Initializes the ``WebSocketCommonProtocol`` with setting it's common attributes.
         
@@ -162,7 +162,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         self._set_common_websocket_attributes(host, port, is_ssl, close_timeout, max_size, max_queue)
         return self
     
-    def _set_common_websocket_attributes(self, host, port, is_ssl, close_timeout=10.0, max_size=1 << 26, max_queue=None):
+    def _set_common_websocket_attributes(self, host, port, is_ssl, close_timeout = 10.0, max_size=1 << 26, max_queue=None):
         """
         Sets the common websocket specific attributes for the protocol.
         
@@ -201,7 +201,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         self.close_reason = None
         
         self.connection_lost_waiter = Future(self._loop)
-        self.messages = AsyncQueue(loop=self._loop, max_length=max_queue)
+        self.messages = AsyncQueue(loop=self._loop, max_length = max_queue)
         
         self.pings = OrderedDict()
         
@@ -351,7 +351,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         await self.write_frame(operation_code, data)
     
     
-    async def close(self, code=1000, reason=''):
+    async def close(self, code=1000, reason = ''):
         """
         Closes the websocket.
         
@@ -1003,7 +1003,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         # moment the timeout occurs and the moment this coroutine resumes running.
         return self.connection_lost_waiter.is_done()
     
-    def fail_connection(self, code=1006, reason=''):
+    def fail_connection(self, code=1006, reason = ''):
         """
         Closes the websocket if any unexpected exception occurred.
         

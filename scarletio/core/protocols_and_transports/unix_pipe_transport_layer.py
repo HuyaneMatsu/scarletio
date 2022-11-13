@@ -185,7 +185,7 @@ class UnixReadPipeTransportLayer(TransportLayerBase):
     
     
     @copy_docs(TransportLayerBase._fatal_error)
-    def _fatal_error(self, exception, message='Fatal error on pipe transport'):
+    def _fatal_error(self, exception, message = 'Fatal error on pipe transport'):
         if not (isinstance(exception, OSError) and (exception.errno == errno.EIO)):
             write_exception_async(
                 exception,
@@ -493,7 +493,7 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
     
     
     @copy_docs(TransportLayerBase._fatal_error)
-    def _fatal_error(self, exception, message='Fatal error on pipe transport'):
+    def _fatal_error(self, exception, message = 'Fatal error on pipe transport'):
         if not isinstance(exception, OSError):
             write_exception_async(
                 exception,

@@ -204,7 +204,7 @@ class RawResponseMessage(RawMessage):
             
             reason = self.reason
             if reason:
-                repr_parts.append(', reason=')
+                repr_parts.append(', reason = ')
                 repr_parts.append(reprlib.repr(self.reason))
             
             yield repr_parts
@@ -267,7 +267,7 @@ class RawRequestMessage(RawMessage):
             
             reason = self.reason
             if reason:
-                repr_parts.append(', reason=')
+                repr_parts.append(', reason = ')
                 repr_parts.append(repr(self.path))
             
             yield repr_parts

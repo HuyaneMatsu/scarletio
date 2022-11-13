@@ -293,7 +293,7 @@ class CookieJar:
         self.next_expiration = min(self.next_expiration, when)
         self.expirations[(domain, name)] = when
     
-    def update_cookies(self, cookies, response_url=URL()):
+    def update_cookies(self, cookies, response_url = URL()):
         """
         Updates the cookies of the.
         
@@ -370,7 +370,7 @@ class CookieJar:
         
         self._do_expiration()
     
-    def filter_cookies(self, request_url=URL()):
+    def filter_cookies(self, request_url = URL()):
         """
         Returns this jar's cookies filtered by their attributes
         

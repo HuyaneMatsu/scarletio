@@ -381,7 +381,7 @@ class FutureSyncWrapper:
                     break
     
     
-    def wait(self, timeout=None, propagate_cancellation=False):
+    def wait(self, timeout = None, propagate_cancellation=False):
         """
         Waits till the waited future's result or exception is set.
         

@@ -251,7 +251,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
     
     
     @copy_docs(TransportLayerBase.get_extra_info)
-    def get_extra_info(self, name, default=None):
+    def get_extra_info(self, name, default = None):
         info, present = get_has_extra_info(self._extra, name)
         if not present:
             transport = self._transport
@@ -373,7 +373,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
     
     
     @copy_docs(TransportLayerBase._fatal_error)
-    def _fatal_error(self, exception, message='Fatal error on transport.'):
+    def _fatal_error(self, exception, message = 'Fatal error on transport.'):
         TransportLayerBase._fatal_error(self, exception, message)
         
         transport = self._transport

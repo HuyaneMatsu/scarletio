@@ -409,7 +409,7 @@ def test_HybridValueDictionary_values():
     
     vampytest.assert_eq(len(values), len(hybrid_value_dictionary))
     vampytest.assert_eq(
-        sorted(values, key=sort_by_type_first_key),
+        sorted(values, key = sort_by_type_first_key),
         sorted(
             (value for key, value in hybrid_value_dictionary.items()),
             key = sort_by_type_first_key,
@@ -424,7 +424,7 @@ def test_HybridValueDictionary_values():
     
     vampytest.assert_eq(len(values), len(hybrid_value_dictionary_empty))
     vampytest.assert_eq(
-        sorted(values, key=sort_by_type_first_key),
+        sorted(values, key = sort_by_type_first_key),
         sorted(
             (value for key, value in hybrid_value_dictionary_empty.items()),
             key = sort_by_type_first_key,

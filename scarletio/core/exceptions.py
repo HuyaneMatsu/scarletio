@@ -23,7 +23,7 @@ class InvalidStateError(Exception):
     _message : `None`, `str`
         Internal cache for the ``.message`` property.
     """
-    def __init__(self, future, func_name, message=None):
+    def __init__(self, future, func_name, message = None):
         """
         Creates a new ``InvalidStateError``.
         

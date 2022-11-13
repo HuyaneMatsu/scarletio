@@ -84,13 +84,13 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
     
     
     @copy_docs(MultiValueDictionary.get_all)
-    def get_all(self, key, default=None):
+    def get_all(self, key, default = None):
         key = IgnoreCaseString(key)
         return MultiValueDictionary.get_all(self, key, default)
     
     
     @copy_docs(MultiValueDictionary.get_one)
-    def get_one(self, key, default=None):
+    def get_one(self, key, default = None):
         key = IgnoreCaseString(key)
         return MultiValueDictionary.get_one(self, key, default)
     
@@ -98,19 +98,19 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
     
     
     @copy_docs(MultiValueDictionary.setdefault)
-    def setdefault(self, key, default=None):
+    def setdefault(self, key, default = None):
         key = IgnoreCaseString(key)
         return MultiValueDictionary.setdefault(self, key, default)
     
     
     @copy_docs(MultiValueDictionary.pop_all)
-    def pop_all(self, key, default=...):
+    def pop_all(self, key, default = ...):
         key = IgnoreCaseString(key)
         return MultiValueDictionary.pop_all(self, key, default)
     
     
     @copy_docs(MultiValueDictionary.pop_one)
-    def pop_one(self, key, default=...):
+    def pop_one(self, key, default = ...):
         key = IgnoreCaseString(key)
         return MultiValueDictionary.pop_one(self, key, default)
     

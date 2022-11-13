@@ -486,7 +486,7 @@ class WeakItemDictionary(dict):
     
     
     @has_docs
-    def get(self, key, default=None):
+    def get(self, key, default = None):
         """
         Gets the value of the weak item dictionary which matches the given key.
         
@@ -548,7 +548,7 @@ class WeakItemDictionary(dict):
     
     
     @has_docs
-    def pop(self, key, default=...):
+    def pop(self, key, default = ...):
         """
         Pops the value of the weak item dictionary which matches the given key.
         

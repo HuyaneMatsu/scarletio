@@ -442,7 +442,7 @@ class WeakKeyDictionary(dict):
         return new
     
     @has_docs
-    def get(self, key, default=None):
+    def get(self, key, default = None):
         """
         Gets the value of the weak key dictionary which matches the given key.
         
@@ -486,7 +486,7 @@ class WeakKeyDictionary(dict):
     
     
     @has_docs
-    def pop(self, key, default=...):
+    def pop(self, key, default = ...):
         """
         Pops the value of the weak key dictionary which matches the given key.
         
@@ -549,7 +549,7 @@ class WeakKeyDictionary(dict):
     
     
     @has_docs
-    def setdefault(self, key, default=None):
+    def setdefault(self, key, default = None):
         """
         Returns the value for the given `key`.
         

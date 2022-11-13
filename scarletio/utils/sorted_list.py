@@ -332,7 +332,7 @@ class SortedList(list):
     
     
     @has_docs
-    def get(self, value, key, default=None):
+    def get(self, value, key, default = None):
         """
         Gets an element from the SortedList, what passed trough `key` equals to the given value.
         
@@ -362,7 +362,7 @@ class SortedList(list):
     
     
     @has_docs
-    def pop(self, value, key, default=None):
+    def pop(self, value, key, default = None):
         """
         Gets and removes element from the SortedList, what's is passed trough `key` equals to the given value.
         

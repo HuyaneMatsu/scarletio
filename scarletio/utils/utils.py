@@ -117,7 +117,7 @@ def relative_index(list_, value):
 
 
 @has_docs
-def change_on_switch(list_, value, new_position, key=None):
+def change_on_switch(list_, value, new_position, key = None):
     """
     Calculates the changes if the given `value` would be moved to an another position.
     

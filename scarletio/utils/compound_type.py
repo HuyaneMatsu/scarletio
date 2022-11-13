@@ -350,7 +350,7 @@ class CompoundMetaType(type):
             if not isinstance(base_type, type):
                 raise TypeError(
                     f'Base types can only be `type` instances, got {base_type!r}; type_name={type_name!r};'
-                    f'base_types={base_types}.'
+                    f'base_types = {base_types}.'
                 )
             
             if base_type is object:
@@ -361,7 +361,7 @@ class CompoundMetaType(type):
             
             raise TypeError(
                 f'Base types can only be `object` or `{Compound.__name__}`, got {base_type!r};'
-                f'type_name={type_name!r}; base_types={base_types}.'
+                f'type_name={type_name!r}; base_types = {base_types}.'
             )
         
         
@@ -1342,7 +1342,7 @@ def separate_base_type_from_components(base_types):
         
         if not isinstance(base_type, type):
             raise TypeError(
-                f'Base types can only be `type` instances, got {base_type!r}; base_types={base_types}.'
+                f'Base types can only be `type` instances, got {base_type!r}; base_types = {base_types}.'
             )
         
         if isinstance(base_type, CompoundMetaType):
@@ -1357,7 +1357,7 @@ def separate_base_type_from_components(base_types):
             
             else:
                 raise TypeError(
-                    f'Only one type can be non-component base type, got {base_type!r}; base_types={base_types}.'
+                    f'Only one type can be non-component base type, got {base_type!r}; base_types = {base_types}.'
                 )
     
     return direct_inherit_type, components

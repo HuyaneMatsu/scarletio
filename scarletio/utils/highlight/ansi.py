@@ -1,7 +1,7 @@
 __all__ = ('AnsiTextDecoration', 'create_ansi_format_code',)
 
 
-def create_ansi_format_code(text_decoration=None, background_color=None, foreground_color=None):
+def create_ansi_format_code(text_decoration = None, background_color = None, foreground_color = None):
     """
     Creates an ansi text format code for `ansi` codeblocks.
     

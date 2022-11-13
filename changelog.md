@@ -1,3 +1,10 @@
+## 1.0.45 *\[2022-11-13\]*
+
+#### Improvements
+
+- Support `HOME` key in the interactive console.
+- Support `END` key in the interactive console.
+
 ## 1.0.44 *\[2022-11-11\]*
 
 #### Improvements

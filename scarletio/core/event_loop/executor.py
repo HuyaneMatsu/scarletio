@@ -93,7 +93,7 @@ class SyncQueue:
     """
     __slots__ = ('_cancelled', '_lock', '_results', '_waiter',)
     
-    def __init__(self, iterable=None, max_length=None, cancelled=False):
+    def __init__(self, iterable=None, max_length = None, cancelled=False):
         """
         Creates a new ``SyncQueue`` with the given parameters.
         
@@ -238,7 +238,7 @@ class SyncQueue:
             
             max_length = results.maxlen
             if (max_length is not None):
-                repr_parts.append(', max_length=')
+                repr_parts.append(', max_length = ')
                 repr_parts.append(repr(max_length))
             
             if self._cancelled:

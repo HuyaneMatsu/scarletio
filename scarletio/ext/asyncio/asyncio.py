@@ -141,7 +141,7 @@ class EventThread:
     
     async def create_connection(
         self, protocol_factory, host=None, port=None, *, ssl=None, family=0, proto=0, flags=0, sock=None,
-        local_addr=None, server_hostname=None, ssl_handshake_timeout=None, happy_eyeballs_delay=None, interleave=None
+        local_addr=None, server_hostname=None, ssl_handshake_timeout = None, happy_eyeballs_delay=None, interleave=None
     ):
         
         
@@ -459,7 +459,7 @@ class EventThread:
     
     
     async def create_unix_connection(self, protocol_factory, path=None, *, ssl=None, sock=None, server_hostname=None,
-            ssl_handshake_timeout=None):
+            ssl_handshake_timeout = None):
         if sock is None:
             return await self._asyncio_create_unix_connection_to(protocol_factory, path, ssl=ssl,
                 server_host_name=server_hostname)
@@ -498,7 +498,7 @@ class EventThread:
     
     async def create_server(self, protocol_factory, host=None, port=None, *, family=module_socket.AF_UNSPEC,
             flags=module_socket.AI_PASSIVE, sock=None, backlog=100, ssl=None, reuse_address=None, reuse_port=None,
-            ssl_handshake_timeout=None, start_serving=True):
+            ssl_handshake_timeout = None, start_serving=True):
         
         if sock is None:
             server = await self.create_server_to(protocol_factory, host, port, socket_family=family,
@@ -514,7 +514,7 @@ class EventThread:
     
     
     async def create_unix_server(self, protocol_factory, path=None, *, sock=None, backlog=100, ssl=None,
-            ssl_handshake_timeout=None, start_serving=True):
+            ssl_handshake_timeout = None, start_serving=True):
         
         if sock is None:
             server = await self.create_unix_server_to(protocol_factory, path, backlog=backlog, ssl=ssl)
@@ -1222,7 +1222,7 @@ class Queue(AsyncQueue):
         else:
             max_length = None
         
-        return AsyncQueue.__new__(cls, loop, max_length=max_length)
+        return AsyncQueue.__new__(cls, loop, max_length = max_length)
     
     async def put(self, element):
         """
@@ -1269,7 +1269,7 @@ class LifoQueue(AsyncLifoQueue):
         else:
             max_length = None
         
-        return AsyncLifoQueue.__new__(cls, loop, max_length=max_length)
+        return AsyncLifoQueue.__new__(cls, loop, max_length = max_length)
     
     def put_nowait(self, element):
         if len(self) == self.max_length:
@@ -1701,7 +1701,7 @@ class StreamWriter:
     async def wait_closed(self):
         await self._protocol._get_close_waiter(self)
 
-    def get_extra_info(self, name, default=None):
+    def get_extra_info(self, name, default = None):
         return self._transport.get_extra_info(name, default)
 
     async def drain(self):
@@ -2092,7 +2092,7 @@ FIRST_COMPLETED = 'FIRST_COMPLETED'
 FIRST_EXCEPTION = 'FIRST_EXCEPTION'
 ALL_COMPLETED = 'ALL_COMPLETED'
 
-async def wait(futures, *, loop=None, timeout=None, return_when=ALL_COMPLETED):
+async def wait(futures, *, loop=None, timeout = None, return_when=ALL_COMPLETED):
     """
     Wait for the Futures and coroutines given by functions to complete.
     
@@ -2212,7 +2212,7 @@ async def _as_completed_task(futures, waiter):
         
         waiter.reset()
 
-def as_completed(functions, *, loop=None, timeout=None):
+def as_completed(functions, *, loop=None, timeout = None):
     """
     Return an iterator whose values are coroutines.
     
@@ -2606,7 +2606,7 @@ class BaseTransport:
             extra = {}
         self._extra = extra
 
-    def get_extra_info(self, name, default=None):
+    def get_extra_info(self, name, default = None):
         return self._extra.get(name, default)
 
     def is_closing(self):

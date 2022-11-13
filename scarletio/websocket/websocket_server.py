@@ -78,7 +78,7 @@ class WebSocketServer:
     """
     __slots__ = ('loop', 'websockets', 'close_connection_task', 'handler', 'server', 'protocol_parameters')
     
-    async def __new__(cls, loop, host, port, handler, *, protocol=WebSocketServerProtocol, available_extensions=None,
+    async def __new__(cls, loop, host, port, handler, *, protocol=WebSocketServerProtocol, available_extensions = None,
             extra_response_headers=None, origin=None, available_subprotocols=None, request_processor=None,
             subprotocol_selector=None, websocket_kwargs=None, ssl=None, **server_kwargs):
         """
