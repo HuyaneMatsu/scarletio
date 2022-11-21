@@ -21,7 +21,7 @@ DEFAULT_CONTENT_TYPE = 'application/octet-stream'
 VALID_TCHAR_RP = re.compile(br'\A[!#$%&\'*+\-.^_`|~\w]+\Z')
 INVALID_QDTEXT_CHAR_RP = re.compile(br'[\x00-\x08\x0A-\x1F\x7F]')
 
-def create_payload(data, kwargs):
+def create_payload(data, keyword_parameters):
     """
     Creates a new ``PayloadBase`` with the given parameters.
     
@@ -30,7 +30,7 @@ def create_payload(data, kwargs):
     data : (`list` of ``PayloadBase``), ``BodyPartReader``, `bytes`, `bytearray`, `memoryview`, `str`, \
             `BytesIO`, `StringIO`, `TextIOBase`, `BufferedReader`, `BufferedRandom`, `IOBase`, ``AsyncIO``, \
             `async-iterable`
-    kwargs : `dict` of (`str`, (`None`, `str`)) items
+    keyword_parameters : `dict` of (`str`, (`None`, `str`)) items
         Keyword parameters for the payload.
     
     Returns
@@ -66,7 +66,7 @@ def create_payload(data, kwargs):
     else:
         raise LookupError(data_type)
     
-    return type_(data, kwargs)
+    return type_(data, keyword_parameters)
 
 
 class PayloadBase:
@@ -92,7 +92,7 @@ class PayloadBase:
     """
     __slots__ = ('content_type', 'data', 'encoding', 'filename', 'headers', 'size', )
     
-    def __init__(self, data, kwargs):
+    def __init__(self, data, keyword_parameters):
         """
         Creates a new ``PayloadBase``.
         
@@ -102,17 +102,17 @@ class PayloadBase:
                 `BytesIO`, `StringIO`, `TextIOBase`, `BufferedReader`, `BufferedRandom`, `IOBase`, ``AsyncIO``, \
                 `async-iterable`
             The payload's data.
-        kwargs : `dict` of (`str`, `Any`) items
+        keyword_parameters : `dict` of (`str`, `Any`) items
             Additional keyword parameters.
         """
         self.data = data
-        self.encoding = kwargs.get('encoding', None)
-        self.filename = filename = kwargs.get('filename', None)
+        self.encoding = keyword_parameters.get('encoding', None)
+        self.filename = filename = keyword_parameters.get('filename', None)
         self.size = None
         
         headers = IgnoreCaseMultiValueDictionary()
         
-        content_type = kwargs.get('content_type', None)
+        content_type = keyword_parameters.get('content_type', None)
         if content_type is None:
             if filename is None:
                 content_type = DEFAULT_CONTENT_TYPE
@@ -125,7 +125,7 @@ class PayloadBase:
         
         headers[CONTENT_TYPE] = content_type
         
-        headers_parameter = kwargs.get('headers', None)
+        headers_parameter = keyword_parameters.get('headers', None)
         if (headers_parameter is not None) or  headers_parameter:
             headers.extend(headers_parameter)
         
@@ -183,7 +183,7 @@ class BytesPayload(PayloadBase):
     """
     __slots__ = ()
     
-    def __init__(self, data, kwargs):
+    def __init__(self, data, keyword_parameters):
         """
         Creates a new ``BytesPayload``.
         
@@ -191,12 +191,12 @@ class BytesPayload(PayloadBase):
         ----------
         data : `bytes`, `bytearray`, `memoryview`
             The payload's data.
-        kwargs : `dict` of (`str`, `Any`) items
+        keyword_parameters : `dict` of (`str`, `Any`) items
             Additional keyword parameters.
         """
-        kwargs.setdefault('content_type', DEFAULT_CONTENT_TYPE)
+        keyword_parameters.setdefault('content_type', DEFAULT_CONTENT_TYPE)
         
-        PayloadBase.__init__(self, data, kwargs)
+        PayloadBase.__init__(self, data, keyword_parameters)
         
         self.size = len(data)
     
@@ -235,7 +235,7 @@ class StringPayload(BytesPayload):
     """
     __slots__ = ()
     
-    def __init__(self, data, kwargs):
+    def __init__(self, data, keyword_parameters):
         """
         Creates a new ``StringPayload``.
         
@@ -243,31 +243,31 @@ class StringPayload(BytesPayload):
         ----------
         data : `str`
             The payload's data.
-        kwargs : `dict` of (`str`, `Any`) items
+        keyword_parameters : `dict` of (`str`, `Any`) items
             Additional keyword parameters.
         """
-        encoding = kwargs.get('encoding', None)
-        content_type = kwargs.get('content_type', None)
+        encoding = keyword_parameters.get('encoding', None)
+        content_type = keyword_parameters.get('content_type', None)
         if encoding is None:
             if content_type is None:
                 encoding = 'utf-8'
                 content_type = 'text/plain; charset=utf-8'
                 
-                kwargs['content_type'] = content_type
+                keyword_parameters['content_type'] = content_type
             else:
                 mime_type = MimeType(content_type)
                 encoding = mime_type.parameters.get('charset', 'utf-8')
             
-            kwargs['encoding'] = encoding
+            keyword_parameters['encoding'] = encoding
         
         else:
             if content_type is None:
                 content_type = f'text/plain; charset={encoding}'
-                kwargs['content_type'] = content_type
+                keyword_parameters['content_type'] = content_type
         
         data = data.encode(encoding)
         
-        BytesPayload.__init__(self, data, kwargs)
+        BytesPayload.__init__(self, data, keyword_parameters)
 
 
 class StringIOPayload(StringPayload):
@@ -291,7 +291,7 @@ class StringIOPayload(StringPayload):
     """
     __slots__ = ()
     
-    def __init__(self, data, kwargs):
+    def __init__(self, data, keyword_parameters):
         """
         Creates a new ``StringIOPayload``.
         
@@ -299,11 +299,11 @@ class StringIOPayload(StringPayload):
         ----------
         data : `StringIO`
             The payload's data.
-        kwargs : `dict` of (`str`, `Any`) items
+        keyword_parameters : `dict` of (`str`, `Any`) items
             Additional keyword parameters.
         """
         data = data.read()
-        StringPayload.__init__(self, data, kwargs)
+        StringPayload.__init__(self, data, keyword_parameters)
 
 
 class IOBasePayload(PayloadBase):
@@ -326,7 +326,7 @@ class IOBasePayload(PayloadBase):
         The payload's size if applicable.
     """
     __slots__ = ()
-    def __init__(self, data, kwargs):
+    def __init__(self, data, keyword_parameters):
         """
         Creates a new ``IOBasePayload``.
         
@@ -334,16 +334,16 @@ class IOBasePayload(PayloadBase):
         ----------
         data : `IOBase`
             The payload's data.
-        kwargs : `dict` of (`str`, `Any`) items
+        keyword_parameters : `dict` of (`str`, `Any`) items
             Additional keyword parameters.
         """
-        if 'filename' not in kwargs:
-            kwargs['filename'] = getattr(data, 'name', None)
+        if 'filename' not in keyword_parameters:
+            keyword_parameters['filename'] = getattr(data, 'name', None)
         
-        PayloadBase.__init__(self, data, kwargs)
+        PayloadBase.__init__(self, data, keyword_parameters)
         
         try:
-            disposition = kwargs['disposition']
+            disposition = keyword_parameters['disposition']
         except KeyError:
             disposition = 'attachment'
         
@@ -396,7 +396,7 @@ class TextIOPayload(IOBasePayload):
     """
     __slots__ = ()
     
-    def __init__(self, data, kwargs):
+    def __init__(self, data, keyword_parameters):
         """
         Creates a new ``TextIOPayload``.
         
@@ -404,28 +404,28 @@ class TextIOPayload(IOBasePayload):
         ----------
         data : `TextIOBase`
             The payload's data.
-        kwargs : `dict` of (`str`, `Any`) items
+        keyword_parameters : `dict` of (`str`, `Any`) items
             Additional keyword parameters.
         """
-        encoding = kwargs.get('encoding', None)
-        content_type = kwargs.get('content_type', None)
+        encoding = keyword_parameters.get('encoding', None)
+        content_type = keyword_parameters.get('content_type', None)
         if encoding is None:
             if content_type is None:
                 encoding = 'utf-8'
                 content_type = 'text/plain; charset=utf-8'
                 
-                kwargs['content_type'] = content_type
+                keyword_parameters['content_type'] = content_type
             else:
                 mime_type = MimeType(content_type)
                 encoding = mime_type.parameters.get('charset', 'utf-8')
             
-            kwargs['encoding'] = encoding
+            keyword_parameters['encoding'] = encoding
         else:
             if content_type is None:
                 content_type = f'text/plain; charset={encoding}'
-                kwargs['content_type'] = content_type
+                keyword_parameters['content_type'] = content_type
         
-        IOBasePayload.__init__(self, data, kwargs)
+        IOBasePayload.__init__(self, data, keyword_parameters)
         
         try:
             size = os.fstat(data.fileno()).st_size - data.tell()
@@ -477,7 +477,7 @@ class BytesIOPayload(IOBasePayload):
     size : `None`, `int`
         The payload's size if applicable.
     """
-    def __init__(self, data, kwargs):
+    def __init__(self, data, keyword_parameters):
         """
         Creates a new ``BytesIOPayload``.
         
@@ -485,10 +485,10 @@ class BytesIOPayload(IOBasePayload):
         ----------
         data : `BytesIO`
             The payload's data.
-        kwargs : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
+        keyword_parameters : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
             Additional keyword parameters.
         """
-        IOBasePayload.__init__(self, data, kwargs)
+        IOBasePayload.__init__(self, data, keyword_parameters)
         
         position = data.tell()
         end = data.seek(0, os.SEEK_END)
@@ -517,7 +517,7 @@ class BufferedReaderPayload(IOBasePayload):
     """
     __slots__ = ()
     
-    def __init__(self, data, kwargs):
+    def __init__(self, data, keyword_parameters):
         """
         Creates a new ``BufferedReaderPayload``.
         
@@ -525,10 +525,10 @@ class BufferedReaderPayload(IOBasePayload):
         ----------
         data : `BufferedReader`, `BufferedRandom`
             The payload's data.
-        kwargs : `dict` of (`str`, `Any`) items
+        keyword_parameters : `dict` of (`str`, `Any`) items
             Additional keyword parameters.
         """
-        IOBasePayload.__init__(self, data, kwargs)
+        IOBasePayload.__init__(self, data, keyword_parameters)
         try:
             size = os.fstat(data.fileno()).st_size - data.tell()
         except OSError:
@@ -559,7 +559,7 @@ class JsonPayload(BytesPayload):
     """
     __slots__ = ()
     
-    def __init__(self, data, kwargs):
+    def __init__(self, data, keyword_parameters):
         """
         Creates a new ``AsyncIterablePayload``.
         
@@ -567,17 +567,17 @@ class JsonPayload(BytesPayload):
         ----------
         data : `None`, `str`, `int`, `float`, `list` of repeat, `dict` of (`str`, repeat) items
             The payload's data.
-        kwargs : `dict` of (`str`, `Any`) items
+        keyword_parameters : `dict` of (`str`, `Any`) items
             Additional keyword parameters.
         """
-        encoding = kwargs.get('encoding', None)
+        encoding = keyword_parameters.get('encoding', None)
         if (encoding is None):
-            kwargs['encoding'] = encoding = 'utf-8'
+            keyword_parameters['encoding'] = encoding = 'utf-8'
         
         data = to_json(data).encode(encoding)
         
-        kwargs.setdefault('content_type', 'application/json')
-        BytesPayload.__init__(self, data, kwargs)
+        keyword_parameters.setdefault('content_type', 'application/json')
+        BytesPayload.__init__(self, data, keyword_parameters)
 
 
 class AsyncIterablePayload(PayloadBase):
@@ -601,7 +601,7 @@ class AsyncIterablePayload(PayloadBase):
     """
     __slots__ = ('_iterator',)
     
-    def __init__(self, data, kwargs):
+    def __init__(self, data, keyword_parameters):
         """
         Creates a new ``AsyncIterablePayload``.
         
@@ -609,12 +609,12 @@ class AsyncIterablePayload(PayloadBase):
         ----------
         data : `async-iterable`
             The payload's data.
-        kwargs : `dict` of (`str`, `Any`) items
+        keyword_parameters : `dict` of (`str`, `Any`) items
             Additional keyword parameters.
         """
-        kwargs.setdefault('content_type', DEFAULT_CONTENT_TYPE)
+        keyword_parameters.setdefault('content_type', DEFAULT_CONTENT_TYPE)
         
-        PayloadBase.__init__(self, data, kwargs)
+        PayloadBase.__init__(self, data, keyword_parameters)
         self._iterator = data.__class__.__aiter__(data)
     
     
@@ -699,7 +699,7 @@ class BodyPartReaderPayload(PayloadBase):
     size : `None`, `int`
         The payload's size if applicable.
     """
-    def __init__(self, data, kwargs):
+    def __init__(self, data, keyword_parameters):
         """
         Creates a new ``BodyPartReaderPayload``.
         
@@ -707,10 +707,10 @@ class BodyPartReaderPayload(PayloadBase):
         ----------
         data : ``BodyPartReader``
             The payload's data.
-        kwargs : `dict` of (`str`, `Any`) items
+        keyword_parameters : `dict` of (`str`, `Any`) items
             Additional keyword parameters.
         """
-        PayloadBase.__init__(self, data, kwargs)
+        PayloadBase.__init__(self, data, keyword_parameters)
         
         parameters = {}
         name = data.name
@@ -1078,9 +1078,9 @@ class MultipartWriter(PayloadBase):
         else:
             quoted_boundary = boundary.decode('ascii')
         
-        kwargs = {'content_type': f'multipart/{subtype}; boundary={quoted_boundary}'}
+        keyword_parameters = {'content_type': f'multipart/{subtype}; boundary={quoted_boundary}'}
         
-        PayloadBase.__init__(self, [], kwargs)
+        PayloadBase.__init__(self, [], keyword_parameters)
         
         self._boundary = boundary
         self.headers[CONTENT_TYPE] = self.content_type
@@ -1131,12 +1131,12 @@ class MultipartWriter(PayloadBase):
             
             payload = body_part
         else:
-            kwargs = {}
+            keyword_parameters = {}
             if (headers is not None):
-                kwargs['headers'] = headers
+                keyword_parameters['headers'] = headers
             
             try:
-                payload = create_payload(body_part, kwargs)
+                payload = create_payload(body_part, keyword_parameters)
             except LookupError as err:
                 raise TypeError(
                     f'Cannot create payload from: {body_part!r}.'
@@ -1256,11 +1256,11 @@ class MultipartWriter(PayloadBase):
             - The `payload`'s content has unknown content-encoding.
             - The `payload`'s content has unknown content-transfer-encoding.
         """
-        kwargs = {}
+        keyword_parameters = {}
         if (headers is not None):
-            kwargs['headers'] = headers
+            keyword_parameters['headers'] = headers
         
-        payload = JsonPayload(obj, kwargs)
+        payload = JsonPayload(obj, keyword_parameters)
         self.append_payload(payload)
         return payload
     
@@ -1292,12 +1292,12 @@ class MultipartWriter(PayloadBase):
         
         data = url_encode(obj, doseq=True)
         
-        kwargs = {'content_type': 'application/x-www-form-url_encoded'}
+        keyword_parameters = {'content_type': 'application/x-www-form-url_encoded'}
         
         if (headers is not None):
-            kwargs['headers'] = headers
+            keyword_parameters['headers'] = headers
         
-        payload = StringPayload(data, kwargs)
+        payload = StringPayload(data, keyword_parameters)
         self.append_payload(payload)
         return payload
     

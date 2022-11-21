@@ -30,7 +30,7 @@ except ImportError:
 
 PACKAGE = __import__(f'{PACKAGE_NAME}.tools.asynchronous_interactive_console')
 
-collect_package_local_variables = PACKAGE.tools.collect_package_local_variables
+collect_module_variables = PACKAGE.tools.collect_module_variables
 run_asynchronous_interactive_console = \
     PACKAGE.tools.asynchronous_interactive_console.run_asynchronous_interactive_console
 
@@ -42,7 +42,7 @@ def __main__():
     
     > You need python3.8 or higher to use `await`!
     """
-    run_asynchronous_interactive_console(collect_package_local_variables(PACKAGE))
+    run_asynchronous_interactive_console(collect_module_variables(PACKAGE))
 
 
 if __name__ == '__main__':

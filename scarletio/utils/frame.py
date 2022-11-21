@@ -1,5 +1,7 @@
-__all__ = ('get_last_module_frame',)
+__all__ = ('get_frame_module', 'get_last_module_frame',)
 
+import sys
+from importlib.util import module_from_spec
 from sys import _getframe as get_frame
 
 
@@ -11,7 +13,7 @@ def get_last_module_frame():
     
     Returns
     -------
-    frame : `None`, ``FrameType``
+    frame : `None`, `FrameType`
     """
     frame = get_frame()
     
@@ -31,3 +33,38 @@ def get_last_module_frame():
         break
     
     return frame
+
+
+def get_frame_module(frame):
+    """
+    Gets from which module the frame is from.
+    
+    Parameters
+    ----------
+    frame : `None`, `FrameType`
+        The frame to get it's module of.
+    
+    Returns
+    -------
+    module : `None`, `ModuleType`
+    """
+    if frame is None:
+        return
+    
+    spec = frame.f_globals.get('__spec__', None)
+    if spec is not None:
+        try:
+            return sys.modules[spec.name]
+        except KeyError:
+            pass
+        
+        return module_from_spec(spec)
+    
+    system_parameters = sys.argv
+    if len(system_parameters) < 1:
+        return
+    
+    executed_file_name = system_parameters[0]
+    
+    if frame.f_code.co_filename == executed_file_name:
+        return sys.modules.get('__main__', None)

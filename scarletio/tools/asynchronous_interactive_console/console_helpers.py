@@ -1,7 +1,7 @@
-__all__ = ('collect_package_local_variables', 'create_banner', 'create_exit_message')
+__all__ = ('collect_package_local_variables', 'collect_module_variables', 'create_banner', 'create_exit_message')
 
 
-import sys
+import sys, warnings
 
 from ... import __package__ as PACKAGE_NAME
 from ...core import create_event_loop, get_event_loop
@@ -151,20 +151,25 @@ def create_exit_message(package=None):
     return f'exiting {package.__package__} interactive_console...'
 
 
-def collect_package_local_variables(package):
+def collect_module_variables(module):
     """
     Collects importable variables of scarletio.
     
     Parameters
     ----------
-    package : `ModuleType`
-        The package to collect variables from.
+    module : `ModuleType`
+        The module to collect variables from.
     
     Returns
     -------
     interactive_console_locals : `dict` of (`str`, `Any`) items
     """
-    interactive_console_locals = {package.__package__: package}
+    interactive_console_locals = {}
+    
+    package_name = module.__package__
+    if (package_name is not None):
+        interactive_console_locals[package_name] = module
+    
     for variable_name in {
         '__name__',
         '__package__',
@@ -173,9 +178,28 @@ def collect_package_local_variables(package):
         '__builtins__',
         '__file__'
     }:
-        interactive_console_locals[variable_name] = getattr(package, variable_name)
+        interactive_console_locals[variable_name] = getattr(module, variable_name)
     
-    for variable_name in getattr(package, '__all__', ()):
-        interactive_console_locals[variable_name] = getattr(package, variable_name)
-    
+    if package_name is None:
+        interactive_console_locals.update(module.__dict__)
+    else:
+        for variable_name in getattr(module, '__all__', ()):
+            interactive_console_locals[variable_name] = getattr(module, variable_name)
+        
     return interactive_console_locals
+
+
+def collect_package_local_variables(package):
+    """
+    Deprecated and will be removed in 2023 Marc. Please use ``collect_module_variables`` instead.
+    """
+    warnings.warn(
+        (
+            f'`collect_package_local_variables` is deprecated and will be removed in 2023 Marc. '
+            f'Please use `collect_module_variables` instead.'
+        ),
+        FutureWarning,
+        stacklevel = 2,
+    )
+    
+    return collect_module_variables(package)

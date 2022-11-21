@@ -1,3 +1,15 @@
+## 1.0.46 *\[2022-11-21\]*
+
+#### Improvements
+
+- Add `get_frame_module`.
+- `collect_module_variables` now handles non-packages as well.
+
+#### Renames, Deprecation & Removals
+
+- Rename `collect_package_local_variables` to `collect_module_variables`.
+- Deprecate `collect_package_local_variables`.
+
 ## 1.0.45 *\[2022-11-13\]*
 
 #### Improvements
