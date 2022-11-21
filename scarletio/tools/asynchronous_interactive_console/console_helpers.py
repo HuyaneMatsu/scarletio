@@ -178,7 +178,12 @@ def collect_module_variables(module):
         '__builtins__',
         '__file__'
     }:
-        interactive_console_locals[variable_name] = getattr(module, variable_name)
+        try:
+            variable_value = getattr(module, variable_name)
+        except AttributeError:
+            pass
+        else:
+            interactive_console_locals[variable_name] = variable_value
     
     if package_name is None:
         interactive_console_locals.update(module.__dict__)

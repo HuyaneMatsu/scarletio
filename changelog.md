@@ -1,3 +1,9 @@
+## 1.0.47 *\[2022-11-21\]*
+
+#### Bug fixes
+
+- `collect_module_variables` could raise when module variables are broken.
+
 ## 1.0.46 *\[2022-11-21\]*
 
 #### Improvements
