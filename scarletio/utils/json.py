@@ -14,7 +14,7 @@ def added_json_serializer(obj):
     Parameters
     ----------
     obj : `iterable`, `Enum`
-        The value to json serialise.
+        The value to json serialize.
     
     Returns
     -------

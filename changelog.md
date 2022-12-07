@@ -1,3 +1,11 @@
+## 1.0.48 *\[2022-12-07\]*
+
+#### Bug fixes
+
+### ext.asyncio
+
+- `run` was using an incorrect way of detecting created event loops.
+
 ## 1.0.47 *\[2022-11-21\]*
 
 #### Bug fixes
@@ -322,6 +330,7 @@
 ## 1.0.12 *\[2022-02-09\]*
 
 #### Improvements
+
 - Add `ext.asyncio`.
 
 ## 1.0.11 *\[2022-02-08\]*

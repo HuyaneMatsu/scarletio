@@ -27,8 +27,8 @@ from threading import current_thread, enumerate as list_threads
 from ...core import (
     AbstractProtocolBase, AsyncLifoQueue, AsyncProcess, AsyncQueue, DatagramSocketTransportLayer, Event as HataEvent,
     EventThread, Executor, Future as HataFuture,  Lock as HataLock, ReadProtocolBase, Task as HataTask,
-    WaitContinuously, WaitTillAll, WaitTillExc, WaitTillFirst, future_or_timeout, shield as hata_shield,
-    skip_ready_cycle, sleep as hata_sleep
+    WaitContinuously, WaitTillAll, WaitTillExc, WaitTillFirst, future_or_timeout, shield as scarletio_shield,
+    skip_ready_cycle, sleep as scarletio_sleep
 )
 from ...core.event_loop.event_loop_functionality_helpers import _is_stream_socket
 from ...core.top_level import get_event_loop as scarletio_get_event_loop, write_exception_async
@@ -556,7 +556,7 @@ EventThread.create_task = asyncio_create_task
 del asyncio_create_task
 
 # We accept different names, so we need to define a dodge system, so here we go
-hata_EventThread_subprocess_shell = EventThread.subprocess_shell
+scarletio_EventThread_subprocess_shell = EventThread.subprocess_shell
 
 async def asyncio_subprocess_shell(self, *args, preexecution_function=None, creation_flags=0, preexec_fn=None,
         creationflags=0, startupinfo=None, startup_info=None, **kwargs):
@@ -570,14 +570,14 @@ async def asyncio_subprocess_shell(self, *args, preexecution_function=None, crea
     if startupinfo is not None:
         startup_info = startupinfo
     
-    return await hata_EventThread_subprocess_shell(self, *args, preexecution_function=preexecution_function,
+    return await scarletio_EventThread_subprocess_shell(self, *args, preexecution_function=preexecution_function,
         creation_flags=creation_flags, startupinfo=startup_info, **kwargs)
 
 EventThread.subprocess_shell = asyncio_subprocess_shell
 del asyncio_subprocess_shell
 
 
-hata_EventThread_subprocess_exec = EventThread.subprocess_exec
+scarletio_EventThread_subprocess_exec = EventThread.subprocess_exec
 
 async def asyncio_subprocess_exec(self, *args, preexecution_function=None, creation_flags=0, preexec_fn=None,
         creationflags=0, startupinfo=None, startup_info=None, **kwargs):
@@ -591,7 +591,7 @@ async def asyncio_subprocess_exec(self, *args, preexecution_function=None, creat
     if startupinfo is not None:
         startup_info = startupinfo
     
-    return await hata_EventThread_subprocess_exec(self, *args, preexecution_function=preexecution_function,
+    return await scarletio_EventThread_subprocess_exec(self, *args, preexecution_function=preexecution_function,
         creation_flags=creation_flags, startup_info=startup_info, **kwargs)
 
 EventThread.subprocess_exec = asyncio_subprocess_exec
@@ -813,7 +813,7 @@ class Future:
     
     (In Python 3.4 or later we may be able to unify the implementations.)
     """
-    def __new__(cls, *, loop=None):
+    def __new__(cls, *, loop = None):
         if loop is None:
             loop = get_event_loop()
         
@@ -903,7 +903,7 @@ class Lock(HataLock):
     # Required by dead.py
     __slots__ = ('__weakref__', )
     
-    def __new__(cls, *, loop=None):
+    def __new__(cls, *, loop = None):
         if loop is None:
             loop = get_event_loop()
         
@@ -945,7 +945,7 @@ class Condition:
     A new Lock object is created and used as the underlying lock.
     """
     
-    def __new__(cls, lock=None, *, loop=None):
+    def __new__(cls, lock = None, *, loop = None):
         raise NotImplementedError
 
 class Semaphore:
@@ -963,7 +963,7 @@ class Semaphore:
     """
     __slots__ = ('_loop', '_value', '_waiters')
     
-    def __new__(cls, value=1, *, loop=None):
+    def __new__(cls, value = 1, *, loop = None):
         if loop is None:
             loop = get_event_loop()
         else:
@@ -1064,7 +1064,7 @@ class BoundedSemaphore(Semaphore):
     """
     __slots__ = ('_bound_value',)
     
-    def __new__(cls, value=1, *, loop=None):
+    def __new__(cls, value = 1, *, loop = None):
         self = Semaphore.__new__(cls, value=value, loop=loop)
         self._bound_value = value
         return self
@@ -1291,7 +1291,7 @@ class LifoQueue(AsyncLifoQueue):
 # asyncio.runners
 # Include: run
 
-def run(main, *, debug=None):
+def run(main, *, debug = None):
     """
     Execute the coroutine and return the result.
     
@@ -1322,28 +1322,27 @@ def run(main, *, debug=None):
     if not iscoroutine(main):
         raise ValueError(f'a coroutine was expected, got {main!r}')
     
-    for thread in list_threads():
-        if isinstance(thread, EventThread):
-            loop = thread
-            break
-    else:
-        loop = None
-        
-    if loop is None:
-        loop = EventThread()
-        
-        # Required by anyio
-        main = Task(in_coro(main), loop=loop)
-        
-        try:
-            loop.run(main)
-        finally:
-            loop.stop()
+    try:
+        loop = scarletio_get_event_loop()
+    except RuntimeError:
+        pass
     else:
         # Required by anyio
-        main = Task(in_coro(main), loop=loop)
+        main = Task(in_coro(main), loop = loop)
         
         loop.run(main)
+        return
+    
+    loop = EventThread()
+    
+    # Required by anyio
+    main = Task(in_coro(main), loop = loop)
+    
+    try:
+        loop.run(main)
+    finally:
+        loop.stop()
+
 
 # asyncio.selector_events
 # Include: BaseSelectorEventLoop
@@ -2268,7 +2267,7 @@ async def sleep(delay, result=None, *, loop=None):
         await skip_ready_cycle()
         return result
     
-    await hata_sleep(delay, loop)
+    await scarletio_sleep(delay, loop)
     return result
 
 def ensure_future(coroutine_or_future, *, loop=None):
@@ -2461,7 +2460,7 @@ def shield(arg, *, loop=None):
         warnings.warn('The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
                       DeprecationWarning, stacklevel=2)
 
-    return hata_shield(arg, loop)
+    return scarletio_shield(arg, loop)
 
 def run_coroutine_threadsafe(coroutine, loop):
     """
