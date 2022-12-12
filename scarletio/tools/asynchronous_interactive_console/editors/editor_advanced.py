@@ -1526,7 +1526,7 @@ class EditorAdvanced(EditorBase):
         cursor_index = new_display_state.cursor_index
         
         if (cursor_index == 0):
-            return 0
+            return None
         
         cursor_index = 0
         
@@ -2210,6 +2210,10 @@ class EditorAdvanced(EditorBase):
     def should_move_in_history(self):
         """
         Returns whether history moving can be executed.
+        
+        Returns
+        -------
+        should_move_in_history : `bool`
         """
         display_state = self.display_state
         if display_state.cursor_line_index != 0:

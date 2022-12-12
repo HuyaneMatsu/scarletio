@@ -1,3 +1,9 @@
+## 1.0.49 *\[2022-12-12\]*
+
+#### Bug fixes
+
+- Interactive console crashed when pressing `home` at index `0`.
+
 ## 1.0.48 *\[2022-12-07\]*
 
 #### Bug fixes
