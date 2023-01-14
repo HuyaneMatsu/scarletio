@@ -72,12 +72,12 @@ class Task(Future):
     
     _coroutine : `CoroutineType`, `GeneratorType`
         The wrapped coroutine.
-    _must_cancel : `bool`
+    _should_cancel : `bool`
         Whether the task is cancelled, and at it's next step a ``CancelledError`` would be raised into it's coroutine.
     _waited_future : `None`, ``Future``
         The future on what's result the future is waiting right now.
     """
-    __slots__ = ('_coroutine', '_must_cancel', '_waited_future')
+    __slots__ = ('_coroutine', '_should_cancel', '_waited_future')
     
     def __new__(cls, coroutine, loop):
         """
@@ -100,7 +100,7 @@ class Task(Future):
         self._callbacks = []
         self._blocking = False
 
-        self._must_cancel = False
+        self._should_cancel = False
         self._waited_future = None
         self._coroutine = coroutine
         
@@ -203,7 +203,7 @@ class Task(Future):
         state = self._state
         repr_parts.append(get_future_state_name(state))
         
-        if self._must_cancel:
+        if self._should_cancel:
             repr_parts.append(' (cancelling)')
         
         repr_parts.append(' coroutine=')
@@ -217,7 +217,7 @@ class Task(Future):
             else:
                 repr_parts.append(repr(waited_future))
         
-        if (not self._must_cancel) and (state >= FUTURE_STATE_FINISHED):
+        if (not self._should_cancel) and (state >= FUTURE_STATE_FINISHED):
             exception = self._exception
             if exception is None:
                 repr_parts.append(', result=')
@@ -327,7 +327,7 @@ class Task(Future):
             
             waited_future = self._waited_future
             if (waited_future is None) or (not waited_future.cancel()):
-                self._must_cancel = True
+                self._should_cancel = True
             
             return 1
         
@@ -339,7 +339,7 @@ class Task(Future):
             
             waited_future = self._waited_future
             if (waited_future is None) or (not waited_future.cancel()):
-                self._must_cancel = True
+                self._should_cancel = True
             
             return 1
     
@@ -424,7 +424,7 @@ class Task(Future):
             raise InvalidStateError(self, 'set_exception')
         
         if (self._waited_future is None) or self._waited_future.cancel():
-            self._must_cancel = True
+            self._should_cancel = True
         
         if isinstance(exception, type):
             exception = exception()
@@ -443,7 +443,7 @@ class Task(Future):
             return 0
         
         if (self._waited_future is None) or self._waited_future.cancel():
-            self._must_cancel = True
+            self._should_cancel = True
         
         if isinstance(exception, type):
             exception = exception()
@@ -471,17 +471,9 @@ class Task(Future):
         )
     
     
-    def _step(self, exception=None):
+    def _step(self):
         """
         Does a step, by giving control to the wrapped coroutine by the task.
-        
-        If `exception` is given, then that exception will be raised to the internal coroutine, exception if the task
-        is already cancelled, because, then the exception to raise will be decided by ``._must_exception``.
-        
-        Parameters
-        ----------
-        exception : `None`, `BaseException`
-            Exception to raise into the wrapped coroutine.
         
         Raises
         ------
@@ -492,44 +484,52 @@ class Task(Future):
             raise InvalidStateError(
                 self,
                 '_step',
-                message = f'`{self.__class__.__name__}._step` already done of {self!r}; exception={exception!r}.',
+                message = f'`{self.__class__.__name__}._step` already done of {self!r}.',
             )
-        
-        if self._must_cancel:
-            exception = self._must_exception(exception)
         
         coroutine = self._coroutine
         self._waited_future = None
         
         self._loop.current_task = self
-        
-        # call either coroutine.throw(err) or coroutine.send(None).
         try:
-            if exception is None:
-                result = coroutine.send(None)
-            else:
+            # Get cancellation exception
+            if self._should_cancel:
+                self._should_cancel = False
+                
+                exception = self._exception
+                if exception is None:
+                    exception = CancelledError()
+            
+                # call either coroutine.throw(err) or coroutine.send(None).
                 result = coroutine.throw(exception)
+            else:
+                result = coroutine.send(None)
+            
         except StopIteration as exception:
-            if self._must_cancel:
+            if self._should_cancel:
                 # the task is cancelled meanwhile
-                self._must_cancel = False
+                self._should_cancel = False
                 Future.set_exception(self, CancelledError())
             else:
                 Future.set_result(self, exception.value)
+        
         except CancelledError:
             Future.cancel(self)
+        
         except BaseException as exception:
             Future.set_exception(self, exception)
+        
         else:
             if isinstance(result, Future) and result._blocking:
                 result._blocking = False
                 result.add_done_callback(self._wake_up)
                 self._waited_future = result
-                if self._must_cancel:
+                if self._should_cancel:
                     if result.cancel():
-                        self._must_cancel = False
+                        self._should_cancel = False
             else:
                 self._loop.call_soon(self._step)
+        
         finally:
             self._loop.current_task = None
             self = None # Need to set `self` as `None`. Else `self` might never get garbage collected.
@@ -545,36 +545,7 @@ class Task(Future):
             The future for what's completion the task is waiting for.
         """
         try:
-            future.get_result()
-        except BaseException as err:
-            self._step(err)
-        else:
             self._step()
-        
-        self = None # set self as `None`, so when exception occurs, self can be garbage collected.
-    
-    
-    def _must_exception(self, exception):
-        """
-        Returns the exception, what should be raised into the tasks' wrapped coroutine.
-        
-        Parameters
-        ----------
-        exception : `None`, `BaseException`
-            The exception, what would be preferable raised into the task.
-        
-        Returns
-        -------
-        exception : `BaseException`
-            If task has already `˙._exception`˙ set, returns that. If `exception` is given as `None`, or as non
-            ``CancelledError``, will create a new ``CancelledError`` and return that.
-        """
-        self_exception = self._exception
-        if self_exception is None:
-            if (exception is None) or (not isinstance(exception, CancelledError)):
-                exception = CancelledError()
-        else:
-            exception = self_exception
-        
-        self._must_cancel = False
-        return exception
+        finally:
+            # set self as `None`, so when exception occurs, self can be garbage collected.
+            self = None

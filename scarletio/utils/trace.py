@@ -636,7 +636,7 @@ def _should_ignore_frame(file_name, name, line):
     return (line in names)
 
 
-def should_ignore_frame(file_name, name, line_number, line=..., filter=None):
+def should_ignore_frame(file_name, name, line_number, line, *, filter = None):
     """
     Returns whether the given frame should be ignored from rending.
     
@@ -671,19 +671,6 @@ def should_ignore_frame(file_name, name, line_number, line=..., filter=None):
     -------
     should_ignore : `bool`
     """
-    if line is ...:
-        line = line_number
-        line_number = 0
-        
-        warnings.warn(
-            (
-                'Please call `should_ignore_frame` with `4` parameters: `file, name, line_number, line`\n'
-                'The `3` parameter version is deprecated and will be removed in 2022 Jun.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-    
     if _should_ignore_frame(file_name, name, line):
         return True
     

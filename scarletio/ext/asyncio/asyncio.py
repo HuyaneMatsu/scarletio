@@ -676,7 +676,7 @@ iscoroutine = is_coroutine
 
 class AbstractEventLoopPolicy:
     def __new__(cls):
-        raise NotImplemented
+        raise NotImplementedError
 
 AbstractEventLoop = EventThread
 from scarletio import Server as AbstractServer, Handle, TimerHandle
@@ -2814,7 +2814,7 @@ class AbstractChildWatcher:
         and call waitpid(-1), there should be only one active object per process.
     """
     def __new__(cls):
-        raise NotImplemented
+        raise NotImplementedError
 
 
 class PidfdChildWatcher(AbstractChildWatcher):

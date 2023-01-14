@@ -2,7 +2,7 @@ __all__ = ()
 
 import warnings
 
-from ..core import EventThread, write_exception_maybe_async
+from ..core import write_exception_maybe_async
 
 
 HOOKS = []

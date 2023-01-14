@@ -1,3 +1,10 @@
+## 1.0.50 *\[2023-01-14\]*
+
+#### Improvements
+
+- `Future.wait_for_completion` will not propagate future exception. (It was never intended.)
+- Task stepping speed improved.
+
 ## 1.0.49 *\[2022-12-12\]*
 
 #### Bug fixes
