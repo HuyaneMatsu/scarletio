@@ -1,6 +1,7 @@
 __all__ = ('ResultGatheringFuture',)
 
-import reprlib
+import reprlib, warnings
+from datetime import datetime as DateTime
 
 from ...utils.trace import format_callback
 
@@ -9,11 +10,16 @@ from ..exceptions import InvalidStateError
 from .future import FUTURE_STATE_FINISHED, FUTURE_STATE_PENDING, Future
 
 
+DEPRECATED = DateTime.utcnow() > DateTime(2023, 7, 18)
+
+
 class ResultGatheringFuture(Future):
     """
     A Future subclass, which yields after it's result was set a set amount of times with ``.set_result``, or with
     ``.set_result_if_pending``, or till an exception is set to with ``.set_exception``, or with
     ``.set_exception_if_pending``.
+    
+    Deprecated and will be removed in 2024. Please use ``TaskGroup`` instead.
     
     Attributes
     ----------
@@ -68,6 +74,16 @@ class ResultGatheringFuture(Future):
         count : `int`
             The amount of times, the future's result need to be set, because becoming done.
         """
+        if DEPRECATED:
+            warnings.warn(
+                (
+                    f'{cls.__name__} is deprecated and will be removed in 2024 february.'
+                    f'Please use `TaskGroup` instead accordingly.'
+                ),
+                FutureWarning,
+                stacklevel = 2,
+            )
+        
         self = object.__new__(cls)
         self._loop = loop
         self._count = count

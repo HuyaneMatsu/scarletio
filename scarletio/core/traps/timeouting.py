@@ -13,6 +13,7 @@ from .task import Task
 
 EventThread = include('EventThread')
 
+
 def future_or_timeout(future, timeout):
     """
     If the given ``Future`` is not done till the given `timeout` occurs, set `TimeoutError` as it's exception.
@@ -46,7 +47,7 @@ def future_or_timeout(future, timeout):
     handle = loop.call_later(timeout, callback, future)
     if handle is None:
         raise RuntimeError(
-            f'`future_or_timeout` was called on future with a stopped loop; loop={loop!r}.'
+            f'`future_or_timeout` was called on future with a stopped loop; loop = {loop!r}.'
         )
     
     callback._handle = handle
@@ -97,7 +98,7 @@ class repeat_timeout:
         Parameters
         ----------
         timeout : `float`
-            The time to drop `TimeoutException` after.
+            The time to drop `TimeoutError` after.
         """
         thread = current_thread()
         if not isinstance(thread, EventThread):

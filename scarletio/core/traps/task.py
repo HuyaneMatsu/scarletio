@@ -206,12 +206,12 @@ class Task(Future):
         if self._should_cancel:
             repr_parts.append(' (cancelling)')
         
-        repr_parts.append(' coroutine=')
+        repr_parts.append(' coroutine = ')
         repr_parts.append(format_coroutine(self._coroutine))
         
         waited_future = self._waited_future
         if waited_future is not None:
-            repr_parts.append(', waits for=')
+            repr_parts.append(', waits for = ')
             if type(waited_future) is type(self):
                 repr_parts.append(waited_future.qualname)
             else:
@@ -220,16 +220,18 @@ class Task(Future):
         if (not self._should_cancel) and (state >= FUTURE_STATE_FINISHED):
             exception = self._exception
             if exception is None:
-                repr_parts.append(', result=')
-                repr_parts.append(reprlib.repr(self._result))
+                result = self._result
+                if (result is not None):
+                    repr_parts.append(', result = ')
+                    repr_parts.append(reprlib.repr(result))
             else:
-                repr_parts.append(', exception=')
+                repr_parts.append(', exception = ')
                 repr_parts.append(get_exception_short_representation(exception))
         
         callbacks = self._callbacks
         limit = len(callbacks)
         if limit:
-            repr_parts.append(', callbacks=[')
+            repr_parts.append(', callbacks = [')
             index = 0
             while True:
                 callback = callbacks[index]

@@ -8,6 +8,8 @@ class WaitTillExc(WaitTillFirst):
     A future subclass, which waits till the first task or future raises an exception, or till all of them becomes done.
     When finished, returns the `done` and the `pending` futures.
     
+    Deprecated and will be removed in 2024. Please use ``TaskGroup`` instead.
+    
     Attributes
     ----------
     _blocking : `bool`

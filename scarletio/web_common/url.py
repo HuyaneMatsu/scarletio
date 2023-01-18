@@ -742,7 +742,7 @@ class URL:
         if (password is not None) and password:
             if (user is None) or (not user):
                 raise ValueError(
-                    f'Non-empty password requires non-empty user; user={user!r}; password={password!r}.'
+                    f'Non-empty password requires non-empty user; user = {user!r}; password = {password!r}.'
                 )
             
             user = f'{user}:{password}'

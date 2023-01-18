@@ -8,6 +8,8 @@ class WaitTillAll(WaitTillFirst):
     A future subclass, which waits till all the given tasks or futures become done. When finished, returns the `done`
     and the `pending` futures.
     
+    Deprecated and will be removed in 2024. Please use ``TaskGroup`` instead.
+    
     Attributes
     ----------
     _blocking : `bool`

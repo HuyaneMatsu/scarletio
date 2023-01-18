@@ -151,19 +151,21 @@ class Future:
         state = self._state
         repr_parts.append(get_future_state_name(state))
         
-        if state > FUTURE_STATE_FINISHED:
+        if state >= FUTURE_STATE_FINISHED:
             exception = self._exception
             if exception is None:
-                repr_parts.append(', result=')
-                repr_parts.append(reprlib.repr(self._result))
+                result = self._result
+                if (result is not None):
+                    repr_parts.append(', result = ')
+                    repr_parts.append(reprlib.repr(result))
             else:
-                repr_parts.append(', exception=')
+                repr_parts.append(', exception = ')
                 repr_parts.append(get_exception_short_representation(exception))
         
         callbacks = self._callbacks
         limit = len(callbacks)
         if limit:
-            repr_parts.append(', callbacks=[')
+            repr_parts.append(', callbacks = [')
             index = 0
             while True:
                 callback = callbacks[index]

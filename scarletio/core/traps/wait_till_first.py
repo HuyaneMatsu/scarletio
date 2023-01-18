@@ -1,5 +1,8 @@
 __all__ = ('WaitTillFirst',)
 
+import warnings
+from datetime import datetime as DateTime
+
 from ...utils import set_docs
 
 from ..exceptions import InvalidStateError
@@ -7,10 +10,15 @@ from ..exceptions import InvalidStateError
 from .future import FUTURE_STATE_CANCELLED, FUTURE_STATE_FINISHED, FUTURE_STATE_PENDING, FUTURE_STATE_RETRIEVED, Future
 
 
+DEPRECATED = DateTime.utcnow() > DateTime(2023, 7, 18)
+
+
 class WaitTillFirst(Future):
     """
     A future subclass, which waits till the first task or future is completed from the given ones. When finished,
     returns the `done` and the `pending` futures.
+    
+    Deprecated and will be removed in 2024. Please use ``TaskGroup`` instead.
     
     Attributes
     ----------
@@ -65,6 +73,16 @@ class WaitTillFirst(Future):
         loop : ``EventThread``
             The loop to what the created future will be bound to.
         """
+        if DEPRECATED:
+            warnings.warn(
+                (
+                    f'{cls.__name__} is deprecated and will be removed in 2024 february.'
+                    f'Please use `TaskGroup` instead accordingly.'
+                ),
+                FutureWarning,
+                stacklevel = 2,
+            )
+        
         pending = set(futures)
         done = set()
         

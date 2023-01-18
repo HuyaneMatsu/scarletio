@@ -1,5 +1,8 @@
 __all__ = ('WaitContinuously', )
 
+import warnings
+from datetime import datetime as DateTime
+
 from ...utils import ignore_frame
 
 from ..exceptions import CancelledError, InvalidStateError
@@ -10,9 +13,15 @@ from .wait_till_first import WaitTillFirst
 
 ignore_frame(__spec__.origin, 'get_result', 'raise exception',)
 
+
+DEPRECATED = DateTime.utcnow() > DateTime(2023, 7, 18)
+
+
 class WaitContinuously(WaitTillFirst):
     """
     A future subclass, which allows waiting for future or task results continuously, yielding `1` result, when awaited.
+    
+    Deprecated and will be removed in 2024. Please use ``TaskGroup`` instead.
     
     Attributes
     ----------
@@ -69,6 +78,16 @@ class WaitContinuously(WaitTillFirst):
         loop : ``EventThread``
             The loop to what the created future will be bound to.
         """
+        if DEPRECATED:
+            warnings.warn(
+                (
+                    f'{cls.__name__} is deprecated and will be removed in 2024 february.'
+                    f'Please use `TaskGroup` instead accordingly.'
+                ),
+                FutureWarning,
+                stacklevel = 2,
+            )
+        
         if (futures is None):
             pending = set()
         else:
@@ -216,7 +235,7 @@ class WaitContinuously(WaitTillFirst):
                     ) from exception
                 
                 if future.is_done():
-                    self._result[0].append(future)
+                    self._result[0].add(future)
                     self._state = FUTURE_STATE_FINISHED
                     return
                 

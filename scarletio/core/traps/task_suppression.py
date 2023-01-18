@@ -39,7 +39,7 @@ async def skip_poll_cycle(loop=None):
     await future
 
 
-def sleep(delay, loop=None):
+def sleep(delay, loop = None):
     """
     Suspends the current task, allowing other tasks to run.
     

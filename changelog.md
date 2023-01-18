@@ -1,3 +1,13 @@
+## 1.0.51 *\[2023-01-??\]*
+
+#### Improvements
+
+- Add `TaskGroup`.
+
+#### Bug fixes
+
+- `Future.__repr__` did not render correctly if the future result was not yet retrieved.
+
 ## 1.0.50 *\[2023-01-14\]*
 
 #### Improvements

@@ -1,5 +1,8 @@
 __all__ = ('Gatherer',)
 
+import warnings
+from datetime import datetime as DateTime
+
 from ...utils import ignore_frame, is_awaitable
 
 from ..exceptions import InvalidStateError
@@ -10,6 +13,10 @@ from .result_gathering_future import ResultGatheringFuture
 
 ignore_frame(__spec__.origin, '__call__', 'raise exception',)
 ignore_frame(__spec__.origin, '__call__', 'future.get_result()',)
+
+
+DEPRECATED = DateTime.utcnow() > DateTime(2023, 7, 18)
+
 
 class GathererElement:
     """
@@ -103,6 +110,8 @@ class Gatherer(ResultGatheringFuture):
     """
     A ``Future`` subclass to gather more future's results and their exceptions.
     
+    Deprecated and will be removed in 2024. Please use ``TaskGroup`` instead.
+    
     Attributes
     ----------
     _blocking : `bool`
@@ -160,6 +169,16 @@ class Gatherer(ResultGatheringFuture):
         TypeError
             Any of the given `coroutines_or_futures` is not awaitable.
         """
+        if DEPRECATED:
+            warnings.warn(
+                (
+                    f'{cls.__name__} is deprecated and will be removed in 2024 february.'
+                    f'Please use `TaskGroup` instead accordingly.'
+                ),
+                FutureWarning,
+                stacklevel = 2,
+            )
+        
         awaitables = set()
         for awaitable in coroutines_or_futures:
             if not is_awaitable(awaitable):
@@ -256,7 +275,7 @@ class Gatherer(ResultGatheringFuture):
         
         Parameters
         ----------
-        exception : `BaseException`
+        exception : `BaseException`, `type<BaseException>`
             The exception to set as a result of the gatherer.
         
         Raises
