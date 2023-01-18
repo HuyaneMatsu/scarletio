@@ -748,7 +748,12 @@ class TaskGroup(RichAttributeErrorBaseType):
             if not pending:
                 return
             
-            await self.wait_next()
+            waiter = self.wait_next()
+            try:
+                await waiter
+            except GeneratorExit:
+                waiter.cancel()
+                raise
     
     # Context managers
     

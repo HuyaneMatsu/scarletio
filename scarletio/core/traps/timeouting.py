@@ -1,5 +1,7 @@
-__all__ = ('future_or_timeout', 'repeat_timeout',)
+__all__ = ('apply_timeout', 'future_or_timeout', 'repeat_timeout',)
 
+import warnings
+from datetime import datetime as DateTime
 from threading import current_thread
 
 from ...utils import include
@@ -13,10 +15,13 @@ from .task import Task
 
 EventThread = include('EventThread')
 
+DEPRECATED = DateTime.utcnow() > DateTime(2023, 7, 18)
 
-def future_or_timeout(future, timeout):
+
+def apply_timeout(future, timeout):
     """
-    If the given ``Future`` is not done till the given `timeout` occurs, set `TimeoutError` as it's exception.
+    If the given ``Future`` is not done till the given `timeout` occurs, sett `TimeoutError` as it's exception.
+    If the `future` is a task, cancels the task and propagates `TimeoutError` outside instead of `CancelledError`.
     
     Parameters
     ----------
@@ -25,22 +30,14 @@ def future_or_timeout(future, timeout):
     timeout : `float`
         The time after the given `future`'s exception is set as `TimeoutError`.
     
+    Returns
+    -------
+    future : ``Future``
+    
     Raises
     ------
     RuntimeError
         The future's event loop is already stopped.
-    
-    Notes
-    -----
-    For futures, which wait for more results and exceptions like ``Gatherer``, `TimeoutError` gives only 1 result,
-    rigging it's results. This is not the case of ``FutureWM``, because that stops when the first exception is received.
-    
-    If `future_or_timeout` is used on ``WaitTillFirst``, ``WaitTillAll`` or on ``WaitTillAll``, then they stop
-    collecting their result at the point, when the timeout occurs and they yield their actual result at that point
-    without any specific exception.
-    
-    At the case of ``WaitContinuously``, when the timeout occurs the next yielded result will be `None` instead of a
-    ``Future``.
     """
     loop = future._loop
     callback = _TimeoutHandleCanceller()
@@ -52,6 +49,24 @@ def future_or_timeout(future, timeout):
     
     callback._handle = handle
     future.add_done_callback(callback)
+    return future
+
+
+def future_or_timeout(future, timeout):
+    """
+    Deprecated and will be removed in 2024.
+    """
+    if DEPRECATED:
+        warnings.warn(
+            (
+                f'{future_or_timeout.__name__} is deprecated and will be removed in 2024 february.'
+                f'Please use `TaskGroup` instead accordingly.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
+    
+    return apply_timeout(future, timeout)
 
 
 class repeat_timeout:

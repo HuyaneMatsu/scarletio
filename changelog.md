@@ -3,10 +3,22 @@
 #### Improvements
 
 - Add `TaskGroup`.
+- `apply_timeout` now returns the passed future.
 
 #### Bug fixes
 
 - `Future.__repr__` did not render correctly if the future result was not yet retrieved.
+
+#### Renames, Deprecation & Removals
+
+- Deprecate `Gatherer`.
+- Deprecate `ResultGatheringFuture`.
+- Deprecate `WaitContinuously`.
+- Deprecate `WaitTillAll`.
+- Deprecate `WaitTillExc`.
+- Deprecate `WaitTillFirst`.
+- Rename `future_or_timeout` to `apply_timeout`.
+- Deprecate `future_or_timeout`.
 
 ## 1.0.50 *\[2023-01-14\]*
 
