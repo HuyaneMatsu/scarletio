@@ -33,7 +33,7 @@ def iter_nullable_string(string):
         yield from string
 
 
-def quote(value, safe=None, protected=None, query_string=False):
+def quote(value, safe = None, protected = None, query_string = False):
     """
     Http quotes the given `value`.
     
@@ -99,10 +99,10 @@ def quote(value, safe=None, protected=None, query_string=False):
             if len(percentage) == 3:
                 percentage = bytes(percentage)
                 try:
-                    unquoted = chr(int(percentage[1:].decode('ascii'), base=16))
+                    unquoted = chr(int(percentage[1:].decode('ascii'), base = 16))
                 except ValueError as err:
                     raise ValueError(
-                        f'Unallowed percentage: {percentage!r}; value={value!r}.'
+                        f'Unallowed percentage: {percentage!r}; value = {value!r}.'
                     ) from err
                 
                 if (protected is not None) and (unquoted in protected):
@@ -135,7 +135,7 @@ def quote(value, safe=None, protected=None, query_string=False):
     return result.decode('ascii')
 
 
-def unquote(value, unsafe=None, query_string=False):
+def unquote(value, unsafe = None, query_string = False):
     """
     Http unquotes the given `value`.
     
@@ -185,7 +185,7 @@ def unquote(value, unsafe=None, query_string=False):
         if (percentage is not None):
             percentage += char
             if len(percentage) == 3:
-                percentages.append(int(percentage[1:], base=16))
+                percentages.append(int(percentage[1:], base = 16))
                 last_percentage = percentage
                 percentage = None
             continue
@@ -197,7 +197,7 @@ def unquote(value, unsafe=None, query_string=False):
                 pass
             else:
                 if query_string and (unquoted in QUERY_STRING_NOT_SAFE):
-                    result.append(quote(unquoted, query_string=True))
+                    result.append(quote(unquoted, query_string = True))
                 elif (unsafe is not None) and (unquoted in unsafe):
                     result.append(quote(unquoted))
                 else:

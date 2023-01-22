@@ -3,6 +3,7 @@ __all__ = ('ResultGatheringFuture',)
 import reprlib, warnings
 from datetime import datetime as DateTime
 
+from ...utils import copy_docs
 from ...utils.trace import format_callback
 
 from ..exceptions import InvalidStateError
@@ -198,13 +199,16 @@ class ResultGatheringFuture(Future):
         return 2
     
     
+    @copy_docs(Future.clear)
     def clear(self):
-        """
-        Clears the future making it reusable.
-        """
+        warnings.warn(
+            f'`{self.__class__.__name__}.clear` is deprecated and will be removed at 2023 July.',
+            FutureWarning,
+            stacklevel = 2,
+        )
+        
         self._state = FUTURE_STATE_PENDING
         self._exception = None
         self._result.clear()
         self.cancel_handles()
         self._blocking = False
-

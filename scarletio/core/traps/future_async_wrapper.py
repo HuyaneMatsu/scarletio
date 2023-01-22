@@ -1,6 +1,6 @@
 __all__ = ('FutureAsyncWrapper', )
 
-import reprlib
+import reprlib, warnings
 from types import MethodType
 
 from ...utils import copy_docs, export, ignore_frame, set_docs
@@ -452,6 +452,12 @@ class FutureAsyncWrapper(Future):
     
     @copy_docs(Future.clear)
     def clear(self):
+        warnings.warn(
+            f'`{self.__class__.__name__}.clear` is deprecated and will be removed at 2023 July.',
+            FutureWarning,
+            stacklevel = 2,
+        )
+        
         future = self._future
         if future is not None:
             loop = future._loop

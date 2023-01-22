@@ -1,6 +1,7 @@
 __all__ = ('Future',)
 
 import reprlib, sys, warnings
+from types import MethodType
 
 from ...utils import export, ignore_frame, include, set_docs, to_coroutine
 from ...utils.trace import format_callback
@@ -73,6 +74,32 @@ def get_exception_short_representation(exception):
         exception_representation = f'<{exception.__class__.__name__} ...>'
     
     return exception_representation
+
+
+def _set_timeout_if_pending(future):
+    """
+    Sets timeout exception into the future if still pending.
+    
+    Parameters
+    ----------
+    future : ``Future``
+        The future to set timeout to.
+    """
+    future.set_exception_if_pending(TimeoutError())
+
+
+def _cancel_handle_callback(handle, future):
+    """
+    Callback added to the future to cancel a handle.
+    
+    Parameters
+    ----------
+    handle : ``Handle``
+        The handle to cancel.
+    future : ``Future``
+        The completed future.
+    """
+    handle.cancel()
 
 
 class Future:
@@ -696,6 +723,12 @@ class Future:
         """
         Clears the future, making it reusable.
         """
+        warnings.warn(
+            f'`{self.__class__.__name__}.clear` is deprecated and will be removed at 2023 July.',
+            FutureWarning,
+            stacklevel = 2,
+        )
+        
         self._state = FUTURE_STATE_PENDING
         self._exception = None
         self._result = None
@@ -730,3 +763,30 @@ class Future:
             An awaitable future from the given event loop.
         """
         return FutureAsyncWrapper(self, loop)
+    
+    
+    def apply_timeout(self, timeout):
+        """
+        Applies timeout to the future. After the timeout duration passed on seconds propagates a `TimeoutError` if the
+        future is still pending.
+        
+        timeout : `float`
+            The time after the given `future`'s exception is set as `TimeoutError`.
+        
+        Returns
+        -------
+        timeout_applied : `int`
+            Returns `1` if timeout was applied. `0` if the future is already finished.
+        """
+        if timeout <= 0.0:
+            return self.set_exception_if_pending(TimeoutError)
+        
+        else:
+            if self.is_done():
+                return 0
+            
+            handle = self._loop.call_later(timeout, _set_timeout_if_pending, self)
+            if (handle is not None):
+                self.add_done_callback(MethodType(_cancel_handle_callback, handle))
+        
+        return 1

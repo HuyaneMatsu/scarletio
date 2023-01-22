@@ -6,7 +6,6 @@ from ...utils import WeakCallable, WeakReferer, ignore_frame, include, weak_meth
 
 
 ignore_frame(__spec__.origin, '_run', 'self.func(*self.args)', )
-ignore_frame(__spec__.origin, 'run', 'handle._run()', )
 
 
 write_exception_async = include('write_exception_async')
@@ -77,7 +76,6 @@ class Handle:
         expected_value : `object`
             The value to ignore.
         """
-
         repr_parts = [
             '<',
             self.__class__.__name__,
@@ -87,7 +85,7 @@ class Handle:
             repr_parts.append(' cancelled')
         
         else:
-            repr_parts.append(' func=')
+            repr_parts.append(' func = ')
             func = self.func
             if expect and (func is expected_value):
                 func_repr = '...'
@@ -105,7 +103,6 @@ class Handle:
                 while True:
                     parameter = parameters[index]
                     
-                    repr_parts.append(' func=')
                     func = self.func
                     if expect and (func is expected_value):
                         parameter_repr = '...'
@@ -159,7 +156,8 @@ class Handle:
                 ]
             )
         
-        self = None  # Needed to break cycles when an exception occurs.
+        finally:
+            self = None  # Needed to break cycles when an exception occurs.
 
 
 class TimerHandle(Handle):
@@ -209,7 +207,7 @@ class TimerHandle(Handle):
         if self.cancelled:
             repr_parts.append(' cancelled')
         else:
-            repr_parts.append(' func=')
+            repr_parts.append(' func = ')
             repr_parts.append(repr(self.func))
             repr_parts.append('(')
             
@@ -229,7 +227,7 @@ class TimerHandle(Handle):
                     continue
             
             repr_parts.append(')')
-            repr_parts.append(', when=')
+            repr_parts.append(', when = ')
             repr_parts.append(repr(self.when))
         
         repr_parts.append('>')

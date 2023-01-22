@@ -486,6 +486,18 @@ class TaskGroup(RichAttributeErrorBaseType):
         Returns
         -------
         future : ``Future``
+        
+        Examples
+        --------
+        ```py3
+        task_group = TaskGroup(loop)
+        task_group.add_future(Task(coro(12), loop))
+        task_group.add_future(Future(loop))
+        
+        # Equals to:
+        
+        task_group = TaskGroup(loop, [Task(coro(12), loop), Future(loop)])
+        ```
         """
         if future.is_done():
             self._waited_done_callback(future)
@@ -516,6 +528,18 @@ class TaskGroup(RichAttributeErrorBaseType):
         ------
         TypeError
             If `coroutine_or_future` is not `awaitable`.
+        
+        Examples
+        --------
+        ```py3
+        task_group = TaskGroup(loop)
+        task_group.add_awaitable(coro(12))
+        task_group.add_awaitable(Future(loop))
+        
+        # Equals to:
+        
+        task_group = TaskGroup(loop, [Task(coro(12), loop), Future(loop)])
+        ```
         """
         return self.add_future(self.loop.ensure_future(coroutine_or_future))
     
@@ -527,6 +551,17 @@ class TaskGroup(RichAttributeErrorBaseType):
         Returns
         -------
         future : ``Future``
+        
+        Examples
+        --------
+        ```py3
+        task_group = TaskGroup(loop)
+        future = task_group.create_future()
+        
+        # Equals to:
+        
+        task_group = TaskGroup(loop, [Future(loop)])
+        ```
         """
         future = Future(self.loop)
         future.add_done_callback(self._callback)
@@ -546,6 +581,17 @@ class TaskGroup(RichAttributeErrorBaseType):
         Returns
         -------
         task : ``Task``
+        
+        Examples
+        --------
+        ```py3
+        task_group = TaskGroup(loop)
+        task = task_group.create_task(coro(11))
+        
+        # Equals to:
+        
+        task_group = TaskGroup(loop, [Task(coro(11), loop)])
+        ```
         """
         task = Task(coroutine, self.loop)
         task.add_done_callback(self._callback)
@@ -621,30 +667,66 @@ class TaskGroup(RichAttributeErrorBaseType):
         """
         Waits till the next future is completed.
         
+        Not like ``.wait_first`` this will not trigger if there are already finished tasks, but will only trigger
+        if a pending task is completed.
+        
         Returns
         -------
         waiter : ``Future``
+        
+        Examples
+        --------
+        ```py
+        future_0 = Future(loop)
+        future_0.set_result(None)
+        future_1 = sleep(2.0)
+        
+        task_group = TaskGroup(loop, [future_0, future_1])
+        
+        # After 2 seconds, we should retrieve `future_1`.
+        next_done = await task_group.wait_next()
+        
+        assert next_done is future_1
+        ```
         """
         return self._add_handler(_handler_wait_next())
-        
+    
     
     def wait_first(self):
         """
-        Waits for the first task to complete and propagates its result.
+        Waits for the first task to complete and propagates it.
+        
+        If there are already done tasks, propagates one of them.
         
         Returns
         -------
         waiter : ``Future`` -> ``Future``
             After awaiting the waiter propagates the first done task.
+        
+        Examples
+        --------
+        ```py
+        future_0 = sleep(1.0)
+        future_1 = sleep(2.0)
+        
+        task_group = TaskGroup(loop, [future_0, future_1])
+        
+        # After 1 seconds, we should retrieve `future_0`.
+        first_done = await task_group.wait_first()
+        
+        assert first_done is future_0
+        ```
         """
         return self._add_handler(_handler_wait_first(self))
     
     
     def wait_first_and_pop(self):
         """
-        Waits for the first task to complete and propagates its result.
+        Waits for the first task to complete and propagates it.
         
-        Removes the done task from the task group.
+        If there are already done tasks, propagates one of them.
+        
+        Removes the propagated task from the task group.
         
         Returns
         -------
@@ -658,19 +740,37 @@ class TaskGroup(RichAttributeErrorBaseType):
         """
         Waits till the first task fails with an exception, or till all is done obviously.
         
+        If there is any task in the task group failing with an exception, propagates that.
+        
         Returns
         -------
         waiter : ``Future`` -> `None` | ``Future``
             After awaiting the waiter propagates the first task that failed with an exception.
+
+        Examples
+        --------
+        ```py
+        future_0 = apply_timeout(Future(loop), 2.0)
+        future_1 = sleep(1.0)
+        
+        task_group = TaskGroup(loop, [future_0, future_1])
+        
+        # After 1 seconds, we should retrieve `future_0`.
+        first_failing_with_exception = await task_group.wait_exception()
+        
+        assert first_failing_with_exception is future_0
+        ```
         """
         return self._add_handler(_handler_wait_exception(self))
     
     
     def wait_exception_and_pop(self):
         """
-        Waits till the first task fails with an exception, or till all is done obviously.
+        Waits till the first task fails with an exception or till all is done obviously.
         
-        Removes the done task from the task group.
+        If there is any task in the task group failing with an exception, propagates that.
+        
+        Familiar to ``.wait_exception``, but removes the propagated task from the task group.
         
         Returns
         -------
@@ -696,6 +796,23 @@ class TaskGroup(RichAttributeErrorBaseType):
             
             This amount can be higher than `count` if there are initially more done tasks in the task group.
             It can also be less than the amount of done tasks inside of task group if any was popped from it.
+        
+        Examples
+        --------
+        ```py
+        future_0 = sleep(0.0)
+        future_1 = sleep(1.0)
+        future_2 = sleep(2.0)
+        
+        task_group = TaskGroup(loop, [future_0, future_1, future_2])
+        
+        # After 1 seconds 2 tasks should be done.
+        first_done = await task_group.wait_first_n(2)
+        
+        assert future_0.is_done()
+        assert future_1.is_done()
+        assert future_2.is_pending()
+        ```
         """
         return self._add_handler(_handler_wait_first_n(self, count))
     
@@ -708,6 +825,20 @@ class TaskGroup(RichAttributeErrorBaseType):
         -------
         waiter : ``Future`` -> `self`
             A future to be waited propagating the task group itself.
+        
+        Examples
+        --------
+        ```py
+        future_0 = sleep(0.0)
+        future_1 = sleep(1.0)
+        
+        task_group = TaskGroup(loop, [future_0, future_1])
+        
+        # After 2 seconds all tasks are finished.
+        first_done = await task_group.wait_all()
+        
+        assert not task_group.has_pending()
+        ```
         """
         return self._add_handler(_handler_wait_all(self))
     
@@ -722,6 +853,23 @@ class TaskGroup(RichAttributeErrorBaseType):
         Yields
         ------
         future : ``Future``
+        
+        Examples
+        --------
+        ```py
+        task_group = TaskGroup(loop)
+        
+        task_group.create_future().set_result(None)
+        task_group.create_future().set_result(None)
+        task_group.add_future(sleep(1.0))
+        
+        # We have 2 done futures and 1 pending.
+        done = [*task_group.exhaust_done()]
+        
+        assert len(done) == 2
+        assert not task_group.has_done()
+        assert task_group.has_pending()
+        ```
         """
         done = self.done
         while done:
@@ -737,6 +885,23 @@ class TaskGroup(RichAttributeErrorBaseType):
         Yields
         ------
         future : ``Future``
+        
+        Examples
+        --------
+        ```py
+        future_0 = sleep(0.0)
+        future_1 = sleep(1.0)
+        future_2 = sleep(2.0)
+        task_group = TaskGroup(loop, [future_0, future_1, future_2])
+        
+        # After 2 second our iteration should end with the last done future.
+        done_futures = []
+        async for future in task_group.exhaust():
+            done_futures.append(future)
+        
+        # We should get back the futures in their completion order.
+        assert done_futures = [future_0, future_1, future_2]
+        ```
         """
         done = self.done
         pending = self.pending
@@ -764,5 +929,18 @@ class TaskGroup(RichAttributeErrorBaseType):
         Returns
         -------
         context_manager : ``TaskGroupContextManager``
+        
+        Examples
+        --------
+        ```py
+        task_group = TaskGroup(loop)
+        future = task_group.create_future()
+        
+        try:
+            with task_group.cancel_on_exception():
+                raise ValueError()
+        finally:
+            assert future.is_cancelled()
+        ```
         """
         return TaskGroupContextManager(self, _context_manager_leaver_cancel_on_exception)

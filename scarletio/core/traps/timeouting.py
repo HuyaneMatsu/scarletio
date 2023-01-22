@@ -1,4 +1,4 @@
-__all__ = ('apply_timeout', 'future_or_timeout', 'repeat_timeout',)
+__all__ = ('future_or_timeout', 'repeat_timeout',)
 
 import warnings
 from datetime import datetime as DateTime
@@ -18,10 +18,12 @@ EventThread = include('EventThread')
 DEPRECATED = DateTime.utcnow() > DateTime(2023, 7, 18)
 
 
-def apply_timeout(future, timeout):
+def future_or_timeout(future, timeout):
     """
     If the given ``Future`` is not done till the given `timeout` occurs, sett `TimeoutError` as it's exception.
     If the `future` is a task, cancels the task and propagates `TimeoutError` outside instead of `CancelledError`.
+    
+    Deprecated and will be removed in 2024.
     
     Parameters
     ----------
@@ -39,6 +41,16 @@ def apply_timeout(future, timeout):
     RuntimeError
         The future's event loop is already stopped.
     """
+    if DEPRECATED:
+        warnings.warn(
+            (
+                f'{future_or_timeout.__name__} is deprecated and will be removed in 2024 february.'
+                f'Please use `TaskGroup` instead accordingly.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
+    
     loop = future._loop
     callback = _TimeoutHandleCanceller()
     handle = loop.call_later(timeout, callback, future)
@@ -50,23 +62,6 @@ def apply_timeout(future, timeout):
     callback._handle = handle
     future.add_done_callback(callback)
     return future
-
-
-def future_or_timeout(future, timeout):
-    """
-    Deprecated and will be removed in 2024.
-    """
-    if DEPRECATED:
-        warnings.warn(
-            (
-                f'{future_or_timeout.__name__} is deprecated and will be removed in 2024 february.'
-                f'Please use `TaskGroup` instead accordingly.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-    
-    return apply_timeout(future, timeout)
 
 
 class repeat_timeout:

@@ -3,7 +3,7 @@
 #### Improvements
 
 - Add `TaskGroup`.
-- `apply_timeout` now returns the passed future.
+- Add `Future.apply_timeout` replacing `future_or_timeout` function.
 
 #### Bug fixes
 
@@ -17,8 +17,8 @@
 - Deprecate `WaitTillAll`.
 - Deprecate `WaitTillExc`.
 - Deprecate `WaitTillFirst`.
-- Rename `future_or_timeout` to `apply_timeout`.
 - Deprecate `future_or_timeout`.
+- Deprecate `Future.clear` in favor of keeping future life cycle flow.
 
 ## 1.0.50 *\[2023-01-14\]*
 

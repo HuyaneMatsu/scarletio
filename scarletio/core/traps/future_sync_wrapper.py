@@ -621,6 +621,12 @@ class FutureSyncWrapper:
     
     @copy_docs(Future.clear)
     def clear(self):
+        warnings.warn(
+            f'`{self.__class__.__name__}.clear` is deprecated and will be removed at 2023 July.',
+            FutureWarning,
+            stacklevel = 2,
+        )
+        
         with self._lock:
             future = self._future
             if future is not None:
