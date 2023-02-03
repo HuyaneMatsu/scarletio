@@ -875,7 +875,18 @@ class ImplementationDetail:
         if (implementation is None):
             return False
         
-        return isinstance(implementation, property)
+        if isinstance(implementation, property):
+            return True
+        
+        # Check for custom descriptors, all should implemented
+        if (
+            (getattr(implementation, '__get__', None) is not None) and
+            (getattr(implementation, '__set__', None) is not None) and
+            (getattr(implementation, '__delete__', None) is not None)
+        ):
+            return True
+        
+        return False
     
     
     def is_method(self):
@@ -1140,8 +1151,8 @@ def _check_get_descriptor_match(source_implementation_detail, added_implementati
     """
     if source_implementation_detail.is_get_descriptor() != added_implementation_detail.is_get_descriptor():
         raise TypeError(
-            f'Implementation of `{source_implementation_detail.name}` at'
-            f'`{source_implementation_detail.implementation_source}` is defined as a `get-descriptor` '
+            f'Implementation of `{source_implementation_detail.name}` at '
+            f'`{source_implementation_detail.implementation_source}` is defined as a `get-descriptor`'
             f', meanwhile at `{added_implementation_detail.implementation_source}` is not. '
             f'Got `{source_implementation_detail!r}`; `{added_implementation_detail!r}`.'
         )

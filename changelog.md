@@ -1,3 +1,9 @@
+## 1.0.52 *\[2023-02-03\]*
+
+#### Bug fixes
+
+- `CompoundMetaType` did not respect property-like custom descriptors as intended.
+
 ## 1.0.51 *\[2023-01-22\]*
 
 #### Improvements
