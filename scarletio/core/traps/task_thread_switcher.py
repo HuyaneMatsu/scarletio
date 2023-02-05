@@ -15,6 +15,7 @@ ignore_frame(__spec__.origin, '__iter__', 'yield self',)
 
 EventThread = include('EventThread')
 
+
 class enter_executor:
     """
     Async context manager for moving a ``Task``'s section's execution to an executor thread.
@@ -146,44 +147,43 @@ class enter_executor:
         
         try:
             while True:
-                if task._must_cancel:
-                    exception = task._must_exception(exception)
-                    
                 if (local_waited_future is not None):
                     if local_waited_future is end_future:
                         end_future.set_result(None)
-                        loop.call_soon_thread_safe(task._step, exception)
+                        loop.call_soon_thread_safe(task._step)
                         break
+                    
+                    self._waited_future = local_waited_future
+                    if task.is_cancelled() or task._should_cancel:
+                        local_waited_future.cancel()
                     
                     try:
-                        self._waited_future = local_waited_future
-                        if type(exception) is CancelledError:
-                            local_waited_future.cancel()
-                        local_waited_future.sync_wrap().wait()
-                    
-                    except CancelledError:
-                        break
-                    except BaseException as err:
-                        exception = err
+                        local_waited_future.sync_wrap().wait_for_completion()
                     finally:
                         local_waited_future = None
-                        self._waited_future = None
                 
                 if task._state != FUTURE_STATE_PENDING:
                     # there is no reason to raise
                     break
                 
-                # call either coroutine.throw(err) or coroutine.send(None).
                 try:
-                    if exception is None:
-                        result = coroutine.send(None)
-                    else:
+                    # Get cancellation exception
+                    if task._should_cancel:
+                        task._should_cancel = False
+                        
+                        exception = task._exception
+                        if exception is None:
+                            exception = CancelledError()
+                    
+                        # call either coroutine.throw(err) or coroutine.send(None).
                         result = coroutine.throw(exception)
+                    else:
+                        result = coroutine.send(None)
                 
                 except StopIteration as exception:
-                    if task._must_cancel:
+                    if task._should_cancel:
                         # the task is cancelled meanwhile
-                        task._must_cancel = False
+                        task._should_cancel = False
                         Future.set_exception(task, CancelledError())
                     else:
                         Future.set_result(task, exception.value)
@@ -205,11 +205,15 @@ class enter_executor:
                     if isinstance(result, Future) and result._blocking:
                         result._blocking = False
                         local_waited_future = result
-                        if task._must_cancel:
+                        task._waited_future = result
+                        if task._should_cancel:
                             if local_waited_future.cancel():
-                                task._must_cancel = False
+                                task._should_cancel = False
                     else:
                         continue
+                
+                finally:
+                    exception = None
         
         finally:
             task.remove_done_callback(self._cancel_callback)

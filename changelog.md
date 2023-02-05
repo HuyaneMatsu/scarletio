@@ -1,3 +1,13 @@
+## 1.0.53 *\[2023-02-05\]*
+
+#### Improvements
+
+- Add `FutureSyncWrapper.wait_for_completion`.
+
+#### Bug fixes
+
+- `enter_executor` dropped `AttributeError` (Gilgamesh#8939) (From `1.0.51`).
+
 ## 1.0.52 *\[2023-02-03\]*
 
 #### Bug fixes

@@ -381,7 +381,7 @@ class FutureSyncWrapper:
                     break
     
     
-    def wait(self, timeout = None, propagate_cancellation=False):
+    def wait(self, timeout = None, propagate_cancellation = False):
         """
         Waits till the waited future's result or exception is set.
         
@@ -393,8 +393,6 @@ class FutureSyncWrapper:
         If the future has result set with `.set_result`, `.set_result_if_pending` successfully, then returns the
         given object.
         
-        If the future is not done yet, raises ``InvalidStateError``.
-        
         Parameters
         ----------
         timeout : `None`, `float` = `None`, Optional
@@ -402,14 +400,17 @@ class FutureSyncWrapper:
         propagate_cancellation : `bool` = `False`, Optional
             Whether cancellation should be propagated towards the waited task.
         
+        Returns
+        -------
+        result : `object`
+            The future's result.
+        
         Raises
         ------
         TimeoutError
             If `timeout` is over and the waited future is still pending.
         CancelledError
             The future is cancelled.
-        InvalidStateError
-            The futures is not done yet.
         TypeError
             The future has non `BaseException` set as exception.
         BaseException
@@ -430,6 +431,47 @@ class FutureSyncWrapper:
             self.cancel()
         
         raise TimeoutError
+    
+    
+    def wait_for_completion(self, timeout = None, propagate_cancellation = False):
+        """
+        Waits till the waited future's result or exception is set.
+        
+        If the future is cancelled, raises ``CancelledError``.
+        
+        If the future has exception set with `.set_exception`, `.set_exception_if_pending` successfully, then raises
+        the given exception.
+        
+        If the future has result set with `.set_result`, `.set_result_if_pending` successfully, then returns the
+        given object.
+        
+        Parameters
+        ----------
+        timeout : `None`, `float` = `None`, Optional
+            Timeout in seconds till the waited future's result should be set. Giving it as `None`, means no time limit.
+        propagate_cancellation : `bool` = `False`, Optional
+            Whether cancellation should be propagated towards the waited task.
+        
+        Returns
+        -------
+        completed : `bool`
+            Whether the wrapper future is completed.
+        """
+        try:
+            result_set = self._waiter.wait(timeout)
+        except:
+            if propagate_cancellation:
+                self.cancel()
+            
+            raise
+        
+        if result_set:
+            return True
+        
+        if propagate_cancellation:
+            self.cancel()
+        
+        raise False
     
     
     def _set_future_result(self, future, result):
