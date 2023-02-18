@@ -30,7 +30,7 @@ class BasicAuth:
     """
     __slots__ = ('username', 'password', 'encoding',)
     
-    def __new__(cls, username, password='', encoding=BASIC_AUTH_DEFAULT_ENCODING):
+    def __new__(cls, username, password = '', encoding = BASIC_AUTH_DEFAULT_ENCODING):
         """
         Creates a new ``BasicAuth`` with the given parameters.
         
@@ -73,8 +73,9 @@ class BasicAuth:
         
         return self
     
+    
     @classmethod
-    def decode(cls, auth_header, encoding=BASIC_AUTH_DEFAULT_ENCODING):
+    def decode(cls, auth_header, encoding = BASIC_AUTH_DEFAULT_ENCODING):
         """
         Creates a new ``BasicAuth`` from the given HTTP header value and.
         
@@ -120,6 +121,7 @@ class BasicAuth:
         self.encoding = encoding
         return self
     
+    
     def encode(self):
         """
         Encodes the authorization to it's header value.
@@ -132,22 +134,23 @@ class BasicAuth:
         sub_value = base64.b64encode(credits_).decode(self.encoding)
         return f'Basic {sub_value}'
     
+    
     def __repr__(self):
-        """Returns the basic auth's representation."""
+        """Returns the basic authorisation's representation."""
         repr_parts = [
             self.__class__.__name__,
-            '(username=',
+            '(username  =',
             repr(self.username),
         ]
         
         password = self.password
         if password:
-            repr_parts.append(', password=')
+            repr_parts.append(', password = ')
             repr_parts.append(repr(password))
         
         encoding = self.encoding
         if encoding != BASIC_AUTH_DEFAULT_ENCODING:
-            repr_parts.append(' encoding=')
+            repr_parts.append(', encoding = ')
             repr_parts.append(repr(encoding))
         
         repr_parts.append(')')
@@ -168,9 +171,9 @@ _ipv6_pattern = (
 )
 
 _ipv4_regex = re.compile(_ipv4_pattern)
-_ipv6_regex = re.compile(_ipv6_pattern, flags=re.I)
+_ipv6_regex = re.compile(_ipv6_pattern, flags = re.I)
 _ipv4_regex_b = re.compile(_ipv4_pattern.encode('ascii'))
-_ipv6_regex_b = re.compile(_ipv6_pattern.encode('ascii'), flags=re.I)
+_ipv6_regex_b = re.compile(_ipv6_pattern.encode('ascii'), flags = re.I)
 
 del _ipv4_pattern, _ipv6_pattern, re
 

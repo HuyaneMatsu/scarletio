@@ -136,7 +136,7 @@ class WeakReferer(WeakrefType):
         if value is None:
             repr_parts.append(' (dead)')
         else:
-            repr_parts.append(' value=')
+            repr_parts.append(' value = ')
             repr_parts.append(repr(value))
         
         repr_parts.append('>')
@@ -246,7 +246,7 @@ class weak_method(WeakReferer, MethodLike):
     __reserved_argcount__ = 1
     
     @has_docs
-    def __new__(cls, obj, func, callback=None):
+    def __new__(cls, obj, func, callback = None):
         """
         Creates a new ``weak_method`` with the given parameter.
         
@@ -320,7 +320,7 @@ class weak_method(WeakReferer, MethodLike):
     
     @classmethod
     @has_docs
-    def from_method(cls, method_, callback=None):
+    def from_method(cls, method_, callback = None):
         """
         Creates a new ``weak_method`` from the given `method`.
         

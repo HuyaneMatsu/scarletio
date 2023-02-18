@@ -277,8 +277,8 @@ class SocketTransportLayerBase(TransportLayerBase):
     
     
     @copy_docs(TransportLayerBase.set_write_buffer_limits)
-    def set_write_buffer_limits(self, high=None, low=None):
-        self._set_write_buffer_limits(high=high, low=low)
+    def set_write_buffer_limits(self, high = None, low = None):
+        self._set_write_buffer_limits(high = high, low = low)
         self._maybe_pause_protocol()
     
     
@@ -341,7 +341,7 @@ class SocketTransportLayerBase(TransportLayerBase):
                 )
     
     
-    def _set_write_buffer_limits(self, high=None, low=None):
+    def _set_write_buffer_limits(self, high = None, low = None):
         """
         Sets the write buffer limits of the transport.
         
@@ -371,7 +371,7 @@ class SocketTransportLayerBase(TransportLayerBase):
         if low < 0 or high < low:
             raise ValueError(
                 f'High water must be greater or equal than low, what must be greater than equal than `0`, '
-                f'got high={high!r}; low={low!r}.'
+                f'got high = {high!r}; low = {low!r}.'
             )
         
         self._high_water = high
@@ -827,7 +827,7 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
             self._protocol.datagram_received(data, address)
     
     
-    def send_to(self, data, maybe_address=None):
+    def send_to(self, data, maybe_address = None):
         """
         Sends the given data to the target address. If target is already set, can be the parameter can be ignored.
         

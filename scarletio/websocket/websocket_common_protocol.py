@@ -136,7 +136,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
     
     is_client = True # placeholder for subclasses
     
-    def __new__(cls, loop, host, port, *, is_ssl=False, close_timeout = 10.0, max_size=1 << 26, max_queue=None):
+    def __new__(cls, loop, host, port, *, is_ssl = False, close_timeout = 10.0, max_size = 1 << 26, max_queue = None):
         """
         Initializes the ``WebSocketCommonProtocol`` with setting it's common attributes.
         
@@ -162,7 +162,10 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         self._set_common_websocket_attributes(host, port, is_ssl, close_timeout, max_size, max_queue)
         return self
     
-    def _set_common_websocket_attributes(self, host, port, is_ssl, close_timeout = 10.0, max_size=1 << 26, max_queue=None):
+    
+    def _set_common_websocket_attributes(
+        self, host, port, is_ssl, close_timeout = 10.0, max_size = 1 << 26, max_queue = None
+    ):
         """
         Sets the common websocket specific attributes for the protocol.
         
@@ -201,7 +204,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         self.close_reason = None
         
         self.connection_lost_waiter = Future(self._loop)
-        self.messages = AsyncQueue(loop=self._loop, max_length = max_queue)
+        self.messages = AsyncQueue(loop = self._loop, max_length = max_queue)
         
         self.pings = OrderedDict()
         
@@ -416,14 +419,14 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         WebSocketProtocolError
             Close code is not given as one of `(1000, 1001, 1002, 1003, 1007, 1008, 1009, 1010, 1011) | [3000:5000)`.
         """
-        if not (code in EXTERNAL_CLOSE_CODES or 2999<code<5000):
+        if not (code in EXTERNAL_CLOSE_CODES or 2999 < code < 5000):
             raise WebSocketProtocolError(
                 f'Status can be in range [3000:5000), got {code!r}.'
             )
         
         return code.to_bytes(2, 'big') + reason.encode('utf-8')
     
-    async def ping(self, data=None):
+    async def ping(self, data = None):
         """
         Sends a ping to the other side and waits till answer is received.
         
@@ -470,7 +473,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         
         await waiter
     
-    async def pong(self, data=None):
+    async def pong(self, data = None):
         """
         Sends a pong payload to the other side.
         

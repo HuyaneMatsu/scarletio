@@ -108,7 +108,7 @@ def _produce_banner(package, logo):
     yield '\n', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE
 
 
-def create_banner(package=None, logo=None, *, highlighter=None):
+def create_banner(package = None, logo = None, *, highlighter = None):
     """
     helper creating console banner.
     
@@ -131,7 +131,7 @@ def create_banner(package=None, logo=None, *, highlighter=None):
     return ''.join([*_iter_highlight_producer(_produce_banner(package, logo), highlighter)])
 
 
-def create_exit_message(package=None):
+def create_exit_message(package = None):
     """
     helper creating console exit message.
     

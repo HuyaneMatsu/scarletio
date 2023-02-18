@@ -249,7 +249,7 @@ class Task(Future):
         return ''.join(repr_parts)
     
     
-    def print_stack(self, limit=-1, file=None):
+    def print_stack(self, limit = -1, file = None):
         """
         Prints the stack or traceback of the task.
         

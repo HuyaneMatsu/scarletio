@@ -128,6 +128,7 @@ def _is_stream_socket(socket):
     """
     return (socket.type & module_socket.SOCK_STREAM) == module_socket.SOCK_STREAM
 
+
 def _set_reuse_port(socket):
     """
     Tells to the kernel to allow this endpoint to be bound to the same port as an other existing endpoint already

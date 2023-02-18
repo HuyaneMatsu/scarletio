@@ -339,7 +339,7 @@ class HostInfo:
     Attributes
     ----------
     hostname : `str`
-        The hosts's name.
+        The hosts' name.
     host : `str`
         The host's ip address.
     port : `int`
@@ -356,8 +356,8 @@ class HostInfo:
     def __repr__(self):
         """Returns the host info's representation."""
         return (
-            f'<{self.__class__.__name__}, hostname={self.hostname!r}, host={self.host!r}, port={self.port!r}, '
-            f'family={self.family!r}, protocol={self.protocol!r}, flags={self.flags!r}>'
+            f'<{self.__class__.__name__}, hostname = {self.hostname!r}, host = {self.host!r}, port = {self.port!r}, '
+            f'family = {self.family!r}, protocol = {self.protocol!r}, flags = {self.flags!r}>'
         )
     
     @classmethod
@@ -381,8 +381,8 @@ class HostInfo:
         self.family = family
         self.protocol = 0
         self.flags = 0
-        
         return self
+    
     
     @classmethod
     def from_address_info(cls, host, address_info):
@@ -562,7 +562,7 @@ class TCPConnector(ConnectorBase):
     """
     __slots__ = ('cached_hosts', 'dns_events', 'family', 'local_address',  'ssl', )
 
-    def __new__(cls, loop, family=0, ssl=None, local_address=None, force_close=False, ):
+    def __new__(cls, loop, family = 0, ssl = None, local_address = None, force_close = False):
         """
         Creates a new ``TCPConnector`` with the given parameters.
         

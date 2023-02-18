@@ -32,7 +32,7 @@ class KeepType:
     _ignored_attr_names = frozenset(('__name__', '__qualname__', '__weakref__', '__dict__', '__slots__', '__module__'))
     
     @has_docs
-    def __new__(cls, old_class, *, new_class=None):
+    def __new__(cls, old_class, *, new_class = None):
         """
         Creates a new ``KeepType`` with given `old_class` to extend. Can be used as a decorator if `new_class`
         parameter is not given.

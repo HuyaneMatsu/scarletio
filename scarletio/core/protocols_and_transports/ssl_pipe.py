@@ -127,7 +127,7 @@ class SSLPipe:
         return (self._state == SSL_PIPE_STATE_WRAPPED)
     
     
-    def do_handshake(self, callback=None):
+    def do_handshake(self, callback = None):
         """
         Starts the SSL handshake.
         
@@ -140,7 +140,7 @@ class SSLPipe:
             +-----------------------+---------------------------+
             | Respective name       | Value                     |
             +=======================+===========================+
-            | handshake_exception   | `None`, `BaseException` |
+            | handshake_exception   | `None`, `BaseException`   |
             +-----------------------+---------------------------+
             
             If the handshake is successful, then the `handshake_exception` is given as `None`, else as an exception
@@ -159,17 +159,18 @@ class SSLPipe:
         if self._state != SSL_PIPE_STATE_UNWRAPPED:
             raise RuntimeError('Handshake in progress or completed.')
         
-        self._ssl_object = self._ssl_context.wrap_bio(self._incoming, self._outgoing, server_side=self._server_side,
-            server_hostname=self._server_host_name)
+        self._ssl_object = self._ssl_context.wrap_bio(
+            self._incoming, self._outgoing, server_side = self._server_side, server_hostname = self._server_host_name
+        )
         
         self._state = SSL_PIPE_STATE_DO_HANDSHAKE
         self._handshake_callback = callback
-        ssl_data, application_data = self.feed_ssl_data(b'', only_handshake=True)
+        ssl_data, application_data = self.feed_ssl_data(b'', only_handshake = True)
         
         return ssl_data
     
     
-    def shutdown(self, callback=None):
+    def shutdown(self, callback = None):
         """
         Starts the SSL shutdown process.
         

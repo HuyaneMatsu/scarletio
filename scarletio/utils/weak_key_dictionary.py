@@ -279,7 +279,7 @@ class WeakKeyDictionary(dict):
     # __hash__ -> same
     
     @has_docs
-    def __init__(self, iterable=None):
+    def __init__(self, iterable = None):
         """
         Creates a new ``WeakKeyDictionary`` from the given iterable.
         

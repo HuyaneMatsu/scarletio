@@ -736,7 +736,7 @@ class AsyncProcess:
         return result
     
     
-    async def communicate(self, input_=None, timeout = None):
+    async def communicate(self, input_ = None, timeout = None):
         """
         Sends data to stdin and reads data from stdout and stderr.
         

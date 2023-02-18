@@ -103,7 +103,7 @@ class URL:
     
     __slots__ = ('_cache', '_value', )
 
-    def __new__(cls, value='', encoded=False):
+    def __new__(cls, value = '', encoded = False):
         """
         Creates a new ``URL`` from the given `value`
         

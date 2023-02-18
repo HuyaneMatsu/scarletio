@@ -39,7 +39,7 @@ class AsyncQueue:
     """
     __slots__ = ('_exception', '_loop', '_results', '_set_result_waiters', '_waiter',)
     
-    def __new__(cls, loop, iterable=None, max_length = None, exception=None):
+    def __new__(cls, loop, iterable = None, max_length = None, exception = None):
         """
         Creates a new ``AsyncQueue`` with the given parameter.
         

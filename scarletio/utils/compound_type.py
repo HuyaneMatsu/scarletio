@@ -265,7 +265,7 @@ class CompoundMetaType(type):
             if keyword_parameters:
                 raise TypeError(
                     f'Keyword parameters are not supported when building a component. '
-                    f'Got type_name={type_name!r}; keyword_parameters={keyword_parameters!r}.'
+                    f'Got type_name = {type_name!r}; keyword_parameters = {keyword_parameters!r}.'
                 )
             
             compound = cls.__create_component__(type_name, base_types, type_attributes)
@@ -349,7 +349,7 @@ class CompoundMetaType(type):
         for base_type in base_types:
             if not isinstance(base_type, type):
                 raise TypeError(
-                    f'Base types can only be `type` instances, got {base_type!r}; type_name={type_name!r};'
+                    f'Base types can only be `type` instances, got {base_type!r}; type_name = {type_name!r};'
                     f'base_types = {base_types}.'
                 )
             
@@ -361,7 +361,7 @@ class CompoundMetaType(type):
             
             raise TypeError(
                 f'Base types can only be `object` or `{Compound.__name__}`, got {base_type!r};'
-                f'type_name={type_name!r}; base_types = {base_types}.'
+                f'type_name = {type_name!r}; base_types = {base_types}.'
             )
         
         

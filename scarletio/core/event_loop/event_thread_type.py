@@ -139,7 +139,7 @@ class EventThreadType(type):
     """
     Type of even thread, which manages their instances creation.
     """
-    def __call__(cls, daemon=False, name=None, start_later=True, **kwargs):
+    def __call__(cls, daemon = False, name = None, start_later = True, **kwargs):
         """
         Creates a new ``EventThread`` with the given parameters.
         
@@ -161,7 +161,7 @@ class EventThreadType(type):
         """
         obj = Thread.__new__(cls)
         cls.__init__(obj, **kwargs)
-        Thread.__init__(obj, daemon=daemon, name=name)
+        Thread.__init__(obj, daemon = daemon, name = name)
         
         obj.context = EventThreadContextManager(obj)
         

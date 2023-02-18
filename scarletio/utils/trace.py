@@ -58,7 +58,7 @@ class ConsoleLineInput:
     
     def __repr__(self):
         """Returns the console line input's representation."""
-        return f'<{self.__class__.__name__} file_name={self.file_name!r}, length={self.length!r}>'
+        return f'<{self.__class__.__name__} file_name = {self.file_name!r}, length = {self.length!r}>'
     
     
     def get_lines(self):
@@ -681,7 +681,7 @@ def should_ignore_frame(file_name, name, line_number, line, *, filter = None):
     return False
 
 
-def format_callback(func, args=None, kwargs=None):
+def format_callback(func, args = None, kwargs = None):
     """
     Formats the given callback to a more user friendly representation.
     
@@ -712,7 +712,7 @@ def format_callback(func, args=None, kwargs=None):
             if (kwargs is not None) and kwargs:
                 for key, arg in kwargs.items():
                     sub_result.append(str(key)) # never trust
-                    sub_result.append('=')
+                    sub_result.append(' = ')
                     sub_result.append(reprlib.repr(arg))
                     sub_result.append(', ')
             
@@ -1599,7 +1599,7 @@ class FrameDetailGroup:
         return into
 
 
-def render_frames_into(frames, extend=None, *, filter=None, highlighter=None):
+def render_frames_into(frames, extend = None, *, filter = None, highlighter = None):
     """
     Renders the given frames into a list of strings.
     
@@ -2090,7 +2090,7 @@ REASON_TYPE_CONTEXT = 2
 REASON_TYPE_CAUSE_GROUP = 3
 
 
-def render_exception_into(exception, extend=None, *, filter=None, highlighter=None):
+def render_exception_into(exception, extend = None, *, filter = None, highlighter = None):
     """
     Renders the given exception's frames into a list of strings.
     

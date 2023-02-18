@@ -290,7 +290,7 @@ class HTTPServer:
     """
     __slots__ = ('close_connection_task', 'handlers', 'loop', 'server')
     
-    async def __new__(cls, loop, host, port, *, ssl=None, **server_kwargs):
+    async def __new__(cls, loop, host, port, *, ssl = None, **server_kwargs):
         """
         Creates a new ``HTTPServer`` with the given parameters.
         
@@ -2795,7 +2795,7 @@ class AppBase:
         
         return self
     
-    def route(self, rule, endpoint=None, **options):
+    def route(self, rule, endpoint = None, **options):
         """
         A decorator, what can be used to registers rules. Does the same thing as ``.add_url_rule``, but it is intended
         to be used as a decorator.
@@ -2815,7 +2815,7 @@ class AppBase:
         """
         return _RouteAdder(self, rule, endpoint, options)
     
-    def add_url_rule(self, rule, *args, provide_automatic_options=None, **options):
+    def add_url_rule(self, rule, *args, provide_automatic_options = None, **options):
         """
         Method to add a route to the application.
         

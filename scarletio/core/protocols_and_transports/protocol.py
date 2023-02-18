@@ -1011,7 +1011,7 @@ class DatagramAddressedReadProtocol(AbstractProtocolBase):
         pass
     
     
-    async def wait_for_receive(self, address=None, timeout = None):
+    async def wait_for_receive(self, address = None, timeout = None):
         """
         Can be used to wait for payload to receive. Note, that this method should be used only initially, because the
         reader protocols implement the reading.
@@ -1035,7 +1035,7 @@ class DatagramAddressedReadProtocol(AbstractProtocolBase):
         Raises
         ------
         TimeoutError
-            - If timeout occured.
+            - If timeout occurred.
         """
         if timeout is None:
             if address is None:

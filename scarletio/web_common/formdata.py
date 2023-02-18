@@ -90,7 +90,7 @@ class Formdata:
         return self
     
     
-    def add_field(self, name, value, content_type=None, filename=None, transfer_encoding=None):
+    def add_field(self, name, value, content_type = None, filename = None, transfer_encoding = None):
         """
         Adds a field to the formdata.
         

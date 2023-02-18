@@ -20,7 +20,7 @@ def skip_ready_cycle():
     yield
 
 
-async def skip_poll_cycle(loop=None):
+async def skip_poll_cycle(loop = None):
     """
     Skips a full poll cycle.
     

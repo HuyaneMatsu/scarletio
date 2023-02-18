@@ -305,7 +305,7 @@ class WeakValueDictionary(dict):
     # __hash__ -> same
     
     @has_docs
-    def __init__(self, iterable=None):
+    def __init__(self, iterable = None):
         """
         Creates a new ``WeakValueDictionary`` from the given iterable.
         

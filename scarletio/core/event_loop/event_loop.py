@@ -748,7 +748,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return self.ensure_future_thread_safe(awaitable).sync_wrap().wait(timeout, True)
     
     
-    def render_exception_async(self, exception, before=None, after=None, file=None):
+    def render_exception_async(self, exception, before = None, after = None, file = None):
         """
         Renders the given exception's traceback in a non blocking way.
         
@@ -785,11 +785,11 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             FutureWarning,
         )
         
-        return write_exception_async(exception, before, after, file, loop=self)
+        return write_exception_async(exception, before, after, file, loop = self)
     
     
     @classmethod
-    def render_exception_maybe_async(cls, exception, before=None, after=None, file=None):
+    def render_exception_maybe_async(cls, exception, before = None, after = None, file = None):
         """
         Renders the given exception's traceback. If called from an ``EventThread``, then will not block it.
         
@@ -937,7 +937,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return [future for future in future_checks_done if isinstance(future, Task)]
     
     
-    def _make_socket_transport(self, socket, protocol, waiter=None, *, extra=None, server=None):
+    def _make_socket_transport(self, socket, protocol, waiter = None, *, extra = None, server = None):
         """
         Creates a socket transport with the given parameters.
         
@@ -962,7 +962,16 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
     
     
     def _make_ssl_transport(
-        self, socket, protocol, ssl, waiter=None, *, server_side=False, server_host_name=None, extra=None, server=None
+        self,
+        socket,
+        protocol,
+        ssl,
+        waiter = None,
+        *,
+        server_side = False,
+        server_host_name = None,
+        extra = None,
+        server = None,
     ):
         """
         Creates an ssl transport with the given parameters.
@@ -1151,11 +1160,17 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             waiter = Future(self)
             if (ssl is None):
                 transport = self._make_socket_transport(
-                    connection_socket, protocol, waiter=waiter, extra=extra, server=server
+                    connection_socket, protocol, waiter = waiter, extra = extra, server = server
                 )
             else:
                 transport = self._make_ssl_transport(
-                    connection_socket, protocol, ssl, waiter=waiter, server_side=True, extra=extra, server=server
+                    connection_socket,
+                    protocol,
+                    ssl,
+                    waiter = waiter,
+                    server_side = True,
+                    extra = extra,
+                    server = server,
                 )
             
             try:
@@ -1320,7 +1335,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return False
     
     
-    async def connect_accepted_socket(self, protocol_factory, socket, *, ssl=None):
+    async def connect_accepted_socket(self, protocol_factory, socket, *, ssl = None):
         """
         Wrap an already accepted connection into a transport/protocol pair.
         
@@ -1405,8 +1420,17 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
     
     
     async def create_connection_to(
-        self, protocol_factory, host, port, *, ssl=None, socket_family=0, socket_protocol=0, socket_flags=0,
-        local_address=None, server_host_name=None
+        self,
+        protocol_factory,
+        host,
+        port,
+        *,
+        ssl = None,
+        socket_family = 0,
+        socket_protocol = 0,
+        socket_flags = 0,
+        local_address = None,
+        server_host_name = None,
     ):
         """
         Open a streaming transport connection to a given address specified by `host` and `port`.
@@ -1551,7 +1575,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return await self._create_connection_transport(socket, protocol_factory, ssl, server_host_name, False)
     
     
-    async def create_connection_with(self, protocol_factory, socket, *, ssl=None, server_host_name=None):
+    async def create_connection_with(self, protocol_factory, socket, *, ssl = None, server_host_name = None):
         """
         Opens a stream transport connection to the given `socket`.
         
@@ -1680,7 +1704,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return ssl, server_host_name
     
 
-    async def create_unix_connection_to(self, protocol_factory, path, *, ssl=None, server_host_name=None):
+    async def create_unix_connection_to(self, protocol_factory, path, *, ssl = None, server_host_name = None):
         """
         Establish a unix socket connection.
         
@@ -1732,7 +1756,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return await self._create_connection_transport(socket, protocol_factory, ssl, server_host_name, False)
     
     
-    async def create_unix_connection_with(self, protocol_factory, socket, *, ssl=None, server_host_name=None):
+    async def create_unix_connection_with(self, protocol_factory, socket, *, ssl = None, server_host_name = None):
         """
         Establish a unix socket connection.
         
@@ -1777,7 +1801,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return await self._create_connection_transport(socket, protocol_factory, ssl, server_host_name, False)
     
     
-    async def open_unix_connection_to(self, path, *, ssl=None, server_host_name=None):
+    async def open_unix_connection_to(self, path, *, ssl = None, server_host_name = None):
         """
         Creates an unix connection.
         
@@ -1813,7 +1837,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             server_host_name = server_host_name,
         )
     
-    async def open_unix_connection_with(self, socket, *, ssl=None, server_host_name=None):
+    async def open_unix_connection_with(self, socket, *, ssl = None, server_host_name = None):
         """
         Creates an unix connection.
         
@@ -1870,7 +1894,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return ssl
     
     
-    async def create_unix_server_to(self, protocol_factory, path, *, backlog=100, ssl=None):
+    async def create_unix_server_to(self, protocol_factory, path, *, backlog = 100, ssl = None):
         """
         Creates an unix server (socket type AF_UNIX) listening on the given path.
         
@@ -1941,7 +1965,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return Server(self, [socket], protocol_factory, ssl, backlog)
     
     
-    async def create_unix_server_with(self, protocol_factory, socket, *, backlog=100, ssl=None):
+    async def create_unix_server_with(self, protocol_factory, socket, *, backlog = 100, ssl = None):
         """
         Creates an unix server (socket type AF_UNIX) listening with the given socket.
         
@@ -1984,27 +2008,27 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
     
     if not IS_UNIX:
         @copy_docs(create_unix_connection_to)
-        async def create_unix_connection_to(self, protocol_factory, path, *, ssl=None, server_host_name=None):
+        async def create_unix_connection_to(self, protocol_factory, path, *, ssl = None, server_host_name = None):
             raise NotImplementedError
         
         @copy_docs(create_unix_connection_with)
-        async def create_unix_connection_with(self, protocol_factory, socket, *, ssl=None, server_host_name=None):
+        async def create_unix_connection_with(self, protocol_factory, socket, *, ssl = None, server_host_name = None):
             raise NotImplementedError
         
         @copy_docs(open_unix_connection_to)
-        async def open_unix_connection_to(self, path, *, ssl=None, server_host_name=None):
+        async def open_unix_connection_to(self, path, *, ssl = None, server_host_name = None):
             raise NotImplementedError
         
         @copy_docs(open_unix_connection_with)
-        async def open_unix_connection_with(self, socket, *, ssl=None, server_host_name=None):
+        async def open_unix_connection_with(self, socket, *, ssl = None, server_host_name = None):
             raise NotImplementedError
         
         @copy_docs(create_unix_server_to)
-        async def create_unix_server_to(self, protocol_factory, path, *, socket, backlog=100, ssl=None,):
+        async def create_unix_server_to(self, protocol_factory, path, *, socket, backlog = 100, ssl = None):
             raise NotImplementedError
         
         @copy_docs(create_unix_server_with)
-        async def create_unix_server_with(self, protocol_factory, socket, *, backlog=100, ssl=None,):
+        async def create_unix_server_with(self, protocol_factory, socket, *, backlog = 100, ssl = None):
             raise NotImplementedError
     
     
@@ -2703,9 +2727,17 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
     
     
     async def create_server_to(
-        self, protocol_factory, host, port, *, socket_family=module_socket.AF_UNSPEC,
-        socket_flags=module_socket.AI_PASSIVE, backlog=100, ssl=None,
-        reuse_address=(os.name == 'posix' and sys.platform != 'cygwin'), reuse_port=False
+        self,
+        protocol_factory,
+        host,
+        port,
+        *,
+        socket_family = module_socket.AF_UNSPEC,
+        socket_flags = module_socket.AI_PASSIVE,
+        backlog = 100,
+        ssl = None,
+        reuse_address = (os.name == 'posix' and sys.platform != 'cygwin'),
+        reuse_port = False,
     ):
         """
         Creates a TCP server (socket type SOCK_STREAM) listening on port of the host address.
@@ -2875,7 +2907,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return Server(self, sockets, protocol_factory, ssl, backlog)
     
     
-    async def create_server_with(self, protocol_factory, socket, *, backlog=100, ssl=None):
+    async def create_server_with(self, protocol_factory, socket, *, backlog = 100, ssl = None):
         """
         Creates a TCP server (socket type SOCK_STREAM) listening on port of the host address.
         
@@ -2979,9 +3011,22 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
     
     
     async def subprocess_shell(
-        self, command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, *, extra=None,
-        preexecution_function=None, close_fds=True, cwd=None, startup_info=None, creation_flags=0, restore_signals=True,
-        start_new_session=False, pass_fds=(), **process_open_kwargs
+        self,
+        command,
+        stdin = subprocess.PIPE,
+        stdout = subprocess.PIPE,
+        stderr = subprocess.PIPE,
+        *,
+        extra = None,
+        preexecution_function = None,
+        close_fds = True,
+        cwd = None,
+        startup_info = None,
+        creation_flags = 0,
+        restore_signals = True,
+        start_new_session = False,
+        pass_fds = (),
+        **process_open_kwargs,
     ):
         """
         Create a subprocess from cmd.
@@ -3076,9 +3121,22 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
     
     
     async def subprocess_exec(
-        self, program, *args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,  extra=None,
-        preexecution_function=None, close_fds=True, cwd=None, startup_info=None, creation_flags=0,
-        restore_signals=True, start_new_session=False, pass_fds=(), **process_open_kwargs
+        self,
+        program,
+        *args,
+        stdin = subprocess.PIPE,
+        stdout = subprocess.PIPE,
+        stderr = subprocess.PIPE,
+        extra = None,
+        preexecution_function = None,
+        close_fds = True,
+        cwd = None,
+        startup_info = None,
+        creation_flags = 0,
+        restore_signals = True,
+        start_new_session = False,
+        pass_fds = (),
+        **process_open_kwargs,
     ):
         """
         Create a subprocess from one or more string parameters specified by args.
@@ -3182,16 +3240,42 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         @copy_docs(subprocess_shell)
         async def subprocess_shell(
-            self, cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, *, extra=None,
-            preexecution_function=None, close_fds=True, cwd=None, startup_info=None, creation_flags=0,
-            restore_signals=True, start_new_session=False, pass_fds=(), **process_open_kwargs
+            self,
+            cmd,
+            stdin = subprocess.PIPE,
+            stdout = subprocess.PIPE,
+            stderr = subprocess.PIPE,
+            *,
+            extra = None,
+            preexecution_function = None,
+            close_fds = True,
+            cwd = None,
+            startup_info = None,
+            creation_flags = 0,
+            restore_signals = True,
+            start_new_session = False,
+            pass_fds = (),
+            **process_open_kwargs,
         ):
             raise NotImplementedError
         
         @copy_docs(subprocess_exec)
         async def subprocess_exec(
-            self, program, *args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, extra=None,
-            preexecution_function=None, close_fds=True, cwd=None, startup_info=None, creation_flags=0,
-            restore_signals=True, start_new_session=False, pass_fds=(), **process_open_kwargs
+            self,
+            program,
+            *args,
+            stdin = subprocess.PIPE,
+            stdout = subprocess.PIPE, 
+            stderr = subprocess.PIPE,
+            extra = None,
+            preexecution_function = None,
+            close_fds = True,
+            cwd = None,
+            startup_info = None,
+            creation_flags = 0,
+            restore_signals = True,
+            start_new_session = False,
+            pass_fds = (),
+            **process_open_kwargs,
         ):
             raise NotImplementedError

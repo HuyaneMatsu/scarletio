@@ -413,7 +413,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
                     else:
                         # no matching extension
                         raise InvalidHandshake(
-                            f'Unsupported extension: name={name!r}, params={params!r}.',
+                            f'Unsupported extension: name = {name!r}, params = {params!r}.',
                             request = request,
                         )
                     

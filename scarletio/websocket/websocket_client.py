@@ -119,8 +119,18 @@ class WebSocketClient(WebSocketCommonProtocol):
     
     __slots__ = ()
     
-    async def __new__(cls, loop, url, *, origin=None, available_extensions = None, available_subprotocols=None,
-            headers=None, http_client=None, **websocket_kwargs):
+    async def __new__(
+        cls,
+        loop,
+        url,
+        *,
+        origin = None,
+        available_extensions = None,
+        available_subprotocols = None,
+        headers = None,
+        http_client = None,
+        **websocket_kwargs,
+    ):
         """
         Connects the websocket client to the given `url`.
         
@@ -327,7 +337,7 @@ class WebSocketClient(WebSocketCommonProtocol):
                     else:
                         # no matching extension
                         raise InvalidHandshake(
-                            f'Unsupported extension: name={name!r}, params={params!r}.',
+                            f'Unsupported extension: name = {name!r}, params = {params!r}.',
                             response = response,
                         )
             

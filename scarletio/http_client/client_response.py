@@ -310,7 +310,7 @@ class ClientResponse:
         return encoding
     
     
-    async def text(self, encoding=None, errors='strict'):
+    async def text(self, encoding = None, errors = 'strict'):
         """
         Loads the response's content as text.
         
@@ -339,7 +339,7 @@ class ClientResponse:
         return body.decode(encoding, errors)
     
     
-    async def json(self, encoding=None, loader=from_json, content_type=None):
+    async def json(self, encoding = None, loader = from_json, content_type = None):
         """
         Loads the response's content as a json.
         

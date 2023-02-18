@@ -125,8 +125,15 @@ class AsynchronousInteractiveConsole:
     )
     
     def __new__(
-        cls, *, banner=None, editor_type=None, event_loop=None, exit_message = None, highlighter=None,
-        local_variables=None, stop_on_interruption=False
+        cls,
+        *,
+        banner = None,
+        editor_type = None,
+        event_loop = None,
+        exit_message = None,
+        highlighter = None,
+        local_variables = None,
+        stop_on_interruption = False,
     ):
         """
         Creates a new async interactive console.

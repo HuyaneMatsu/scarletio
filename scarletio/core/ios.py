@@ -72,7 +72,7 @@ class ReuBytesIO(BytesIO):
         return amount
     
     
-    def read(self, amount=None):
+    def read(self, amount = None):
         """
         Reads the given amount of data from the buffer.
         
@@ -745,7 +745,7 @@ class AsyncIO:
         return await executor.execute(self._io.tell)
     
     
-    async def truncate(self, size=None):
+    async def truncate(self, size = None):
         """
         Resize the stream to the given size in bytes (or the current position if size is not specified). The current
         stream position isn’t changed. This resizing can extend or reduce the current file size. In case of extension,

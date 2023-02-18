@@ -164,7 +164,7 @@ class AbstractTransportLayerBase:
         return 0, 0
     
     
-    def set_write_buffer_limits(self, high=None, low=None):
+    def set_write_buffer_limits(self, high = None, low = None):
         """
         Set the high- and low-water limits for write flow control.
         

@@ -46,7 +46,7 @@ class enter_executor:
     def __init__(self):
         self._enter_future = None
         self._task = None
-        self._exit_future=None
+        self._exit_future = None
         self._waited_future = None
     
     

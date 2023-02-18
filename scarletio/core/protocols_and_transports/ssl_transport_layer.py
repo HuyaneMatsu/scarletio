@@ -162,7 +162,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
         return ''.join(repr_parts)
     
     
-    def _wake_up_connection_made_waiter(self, exception=None):
+    def _wake_up_connection_made_waiter(self, exception = None):
         """
         Wakes up the ssl protocol's ``._connection_made_waiter`` if applicable.
         
@@ -492,7 +492,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
     
     
     @copy_docs(TransportLayerBase.set_write_buffer_limits)
-    def set_write_buffer_limits(self, low=None, high=None):
+    def set_write_buffer_limits(self, low = None, high = None):
         transport = self._transport
         if (transport is not None):
             transport.set_write_buffer_limits(high, low)

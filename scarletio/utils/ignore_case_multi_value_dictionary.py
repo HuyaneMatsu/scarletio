@@ -15,7 +15,7 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
     __slots__ = ()
     
     @copy_docs(MultiValueDictionary.__init__)
-    def __init__(self, iterable=None):
+    def __init__(self, iterable = None):
         dict.__init__(self)
         
         if (iterable is None) or (not iterable):

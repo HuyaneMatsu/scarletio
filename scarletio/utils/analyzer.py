@@ -522,7 +522,7 @@ class CallableAnalyzer:
                 args_name = real_function.__code__.co_varnames[end]
                 end += 1
             else:
-                args_name= None
+                args_name = None
             
             if accepts_kwargs:
                 kwargs_name = real_function.__code__.co_varnames[end]

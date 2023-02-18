@@ -28,7 +28,7 @@ class SortedList(list):
     append = RemovedDescriptor()
     
     @has_docs
-    def __init__(self, iterable=None, reverse=False):
+    def __init__(self, iterable = None, reverse = False):
         """
         Creates a new ``SortedList`` with the given parameters.
         
@@ -42,7 +42,7 @@ class SortedList(list):
         self._reversed = reverse
         if (iterable is not None):
             self.extend(iterable)
-            list.sort(self, reverse=reverse)
+            list.sort(self, reverse = reverse)
     
     
     @has_docs
@@ -64,7 +64,7 @@ class SortedList(list):
                 result.append(', ')
                 continue
         
-        result.append('], reversed=')
+        result.append('], reversed = ')
         result.append(repr(self._reversed))
         result.append(')')
         

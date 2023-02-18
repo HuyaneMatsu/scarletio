@@ -5,7 +5,7 @@ from ..traps import Future, Task
 from .event_loop import _get_event_loop_is_current_thread, get_event_loop
 
 
-def create_future(loop=None):
+def create_future(loop = None):
     """
     Creates s future bound to the local event loop.
     
@@ -31,7 +31,7 @@ def create_future(loop=None):
     return future
 
 
-def create_task(coroutine, loop=None):
+def create_task(coroutine, loop = None):
     """
     Creates a task on the local event loop.
     
@@ -60,7 +60,7 @@ def create_task(coroutine, loop=None):
 
 
 
-def get_current_task(loop=None):
+def get_current_task(loop = None):
     """
     Returns the currently executed task.
     
@@ -84,7 +84,7 @@ def get_current_task(loop=None):
     return loop.current_task
 
 
-def get_tasks(loop=None):
+def get_tasks(loop = None):
     """
     Returns the pending tasks.
     

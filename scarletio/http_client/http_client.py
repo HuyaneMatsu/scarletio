@@ -36,7 +36,7 @@ class HTTPClient:
     """
     __slots__ = ('loop', 'connector', 'proxy_url', 'proxy_auth', 'cookie_jar')
     
-    def __init__(self, loop, proxy_url = None, proxy_auth=None, *, connector=None):
+    def __init__(self, loop, proxy_url = None, proxy_auth = None, *, connector = None):
         """
         Creates a new ``HTTPClient`` with the given parameters.
         
@@ -63,7 +63,7 @@ class HTTPClient:
         self.connector = connector
         self.cookie_jar = CookieJar()
         
-    async def _request(self, method, url, headers, data=None, params=None, redirects=3):
+    async def _request(self, method, url, headers, data = None, params = None, redirects = 3):
         """
         Internal method for executing an http request.
         
@@ -196,8 +196,20 @@ class HTTPClient:
         response.history = tuple(history)
         return response
         
-    async def _request2(self, method, url, headers=None, data=None, params=None, redirects=3, auth=None,
-            proxy_url = ..., proxy_auth=..., timeout = DEFAULT_TIMEOUT, ssl=None):
+    async def _request2(
+        self,
+        method,
+        url,
+        headers = None,
+        data = None,
+        params = None,
+        redirects = 3,
+        auth = None,
+        proxy_url = ...,
+        proxy_auth = ...,
+        timeout = DEFAULT_TIMEOUT,
+        ssl = None,
+    ):
         """
         Internal method for executing an http request with extra parameters
         
@@ -404,7 +416,7 @@ class HTTPClient:
     
     close = __del__
     
-    def request(self, method, url, headers=None, **kwargs):
+    def request(self, method, url, headers = None, **kwargs):
         """
         Executes an http request.
         
@@ -448,7 +460,7 @@ class HTTPClient:
         
         return RequestContextManager(self._request(method, url, headers, **kwargs))
     
-    def request2(self, method, url, headers=None, **kwargs):
+    def request2(self, method, url, headers = None, **kwargs):
         """
         Executes an http request with extra parameters.
         
@@ -502,7 +514,7 @@ class HTTPClient:
         
         return RequestContextManager(self._request2(method, url, headers, **kwargs))
     
-    def get(self, url, headers=None, **kwargs):
+    def get(self, url, headers = None, **kwargs):
         """
         Shortcut for executing a get request.
         
@@ -545,7 +557,7 @@ class HTTPClient:
         return RequestContextManager(self._request(METHOD_GET, url, headers, **kwargs))
     
     
-    def options(self, url, headers=None, **kwargs):
+    def options(self, url, headers = None, **kwargs):
         """
         Shortcut for executing a get request.
         
@@ -588,7 +600,7 @@ class HTTPClient:
         return RequestContextManager(self._request(METHOD_OPTIONS, url, headers, **kwargs))
     
     
-    def head(self, url, headers=None, **kwargs):
+    def head(self, url, headers = None, **kwargs):
         """
         Shortcut for executing a head request.
         
@@ -631,7 +643,7 @@ class HTTPClient:
         return RequestContextManager(self._request(METHOD_HEAD, url, headers, **kwargs))
     
     
-    def post(self, url, headers=None, **kwargs):
+    def post(self, url, headers = None, **kwargs):
         """
         Shortcut for executing a post request.
         
@@ -674,7 +686,7 @@ class HTTPClient:
         return RequestContextManager(self._request(METHOD_POST, url, headers, **kwargs))
     
     
-    def put(self, url, headers=None, **kwargs):
+    def put(self, url, headers = None, **kwargs):
         """
         Shortcut for executing a put request.
         
@@ -717,7 +729,7 @@ class HTTPClient:
         return RequestContextManager(self._request(METHOD_PUT, url, headers, **kwargs))
     
     
-    def patch(self, url, headers=None, **kwargs):
+    def patch(self, url, headers = None, **kwargs):
         """
         Shortcut for executing a patch request.
         
@@ -760,7 +772,7 @@ class HTTPClient:
         return RequestContextManager(self._request(METHOD_PATCH, url, headers, **kwargs))
     
     
-    def delete(self, url, headers=None, **kwargs):
+    def delete(self, url, headers = None, **kwargs):
         """
         Shortcut for executing a delete request.
         

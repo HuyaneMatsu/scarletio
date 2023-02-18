@@ -287,7 +287,7 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
         '_protocol', '_protocol_paused'
     )
     
-    async def __new__(cls, loop, pipe, protocol, extra=None):
+    async def __new__(cls, loop, pipe, protocol, extra = None):
         """
         Creates a new ``UnixWritePipeTransportLayer`` with the given parameters.
         
@@ -623,7 +623,7 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
         return self._low_water, self._high_water
     
     
-    def _set_write_buffer_limits(self, low=None, high=None):
+    def _set_write_buffer_limits(self, low = None, high = None):
         """
         Sets the write buffer limits of the transport.
         
@@ -653,7 +653,7 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
         if low < 0 or high < low:
             raise ValueError(
                 f'High water must be greater or equal than low, what must be greater than equal than `0`, '
-                f'got high={high!r}; low={low!r}.'
+                f'got high = {high!r}; low = {low!r}.'
             )
         
         self._high_water = high
@@ -661,6 +661,6 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
     
     
     @copy_docs(TransportLayerBase.set_write_buffer_limits)
-    def set_write_buffer_limits(self, low=None, high=None):
-        self._set_write_buffer_limits(low=low, high=high)
+    def set_write_buffer_limits(self, low = None, high = None):
+        self._set_write_buffer_limits(low = low, high = high)
         self._maybe_pause_protocol()

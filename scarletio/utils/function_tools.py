@@ -47,7 +47,7 @@ class alchemy_incendiary:
     __slots__ = ('args', 'func', 'kwargs',)
     
     @has_docs
-    def __init__(self, func, args, kwargs=None):
+    def __init__(self, func, args, kwargs = None):
         """
         Creates a new `alchemy_incendiary` with the given parameters.
         

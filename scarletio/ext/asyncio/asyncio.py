@@ -21,6 +21,7 @@ import os, sys, warnings
 import socket as module_socket
 from collections import deque
 from functools import partial, partial as partial_func
+from stat import S_ISSOCK
 from subprocess import DEVNULL, PIPE, STDOUT
 from threading import current_thread, enumerate as list_threads
 
@@ -30,7 +31,7 @@ from ...core import (
     WaitContinuously, WaitTillAll, WaitTillExc, WaitTillFirst, future_or_timeout, shield as scarletio_shield,
     skip_ready_cycle, sleep as scarletio_sleep
 )
-from ...core.event_loop.event_loop_functionality_helpers import _is_stream_socket
+from ...core.event_loop.event_loop_functionality_helpers import _is_stream_socket, _set_reuse_port
 from ...core.top_level import get_event_loop as scarletio_get_event_loop, write_exception_async
 from ...utils import IS_UNIX, KeepType,  WeakReferer, alchemy_incendiary, is_coroutine
 
@@ -140,38 +141,76 @@ class EventThread:
     
     
     async def create_connection(
-        self, protocol_factory, host=None, port=None, *, ssl=None, family=0, proto=0, flags=0, sock=None,
-        local_addr=None, server_hostname=None, ssl_handshake_timeout = None, happy_eyeballs_delay=None, interleave=None
+        self,
+        protocol_factory,
+        host = None,
+        port = None,
+        *,
+        ssl = None,
+        family = 0,
+        proto = 0,
+        flags = 0,
+        sock = None,
+        local_addr = None, server_hostname = None,
+        ssl_handshake_timeout = None,
+        happy_eyeballs_delay = None,
+        interleave = None,
     ):
         
         
         if sock is None:
             return await self._asyncio_create_connection_to(
-                protocol_factory, host, port, ssl=ssl, socket_family=family, socket_protocol=proto, socket_flags=flags,
-                local_address=local_addr, server_host_name=server_hostname
+                protocol_factory,
+                host,
+                port,
+                ssl = ssl,
+                socket_family = family,
+                socket_protocol = proto,
+                socket_flags = flags,
+                local_address = local_addr,
+                server_host_name = server_hostname,
             )
         else:
-            return await self._asyncio_create_connection_with(protocol_factory, sock, ssl=ssl,
-                server_host_name=server_hostname)
+            return await self._asyncio_create_connection_with(
+                protocol_factory,
+                sock,
+                ssl = ssl,
+                server_host_name = server_hostname,
+            )
     
     
 
     async def _asyncio_create_connection_to(
-        self, protocol_factory, host, port, *, ssl=None, socket_family=0, socket_protocol=0, socket_flags=0,
-        local_address=None, server_host_name=None
+        self,
+        protocol_factory,
+        host,
+        port,
+        *,
+        ssl = None,
+        socket_family = 0,
+        socket_protocol = 0,
+        socket_flags = 0,
+        local_address = None,
+        server_host_name = None
     ):
         ssl, server_host_name = self._create_connection_shared_precheck(ssl, server_host_name, host)
         
         future_1 = self._ensure_resolved(
-            (host, port), family=socket_family, type=module_socket.SOCK_STREAM, protocol=socket_protocol,
-            flags=socket_flags
+            (host, port),
+            family = socket_family,
+            type = module_socket.SOCK_STREAM,
+            protocol = socket_protocol,
+            flags = socket_flags,
         )
         
         futures = [future_1]
         if local_address is not None:
             future_2 = self._ensure_resolved(
-                local_address, family=socket_family, type=module_socket.SOCK_STREAM, protocol=socket_protocol,
-                flags=socket_flags
+                local_address,
+                family = socket_family,
+                type = module_socket.SOCK_STREAM,
+                protocol = socket_protocol,
+                flags = socket_flags,
             )
             
             futures.append(future_2)
@@ -193,7 +232,7 @@ class EventThread:
         exceptions = []
         for socket_family, socket_type, socket_protocol, canonical_name, address in infos:
             
-            socket = module_socket.socket(family=socket_family, type=socket_type, proto=socket_protocol)
+            socket = module_socket.socket(family = socket_family, type = socket_type, proto = socket_protocol)
             
             try:
                 socket.setblocking(False)
@@ -248,7 +287,7 @@ class EventThread:
         return await self._asyncio_create_connection_transport(socket, protocol_factory, ssl, server_host_name, False)
     
     
-    async def _asyncio_create_connection_with(self, protocol_factory, socket, *, ssl=None, server_host_name=None):
+    async def _asyncio_create_connection_with(self, protocol_factory, socket, *, ssl = None, server_host_name = None):
         ssl, server_host_name = self._create_connection_shared_precheck(ssl, server_host_name, None)
         
         if not _is_stream_socket(socket):
@@ -266,8 +305,9 @@ class EventThread:
         if ssl is None:
             transport = self._make_socket_transport(socket, protocol, waiter)
         else:
-            transport = self._make_ssl_transport(socket, protocol, ssl, waiter, server_side=server_side,
-                server_host_name=server_host_name)
+            transport = self._make_ssl_transport(
+                socket, protocol, ssl, waiter, server_side = server_side, server_host_name = server_host_name
+            )
         
         try:
             await waiter
@@ -278,21 +318,49 @@ class EventThread:
         return transport, protocol
     
     
-    async def create_datagram_endpoint(self, protocol_factory, local_addr=None, remote_addr=None, *, family=0, proto=0,
-            flags=0, reuse_address=None, reuse_port=None, allow_broadcast=None, sock=None):
+    async def create_datagram_endpoint(
+        self,
+        protocol_factory,
+        local_addr = None,
+        remote_addr = None,
+        *,
+        family = 0,
+        proto = 0,
+        flags = 0,
+        reuse_address = None,
+        reuse_port = None,
+        allow_broadcast = None,
+        sock = None,
+    ):
         
         if sock is None:
-            return await self._asyncio_create_datagram_connection_to(protocol_factory, local_addr, remote_addr,
-                socket_family=family, socket_protocol=proto, socket_flags=flags, reuse_port=reuse_port,
-                allow_broadcast=allow_broadcast)
+            return await self._asyncio_create_datagram_connection_to(
+                protocol_factory,
+                local_addr,
+                remote_addr,
+                socket_family = family,
+                socket_protocol = proto,
+                socket_flags = flags,
+                reuse_port = reuse_port,
+                allow_broadcast = allow_broadcast,
+            )
         
         else:
             return await self._asyncio_create_datagram_connection_with(protocol_factory, sock)
 
     
 
-    async def _asyncio_create_datagram_connection_to(self, protocol_factory, local_address, remote_address, *,
-            socket_family=0, socket_protocol=0, socket_flags=0, reuse_port=False, allow_broadcast=False):
+    async def _asyncio_create_datagram_connection_to(
+        self,
+        protocol_factory,
+        local_address,
+        remote_address, *,
+        socket_family = 0,
+        socket_protocol = 0,
+        socket_flags = 0,
+        reuse_port = False,
+        allow_broadcast = False,
+    ):
         address_info = []
         
         if (local_address is None) and (remote_address is None):
@@ -304,7 +372,7 @@ class EventThread:
         elif hasattr(module_socket, 'AF_UNIX') and socket_family == module_socket.AF_UNIX:
             if __debug__:
                 if (local_address is not None):
-                    if not isinstance(local_address,bytes):
+                    if not isinstance(local_address, bytes):
                         raise TypeError(
                             f'`local_address` can be `None`, `str` if `socket_family` is `AF_UNIX`, got '
                             f'{local_address.__class__.__name__}; {local_address!r}.'
@@ -337,8 +405,13 @@ class EventThread:
             # join address by (socket_family, socket_protocol)
             address_infos = {}
             if (local_address is not None):
-                infos = await self._ensure_resolved(local_address, family=socket_family, type=module_socket.SOCK_DGRAM,
-                    protocol=socket_protocol, flags=socket_flags)
+                infos = await self._ensure_resolved(
+                    local_address,
+                    family = socket_family,
+                    type = module_socket.SOCK_DGRAM,
+                    protocol = socket_protocol,
+                    flags = socket_flags,
+                )
                 
                 if not infos:
                     raise OSError('`get_address_info` returned empty list')
@@ -353,8 +426,13 @@ class EventThread:
                     address_infos[(iterated_socket_family, iterated_socket_protocol)] = (iterated_socket_address, None)
             
             if (remote_address is not None):
-                infos = await self._ensure_resolved(remote_address, family=socket_family, type=module_socket.SOCK_DGRAM,
-                    protocol=socket_protocol, flags=socket_flags)
+                infos = await self._ensure_resolved(
+                    remote_address,
+                    family = socket_family,
+                    type = module_socket.SOCK_DGRAM,
+                    protocol = socket_protocol,
+                    flags = socket_flags,
+                )
                 
                 if not infos:
                     raise OSError('`get_address_info` returned empty list')
@@ -458,18 +536,28 @@ class EventThread:
         return transport, protocol
     
     
-    async def create_unix_connection(self, protocol_factory, path=None, *, ssl=None, sock=None, server_hostname=None,
-            ssl_handshake_timeout = None):
+    async def create_unix_connection(
+        self,
+        protocol_factory,
+        path = None,
+        *,
+        ssl = None,
+        sock = None,
+        server_hostname = None,
+        ssl_handshake_timeout = None,
+    ):
         if sock is None:
-            return await self._asyncio_create_unix_connection_to(protocol_factory, path, ssl=ssl,
-                server_host_name=server_hostname)
+            return await self._asyncio_create_unix_connection_to(
+                protocol_factory, path, ssl = ssl, server_host_name = server_hostname
+            )
         
         else:
-            return await self._asyncio_create_unix_connection_with(protocol_factory, sock, ssl=ssl,
-                server_host_name=server_hostname)
+            return await self._asyncio_create_unix_connection_with(
+                protocol_factory, sock, ssl = ssl, server_host_name = server_hostname
+            )
     
     
-    async def _asyncio_create_unix_connection_to(self, protocol_factory, path, *, ssl=None, server_host_name=None):
+    async def _asyncio_create_unix_connection_to(self, protocol_factory, path, *, ssl = None, server_host_name = None):
         ssl, server_host_name = self._create_unix_connection_shared_precheck(ssl, server_host_name)
         
         path = os.fspath(path)
@@ -485,7 +573,9 @@ class EventThread:
         return await self._asyncio_create_connection_transport(socket, protocol_factory, ssl, server_host_name, False)
     
     
-    async def _asyncio_create_unix_connection_with(self, protocol_factory, socket, *, ssl=None, server_host_name=None):
+    async def _asyncio_create_unix_connection_with(
+        self, protocol_factory, socket, *, ssl = None, server_host_name = None
+    ):
         ssl, server_host_name = self._create_unix_connection_shared_precheck(ssl, server_host_name)
         
         if socket.family not in (module_socket.AF_UNIX, module_socket.SOCK_STREAM):
@@ -496,16 +586,36 @@ class EventThread:
         return await self._asyncio_create_connection_transport(socket, protocol_factory, ssl, server_host_name, False)
     
     
-    async def create_server(self, protocol_factory, host=None, port=None, *, family=module_socket.AF_UNSPEC,
-            flags=module_socket.AI_PASSIVE, sock=None, backlog=100, ssl=None, reuse_address=None, reuse_port=None,
-            ssl_handshake_timeout = None, start_serving=True):
-        
+    async def create_server(
+        self,
+        protocol_factory,
+        host = None,
+        port = None,
+        *,
+        family = module_socket.AF_UNSPEC,
+        flags = module_socket.AI_PASSIVE,
+        sock = None,
+        backlog = 100,
+        ssl = None,
+        reuse_address = None,
+        reuse_port = None,
+        ssl_handshake_timeout = None,
+        start_serving = True,
+    ):
         if sock is None:
-            server = await self.create_server_to(protocol_factory, host, port, socket_family=family,
-                socket_flags=flags, backlog=backlog, ssl=ssl, reuse_port=reuse_port)
+            server = await self.create_server_to(
+                protocol_factory,
+                host,
+                port,
+                socket_family = family,
+                socket_flags = flags,
+                backlog = backlog,
+                ssl = ssl,
+                reuse_port = reuse_port,
+            )
         
         else:
-            server =  await self.create_server_with(protocol_factory, sock, backlog=backlog, ssl=ssl)
+            server =  await self.create_server_with(protocol_factory, sock, backlog = backlog, ssl = ssl)
         
         if start_serving:
             await server.start()
@@ -513,14 +623,23 @@ class EventThread:
         return server
     
     
-    async def create_unix_server(self, protocol_factory, path=None, *, sock=None, backlog=100, ssl=None,
-            ssl_handshake_timeout = None, start_serving=True):
+    async def create_unix_server(
+        self,
+        protocol_factory,
+        path = None,
+        *,
+        sock = None,
+        backlog = 100,
+        ssl = None,
+        ssl_handshake_timeout = None,
+        start_serving = True,
+    ):
         
         if sock is None:
-            server = await self.create_unix_server_to(protocol_factory, path, backlog=backlog, ssl=ssl)
+            server = await self.create_unix_server_to(protocol_factory, path, backlog = backlog, ssl = ssl)
         
         else:
-            server = await self.create_unix_server_with(protocol_factory, sock, backlog=backlog, ssl=ssl)
+            server = await self.create_unix_server_with(protocol_factory, sock, backlog = backlog, ssl = ssl)
         
         if start_serving:
             await server.start()
@@ -532,7 +651,7 @@ async def in_coro(future):
     return await future
 
 # Required by aio-http 3.7
-def asyncio_run_in_executor(self, executor, func=..., *args):
+def asyncio_run_in_executor(self, executor, func = ..., *args):
     # We ignore the executor parameter.
     # First handle if the call is from hata. If called from hata, needs to return a `Future`.
     if func is ...:
@@ -558,8 +677,17 @@ del asyncio_create_task
 # We accept different names, so we need to define a dodge system, so here we go
 scarletio_EventThread_subprocess_shell = EventThread.subprocess_shell
 
-async def asyncio_subprocess_shell(self, *args, preexecution_function=None, creation_flags=0, preexec_fn=None,
-        creationflags=0, startupinfo=None, startup_info=None, **kwargs):
+async def asyncio_subprocess_shell(
+    self,
+    *args,
+    preexecution_function = None,
+    creation_flags = 0,
+    preexec_fn = None,
+    creationflags = 0,
+    startupinfo = None,
+    startup_info = None,
+    **kwargs,
+):
     
     if preexec_fn is not None:
         preexecution_function = preexec_fn
@@ -570,8 +698,14 @@ async def asyncio_subprocess_shell(self, *args, preexecution_function=None, crea
     if startupinfo is not None:
         startup_info = startupinfo
     
-    return await scarletio_EventThread_subprocess_shell(self, *args, preexecution_function=preexecution_function,
-        creation_flags=creation_flags, startupinfo=startup_info, **kwargs)
+    return await scarletio_EventThread_subprocess_shell(
+        self,
+        *args,
+        preexecution_function = preexecution_function,
+        creation_flags = creation_flags,
+        startupinfo = startup_info,
+        **kwargs,
+    )
 
 EventThread.subprocess_shell = asyncio_subprocess_shell
 del asyncio_subprocess_shell
@@ -579,8 +713,17 @@ del asyncio_subprocess_shell
 
 scarletio_EventThread_subprocess_exec = EventThread.subprocess_exec
 
-async def asyncio_subprocess_exec(self, *args, preexecution_function=None, creation_flags=0, preexec_fn=None,
-        creationflags=0, startupinfo=None, startup_info=None, **kwargs):
+async def asyncio_subprocess_exec(
+    self,
+    *args,
+    preexecution_function = None,
+    creation_flags = 0,
+    preexec_fn = None,
+    creationflags = 0,
+    startupinfo = None,
+    startup_info = None,
+    **kwargs,
+):
     
     if preexec_fn is not None:
         preexecution_function = preexec_fn
@@ -591,8 +734,14 @@ async def asyncio_subprocess_exec(self, *args, preexecution_function=None, creat
     if startupinfo is not None:
         startup_info = startupinfo
     
-    return await scarletio_EventThread_subprocess_exec(self, *args, preexecution_function=preexecution_function,
-        creation_flags=creation_flags, startup_info=startup_info, **kwargs)
+    return await scarletio_EventThread_subprocess_exec(
+        self,
+        *args,
+        preexecution_function = preexecution_function,
+        creation_flags = creation_flags,
+        startup_info = startup_info,
+        **kwargs,
+    )
 
 EventThread.subprocess_exec = asyncio_subprocess_exec
 del asyncio_subprocess_exec
@@ -833,7 +982,7 @@ HataFuture.get_loop = asyncio_get_loop
 del asyncio_get_loop
 
 
-def wrap_future(future, *, loop=None):
+def wrap_future(future, *, loop = None):
     raise NotImplementedError
 
 def isfuture(obj):
@@ -923,7 +1072,7 @@ class Event:
     Class implementing event objects. An event manages a flag that can be set to true with the set() method and reset
     to false with the clear() method. The wait() method blocks until the flag is true. The flag is initially false.
     """
-    def __new__(cls, *, loop=None):
+    def __new__(cls, *, loop = None):
         if loop is None:
             loop = get_event_loop()
         
@@ -1065,7 +1214,7 @@ class BoundedSemaphore(Semaphore):
     __slots__ = ('_bound_value',)
     
     def __new__(cls, value = 1, *, loop = None):
-        self = Semaphore.__new__(cls, value=value, loop=loop)
+        self = Semaphore.__new__(cls, value = value, loop = loop)
         self._bound_value = value
         return self
     
@@ -1213,7 +1362,7 @@ class QueueFull(Exception):
         pass
 
 class Queue(AsyncQueue):
-    def __new__(cls, maxsize=0, *, loop=None):
+    def __new__(cls, maxsize = 0, *, loop = None):
         if loop is None:
             loop = get_event_loop()
         
@@ -1249,7 +1398,7 @@ class Queue(AsyncQueue):
             raise QueueEmpty
 
 
-def PriorityQueue(maxsize=0, *, loop=None):
+def PriorityQueue(maxsize = 0, *, loop = None):
     """
     A subclass of Queue; retrieves entries in priority order (lowest first).
 
@@ -1259,7 +1408,7 @@ def PriorityQueue(maxsize=0, *, loop=None):
 
 
 class LifoQueue(AsyncLifoQueue):
-    def __new__(cls, maxsize=0, *, loop=None):
+    def __new__(cls, maxsize = 0, *, loop = None):
         """A subclass of Queue that retrieves most recently added entries first."""
         if loop is None:
             loop = get_event_loop()
@@ -1355,7 +1504,7 @@ BaseSelectorEventLoop = EventThread
 # asyncio.staggered_race
 # Include: staggered_race
 
-async def staggered_race(coroutine_functions, delay, *, loop=None):
+async def staggered_race(coroutine_functions, delay, *, loop = None):
     """
     Run coroutines with staggered start times and take the first to finish.
     
@@ -1425,7 +1574,7 @@ def protocol_itself_factory(protocol):
     return protocol
 
 
-async def open_connection(host=None, port=None, *, loop=None, limit=_DEFAULT_LIMIT, **kwds):
+async def open_connection(host = None, port = None, *, loop = None, limit = _DEFAULT_LIMIT, **kwds):
     """
     A wrapper for create_connection() returning a (reader, writer) pair.
     
@@ -1443,16 +1592,19 @@ async def open_connection(host=None, port=None, *, loop=None, limit=_DEFAULT_LIM
     if loop is None:
         loop = get_event_loop()
     else:
-        warnings.warn('The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
-                      DeprecationWarning, stacklevel=2)
+        warnings.warn(
+            'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
+            DeprecationWarning,
+            stacklevel = 2,
+        )
     
-    reader = StreamReader(limit=limit, loop=loop)
-    protocol = StreamReaderProtocol(reader, loop=loop)
+    reader = StreamReader(limit = limit, loop = loop)
+    protocol = StreamReaderProtocol(reader, loop = loop)
     transport, _ = await loop.create_connection(partial_func(protocol_itself_factory, protocol), host, port, **kwds)
     writer = StreamWriter(transport, protocol, reader, loop)
     return reader, writer
 
-async def start_server(client_connected_cb, host=None, port=None, *, loop=None, limit=_DEFAULT_LIMIT, **kwds):
+async def start_server(client_connected_cb, host = None, port = None, *, loop = None, limit = _DEFAULT_LIMIT, **kwds):
     """
     Start a socket server, call back for each client connected. The first parameter, `client_connected_cb`, takes two
     parameters: client_reader, client_writer. client_reader is a StreamReader object, while client_writer is a
@@ -1471,30 +1623,36 @@ async def start_server(client_connected_cb, host=None, port=None, *, loop=None, 
     if loop is None:
         loop = get_event_loop()
     else:
-        warnings.warn('The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
-                      DeprecationWarning, stacklevel=2)
+        warnings.warn(
+            'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
+            DeprecationWarning,
+            stacklevel = 2,
+        )
     
     def factory():
-        reader = StreamReader(limit=limit, loop=loop)
-        protocol = StreamReaderProtocol(reader, client_connected_cb, loop=loop)
+        reader = StreamReader(limit=limit, loop = loop)
+        protocol = StreamReaderProtocol(reader, client_connected_cb, loop = loop)
         return protocol
     
     return await loop.create_server(factory, host, port, **kwds)
 
 
-async def start_unix_server(client_connected_cb, path=None, *, loop=None, limit=_DEFAULT_LIMIT, **kwds):
+async def start_unix_server(client_connected_cb, path = None, *, loop = None, limit = _DEFAULT_LIMIT, **kwds):
     """
     Similar to `start_server` but works with UNIX Domain Sockets.
     """
     if loop is None:
         loop = get_event_loop()
     else:
-        warnings.warn('The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
-                      DeprecationWarning, stacklevel=2)
+        warnings.warn(
+            'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
+            DeprecationWarning,
+            stacklevel = 2,
+        )
     
     def factory():
-        reader = StreamReader(limit=limit, loop=loop)
-        protocol = StreamReaderProtocol(reader, client_connected_cb, loop=loop)
+        reader = StreamReader(limit=limit, loop = loop)
+        protocol = StreamReaderProtocol(reader, client_connected_cb, loop = loop)
         return protocol
 
     return await loop.create_unix_server(factory, path, **kwds)
@@ -1509,7 +1667,7 @@ class FlowControlMixin(Protocol):
     
     StreamWriter.drain() must wait for _drain_helper() coroutine.
     """
-    def __init__(self, loop=None):
+    def __init__(self, loop = None):
         if loop is None:
             loop = get_event_loop()
         
@@ -1565,8 +1723,8 @@ class StreamReaderProtocol(FlowControlMixin, Protocol):
     itself a Protocol subclass, because the StreamReader has other potential uses, and to prevent the user of the
     StreamReader to accidentally call inappropriate methods of the protocol.)
     """
-    def __init__(self, stream_reader, client_connected_cb=None, loop=None):
-        FlowControlMixin.__init__(self, loop=loop)
+    def __init__(self, stream_reader, client_connected_cb = None, loop = None):
+        FlowControlMixin.__init__(self, loop = loop)
         if stream_reader is not None:
             self._stream_reader_wr = WeakReferer(stream_reader)
         else:
@@ -1662,13 +1820,13 @@ class StreamWriter:
         result = [
             '<',
             self.__class__.__name__,
-            'transport=',
+            'transport = ',
             repr(self._transport)
         ]
         
         reader = self._reader
         if reader is not None:
-            result.append(' reader=')
+            result.append(' reader = ')
             result.append(repr(reader))
         
         result.append('>')
@@ -1716,7 +1874,7 @@ class StreamWriter:
 
 
 class StreamReader:
-    def __init__(self, limit=_DEFAULT_LIMIT, loop=None):
+    def __init__(self, limit=_DEFAULT_LIMIT, loop = None):
         if limit <= 0:
             raise ValueError('Limit cannot be <= 0')
 
@@ -1749,17 +1907,17 @@ class StreamReader:
         
         limit = self._limit
         if limit != _DEFAULT_LIMIT:
-            result.append(' limit=')
+            result.append(' limit = ')
             result.append(repr(limit))
         
         waiter = self._waiter
         if waiter is not None:
-            result.append(' waiter=')
+            result.append(' waiter = ')
             result.append(repr(waiter))
         
         exception = self._exception
         if exception is not None:
-            result.append(' exception')
+            result.append(' exception = ')
             result.append(repr(exception))
         
         
@@ -1857,7 +2015,7 @@ class StreamReader:
             raise ValueError(err.args[0])
         return line
     
-    async def readuntil(self, separator=b'\n'):
+    async def readuntil(self, separator = b'\n'):
         seplen = len(separator)
         if seplen == 0:
             raise ValueError('Separator should be at least one-byte string')
@@ -1963,14 +2121,23 @@ class StreamReader:
 # Include: DEVNULL, PIPE, Process, STDOUT, create_subprocess_exec, create_subprocess_shell, Process
 
 if IS_UNIX:
-    async def create_subprocess_shell(cmd, stdin=None, stdout=None, stderr=None, loop=None, limit=_DEFAULT_LIMIT,
-            **kwargs):
-        
+    async def create_subprocess_shell(
+        cmd,
+        stdin = None,
+        stdout = None,
+        stderr = None,
+        loop = None,
+        limit = _DEFAULT_LIMIT,
+        **kwargs,
+    ):
         if loop is None:
             loop = get_event_loop()
         else:
-            warnings.warn('The loop parameter is deprecated since Python 3.8 and scheduled for removal in Python 3.10.',
-                          DeprecationWarning, stacklevel=2)
+            warnings.warn(
+                'The loop parameter is deprecated since Python 3.8 and scheduled for removal in Python 3.10.',
+                DeprecationWarning,
+                stacklevel = 2,
+            )
         
         if stdin is None:
             stdin = PIPE
@@ -1981,17 +2148,28 @@ if IS_UNIX:
         if stderr is None:
             stderr = PIPE
         
-        return await loop.subprocess_shell(cmd, stdin=stdin, stdout=stdout, stderr=stderr, **kwargs)
+        return await loop.subprocess_shell(cmd, stdin = stdin, stdout = stdout, stderr = stderr, **kwargs)
     
     
-    async def create_subprocess_exec(program, *args, stdin=None, stdout=None, stderr=None, loop=None,
-            limit=_DEFAULT_LIMIT, **kwargs):
+    async def create_subprocess_exec(
+        program,
+        *args,
+        stdin = None,
+        stdout = None,
+        stderr = None,
+        loop = None,
+        limit = _DEFAULT_LIMIT,
+        **kwargs,
+    ):
         
         if loop is None:
             loop = get_event_loop()
         else:
-            warnings.warn('The loop parameter is deprecated since Python 3.8 and scheduled for removal in Python 3.10.',
-                          DeprecationWarning, stacklevel=2)
+            warnings.warn(
+                'The loop parameter is deprecated since Python 3.8 and scheduled for removal in Python 3.10.',
+                DeprecationWarning,
+                stacklevel = 2,
+            )
             
         if stdin is None:
             stdin = PIPE
@@ -2002,16 +2180,30 @@ if IS_UNIX:
         if stderr is None:
             stderr = PIPE
         
-        return await loop.subprocess_exec(program, *args, stdin=stdin, stdout=stdout, stderr=stderr,
-            **kwargs)
+        return await loop.subprocess_exec(program, *args, stdin = stdin, stdout = stdout, stderr = stderr, **kwargs)
 
 else:
-    async def create_subprocess_shell(cmd, stdin=None, stdout=None, stderr=None, loop=None, limit=_DEFAULT_LIMIT,
-            **kwargs):
+    async def create_subprocess_shell(
+        cmd,
+        stdin = None,
+        stdout = None,
+        stderr = None,
+        loop = None,
+        limit = _DEFAULT_LIMIT,
+        **kwargs,
+    ):
         raise NotImplementedError
     
-    async def create_subprocess_exec(program, *args, stdin=None, stdout=None, stderr=None, loop=None,
-            limit=_DEFAULT_LIMIT, **kwargs):
+    async def create_subprocess_exec(
+        program,
+        *args,
+        stdin = None,
+        stdout = None,
+        stderr = None,
+        loop = None,
+        limit = _DEFAULT_LIMIT,
+        **kwargs,
+    ):
         raise NotImplementedError
 
 # Required by anyio
@@ -2023,7 +2215,7 @@ Process = AsyncProcess
 #    _unregister_task, _enter_task, _leave_task,
 
 class TaskMeta(type):
-    def __new__(cls, class_name, class_parents, class_attributes, ignore=False):
+    def __new__(cls, class_name, class_parents, class_attributes, ignore = False):
         if ignore:
             return type.__new__(cls, class_name, class_parents, class_attributes)
         
@@ -2037,17 +2229,17 @@ class TaskMeta(type):
         pass
     
     # Required by dead.py
-    def _subclass_new(cls, *args, coro=None, loop=None, **kwargs):
-        self = Task.__new__(cls, coro, loop=loop)
-        self.__init__(*args, coro=coro, loop=loop, **kwargs)
+    def _subclass_new(cls, *args, coro = None, loop = None, **kwargs):
+        self = Task.__new__(cls, coro, loop = loop)
+        self.__init__(*args, coro = coro, loop = loop, **kwargs)
         return self
 
-class Task(HataTask, metaclass=TaskMeta, ignore=True):
+class Task(HataTask, metaclass = TaskMeta, ignore = True):
     __slots__ = (
         '__weakref__', # Required by anyio
     )
     
-    def __new__(cls, coroutine, loop=None, name=None):
+    def __new__(cls, coroutine, loop = None, name = None):
         """A coroutine wrapped in a Future."""
         if not iscoroutine(coroutine):
             raise TypeError(f'a coroutine was expected, got {coroutine!r}')
@@ -2058,7 +2250,7 @@ class Task(HataTask, metaclass=TaskMeta, ignore=True):
         return HataTask.__new__(cls, coroutine, loop)
     
     # Required by aiohttp 3.6
-    def current_task(loop=None):
+    def current_task(loop = None):
         if loop is None:
             loop = get_event_loop()
         else:
@@ -2078,7 +2270,7 @@ class Task(HataTask, metaclass=TaskMeta, ignore=True):
         return self._coroutine
 
 
-def create_task(coroutine, *, name=None):
+def create_task(coroutine, *, name = None):
     """
     Schedule the execution of a coroutine object in a spawn task.
     
@@ -2091,7 +2283,7 @@ FIRST_COMPLETED = 'FIRST_COMPLETED'
 FIRST_EXCEPTION = 'FIRST_EXCEPTION'
 ALL_COMPLETED = 'ALL_COMPLETED'
 
-async def wait(futures, *, loop=None, timeout = None, return_when=ALL_COMPLETED):
+async def wait(futures, *, loop = None, timeout = None, return_when = ALL_COMPLETED):
     """
     Wait for the Futures and coroutines given by functions to complete.
     
@@ -2121,14 +2313,23 @@ async def wait(futures, *, loop=None, timeout = None, return_when=ALL_COMPLETED)
     if loop is None:
         loop = get_running_loop()
     else:
-        warnings.warn('The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
-                      DeprecationWarning, stacklevel=2)
+        warnings.warn(
+            'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
+            DeprecationWarning,
+            stacklevel = 2,
+        )
     
     futures = set(futures)
     
     if any(iscoroutine(future) for future in futures):
-        warnings.warn('The explicit passing of coroutine objects to asyncio.wait() is deprecated since Python 3.8, '
-                      'and scheduled for removal in Python 3.11.', DeprecationWarning, stacklevel=2)
+        warnings.warn(
+            (
+                'The explicit passing of coroutine objects to asyncio.wait() is deprecated since Python 3.8, '
+                'and scheduled for removal in Python 3.11.'
+            ),
+            DeprecationWarning,
+            stacklevel = 2,
+        )
     
     futures = {loop.ensure_future(future) for future in futures}
     
@@ -2145,7 +2346,7 @@ async def wait(futures, *, loop=None, timeout = None, return_when=ALL_COMPLETED)
     
     return await future
 
-async def wait_for(future, timeout, *, loop=None):
+async def wait_for(future, timeout, *, loop = None):
     """
     Wait for the single Future or coroutine to complete, with timeout.
     
@@ -2161,8 +2362,11 @@ async def wait_for(future, timeout, *, loop=None):
     if loop is None:
         loop = get_running_loop()
     else:
-        warnings.warn('The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
-                      DeprecationWarning, stacklevel=2)
+        warnings.warn(
+            'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
+            DeprecationWarning,
+            stacklevel = 2,
+        )
     
     if timeout is None:
         return await future
@@ -2211,7 +2415,7 @@ async def _as_completed_task(futures, waiter):
         
         waiter.reset()
 
-def as_completed(functions, *, loop=None, timeout = None):
+def as_completed(functions, *, loop = None, timeout = None):
     """
     Return an iterator whose values are coroutines.
     
@@ -2235,8 +2439,11 @@ def as_completed(functions, *, loop=None, timeout = None):
     if loop is None:
         loop = get_event_loop()
     else:
-        warnings.warn('The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
-                      DeprecationWarning, stacklevel=2)
+        warnings.warn(
+            'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
+            DeprecationWarning,
+            stacklevel = 2,
+        )
     
     tasks = set()
     for coroutine_or_future in functions:
@@ -2255,13 +2462,16 @@ def as_completed(functions, *, loop=None, timeout = None):
     return futures
     
 
-async def sleep(delay, result=None, *, loop=None):
+async def sleep(delay, result = None, *, loop = None):
     """Coroutine that completes after a given time (in seconds)."""
     if loop is None:
         loop = get_running_loop()
     else:
-        warnings.warn('The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
-                      DeprecationWarning, stacklevel=2)
+        warnings.warn(
+            'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
+            DeprecationWarning,
+            stacklevel = 2,
+        )
     
     if delay <= 0.0:
         await skip_ready_cycle()
@@ -2270,7 +2480,8 @@ async def sleep(delay, result=None, *, loop=None):
     await scarletio_sleep(delay, loop)
     return result
 
-def ensure_future(coroutine_or_future, *, loop=None):
+
+def ensure_future(coroutine_or_future, *, loop = None):
     """
     Wrap a coroutine or an awaitable in a future.
     
@@ -2355,7 +2566,7 @@ class _gatherer_done_cb_raise:
         else:
             future.set_exception(exception)
 
-class _getherer_cancel_cb:
+class _gatherer_cancel_cb:
     __slots__ = ('gatherer',)
     
     def __init__(self, gatherer):
@@ -2375,7 +2586,7 @@ class _getherer_cancel_cb:
         gatherer.cancel()
 
         
-def gather(*coroutines_or_futures, loop=None, return_exceptions=False):
+def gather(*coroutines_or_futures, loop = None, return_exceptions = False):
     """
     Return a future aggregating results from the given coroutines/futures. Coroutines will be wrapped in a future and
     scheduled in the event loop. They will not necessarily be scheduled in the same order as passed in.
@@ -2422,11 +2633,12 @@ def gather(*coroutines_or_futures, loop=None, return_exceptions=False):
         gatherer_done_cb_type = _gatherer_done_cb_raise
     
     gatherer = gatherer_type(tasks, loop)
-    future.add_done_callback(_getherer_cancel_cb(gatherer))
+    future.add_done_callback(_gatherer_cancel_cb(gatherer))
     gatherer.add_done_callback(gatherer_done_cb_type(future))
     return future
 
-def shield(arg, *, loop=None):
+
+def shield(arg, *, loop = None):
     """
     Wait for a future, shielding it from cancellation.
     
@@ -2457,10 +2669,14 @@ def shield(arg, *, loop=None):
     if loop is None:
         loop = get_running_loop()
     else:
-        warnings.warn('The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
-                      DeprecationWarning, stacklevel=2)
+        warnings.warn(
+            'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
+            DeprecationWarning,
+            stacklevel = 2,
+        )
 
     return scarletio_shield(arg, loop)
+
 
 def run_coroutine_threadsafe(coroutine, loop):
     """
@@ -2483,12 +2699,13 @@ def _leave_task(loop, task):
 def _unregister_task(task):
     """Unregister a task."""
 
-def all_tasks(loop=None):
+def all_tasks(loop = None):
     """Return a set of all tasks for the loop."""
     # We could do this, but we will not.
     return {}
 
-def current_task(loop=None):
+
+def current_task(loop = None):
     """Return a currently executed task."""
     if loop is None:
         loop = get_running_loop()
@@ -2600,7 +2817,7 @@ async def to_thread(func, *args, **kwargs):
 class BaseTransport:
     __slots__ = ('_extra',)
 
-    def __init__(self, extra=None):
+    def __init__(self, extra = None):
         if extra is None:
             extra = {}
         self._extra = extra
@@ -2637,7 +2854,7 @@ class ReadTransport(BaseTransport):
 class WriteTransport(BaseTransport):
     __slots__ = ()
 
-    def set_write_buffer_limits(self, high=None, low=None):
+    def set_write_buffer_limits(self, high = None, low = None):
         raise NotImplementedError
 
     def get_write_buffer_size(self):
@@ -2682,7 +2899,7 @@ class Transport(ReadTransport, WriteTransport):
 class DatagramTransport(BaseTransport):
     __slots__ = ()
 
-    def sendto(self, data, addr=None):
+    def sendto(self, data, addr = None):
         raise NotImplementedError
 
     def abort(self):
@@ -2728,7 +2945,7 @@ class _FlowControlMixin(Transport):
 
     __slots__ = ('_loop', '_protocol_paused', '_high_water', '_low_water')
     
-    def __init__(self, extra=None, loop=None):
+    def __init__(self, extra = None, loop = None):
         Transport.__init__(extra)
         assert loop is not None
         self._loop = loop
@@ -2762,7 +2979,7 @@ class _FlowControlMixin(Transport):
     def get_write_buffer_limits(self):
         return (self._low_water, self._high_water)
     
-    def _set_write_buffer_limits(self, high=None, low=None):
+    def _set_write_buffer_limits(self, high = None, low = None):
         if high is None:
             if low is None:
                 high = 64 * 1024
@@ -2777,8 +2994,8 @@ class _FlowControlMixin(Transport):
         self._high_water = high
         self._low_water = low
 
-    def set_write_buffer_limits(self, high=None, low=None):
-        self._set_write_buffer_limits(high=high, low=low)
+    def set_write_buffer_limits(self, high = None, low = None):
+        self._set_write_buffer_limits(high = high, low = low)
         self._maybe_pause_protocol()
 
     def get_write_buffer_size(self):
@@ -2890,7 +3107,7 @@ ProactorEventLoop = EventThread
 class IocpProactor:
     """Proactor implementation using IOCP."""
 
-    def __new__(cls, concurrency=0xffffffff):
+    def __new__(cls, concurrency = 0xffffffff):
         raise NotImplementedError
 
 # DefaultEventLoopPolicy included already
@@ -2906,7 +3123,7 @@ class WindowsProactorEventLoopPolicy(AbstractEventLoopPolicy):
 
 BUFSIZE = 8192
 
-def pipe(*, duplex=False, overlapped=(True, True), bufunctionsize=BUFSIZE):
+def pipe(*, duplex = False, overlapped = (True, True), bufunctionsize = BUFSIZE):
     raise NotImplementedError
 
 class PipeHandle:
@@ -2924,5 +3141,5 @@ class Popen:
     
     The stdin, stdout, stderr are None or instances of PipeHandle.
     """
-    def __new__(cls, args, stdin=None, stdout=None, stderr=None, **kwds):
+    def __new__(cls, args, stdin = None, stdout = None, stderr = None, **kwds):
         raise NotImplementedError

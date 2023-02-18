@@ -138,7 +138,7 @@ class class_property:
         Documentation for the property.
     """)
     
-    def __new__(cls, fget=None, fset=None, fdel=None, doc=None):
+    def __new__(cls, fget = None, fset = None, fdel = None, doc = None):
         """
         Creates a new ``class_property`` from the given parameters.
         

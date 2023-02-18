@@ -81,7 +81,7 @@ class MultiValueDictionary(dict):
     __slots__ = ()
     
     @has_docs
-    def __init__(self, iterable=None):
+    def __init__(self, iterable = None):
         """
         Creates a new ``MultiValueDictionary``.
         

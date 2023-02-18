@@ -248,7 +248,7 @@ class WeakSet(set):
     
     
     @has_docs
-    def __init__(self, iterable=None):
+    def __init__(self, iterable = None):
         """
         Creates a new ``WeakSet`` from the given iterable.
         

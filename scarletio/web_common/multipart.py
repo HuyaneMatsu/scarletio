@@ -1022,7 +1022,7 @@ class MultipartWriter(PayloadBase):
     """
     __slots__ = ('_boundary', )
     
-    def __init__(self, subtype='mixed', boundary=None):
+    def __init__(self, subtype = 'mixed', boundary = None):
         """
         Creates a new ``MultipartWriter`` with the given parameters.
         
@@ -1098,7 +1098,7 @@ class MultipartWriter(PayloadBase):
         return self._boundary.decode('ascii')
     
     
-    def append(self, body_part, headers=None):
+    def append(self, body_part, headers = None):
         """
         Adds a new body part to the ``MultipartWriter``.
         
@@ -1234,7 +1234,7 @@ class MultipartWriter(PayloadBase):
         data.append((payload, headers, content_encoding, transfer_encoding))
     
     
-    def append_json(self, obj, headers=None):
+    def append_json(self, obj, headers = None):
         """
         Helper method to add a json field.
         
@@ -1265,7 +1265,7 @@ class MultipartWriter(PayloadBase):
         return payload
     
     
-    def append_form(self, obj, headers=None):
+    def append_form(self, obj, headers = None):
         """
         Helper method to add url_encoded field.
         
@@ -1302,7 +1302,7 @@ class MultipartWriter(PayloadBase):
         return payload
     
     
-    async def write(self, writer, close_boundary=True):
+    async def write(self, writer, close_boundary = True):
         """
         Writes the payloads of the multipart writer to the given http writer.
         

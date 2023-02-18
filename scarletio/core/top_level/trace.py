@@ -21,7 +21,7 @@ from .event_loop import get_event_loop
 EventThread = include('EventThread')
 
 
-async def render_frames_into_async(frames, extend=None, *, filter=None, highlighter=None, loop=None):
+async def render_frames_into_async(frames, extend = None, *, filter = None, highlighter = None, loop = None):
     """
     Renders the given frames into a list of strings.
     
@@ -84,7 +84,7 @@ async def render_frames_into_async(frames, extend=None, *, filter=None, highligh
     )
 
 
-async def render_exception_into_async(exception, extend=None, *, filter=None, highlighter=None, loop=None):
+async def render_exception_into_async(exception, extend = None, *, filter = None, highlighter = None, loop = None):
     """
     Renders the given exception's frames into a list of strings.
     
@@ -239,7 +239,7 @@ def _build_additional_title_object(title_object):
     return _build_additional_title_str(repr(title_object))
 
 
-def write_exception_sync(exception, before=None, after=None, file=None, *, filter=None, highlighter=None):
+def write_exception_sync(exception, before = None, after = None, file = None, *, filter = None, highlighter = None):
     """
     Writes the given exception's traceback.
     
@@ -321,7 +321,9 @@ def write_exception_sync(exception, before=None, after=None, file=None, *, filte
 
 
 @export
-def write_exception_async(exception, before=None, after=None, file=None, *, filter=None, highlighter=None, loop=None):
+def write_exception_async(
+    exception, before = None, after = None, file = None, *, filter = None, highlighter = None, loop = None
+):
     """
     Writes the given exception's traceback asynchronously.
     
@@ -386,7 +388,9 @@ def write_exception_async(exception, before=None, after=None, file=None, *, filt
 
 
 @export
-def write_exception_maybe_async(exception, before=None, after=None, file=None, *, filter=None, highlighter=None):
+def write_exception_maybe_async(
+    exception, before = None, after = None, file = None, *, filter = None, highlighter = None
+):
     """
     Writes the given exception's traceback on a non-async thread. If called from an async thread will use an executor.
     If called from a sync thread, will block instead.
@@ -554,7 +558,7 @@ class ExceptionWriterContextManager:
     """
     __slots__ = ('exclude', 'filter', 'highlighter', 'include', 'location')
     
-    def __new__(cls, include=None, exclude=None, *, location=None, filter=None, highlighter=None):
+    def __new__(cls, include = None, exclude = None, *, location = None, filter = None, highlighter = None):
         """
         Creates a new exception catcher.
         

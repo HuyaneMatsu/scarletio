@@ -18,7 +18,7 @@ class IgnoreCaseString(str):
     __slots__ = ('_case_fold', )
     
     @has_docs
-    def __new__(cls, value='', encoding=sys.getdefaultencoding(), errors='strict'):
+    def __new__(cls, value = '', encoding = sys.getdefaultencoding(), errors = 'strict'):
         """
         Return an string which ignores casing. If object is not provided, returns the empty string. Otherwise, the
         behavior of ``IgnoreCaseString`` depends on whether encoding or errors is given, as follows.

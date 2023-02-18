@@ -93,7 +93,7 @@ class SyncQueue:
     """
     __slots__ = ('_cancelled', '_lock', '_results', '_waiter',)
     
-    def __init__(self, iterable=None, max_length = None, cancelled=False):
+    def __init__(self, iterable = None, max_length = None, cancelled = False):
         """
         Creates a new ``SyncQueue`` with the given parameters.
         
@@ -106,7 +106,7 @@ class SyncQueue:
         cancelled : `bool` = `False`, Optional
             Whether the queue should be initially cancelled.
         """
-        self._results = deque(maxlen=max_length) if iterable is None else deque(iterable, maxlen=max_length)
+        self._results = deque(maxlen = max_length) if iterable is None else deque(iterable, maxlen = max_length)
         self._waiter = None
         self._cancelled = cancelled
         self._lock = SyncLock()
@@ -396,7 +396,7 @@ class ExecutorThread(Thread):
                 render_exception_into(err, extend=extracted)
                 sys.stderr.write(''.join(extracted))
     
-    def execute(self, func, future=None):
+    def execute(self, func, future = None):
         """
         Executes the given `func` on the executor thread.
         
