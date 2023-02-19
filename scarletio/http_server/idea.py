@@ -6,7 +6,7 @@ from importlib.util import find_spec
 from threading import current_thread
 from uuid import UUID
 
-from ..core import CancelledError, EventThread, Future, Task, WaitTillAll, skip_poll_cycle, write_exception_async
+from ..core import CancelledError, EventThread, Future, Task, TaskGroup, skip_poll_cycle, write_exception_async
 from ..utils import CallableAnalyzer, IgnoreCaseMultiValueDictionary
 from ..web_common import HttpReadWriteProtocol, HttpVersion11, PayloadError, URL
 from ..web_common.headers import METHOD_ALL, METHOD_GET
@@ -417,13 +417,7 @@ class HTTPServer:
         
         handlers = self.handlers
         if handlers:
-            tasks = []
-            for request_handler in handlers:
-                tasks.append(request_handler.close(1001))
-            
-            future = WaitTillAll(tasks, loop)
-            tasks = None
-            await future
+            await TaskGroup(loop, (request_handler.close(1001) for request_handler in handlers)).wait_all()
             
         if handlers:
             tasks = []
@@ -436,7 +430,7 @@ class HTTPServer:
             
             task = None
             if tasks:
-                future = WaitTillAll(tasks, loop)
+                future = TaskGroup(loop, tasks).wait_all()
                 tasks = None
                 await future
 

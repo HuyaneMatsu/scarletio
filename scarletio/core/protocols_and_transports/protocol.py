@@ -1064,7 +1064,7 @@ class DatagramAddressedReadProtocol(AbstractProtocolBase):
         
         else:
             waiter = Task(self.wait_for_receive(address), self._loop)
-            future_or_timeout(waiter, timeout)
+            waiter.apply_timeout(timeout)
             
             try:
                 result = await waiter

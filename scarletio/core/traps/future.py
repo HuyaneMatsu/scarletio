@@ -234,7 +234,8 @@ class Future:
             self._loop._schedule_callbacks(self)
             return 1
     
-    set_docs(cancel,
+    set_docs(
+        cancel,
         """
         Cancels the future if it is pending.
         
@@ -790,3 +791,18 @@ class Future:
                 self.add_done_callback(MethodType(_cancel_handle_callback, handle))
         
         return 1
+    
+    
+    def iter_callbacks(self):
+        """
+        Iterates over the future's callbacks.
+        
+        This method is an iterable generator.
+        
+        Yields
+        ------
+        callback : `object`
+        """
+        callbacks = self._callbacks
+        if (callbacks is not None):
+            yield from callbacks

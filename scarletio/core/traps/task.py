@@ -109,7 +109,7 @@ class Task(Future):
         return self
     
     
-    def get_stack(self, limit=-1):
+    def get_stack(self, limit = -1):
         """
         Return the list of stack frames for the task. If the task is already done, returns an empty list.
         

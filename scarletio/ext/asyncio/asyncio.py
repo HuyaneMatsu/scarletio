@@ -27,9 +27,8 @@ from threading import current_thread, enumerate as list_threads
 
 from ...core import (
     AbstractProtocolBase, AsyncLifoQueue, AsyncProcess, AsyncQueue, DatagramSocketTransportLayer, Event as HataEvent,
-    EventThread, Executor, Future as HataFuture,  Lock as HataLock, ReadProtocolBase, Task as HataTask,
-    WaitContinuously, WaitTillAll, WaitTillExc, WaitTillFirst, future_or_timeout, shield as scarletio_shield,
-    skip_ready_cycle, sleep as scarletio_sleep
+    EventThread, Executor, Future as HataFuture,  Lock as HataLock, ReadProtocolBase, Task as HataTask, TaskGroup,
+    future_or_timeout, shield as scarletio_shield, skip_ready_cycle, sleep as scarletio_sleep
 )
 from ...core.event_loop.event_loop_functionality_helpers import _is_stream_socket, _set_reuse_port
 from ...core.top_level import get_event_loop as scarletio_get_event_loop, write_exception_async
@@ -45,14 +44,17 @@ class EventThread:
     
     call_soon_threadsafe = EventThread.call_soon_thread_safe
     
-    def getaddrinfo(self, host, port, *, family=0, type=0, proto=0, flags=0):
-        return self.get_address_info(host, port, family=family, type=type, protocol=proto, flags=flags)
+    
+    def getaddrinfo(self, host, port, *, family = 0, type = 0, proto = 0, flags = 0):
+        return self.get_address_info(host, port, family = family, type = type, protocol = proto, flags = flags)
+    
     
     getnameinfo = EventThread.get_name_info
     sock_recv = EventThread.socket_receive
     sock_sendall = EventThread.socket_send_all
     sock_connect = EventThread.socket_connect
     sock_accept = EventThread.socket_accept
+    
     
     # Required by aio-http 3.6
     def is_running(self):
@@ -63,16 +65,20 @@ class EventThread:
     def get_debug(self):
         return False
     
+    
     EventThread.get_debug = get_debug
     del get_debug
+    
     
     # Required by aio-http 3.6
     def is_closed(self):
         return (not self.running)
     
+    
     # Required by dead.py 3.8
     def add_signal_handler(self, sig, callback, *args):
         pass
+    
     
     # Required by aio-http 3.8
     def remove_signal_handler(self, sig):
@@ -93,6 +99,7 @@ class EventThread:
         self.wake_up()
         self.join()
     
+    
     # Required by dead.py 3.8
     def run_until_complete(self, future):
         local_thread = current_thread()
@@ -101,9 +108,11 @@ class EventThread:
         
         self.run(future)
     
+    
     # Required by dead.py 3.8
     def close(self):
         self.stop()
+    
     
     def call_exception_handler(self, context):
         message = context.pop('message')
@@ -156,8 +165,6 @@ class EventThread:
         happy_eyeballs_delay = None,
         interleave = None,
     ):
-        
-        
         if sock is None:
             return await self._asyncio_create_connection_to(
                 protocol_factory,
@@ -179,7 +186,6 @@ class EventThread:
             )
     
     
-
     async def _asyncio_create_connection_to(
         self,
         protocol_factory,
@@ -203,7 +209,6 @@ class EventThread:
             flags = socket_flags,
         )
         
-        futures = [future_1]
         if local_address is not None:
             future_2 = self._ensure_resolved(
                 local_address,
@@ -212,32 +217,41 @@ class EventThread:
                 protocol = socket_protocol,
                 flags = socket_flags,
             )
-            
-            futures.append(future_2)
         
         else:
             future_2 = None
         
-        await WaitTillAll(futures, self)
+        try:
+            await future_1
+        except:
+            if (future_2 is not None):
+                future_2.cancel()
+            raise
+        
+        if (future_2 is not None):
+            await future_2
         
         infos = future_1.get_result()
         if not infos:
             raise OSError('`get_address_info` returned empty list')
         
-        if (future_2 is not None):
+        if (future_2 is None):
+            local_address_infos = None
+        
+        else:
             local_address_infos = future_2.get_result()
             if not local_address_infos:
                 raise OSError('`get_address_info` returned empty list')
         
         exceptions = []
-        for socket_family, socket_type, socket_protocol, canonical_name, address in infos:
+        for socket_family, socket_type, socket_protocol, socket_address_canonical_name, socket_address in infos:
             
             socket = module_socket.socket(family = socket_family, type = socket_type, proto = socket_protocol)
             
             try:
                 socket.setblocking(False)
                 
-                if (future_2 is not None):
+                if (local_address_infos is not None):
                     for element in local_address_infos:
                         local_address = element[4]
                         try:
@@ -252,7 +266,7 @@ class EventThread:
                         socket = None
                         continue
                 
-                await self.socket_connect(socket, address)
+                await self.socket_connect(socket, socket_address)
             except OSError as err:
                 if (socket is not None):
                     socket.close()
@@ -348,7 +362,6 @@ class EventThread:
         else:
             return await self._asyncio_create_datagram_connection_with(protocol_factory, sock)
 
-    
 
     async def _asyncio_create_datagram_connection_to(
         self,
@@ -880,7 +893,7 @@ def get_running_loop():
     """
     loop = _get_running_loop()
     if loop is None:
-        raise RuntimeError('no running event loop')
+        raise RuntimeError('no current event loop')
     
     return loop
 
@@ -1604,6 +1617,7 @@ async def open_connection(host = None, port = None, *, loop = None, limit = _DEF
     writer = StreamWriter(transport, protocol, reader, loop)
     return reader, writer
 
+
 async def start_server(client_connected_cb, host = None, port = None, *, loop = None, limit = _DEFAULT_LIMIT, **kwds):
     """
     Start a socket server, call back for each client connected. The first parameter, `client_connected_cb`, takes two
@@ -2279,9 +2293,11 @@ def create_task(coroutine, *, name = None):
     loop = get_running_loop()
     return Task(coroutine, loop)
 
+
 FIRST_COMPLETED = 'FIRST_COMPLETED'
 FIRST_EXCEPTION = 'FIRST_EXCEPTION'
 ALL_COMPLETED = 'ALL_COMPLETED'
+
 
 async def wait(futures, *, loop = None, timeout = None, return_when = ALL_COMPLETED):
     """
@@ -2319,7 +2335,7 @@ async def wait(futures, *, loop = None, timeout = None, return_when = ALL_COMPLE
             stacklevel = 2,
         )
     
-    futures = set(futures)
+    futures = {*futures}
     
     if any(iscoroutine(future) for future in futures):
         warnings.warn(
@@ -2331,20 +2347,28 @@ async def wait(futures, *, loop = None, timeout = None, return_when = ALL_COMPLE
             stacklevel = 2,
         )
     
-    futures = {loop.ensure_future(future) for future in futures}
+    task_group = TaskGroup(
+        loop,
+        (loop.ensure_future(future) for future in futures),
+    )
     
     if return_when == FIRST_COMPLETED:
-        future_type = WaitTillFirst
+        waiter_future = task_group.wait_first()
     elif return_when == FIRST_EXCEPTION:
-        future_type = WaitTillExc
+        waiter_future = task_group.wait_first()
     else:
-        future_type = WaitTillAll
+        waiter_future = task_group.wait_all()
     
-    future = future_type(futures, loop)
     if timeout is not None:
-        future_or_timeout(future, timeout)
+        waiter_future.apply_timeout(timeout)
     
-    return await future
+    try: 
+        await waiter_future
+    except TimeoutError:
+        pass
+    
+    return task_group.done, task_group.pending
+
 
 async def wait_for(future, timeout, *, loop = None):
     """
@@ -2376,46 +2400,47 @@ async def wait_for(future, timeout, *, loop = None):
         if future.done():
             return future.get_result()
     
-    future_or_timeout(future, timeout)
+    future.apply_timeout(timeout)
     return await future
 
 
-async def _as_completed_task(futures, waiter):
+async def _as_completed_task(task_group, waiter_futures, timeout_future):
     index = 0
-    limit = len(futures)
-    while True:
-        future = futures[index]
+    limit = len(waiter_futures)
+    
+    async for future in task_group.exhaust():
+        if future is timeout_future:
+            future.cancel()
+            task_group.cancel_pending()
+            
+            while True:
+                waiter_futures[index].set_exception_if_pending(TimeoutError())
+                
+                index += 1
+                if index == limit:
+                    break
+                
+                continue
+            return
         
         try:
-            result = await waiter
+            result = future.get_result()
         except BaseException as err:
-            future.set_exception_if_pending(err)
+            waiter_futures[index].set_exception_if_pending(err)
         else:
-            if result is None:
-                future.set_exception_if_pending(TimeoutError())
-                
-                for future in waiter.futures_pending:
-                    future.cancel()
-                
-                while True:
-                    index += 1
-                    if index == limit:
-                        break
-                    
-                    future = futures[index]
-                    future.set_exception_if_pending(TimeoutError())
-                    continue
-                return
-            
-            future.set_result_if_pending(result)
+            waiter_futures[index].set_result_if_pending(result)
         
         index += 1
         if index == limit:
-            break
+            if (timeout_future is not None):
+                timeout_future.cancel()
+            
+            return
         
-        waiter.reset()
+        continue
 
-def as_completed(functions, *, loop = None, timeout = None):
+
+def as_completed(futures, *, loop = None, timeout = None):
     """
     Return an iterator whose values are coroutines.
     
@@ -2433,11 +2458,13 @@ def as_completed(functions, *, loop = None, timeout = None):
     
     Note: The futures 'f' are not necessarily members of functions.
     """
-    if isfuture(functions) or iscoroutine(functions):
-        raise TypeError(f'expect a list of futures, not {type(functions).__name__}')
+    if isfuture(futures) or iscoroutine(futures):
+        raise TypeError(
+            f'expect a list of futures, not {type(futures).__name__}.'
+        )
     
     if loop is None:
-        loop = get_event_loop()
+        loop = get_running_loop()
     else:
         warnings.warn(
             'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
@@ -2445,22 +2472,30 @@ def as_completed(functions, *, loop = None, timeout = None):
             stacklevel = 2,
         )
     
-    tasks = set()
-    for coroutine_or_future in functions:
-        task = loop.ensure_future(coroutine_or_future)
-        tasks.add(task)
+    tasks = {loop.ensure_future(coroutine_or_future) for coroutine_or_future in {*futures}}
     
     if not tasks:
         return []
     
-    futures = [HataFuture(loop) for _ in range(len(tasks))]
-    waiter = WaitContinuously(tasks, loop)
-    if timeout is not None:
-        future_or_timeout(waiter, timeout)
+    waiter_futures = [HataFuture(loop) for _ in range(len(tasks))]
+    waited_futures = waiter_futures[::-1]
     
-    Task(_as_completed_task(futures, waiter), loop)
-    return futures
+    if timeout is None:
+        timeout_future = None
+    else:
+        timeout_future = HataFuture(loop)
+        timeout_future.apply_timeout(timeout)
+        tasks.add(timeout_future)
     
+    task_group = TaskGroup(loop, tasks)
+    Task(_as_completed_task(task_group, waiter_futures, timeout_future), loop)
+    
+    async def wait_for_one():
+        return await waited_futures.pop()
+    
+    for _ in range(len(waiter_futures)):
+        yield wait_for_one()
+
 
 async def sleep(delay, result = None, *, loop = None):
     """Coroutine that completes after a given time (in seconds)."""
@@ -2498,15 +2533,15 @@ def ensure_future(coroutine_or_future, *, loop = None):
     
     return loop.ensure_future(coroutine_or_future)
 
-class _gatherer_done_cb_return_exceptions:
-    __slots__ = ('future', )
+class _gatherer_done_callback_return_exceptions:
+    __slots__ = ('task_group', 'future', )
     
-    def __init__(self, future):
+    def __init__(self, task_group, future):
+        self.task_group = task_group
         self.future = future
     
     def __call__(self, gatherer):
-        for pending_future in gatherer.futures_pending:
-            pending_future.cancel()
+        self.task_group.cancel_pending()
         
         future = self.future
         if future.done():
@@ -2516,12 +2551,12 @@ class _gatherer_done_cb_return_exceptions:
         results = []
         
         try:
-            done, pending = gatherer.get_result()
+            gatherer.get_result()
         except BaseException as err:
-            future.set_exception(err)
+            future.set_exception_if_pending(err)
             return
         
-        for done_future in done:
+        for done_future in self.task_group.done:
             try:
                 result = done_future.get_result()
             except BaseException as err:
@@ -2531,11 +2566,13 @@ class _gatherer_done_cb_return_exceptions:
         
         future.set_result(results)
 
-class _gatherer_done_cb_raise:
-    __slots__ = ('future', )
+class _gatherer_done_callback_raise:
+    __slots__ = ('task_group', 'future', )
     
-    def __init__(self, future):
+    def __init__(self, task_group, future):
+        self.task_group = task_group
         self.future = future
+    
     
     def __call__(self, gatherer):
         future = self.future
@@ -2543,13 +2580,13 @@ class _gatherer_done_cb_raise:
             return
         
         try:
-            done, pending = gatherer.get_result()
+            gatherer.get_result()
         except BaseException as err:
-            future.set_exception(err)
+            future.set_exception_if_pending(err)
             return
         
         results = []
-        for done_future in done:
+        for done_future in self.task_group.done:
             try:
                 result = done_future.get_result()
             except BaseException as err:
@@ -2566,10 +2603,12 @@ class _gatherer_done_cb_raise:
         else:
             future.set_exception(exception)
 
-class _gatherer_cancel_cb:
-    __slots__ = ('gatherer',)
+
+class _gatherer_cancel_callback:
+    __slots__ = ('task_group', 'gatherer',)
     
-    def __init__(self, gatherer):
+    def __init__(self, task_group, gatherer):
+        self.task_group = task_group
         self.gatherer = gatherer
     
     def __call__(self, future):
@@ -2580,9 +2619,7 @@ class _gatherer_cancel_cb:
         if not future.cancelled():
             return
         
-        for done_future in gatherer.futures_done:
-            done_future.cancel()
-        
+        self.task_group.cancel_all()
         gatherer.cancel()
 
         
@@ -2605,14 +2642,36 @@ def gather(*coroutines_or_futures, loop = None, return_exceptions = False):
     calling ``gather.cancel()`` after catching an exception (raised by one of the awaitables) from gather won't cancel
     any other awaitables.
     """
+    # Remove duplicates. This is not an asyncio behavior, but should be.
+    coroutines_or_futures = {*coroutines_or_futures}
+    
     if loop is None:
-        loop = get_event_loop()
+        detected_loops = None
+        for future in coroutines_or_futures:
+            if isinstance(future, HataFuture):
+                if detected_loops is None:
+                    detected_loops = set()
+                detected_loops.add(future._loop)
+        
+        if detected_loops is None:
+            loop = get_running_loop()
+        
+        else:
+            if len(detected_loops) > 1:
+                raise ValueError(
+                    'The given futures are bound to multiple event loops; {detected_loops!r}.'
+                )
+            
+            loop = detected_loops.pop()
+            detected_loops = None
+    
     else:
         warnings.warn(
             'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
             DeprecationWarning,
             stacklevel = 2,
         )
+    
     
     future = HataFuture(loop)
     
@@ -2625,16 +2684,17 @@ def gather(*coroutines_or_futures, loop = None, return_exceptions = False):
         task = loop.ensure_future(coroutine)
         tasks.append(task)
     
-    if return_exceptions:
-        gatherer_type = WaitTillAll
-        gatherer_done_cb_type = _gatherer_done_cb_return_exceptions
-    else:
-        gatherer_type = WaitTillExc
-        gatherer_done_cb_type = _gatherer_done_cb_raise
+    task_group = TaskGroup(loop, tasks)
     
-    gatherer = gatherer_type(tasks, loop)
-    future.add_done_callback(_gatherer_cancel_cb(gatherer))
-    gatherer.add_done_callback(gatherer_done_cb_type(future))
+    if return_exceptions:
+        waiter = task_group.wait_all()
+        gatherer_done_callback_type = _gatherer_done_callback_return_exceptions
+    else:
+        waiter = task_group.wait_exception_or_cancellation()
+        gatherer_done_callback_type = _gatherer_done_callback_raise
+    
+    future.add_done_callback(_gatherer_cancel_callback(task_group, waiter))
+    waiter.add_done_callback(gatherer_done_callback_type(task_group, future))
     return future
 
 

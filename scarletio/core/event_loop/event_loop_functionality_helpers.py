@@ -3,10 +3,11 @@ __all__ = ()
 import socket as module_socket
 import sys
 from threading import current_thread
+from types import MethodType
 
-from ...utils import DOCS_ENABLED, docs_property, include
+from ...utils import DOCS_ENABLED, WeakReferer, docs_property, include
 
-from ..traps import Task
+from ..traps import Future, Task, TaskGroup
 
 
 EventThread = include('EventThread')
@@ -252,3 +253,44 @@ class EventThreadRunDescriptor:
     
     def __delete__(self, obj):
         raise AttributeError('can\'t delete attribute')
+
+
+def _iter_futures_of(value):
+    """
+    Iterates over the identified futures of the given value.
+    
+    This function is an iterable generator.
+    
+    Parameters
+    ----------
+    value : `object`
+        The value to check.
+    
+    Yields
+    ------
+    future : ``Future``
+    """
+    while True:
+        # direct instance.
+        if isinstance(value, Future):
+            yield value
+            return
+        
+        
+        if isinstance(value, TaskGroup):
+            yield from value.iter_futures()
+            return
+        
+        # Method?
+        if isinstance(value, MethodType):
+            instance = value.__self__
+            if isinstance(instance, WeakReferer):
+                instance = instance()
+                if instance is None:
+                    return
+            
+            value = instance
+            continue
+        
+        # Not method, gin-heh
+        return

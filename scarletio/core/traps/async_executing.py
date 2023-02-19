@@ -1,8 +1,9 @@
 __all__ = ('ScarletExecutor',)
 
 from threading import current_thread
+from types import MethodType
 
-from ...utils import ignore_frame, include
+from ...utils import WeakReferer, ignore_frame, include
 
 from ..exceptions import CancelledError
 
@@ -16,60 +17,43 @@ ignore_frame(__spec__.origin, '__call__', 'future.get_result()', )
 EventThread = include('EventThread')
 
 
-class ScarletExecutorCallback:
+def _scarlet_executor_callback(parent_reference, future):
     """
-    ``ScarletExecutor`` callback's added to futures or tasks waited by it.
+    Called as a callback when a waited future or task is finished.
     
-    Attributes
+    Removes the given `future`'s from the parent's active ones. If the parent Scarlet executor is overloaded with
+    tasks, wakes it up.
+    
+    If the `future` is finished with an exception then propagates it to it's parent to re-raise.
+    
+    Parameters
     ----------
-    _parent : ``ScarletExecutor``
-        The parent Scarlet executor.
+    parent_reference : ``WeakReferer`` to ``ScarletExecutor``
+        Reference to the parent scarlet executor.
+    future : ``Future``
+        A finished future or task.
     """
-    __slots__ = ('_parent',)
+    parent = parent_reference()
+    if parent is None:
+        return
     
-    def __init__(self, parent):
-        """
-        Creates a new scarlet executor with the given parameters.
-        
-        Parameters
-        ----------
-        parent : ``ScarletExecutor``
-            The parent Scarlet executor.
-        """
-        self._parent = parent
+    active = parent._active
     
-    def __call__(self, future):
-        """
-        Called as a callback when a waited future or task is finished.
-        
-        Removes the given `future`'s from the parent's active ones. If the parent Scarlet executor is overloaded with
-        tasks, wakes it up.
-        
-        If the `future` is finished with an exception then propagates it to it's parent to re-raise.
-        
-        Parameters
-        ----------
-        future : ``Future``
-            A finished future or task.
-        """
-        parent = self._parent
-        if parent is None:
-            return
-        
-        active = parent._active
-        
-        active.discard(future)
-        
-        try:
-            future.get_result()
-        except CancelledError:
-            pass
-        except BaseException as err:
-            exception = parent._exception
-            if exception is None:
-                parent._exception = err
-        
-        parent._waiter.set_result_if_pending(None)
+    active.discard(future)
+    
+    try:
+        future.get_result()
+    except CancelledError:
+        pass
+    
+    except BaseException as err:
+        exception = parent._exception
+        if exception is None:
+            parent._exception = err
+    
+    waiter = parent._waiter
+    if (waiter is not None):
+        waiter.set_result_if_pending(None)
 
 
 class ScarletExecutor:
@@ -169,7 +153,7 @@ class ScarletExecutor:
                 await scarlet.add(sleep(sleep_time))
         
         end = perf_counter()
-        print(end-start)
+        print(end - start)
     ```
     
     +---------------+-------------------------------+-----------------------+-----------------------+
@@ -218,7 +202,7 @@ class ScarletExecutor:
     ----------
     _active : `set` of ``Future``
         The already running tasks.
-    _callback : `None`, ``ScarletExecutorCB``
+    _callback : `None`, `MethodType`
         Callback set to the parallelly limited tasks.
     _exception : `None`, `BaseException`
         Any exception raised by an added task. ``CancelledError``-s are ignored.
@@ -227,19 +211,19 @@ class ScarletExecutor:
     _loop : `None`, ``EventThread``
         The event loop to what the ScarletExecutor is bound to.
     _waiter : `None`, ``Future``
-        A future which is used to block the main task's execution if the parallelly running tasks's amount is greater or
+        A future which is used to block the main task's execution if the parallelly running tasks' amount is greater or
         equal to the ``._limit``.
     """
-    __slots__ = ('_active', '_callback', '_exception', '_limit', '_loop', '_waiter', )
+    __slots__ = ('__weakref__', '_active', '_callback', '_exception', '_limit', '_loop', '_waiter', )
     
-    def __new__(cls, limit=10):
+    def __new__(cls, limit = ...):
         """
         Creates a new Scarlet executor instance.
         
         Parameters
         ----------
-        limit : `int` = `10`, Optional
-            The maximal amount of parallelism allowed by the Scarlet executor.
+        limit : `int`, Optional
+            The maximal amount of parallelism allowed by the Scarlet executor. Defaults to `10`.
         
         Raises
         ------
@@ -248,20 +232,19 @@ class ScarletExecutor:
         ValueError
             `size` is given as non negative `int`.
         """
-        limit_type = limit.__class__
-        if limit_type is int:
-            pass
-        elif issubclass(limit_type, int):
-            limit = int(limit)
-        else:
-            raise TypeError(
-                f'`limit` can be `int`, got {limit_type.__name__}; {limit!r}.'
-            )
+        if limit is ...:
+            limit = 10
         
-        if limit < 1:
-            raise ValueError(
-                f'`limit` can only be positive, got {limit!r}.'
-            )
+        else:
+            if not isinstance(limit, int):
+                raise TypeError(
+                    f'`limit` can be `int`, got {limit.__class__.__name__}; {limit!r}.'
+                )
+            
+            if limit < 1:
+                raise ValueError(
+                    f'`limit` can only be positive, got {limit!r}.'
+                )
         
         self = object.__new__(cls)
         self._limit = limit
@@ -273,6 +256,7 @@ class ScarletExecutor:
         self._exception = None
         
         return self
+    
     
     async def __aenter__(self):
         """
@@ -293,9 +277,10 @@ class ScarletExecutor:
         
         self._loop = loop
         self._waiter = Future(loop)
-        self._callback = ScarletExecutorCallback(self)
+        self._callback = MethodType(_scarlet_executor_callback, WeakReferer(self))
         
         return self
+    
     
     async def add(self, future):
         """
@@ -326,11 +311,17 @@ class ScarletExecutor:
         
         waiter = self._waiter
         
-        if waiter.is_done():
-            if self._exception is None:
-                waiter.clear()
-            else:
-                raise CancelledError
+        if waiter is None:
+            waiter = Future(self._loop)
+            self._waiter = waiter
+        
+        else:
+            if waiter.is_done():
+                if self._exception is None:
+                    waiter = Future(self._loop)
+                    self._waiter = waiter
+                else:
+                    raise CancelledError
         
         limit = self._limit
         while len(active) >= limit:
@@ -338,9 +329,11 @@ class ScarletExecutor:
             if (self._exception is not None):
                 raise CancelledError
             
-            waiter.clear()
+            waiter = Future(self._loop)
+            self._waiter = waiter
             
             break
+    
     
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """
@@ -353,15 +346,21 @@ class ScarletExecutor:
         """
         if exc_type is None:
             active = self._active
-            waiter = self._waiter
+            
             while active:
+                waiter = self._waiter
+                if waiter is None:
+                    waiter = Future(self._loop)
+                    self._waiter = waiter
+                
                 await waiter
+                
                 exception = self._exception
                 if exception is None:
-                    waiter.clear()
+                    waiter = Future(self._loop)
+                    self._waiter = waiter
                     continue
                 
-                self._callback._parent = None
                 self._callback = None
                 
                 self._waiter = None
@@ -375,7 +374,6 @@ class ScarletExecutor:
                 
                 raise exception
             
-            self._callback._parent = None
             self._callback = None
             
             self._waiter = None
@@ -391,7 +389,6 @@ class ScarletExecutor:
         
         exception = self._exception
         
-        self._callback._parent = None
         self._callback = None
         
         self._waiter = None
@@ -412,14 +409,14 @@ class ScarletExecutor:
         repr_parts = [
             '<',
             self.__class__.__name__,
-            ' limit=',
+            ' limit = ',
             repr(self._limit),
         ]
         
         if (self._loop is None):
             repr_parts.append(', closed')
         else:
-            repr_parts.append(', active=')
+            repr_parts.append(', active = ')
             repr_parts.append(repr(len(self._active)))
         
         repr_parts.append('>')

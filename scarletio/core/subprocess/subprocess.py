@@ -5,7 +5,7 @@ from socket import socketpair as create_socket_pair
 from subprocess import PIPE, Popen, TimeoutExpired
 
 from ..protocols_and_transports import ReadProtocolBase
-from ..traps import Future, Task, WaitTillAll, future_or_timeout, skip_poll_cycle
+from ..traps import Future, Task, TaskGroup, skip_poll_cycle
 
 from .subprocess_protocols import SubprocessReadPipeProtocol, SubprocessWritePipeProtocol
 from .subprocess_writer import SubprocessWriter
@@ -81,8 +81,9 @@ class AsyncProcess:
         '_subprocess_stdout_protocol', 'process', 'process_id', 'return_code', 'stderr', 'stdin', 'stdout'
     )
     
-    async def __new__(cls, loop, process_parameters, shell, stdin, stdout, stderr, buffer_size, extra,
-            process_open_kwargs):
+    async def __new__(
+        cls, loop, process_parameters, shell, stdin, stdout, stderr, buffer_size, extra, process_open_kwargs
+    ):
         """
         Creates a new ``AsyncProcess``.
         
@@ -620,7 +621,7 @@ class AsyncProcess:
         
         exit_waiters.add(waiter)
         if (timeout is not None):
-            future_or_timeout(waiter, timeout)
+            waiter.apply_timeout(timeout)
         
         try:
             return await waiter
@@ -785,16 +786,17 @@ class AsyncProcess:
             tasks.append(stderr_task)
         
         if tasks:
-            future = WaitTillAll(tasks, loop)
+            task_group = TaskGroup(loop, tasks)
+            
+            future = task_group.wait_all()
             if (timeout is not None):
-                future_or_timeout(future, timeout)
+                future.apply_timeout(timeout)
             
-            done, pending = await future
-            
-            if pending:
+            try:
+                await future
+            except TimeoutError:
                 # timeout occurred, cancel the read tasks and raise TimeoutExpired.
-                for task in pending:
-                    task.cancel()
+                task_group.cancel_pending()
                 
                 process = self.process
                 if process is None:
@@ -802,7 +804,11 @@ class AsyncProcess:
                 else:
                     args = process.args
                 
-                raise TimeoutExpired(args, timeout)
+                raise TimeoutExpired(args, timeout) from None
+            
+            except:
+                task_group.cancel_all()
+                raise
             
             if (stdin_task is not None):
                 stdin_task.get_result()

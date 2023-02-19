@@ -380,7 +380,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         close_message = self._serialize_close(code, reason)
         try:
             task = Task(self.write_close_frame(close_message), self._loop)
-            future_or_timeout(task, self.close_timeout)
+            task.apply_timeout(self.close_timeout)
             await task
         except TimeoutError:
             self.fail_connection()
@@ -389,7 +389,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             # if close() is cancelled during the wait, self.transfer_data_task is cancelled before the close_timeout
             # elapses
             task = self.transfer_data_task
-            future_or_timeout(task, self.close_timeout)
+            task.apply_timeout(self.close_timeout)
             await task
         except (TimeoutError, CancelledError):
             pass
@@ -997,7 +997,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         if self.connection_lost_waiter.is_pending():
             try:
                 task = shield(self.connection_lost_waiter, self._loop)
-                future_or_timeout(task, self.close_timeout)
+                task.apply_timeout(self.close_timeout)
                 await task
             except TimeoutError:
                 pass
@@ -1006,7 +1006,8 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         # moment the timeout occurs and the moment this coroutine resumes running.
         return self.connection_lost_waiter.is_done()
     
-    def fail_connection(self, code=1006, reason = ''):
+    
+    def fail_connection(self, code = 1006, reason = ''):
         """
         Closes the websocket if any unexpected exception occurred.
         

@@ -158,6 +158,21 @@ class Handle:
         
         finally:
             self = None  # Needed to break cycles when an exception occurs.
+    
+    
+    def iter_positional_parameters(self):
+        """
+        Iterates over the handle's positional parameters.
+        
+        This method is an iterable generator.
+        
+        Yields
+        ------
+        parameter : `object`
+        """
+        args = self.args
+        if (args is not None):
+            yield from args
 
 
 class TimerHandle(Handle):

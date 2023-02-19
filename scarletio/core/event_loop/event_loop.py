@@ -10,7 +10,6 @@ from selectors import DefaultSelector, EVENT_READ, EVENT_WRITE
 from ssl import SSLContext, create_default_context
 from stat import S_ISSOCK
 from threading import Thread, current_thread
-from types import MethodType
 
 from ...utils import IS_UNIX, WeakSet, alchemy_incendiary, copy_docs, export, include, is_coroutine
 
@@ -21,11 +20,11 @@ from ..protocols_and_transports import (
 )
 from ..subprocess import AsyncProcess
 from ..time import LOOP_TIME, LOOP_TIME_RESOLUTION
-from ..traps import Future, FutureAsyncWrapper, Gatherer, Task, WaitTillAll, WaitTillFirst
+from ..traps import Future, FutureAsyncWrapper, Task, TaskGroup
 
 from .cycler import Cycler
 from .event_loop_functionality_helpers import (
-    EventThreadRunDescriptor, _HAS_IPv6, _ip_address_info, _is_stream_socket, _set_reuse_port
+    EventThreadRunDescriptor, _HAS_IPv6, _ip_address_info, _is_stream_socket, _iter_futures_of, _set_reuse_port
 )
 from .event_thread_suspender import ThreadSuspenderContext
 from .event_thread_type import EventThreadType
@@ -39,7 +38,7 @@ write_exception_maybe_async = include('write_exception_maybe_async')
 
 
 @export
-class EventThread(Executor, Thread, metaclass=EventThreadType):
+class EventThread(Executor, Thread, metaclass = EventThreadType):
     """
     Event loops run asynchronous tasks and callbacks, perform network IO operations, and runs subprocesses.
     
@@ -99,7 +98,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         'started',
     )
     
-    def __init__(self, keep_executor_count=...):
+    def __init__(self, keep_executor_count = ...):
         """
         Creates a new ``EventThread`` with the given parameters.
         
@@ -447,7 +446,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return handle
     
     
-    def cycle(self, cycle_time, *funcs, priority=0):
+    def cycle(self, cycle_time, *funcs, priority = 0):
         """
         Cycles the given functions on an event loop, by calling them after every `n` amount of seconds.
         
@@ -465,7 +464,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         cycler : ``Cycler``
             A cycler with what the added function and the cycling can be managed.
         """
-        return Cycler(self, cycle_time, *funcs, priority=priority)
+        return Cycler(self, cycle_time, *funcs, priority = priority)
     
     
     def _schedule_callbacks(self, future):
@@ -862,7 +861,10 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         closing_async_generators = list(async_generators)
         async_generators.clear()
         
-        results = await Gatherer(self, (ag.aclose() for ag in closing_async_generators))
+        results = await TaskGroup(
+            self,
+            (Task(ag.aclose(), self) for ag in closing_async_generators),
+        )
         
         for result, async_generator in zip(results, closing_async_generators):
             exception = result.exception
@@ -893,25 +895,10 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             future_checks_pending.add(task)
         
         for handle in chain(self._ready, self._scheduled):
-            func = handle.func
-            if isinstance(func, MethodType):
-                maybe_future = func.__self__
-                if isinstance(maybe_future, Future):
-                    future_checks_pending.add(maybe_future)
+            future_checks_pending.update(_iter_futures_of(handle.func))
             
-            elif isinstance(func, Future):
-                future_checks_pending.add(func)
-            
-            args = handle.args
-            if (args is not None):
-                for parameter in args:
-                    if isinstance(parameter, MethodType):
-                        maybe_future = parameter.__self__
-                        if isinstance(maybe_future, Future):
-                            future_checks_pending.add(maybe_future)
-                    
-                    elif isinstance(parameter, Future):
-                        future_checks_pending.add(parameter)
+            for parameter in handle.iter_positional_parameters():
+                future_checks_pending.update(_iter_futures_of(parameter))
         
         # Check callbacks
         
@@ -921,16 +908,10 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             future = future_checks_pending.pop()
             future_checks_done.add(future)
             
-            for callback in future._callbacks:
-                if isinstance(callback, MethodType):
-                    maybe_future = callback.__self__
-                    if isinstance(maybe_future, Future):
-                        if (maybe_future not in future_checks_done):
-                            future_checks_pending.add(maybe_future)
-                
-                elif isinstance(callback, Future):
-                    if (callback not in future_checks_done):
-                        future_checks_pending.add(callback)
+            for callback in future.iter_callbacks():
+                for future in _iter_futures_of(callback):
+                    if future not in future_checks_done:
+                        future_checks_pending.add(future)
         
         # select tasks
         
@@ -1482,8 +1463,10 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             flags = socket_flags,
         )
         
-        futures = [future_1]
-        if local_address is not None:
+        if local_address is None:
+            future_2 = None
+        
+        else:
             future_2 = self._ensure_resolved(
                 local_address,
                 family = socket_family,
@@ -1491,13 +1474,17 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                 protocol = socket_protocol,
                 flags = socket_flags,
             )
-            
-            futures.append(future_2)
         
-        else:
-            future_2 = None
+        # await futures
+        try:
+            await future_1
+        except:
+            if (future_2 is not None):
+                future_2.cancel()
+            raise
         
-        await WaitTillAll(futures, self)
+        await future_2
+        
         
         infos = future_1.get_result()
         if not infos:
@@ -1511,9 +1498,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                 raise OSError('`get_address_info` returned empty list.')
         
         exceptions = []
-        for socket_family, socket_type, socket_protocol, canonical_name, address in infos:
+        for socket_family, socket_type, socket_protocol, socket_address_canonical_name, address in infos:
             
-            socket = module_socket.socket(family=socket_family, type=socket_type, proto=socket_protocol)
+            socket = module_socket.socket(family = socket_family, type = socket_type, proto = socket_protocol)
             
             try:
                 socket.setblocking(False)
@@ -2033,7 +2020,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
     
     
     # await it
-    def get_address_info(self, host, port, *, family=0, type=0, protocol=0, flags=0):
+    def get_address_info(self, host, port, *, family = 0, type = 0, protocol = 0, flags = 0):
         """
         Asynchronous version of `socket.getaddrinfo()`.
         
@@ -2069,7 +2056,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         )
     
     # await it
-    def get_name_info(self, socket_address, flags=0):
+    def get_name_info(self, socket_address, flags = 0):
         """
         Asynchronous version of `socket.getnameinfo()`.
         
@@ -2088,7 +2075,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         return self.run_in_executor(alchemy_incendiary(module_socket.getnameinfo, (socket_address, flags,),))
     
     
-    def _ensure_resolved(self, address, *, family=0, type=module_socket.SOCK_STREAM, protocol=0, flags=0):
+    def _ensure_resolved(self, address, *, family = 0, type = module_socket.SOCK_STREAM, protocol = 0, flags = 0):
         """
         Ensures, that the given address is already a resolved IP. If not, gets it's address.
         
@@ -2124,7 +2111,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         info = _ip_address_info(host, port, family, type, protocol)
         if info is None:
-            return self.get_address_info(host, port, family=family, type=type, protocol=protocol, flags=flags)
+            return self.get_address_info(host, port, family = family, type = type, protocol = protocol, flags = flags)
         
         # "host" is already a resolved IP.
         future = Future(self)
@@ -2210,7 +2197,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             The address to connect to.
         """
         if not hasattr(module_socket, 'AF_UNIX') or (socket.family != module_socket.AF_UNIX):
-            resolved = self._ensure_resolved(address, family=socket.family, protocol=socket.proto)
+            resolved = self._ensure_resolved(address, family = socket.family, protocol = socket.proto)
             if not resolved.is_done():
                 await resolved
             address = resolved.get_result()[0][4]
@@ -2469,8 +2456,16 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
     
     
     async def create_datagram_connection_to(
-        self, protocol_factory, local_address, remote_address, *, socket_family=0, socket_protocol=0, socket_flags=0,
-        reuse_port=False, allow_broadcast=False
+        self,
+        protocol_factory,
+        local_address,
+        remote_address,
+        *,
+        socket_family = 0,
+        socket_protocol = 0,
+        socket_flags = 0,
+        reuse_port = False,
+        allow_broadcast = False,
     ):
         """
         Creates a datagram connection. The socket type will be `SOCK_DGRAM`.
@@ -2567,7 +2562,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                     iterated_socket_family,
                     iterated_socket_type,
                     iterated_socket_protocol,
-                    iterated_socket_canonical_name,
+                    iterated_socket_address_canonical_name,
                     iterated_socket_address
                 ) in infos:
                     address_infos[(iterated_socket_family, iterated_socket_protocol)] = (iterated_socket_address, None)
@@ -2584,7 +2579,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
                     iterated_socket_family,
                     iterated_socket_type,
                     iterated_socket_protocol,
-                    iterated_canonical_name,
+                    iterated_socket_address_canonical_name,
                     iterated_socket_address,
                 ) in infos:
                     key = (iterated_socket_family, iterated_socket_protocol)
@@ -2702,8 +2697,9 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         future : ``Future``
             A future, what's result is set, when the address is dispatched.
         """
-        return self._ensure_resolved((host, port), family=socket_family, type=module_socket.SOCK_STREAM,
-            flags=socket_flags)
+        return self._ensure_resolved(
+            (host, port), family = socket_family, type = module_socket.SOCK_STREAM, flags = socket_flags
+        )
     
     
     def _create_server_shared_precheck(self, ssl):
@@ -2835,70 +2831,63 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
         
         sockets = []
         
-        futures = {self._create_server_get_address_info(host, port, socket_family, socket_flags) for host in hosts}
+        task_group = TaskGroup(
+            self,
+            (self._create_server_get_address_info(host, port, socket_family, socket_flags) for host in hosts),
+        )
         
         try:
-            while True:
-                done, pending = await WaitTillFirst(futures, self)
-                for future in done:
-                    futures.discard(future)
-                    address_infos = future.get_result()
+            async for future in task_group.exhaust():
+                address_infos = future.get_result()
+                
+                for (
+                    socket_family,
+                    socket_type,
+                    socket_protocol,
+                    socket_address_canonical_name,
+                    socket_address,
+                ) in address_infos:
                     
-                    for (
-                        socket_family,
-                        socket_type,
-                        socket_protocol,
-                        address_canonical_name,
-                        socket_address,
-                    ) in address_infos:
-                        
+                    try:
+                        socket = module_socket.socket(socket_family, socket_type, socket_protocol)
+                    except module_socket.error:
+                        continue
+                    
+                    sockets.append(socket)
+                    
+                    if reuse_address:
+                        socket.setsockopt(module_socket.SOL_SOCKET, module_socket.SO_REUSEADDR, True)
+                    
+                    if reuse_port:
                         try:
-                            socket = module_socket.socket(socket_family, socket_type, socket_protocol)
-                        except module_socket.error:
-                            continue
-                        
-                        sockets.append(socket)
-                        
-                        if reuse_address:
-                            socket.setsockopt(module_socket.SOL_SOCKET, module_socket.SO_REUSEADDR, True)
-                        
-                        if reuse_port:
-                            try:
-                                socket.setsockopt(module_socket.SOL_SOCKET, module_socket.SO_REUSEPORT, 1)
-                            except OSError as err:
-                                raise ValueError(
-                                    '`reuse_port` not supported by socket module, `SO_REUSEPORT` defined '
-                                    'but not implemented.'
-                                ) from err
-                        
-                        if (
-                            _HAS_IPv6 and
-                            (socket_family == module_socket.AF_INET6) and
-                            hasattr(module_socket, 'IPPROTO_IPV6')
-                        ):
-                            socket.setsockopt(module_socket.IPPROTO_IPV6, module_socket.IPV6_V6ONLY, True)
-                        try:
-                            socket.bind(socket_address)
+                            socket.setsockopt(module_socket.SOL_SOCKET, module_socket.SO_REUSEPORT, 1)
                         except OSError as err:
-                            raise OSError(
-                                err.errno,
-                                (
-                                    f'Error while attempting to bind on address '
-                                    f'{socket_address!r}: {err.strerror.lower()!s}.'
-                                ),
-                            ) from None
-                
-                if futures:
-                    continue
-                
-                break
+                            raise ValueError(
+                                '`reuse_port` not supported by socket module, `SO_REUSEPORT` defined '
+                                'but not implemented.'
+                            ) from err
+                    
+                    if (
+                        _HAS_IPv6 and
+                        (socket_family == module_socket.AF_INET6) and
+                        hasattr(module_socket, 'IPPROTO_IPV6')
+                    ):
+                        socket.setsockopt(module_socket.IPPROTO_IPV6, module_socket.IPV6_V6ONLY, True)
+                    try:
+                        socket.bind(socket_address)
+                    except OSError as err:
+                        raise OSError(
+                            err.errno,
+                            (
+                                f'Error while attempting to bind on address '
+                                f'{socket_address!r}: {err.strerror.lower()!s}.'
+                            ),
+                        ) from None
         except:
             for socket in sockets:
                 socket.close()
-                
-            for future in futures:
-                future.cancel()
             
+            task_group.cancel_all()
             raise
         
         for socket in sockets:
@@ -3265,7 +3254,7 @@ class EventThread(Executor, Thread, metaclass=EventThreadType):
             program,
             *args,
             stdin = subprocess.PIPE,
-            stdout = subprocess.PIPE, 
+            stdout = subprocess.PIPE,
             stderr = subprocess.PIPE,
             extra = None,
             preexecution_function = None,

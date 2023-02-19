@@ -1,8 +1,10 @@
+import gc
+
+import vampytest
+
 from ..weak_key_dictionary import WeakKeyDictionary
 
 from .weak_helpers import WeakReferencable
-
-import vampytest
 
 
 # Test WeakKeyDictionary
@@ -135,8 +137,10 @@ def test_WeakKeyDictionary_setitem():
     
     key = WeakReferencable(3)
     value = 6
-    
     weak_key_dictionary[key] = value
+    
+    gc.collect()
+    
     vampytest.assert_eq(weak_key_dictionary[key], value)
     vampytest.assert_eq(len(weak_key_dictionary), 4)
 

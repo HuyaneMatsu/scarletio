@@ -251,6 +251,79 @@ def _handler_wait_exception_and_pop(task_group):
             return 0, future
 
 
+def _handler_wait_exception_or_cancellation(task_group):
+    """
+    Task group handler waiting for the first task to finish with an exception or with cancellation.
+    
+    Parameters
+    ----------
+    task_group : ``TaskGroup``
+        The parent task group.
+    
+    Yield
+    -----
+    should_add_to_done : `int`
+        Whether the task should be added to done.
+    
+    returns
+    -------
+    should_add_to_done : `int`
+        Whether the task should be added to done.
+    result : ``Future``
+        The first failing task.
+    """
+    for future in task_group.done:
+        if future.is_cancelled() or (future._exception is not None):
+            return 1, future
+    
+    pending = task_group.pending
+    while True:
+        if not pending:
+            return 1, None
+        
+        future = (yield 1)
+        if future.is_cancelled() or (future._exception is not None):
+            return 1, future
+
+
+def _handler_wait_exception_or_cancellation_and_pop(task_group):
+    """
+    Task group handler waiting for the first task to finish with an exception or cancellation.
+    
+    The finished task will be popped from the task group's `.done`.
+    
+    Parameters
+    ----------
+    task_group : ``TaskGroup``
+        The parent task group.
+    
+    Yield
+    -----
+    should_add_to_done : `int`
+        Whether the task should be added to done.
+    
+    returns
+    -------
+    should_add_to_done : `int`
+        Whether the task should be added to done.
+    result : ``Future``
+        The first failing task.
+    """
+    for future in task_group.done:
+        if future.is_cancelled() or (future._exception is not None):
+            task_group.done.discard(future)
+            return 0, future
+    
+    pending = task_group.pending
+    while True:
+        if not pending:
+            return 1, None
+        
+        future = (yield 1)
+        if future.is_cancelled() or (future._exception is not None):
+            return 0, future
+
+
 def _handler_wait_first_n(task_group, required_count):
     """
     Task group handler waiting for the first `0` task to finish.
@@ -750,12 +823,13 @@ class TaskGroup(RichAttributeErrorBaseType):
         Examples
         --------
         ```py
-        future_0 = apply_timeout(Future(loop), 2.0)
-        future_1 = sleep(1.0)
+        future_0 = Future(loop)
+        future_0.apply_timeout(1.0)
+        future_1 = sleep(2.0)
         
         task_group = TaskGroup(loop, [future_0, future_1])
         
-        # After 1 seconds, we should retrieve `future_0`.
+        # After 1 second, we should retrieve `future_0`.
         first_failing_with_exception = await task_group.wait_exception()
         
         assert first_failing_with_exception is future_0
@@ -778,6 +852,51 @@ class TaskGroup(RichAttributeErrorBaseType):
             After awaiting the waiter propagates the first task that failed with an exception.
         """
         return self._add_handler(_handler_wait_exception_and_pop(self))
+    
+    
+    def wait_exception_or_cancellation(self):
+        """
+        Waits till the first task fails with an exception, is cancelled, or till all is done obviously.
+        
+        If there is any task in the task group failing with an exception or with cancellation, propagates that.
+        
+        Returns
+        -------
+        waiter : ``Future`` -> `None` | ``Future``
+            After awaiting the waiter propagates the first task that failed with an exception.
+
+        Examples
+        --------
+        ```py
+        future_0 = sleep(1)
+        future_1 = Future(loop)
+        future_1.cancel()
+        
+        task_group = TaskGroup(loop, [future_0, future_1])
+        
+        # we should retrieve `future_0` as soon as possible.
+        first_failing_with_exception_or_cancellation = await task_group.wait_exception()
+        
+        assert first_failing_with_exception_or_cancellation is future_1
+        ```
+        """
+        return self._add_handler(_handler_wait_exception_or_cancellation(self))
+    
+    
+    def wait_exception_or_cancellation_and_pop(self):
+        """
+        Waits till the first task fails with an exception, is cancelled or till all is done obviously.
+        
+        If there is any task in the task group failing with an exception or with cancellation, propagates that.
+        
+        Familiar to ``.wait_exception``, but removes the propagated task from the task group.
+        
+        Returns
+        -------
+        waiter : ``Future`` -> `None` | ``Future``
+            After awaiting the waiter propagates the first task that failed with an exception.
+        """
+        return self._add_handler(_handler_wait_exception_or_cancellation_and_pop(self))
     
     
     def wait_first_n(self, count):
@@ -843,6 +962,20 @@ class TaskGroup(RichAttributeErrorBaseType):
         return self._add_handler(_handler_wait_all(self))
     
     # Iterators
+    
+    def iter_futures(self):
+        """
+        Iterates over the tasks of the task group.
+        
+        This function is an iterable generator.
+        
+        Yields
+        ------
+        future : ``Future``
+        """
+        yield from self.done
+        yield from self.pending
+    
     
     def exhaust_done(self):
         """

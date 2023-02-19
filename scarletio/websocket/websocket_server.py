@@ -2,7 +2,7 @@ __all__ = ('WebSocketServer', )
 
 from functools import partial as partial_func
 
-from ..core import Task, WaitTillAll, skip_poll_cycle
+from ..core import Task, TaskGroup, skip_poll_cycle
 from ..utils import IgnoreCaseMultiValueDictionary
 
 from .websocket_server_protocol import WebSocketServerProtocol
@@ -325,13 +325,7 @@ class WebSocketServer:
         
         websockets = self.websockets
         if websockets:
-            tasks = []
-            for websocket in websockets:
-                tasks.append(websocket.close(1001))
-            
-            future = WaitTillAll(tasks, loop)
-            tasks = None
-            await future
+            await TaskGroup(loop, (websocket.close(1001) for websocket in websockets)).wait_all()
             
         if websockets:
             tasks = []
@@ -344,6 +338,6 @@ class WebSocketServer:
             
             task = None
             if tasks:
-                future = WaitTillAll(tasks, loop)
+                future = TaskGroup(loop, tasks).wait_all()
                 tasks = None
                 await future

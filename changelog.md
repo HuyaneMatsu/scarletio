@@ -1,3 +1,16 @@
+## 1.0.54 *\[2023-02-??\]*
+
+#### Improvements
+
+- Add `TaskGroup.iter_futures`.
+- Add `Handle.iter_positional_parameters`.
+- Add `Future.iter_callbacks`.
+- `EventThread.get_tasks` now handles `TaskGroup`-s as intended.
+- Stop using features that were deprecated at ˙1.0.51˙.
+
+##### ext.asyncio
+- Update `gather`, `complete_as`, `wait` to match asyncio's behavior more.
+
 ## 1.0.53 *\[2023-02-05\]*
 
 #### Improvements
