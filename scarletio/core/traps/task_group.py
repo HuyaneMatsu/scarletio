@@ -145,7 +145,10 @@ def _handler_wait_first(task_group):
     if done:
         return 1, next(iter(done))
     
-    return 1, (yield 1)
+    if task_group.pending:
+        return 1, (yield 1)
+    
+    return 1, None
 
 
 def _handler_wait_first_and_pop(task_group):
@@ -175,8 +178,11 @@ def _handler_wait_first_and_pop(task_group):
     if done:
         return 1, done.pop()
     
-    return 0, (yield 0)
-
+    if task_group.pending:
+        return 0, (yield 0)
+    
+    return 1, None
+    
 
 def _handler_wait_exception(task_group):
     """
@@ -370,13 +376,13 @@ def _handler_wait_all(task_group):
     -------
     should_add_to_done : `int`
         Whether the task should be added to done.
-    task_group : ``TaskGroup``
-        The task group itself.
+    dummy : `None`
+        Dummy value.
     """
     pending = task_group.pending
     while True:
         if not pending:
-            return 1, task_group
+            return 1, None
         
         yield 1
 
@@ -773,7 +779,7 @@ class TaskGroup(RichAttributeErrorBaseType):
         
         Returns
         -------
-        waiter : ``Future`` -> ``Future``
+        waiter : ``Future`` -> `None` | ``Future``
             After awaiting the waiter propagates the first done task.
         
         Examples
@@ -803,7 +809,7 @@ class TaskGroup(RichAttributeErrorBaseType):
         
         Returns
         -------
-        waiter : ``Future`` -> ``Future``
+        waiter : ``Future`` -> `None` | ``Future``
             After awaiting the waiter propagates the first done task.
         """
         return self._add_handler(_handler_wait_first_and_pop(self))
@@ -926,8 +932,9 @@ class TaskGroup(RichAttributeErrorBaseType):
         task_group = TaskGroup(loop, [future_0, future_1, future_2])
         
         # After 1 seconds 2 tasks should be done.
-        first_done = await task_group.wait_first_n(2)
+        done_count = await task_group.wait_first_n(2)
         
+        assert done_count == 2
         assert future_0.is_done()
         assert future_1.is_done()
         assert future_2.is_pending()
@@ -942,7 +949,7 @@ class TaskGroup(RichAttributeErrorBaseType):
         
         Returns
         -------
-        waiter : ``Future`` -> `self`
+        waiter : ``Future``
             A future to be waited propagating the task group itself.
         
         Examples
@@ -954,7 +961,7 @@ class TaskGroup(RichAttributeErrorBaseType):
         task_group = TaskGroup(loop, [future_0, future_1])
         
         # After 2 seconds all tasks are finished.
-        first_done = await task_group.wait_all()
+        await task_group.wait_all()
         
         assert not task_group.has_pending()
         ```

@@ -7,6 +7,8 @@
 - Add `Future.iter_callbacks`.
 - `EventThread.get_tasks` now handles `TaskGroup`-s as intended.
 - Stop using features that were deprecated at ˙1.0.51˙.
+- Add `TaskGroup.wait_exception_or_cancellation`.
+- Add `TaskGroup.wait_exception_or_cancellation_and_pop`.
 
 ##### ext.asyncio
 - Update `gather`, `complete_as`, `wait` to match asyncio's behavior more.
