@@ -1483,7 +1483,8 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
                 future_2.cancel()
             raise
         
-        await future_2
+        if (future_2 is not None):
+            await future_2
         
         
         infos = future_1.get_result()
