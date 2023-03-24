@@ -1,15 +1,16 @@
-## 1.0.55 *\[2023-03-??\]*
+## 1.0.55 *\[2023-03-24\]*
 
 #### Improvements
 
 - Add `EventThread.socket_receive_into`.
 - Add `Reference` type.
-- Add `GeneratorProxy`.
+- Add `CoroutineFunctionTypeProxy`.
+- Add `CoroutineTypeProxy`.
 
 #### Bug fixes
 
 - Fix `WebSocketServer.close` dropped `AttributeError`. (from `1.0.54` probably)
-- Fix race condition in `socket_connect`.
+- Fix race condition in `EventThread.socket_connect` and in other `.socket_...` methods.
 - Tasks waiting on a `TaskGroup`'s waiter could be garbage collected prematurely.
 
 ## 1.0.54 *\[2023-03-02\]*
