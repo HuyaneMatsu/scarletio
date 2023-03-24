@@ -14,7 +14,6 @@ def _assert_fields_set(task_group):
     Asserts whether every fields are set of the given `task_group`.
     """
     vampytest.assert_instance(task_group, TaskGroup)
-    vampytest.assert_instance(task_group._callback, MethodType)
     vampytest.assert_instance(task_group.done, set)
     vampytest.assert_instance(task_group.loop, EventThread)
     vampytest.assert_instance(task_group.pending, set)
@@ -54,7 +53,7 @@ async def test__TaskGroup__new__1():
     vampytest.assert_eq(task_group.pending, {future_0})
     vampytest.assert_eq(task_group.done, {future_1})
     
-    vampytest.assert_eq(future_0._callbacks, [task_group._callback])
+    vampytest.assert_eq(future_0._callbacks, [task_group._waited_done_callback])
     
     # Cancels the futures so we get no error message
     future_0.cancel()

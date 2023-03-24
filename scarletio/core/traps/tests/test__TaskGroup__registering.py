@@ -25,7 +25,7 @@ async def test__TaskGroup__add_future__0():
     vampytest.assert_eq(task_group.done, set())
     vampytest.assert_eq(task_group.pending, {future_0})
     
-    vampytest.assert_eq(future_0._callbacks, [task_group._callback])
+    vampytest.assert_eq(future_0._callbacks, [task_group._waited_done_callback])
 
     # Cancel the futures, so we get no error messages.
     future_0.cancel()
@@ -104,7 +104,7 @@ async def test__TaskGroup__add_awaitable():
     
     vampytest.assert_eq(task_group.done, set())
     vampytest.assert_eq(task_group.pending, {future_0})
-    vampytest.assert_eq(future_0._callbacks, [task_group._callback])
+    vampytest.assert_eq(future_0._callbacks, [task_group._waited_done_callback])
     
     future_1 = Future(loop)
     future_2 = task_group.add_awaitable(future_1)
@@ -112,7 +112,7 @@ async def test__TaskGroup__add_awaitable():
     
     vampytest.assert_eq(task_group.done, set())
     vampytest.assert_eq(task_group.pending, {future_0, future_1})
-    vampytest.assert_eq(future_1._callbacks, [task_group._callback])
+    vampytest.assert_eq(future_1._callbacks, [task_group._waited_done_callback])
     
     # Cancel the futures, so we get no error messages.
     future_0.cancel()
@@ -135,7 +135,7 @@ async def test__Taskgroup__create_future():
     vampytest.assert_eq(task_group.done, set())
     vampytest.assert_eq(task_group.pending, {future_0})
     
-    vampytest.assert_eq(future_0._callbacks, [task_group._callback])
+    vampytest.assert_eq(future_0._callbacks, [task_group._waited_done_callback])
 
     # Cancel the futures, so we get no error messages.
     future_0.cancel()
@@ -158,7 +158,7 @@ async def test__Taskgroup__create_task():
     vampytest.assert_eq(task_group.done, set())
     vampytest.assert_eq(task_group.pending, {task_0})
     
-    vampytest.assert_eq(task_0._callbacks, [task_group._callback])
+    vampytest.assert_eq(task_0._callbacks, [task_group._waited_done_callback])
 
     # Cancel the futures, so we get no error messages.
     task_0.cancel()

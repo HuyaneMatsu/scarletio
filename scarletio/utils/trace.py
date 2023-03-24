@@ -1,6 +1,6 @@
 __all__ = ('ignore_frame', 'render_exception_into', 'render_frames_into', 'should_ignore_frame',)
 
-import reprlib, sys, warnings
+import os, reprlib, sys
 from collections import OrderedDict
 from linecache import checkcache as check_file_cache, getline as _get_file_line
 from os.path import sep as PATH_SEPARATOR
@@ -14,6 +14,7 @@ from .docs import copy_docs
 from .highlight import HIGHLIGHT_TOKEN_TYPES, iter_highlight_code_lines
 from .highlight.token import Token
 
+DEFAULT_IGNORED_FRAMES = os.environ.get('SCARLETIO_TRACE_DEFAULT_IGNORED_FRAME', '').casefold() not in ('0', 'false')
 
 SlotWrapperType = object.__lt__.__class__
 
@@ -634,6 +635,12 @@ def _should_ignore_frame(file_name, name, line):
         return False
     
     return (line in names)
+
+
+if not DEFAULT_IGNORED_FRAMES:
+    @copy_docs(_should_ignore_frame)
+    def _should_ignore_frame(file_name, name, line):
+        return False
 
 
 def should_ignore_frame(file_name, name, line_number, line, *, filter = None):

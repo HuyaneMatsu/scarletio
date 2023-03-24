@@ -664,7 +664,7 @@ class AsyncProcess:
             pending_calls.append((self.__class__._do_connection_lost, (self, None,)))
     
     
-    async def _feed_stdin(self, input_):
+    async def _feed_stdin(self, input_value):
         """
         Feeds the given data to ``.stdin``, waits till it drains and closes it.
         
@@ -674,15 +674,15 @@ class AsyncProcess:
         
         Parameters
         ----------
-        input_ : `None`, `bytes-like`
+        input_value : `None`, `bytes-like`
             Optional data to be sent to the sub-process.
         """
         stdin = self.stdin
         if stdin is None:
             return
         
-        if (input_ is not None):
-            stdin.write(input_)
+        if (input_value is not None):
+            stdin.write(input_value)
         
         try:
             await stdin.drain()
@@ -737,7 +737,7 @@ class AsyncProcess:
         return result
     
     
-    async def communicate(self, input_ = None, timeout = None):
+    async def communicate(self, input_value = None, timeout = None):
         """
         Sends data to stdin and reads data from stdout and stderr.
         
@@ -747,7 +747,7 @@ class AsyncProcess:
         
         Parameters
         ----------
-        input_ : `None`, `bytes-like` = `None` , Optional
+        input_value : `None`, `bytes-like` = `None` , Optional
             Optional data to be sent to the sub-process.
         timeout : `None`, `float` = `None`, Optional
             The maximal amount of time to wait for the process to close in seconds.
@@ -767,10 +767,10 @@ class AsyncProcess:
         tasks = []
         
         loop = self._loop
-        if input_ is None:
+        if input_value is None:
             stdin_task = None
         else:
-            stdin_task = Task(self._feed_stdin(input_), loop)
+            stdin_task = Task(self._feed_stdin(input_value), loop)
             tasks.append(stdin_task)
         
         if self.stdout is None:

@@ -11,7 +11,7 @@ from ssl import SSLContext, create_default_context
 from stat import S_ISSOCK
 from threading import Thread, current_thread
 
-from ...utils import IS_UNIX, WeakSet, alchemy_incendiary, copy_docs, export, include, is_coroutine
+from ...utils import IS_UNIX, Reference, WeakSet, alchemy_incendiary, copy_docs, export, include, is_coroutine
 
 from ..exceptions import CancelledError
 from ..protocols_and_transports import (
@@ -1176,18 +1176,23 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             )
     
     
-    def add_reader(self, fd, callback, *args):
+    def add_reader(self, file_descriptor, callback, *args):
         """
         Registers read callback for the given fd.
         
         Parameters
         ----------
-        fd : `int`
+        file_descriptor : `int`
             The respective file descriptor.
         callback : `callable`
             The function, what is called, when data is received on the respective file descriptor.
-        *args : Parameters
+        *args : Positional parameters
             Parameters to call `callback` with.
+        
+        Returns
+        -------
+        handle : ``Handle``
+            The Handle ran when the socket is ready to be read.
         """
         if not self.running:
             if not self._maybe_start():
@@ -1195,20 +1200,23 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         
         handle = Handle(callback, args)
         try:
-            key = self.selector.get_key(fd)
+            key = self.selector.get_key(file_descriptor)
         except KeyError:
-            self.selector.register(fd, EVENT_READ, (handle, None))
+            self.selector.register(file_descriptor, EVENT_READ, (handle, None))
         else:
-            mask = key.events
             reader, writer = key.data
-            self.selector.modify(fd, mask | EVENT_READ, (handle, writer))
+            
+            self.selector.modify(file_descriptor, key.events | EVENT_READ, (handle, writer))
+            
             if reader is not None:
                 reader.cancel()
+        
+        return handle
     
     
     def remove_reader(self, file_descriptor):
         """
-        Removes a read callback for the given file_descriptor.
+        Removes a read callback for the given file descriptor.
         
         Parameters
         ----------
@@ -1229,10 +1237,9 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         except KeyError:
             return False
         
-        mask = key.events
         reader, writer = key.data
-        mask &= ~EVENT_READ
         
+        mask = key.events & ~EVENT_READ
         if mask:
             self.selector.modify(file_descriptor, mask, (None, writer))
         else:
@@ -1247,7 +1254,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
     
     def add_writer(self, file_descriptor, callback, *args):
         """
-        Registers a write callback for the given file_descriptor.
+        Registers a write callback for the given file descriptor.
         
         Parameters
         ----------
@@ -1255,8 +1262,13 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             The respective file descriptor.
         callback : `callable`
             The function, what is called, when data the respective file descriptor becomes writable.
-        *args : Parameters
+        *args : Positional parameters
             Parameters to call `callback` with.
+        
+        Returns
+        -------
+        handle : ``Handle``
+            The Handle ran when the socket is ready to be written.
         """
         if not self.running:
             if not self._maybe_start():
@@ -1267,14 +1279,16 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             key = self.selector.get_key(file_descriptor)
         except KeyError:
             self.selector.register(file_descriptor, EVENT_WRITE, (None, handle))
-            return
         
-        mask = key.events
-        reader, writer = key.data
+        else:
+            reader, writer = key.data
+            
+            self.selector.modify(file_descriptor, key.events | EVENT_WRITE, (reader, handle))
+            
+            if writer is not None:
+                writer.cancel()
         
-        self.selector.modify(file_descriptor, mask | EVENT_WRITE, (reader, handle))
-        if writer is not None:
-            writer.cancel()
+        return handle
     
     
     def remove_writer(self, file_descriptor):
@@ -1300,10 +1314,9 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         except KeyError:
             return False
         
-        mask = key.events
         reader, writer = key.data
-        # remove both writer and connector.
-        mask &= ~EVENT_WRITE
+        
+        mask = key.events & ~EVENT_WRITE
         if mask:
             self.selector.modify(file_descriptor, mask, (reader, None))
         else:
@@ -2140,12 +2153,23 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         address : `tuple` (`str`, `int`)
             The address to what the connection is connected to.
         """
+        try:
+            conn, address = socket.accept()
+            conn.setblocking(False)
+        except (BlockingIOError, InterruptedError):
+            pass
+        else:
+            return conn, address
+        
         future = Future(self)
-        self._socket_accept(future, False, socket)
+        file_descriptor = socket.fileno()
+        handle = self.add_reader(file_descriptor, self._socket_accept, future, socket)
+        future.add_done_callback(partial_func(self._socket_read_done_callback, file_descriptor, handle))
+        
         return await future
     
     
-    def _socket_accept(self, future, registered, socket):
+    def _socket_accept(self, future, socket):
         """
         Method used by ``.socket_accept`` to check whether the respective socket can be accepted already.
         
@@ -2157,29 +2181,23 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         future : ``Future``
             Waiter future, what's result or exception is set, when the socket can be accepted or when an exception
             occurs.
-        registered : `bool`
-            Whether the given `socket is registered as a reader and should be removed.
         socket : `socket.socket`
             The respective socket, what's is listening for a connection.
         """
-        fd = socket.fileno()
-        if registered:
-            self.remove_reader(fd)
-            
-            # First time `registered` is given as `False` and at the case, the `future` can not be cancelled yet.
-            # Later it is called with `True`.
-            if future.is_cancelled():
-                return
+        if future.is_done():
+            return
         
         try:
             conn, address = socket.accept()
             conn.setblocking(False)
         except (BlockingIOError, InterruptedError):
-            self.add_reader(fd, self._socket_accept, future, True, socket)
+            return
         except BaseException as err:
             future.set_exception_if_pending(err)
         else:
             future.set_result_if_pending((conn, address))
+        
+        self.remove_reader(socket.fileno())
     
     
     async def socket_connect(self, socket, address):
@@ -2203,58 +2221,19 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
                 await resolved
             address = resolved.get_result()[0][4]
         
-        future = Future(self)
-        
-        fd = socket.fileno()
         try:
             socket.connect(address)
         except (BlockingIOError, InterruptedError):
-            self.add_writer(fd, self._socket_connect_callback, future, socket, address)
-            future.add_done_callback(self._socket_connect_done(fd),)
-            
-        except BaseException as err:
-            future.set_exception_if_pending(err)
+            pass
         else:
-            future.set_result_if_pending(None)
+            return
         
-        await future
-    
-    
-    class _socket_connect_done:
-        """
-        Callback added to the waited future by ``EventThread.socket_connect`` to remove the respective socket from the
-        writers by it's file descriptor.
+        future = Future(self)
+        file_descriptor = socket.fileno()
+        handle = self.add_writer(file_descriptor, self._socket_connect_callback, future, socket, address)
+        future.add_done_callback(partial_func(self._socket_write_done_callback, file_descriptor, handle))
         
-        Attributes
-        ----------
-        fd : `int`
-            The respective socket's file descriptor's identifier.
-        """
-        __slots__ = ('fd',)
-        
-        def __init__(self, fd):
-            """
-            Creates a new ``_socket_connect_done`` with the given fd.
-            
-            Parameters
-            ----------
-            fd : `int`
-                The respective socket's file descriptor's identifier.
-            """
-            self.fd = fd
-        
-        def __call__(self, future):
-            """
-            Callback what runs when the respective waiter future is marked as done.
-            
-            Removes the respective socket from writers.
-            
-            Parameters
-            ----------
-            future : ``Future``
-                The respective future, what's result is set, when the respective connected.
-            """
-            future._loop.remove_writer(self.fd)
+        return await future
     
     
     def _socket_connect_callback(self, future, socket, address):
@@ -2275,29 +2254,25 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             return
         
         try:
-            err_number = socket.getsockopt(module_socket.SOL_SOCKET, module_socket.SO_ERROR)
+            error_number = socket.getsockopt(module_socket.SOL_SOCKET, module_socket.SO_ERROR)
         except (BlockingIOError, InterruptedError):
-            # socket is still registered, the callback will be retried later
-            pass
+            return # socket is still registered, the callback will be retried later
         
         except BaseException as err:
             future.set_exception(err)
         
         else:
-            if err_number:
-                future.set_exception(
-                    OSError(
-                        err_number,
-                        f'Connect call failed to: {address!r}.'
-                    )
-                )
+            if error_number:
+                future.set_exception(OSError(error_number, f'Connect call failed to: {address!r}.'))
             else:
                 future.set_result(None)
+        
+        self.remove_writer(socket.fileno())
     
     
-    async def socket_receive(self, socket, n):
+    async def socket_receive(self, socket, number_of_bytes):
         """
-        Receive up to `n` from the given socket. Asynchronous version of `socket.recv()`.
+        Receive up to `number_of_bytes` from the given socket. Asynchronous version of `socket.recv()`.
         
         This method is a coroutine.
         
@@ -2305,24 +2280,30 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         ----------
         socket : `socket.socket`
             The socket to receive the data from. Must be a non-blocking socket.
-        n : `int`
+        number_of_bytes : `int`
             The amount of data to receive in bytes.
         
         Returns
         -------
         data : `bytes`
             The received data.
-        
-        Notes
-        -----
-        There is no way to determine how much data, if any was successfully received on the other end of the connection.
         """
+        try:
+            data = socket.recv(number_of_bytes)
+        except (BlockingIOError, InterruptedError):
+            pass
+        else:
+            return data
+        
         future = Future(self)
-        self._socket_receive(future, False, socket, n)
+        file_descriptor = socket.fileno()
+        handle = self.add_reader(file_descriptor, self._socket_receive, future, socket, number_of_bytes)
+        future.add_done_callback(partial_func(self._socket_read_done_callback, file_descriptor, handle))
+        
         return await future
     
     
-    def _socket_receive(self, future, registered, socket, n):
+    def _socket_receive(self, future, socket, number_of_bytes):
         """
         Added reader callback by ``.socket_receive``. This method is repeated till the data is successfully polled.
         
@@ -2330,28 +2311,86 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         ----------
         future : ``Future``
             Waiter future, what's result or exception will be set.
-        registered : `bool`
-            Whether `socket` is registered as a reader and should be removed.
         socket : `socket.socket`
             The socket from what we read.
-        n : `int`
+        number_of_bytes : `int`
             The amount of data to receive in bytes.
         """
-        fd = socket.fileno()
-        if registered:
-            self.remove_reader(fd)
-        
         if future.is_done():
             return
         
         try:
-            data = socket.recv(n)
-        except (BlockingIOError,InterruptedError):
-            self.add_reader(fd, self._socket_receive, future, True, socket, n)
+            data = socket.recv(number_of_bytes)
+        except (BlockingIOError, InterruptedError):
+            return
         except BaseException as err:
             future.set_exception(err)
         else:
             future.set_result(data)
+        
+        self.remove_reader(socket.fileno())
+    
+    
+    async def socket_receive_into(self, socket, buffer):
+        """
+        Receive data from the socket and stores it into the given buffer. Asynchronous version of `socket.recv_into()`.
+        
+        This method is a coroutine.
+        
+        Parameters
+        ----------
+        socket : `socket.socket`
+            The socket to receive the data from. Must be a non-blocking socket.
+        buffer : `object`
+            Buffer to receive the data into. Can be `bytearray` for example.
+            
+        Returns
+        -------
+        number_of_bytes : `int`
+            The number of bytes received.
+        """
+        try:
+            number_of_bytes = socket.recv_into(buffer)
+        except (BlockingIOError, InterruptedError):
+            pass
+        else:
+            return number_of_bytes
+        
+        future = Future(self)
+        file_descriptor = socket.fileno()
+        
+        handle = self.add_reader(file_descriptor, self._socket_receive_into, future, socket, buffer)
+        future.add_done_callback(partial_func(self._socket_read_done_callback, file_descriptor, handle))
+        
+        return await future
+    
+    
+    def _socket_receive_into(self, future, socket, buffer):
+        """
+        Added reader callback by ``.socket_receive_into``. This method is repeated till data is successfully polled.
+        
+        Parameters
+        ----------
+        future : ``Future``
+            Waiter future, what's result or exception will be set.
+        socket : `socket.socket`
+            The socket from what we read.
+        buffer : `object`
+            Buffer to receive the data into. Can be `bytearray` for example.
+        """
+        if future.is_done():
+            return
+        
+        try:
+            number_of_bytes = socket.recv_into(buffer)
+        except (BlockingIOError, InterruptedError):
+            return
+        except BaseException as err:
+            future.set_exception(err)
+        else:
+            future.set_result(number_of_bytes)
+        
+        self.remove_reader(socket.fileno())
     
     
     async def socket_send_all(self, socket, data):
@@ -2376,13 +2415,28 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         if not isinstance(data, memoryview):
             data = memoryview(data)
         
-        if data:
-            future = Future(self)
-            self._socket_send_all(future, False, socket, data)
-            await future
+        if not data:
+            return
+        
+        try:
+            number_of_bytes_written = socket.send(data)
+        except (BlockingIOError, InterruptedError):
+            number_of_bytes_written = 0
+        else:
+            if number_of_bytes_written == len(data):
+                return
+        
+        future = Future(self)
+        file_descriptor = socket.fileno()
+        handle = self.add_writer(
+            file_descriptor, self._socket_send_all, future, socket, data, Reference(number_of_bytes_written)
+        )
+        future.add_done_callback(partial_func(self._socket_write_done_callback, file_descriptor, handle))
+        
+        await future
     
     
-    def _socket_send_all(self, future, registered, socket, data):
+    def _socket_send_all(self, future, socket, data, start_reference):
         """
         Added writer callback by ``.socket_send_all``. This method is repeated till the whole data is exhausted.
         
@@ -2390,36 +2444,72 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         ----------
         future : ``Future``
             Waiter future, what's result or exception will be set.
-        registered : `bool`
-            Whether `socket` is registered as a writer and should be removed.
         socket : `socket.socket`
             The socket to what the data is sent to.
         data : `memoryview`
             Memoryview on the data to send.
+        start_reference : ``Reference`` to `int`
+            Reference to the start index.
         """
-        fd = socket.fileno()
-        
-        if registered:
-            self.remove_writer(fd)
-        
         if future.is_done():
             return
         
+        start = start_reference.value
+        
         try:
-            n = socket.send(data)
+            number_of_bytes_written = socket.send(data[start:])
         except (BlockingIOError, InterruptedError):
-            n = 0
+            return
         except BaseException as err:
             future.set_exception(err)
-            return
-        
-        if n == len(data):
-            future.set_result(None)
         else:
-            if n:
-                data = data[n:]
+            start += number_of_bytes_written
+            if start != len(data):
+                start_reference.value = start
+                return
             
-            self.add_writer(fd, self._socket_send_all, future, True, socket, data)
+            future.set_result(None)
+        
+        self.remove_writer(socket.fileno())
+    
+    
+    def _socket_write_done_callback(self, file_descriptor, handle, future):
+        """
+        Callback added to the waited future by ``socket_connect`` to remove the respective socket from the
+        writers by it's file descriptor.
+        
+        The `file_descriptor` and `handle` parameters are passed initially when the callback is created.
+        
+        Attributes
+        ----------
+        file_descriptor : `int`
+            The respective socket's file descriptor's identifier.
+        handle : ``Handle``
+            The Handle ran when the socket is ready to be read.
+        future : ``Future``
+            The respective future what's result is set when the socket connected successfully.
+        """
+        if not handle.cancelled:
+            self.remove_writer(file_descriptor)
+    
+    
+    def _socket_read_done_callback(self, file_descriptor, handle, future):
+        """
+        Done callback of ``.socket_receive_into`` and ``.socket_receive_into``. Called when the waiter future is done.
+        
+        The `file_descriptor` and `handle` parameters are passed initially when the callback is created.
+        
+        Parameters
+        ----------
+        file_descriptor : `int`
+            The respective file descriptor.
+        handle : ``Handle``
+            Reader callback.
+        future : ``Future``
+            The respective future what's result is set when data is read successfully.
+        """
+        if not handle.cancelled:
+            self.remove_reader(file_descriptor)
     
     
     async def _create_datagram_connection(self, protocol_factory, socket, address):

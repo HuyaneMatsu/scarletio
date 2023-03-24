@@ -1188,7 +1188,7 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
     """
     __slots__ = ()
     
-    def write_http_request(self, method, path, headers, version=HttpVersion11):
+    def write_http_request(self, method, path, headers, version = HttpVersion11):
         """
         Writes an http request to the protocol's transport.
         
@@ -1222,7 +1222,7 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
         transport.write(''.join(result).encode())
     
     
-    def write_http_response(self, status, headers, version=HttpVersion11, body=None):
+    def write_http_response(self, status, headers, version = HttpVersion11, body = None):
         """
         Writes an http response to the protocol's transport.
         
@@ -1244,7 +1244,7 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
         """
         transport = self._transport
         if transport is None:
-            raise RuntimeError(f'Protocol has no attached transport; self={self!r}.')
+            raise RuntimeError(f'Protocol has no attached transport; self = {self!r}.')
         
         result = [
             'HTTP/',
@@ -1256,7 +1256,6 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
             ' ',
             str(status.phrase),
             '\r\n',
-            
         ]
         
         for header_key, header_value in headers.items():

@@ -351,7 +351,8 @@ class Future:
             raise InvalidStateError(self, 'result')
     
     
-    set_docs(get_result,
+    set_docs(
+        get_result,
         """
         Returns the result of the future.
         
@@ -416,7 +417,8 @@ class Future:
             # still pending
             raise InvalidStateError(self, 'exception')
     
-    set_docs(get_exception,
+    set_docs(
+        get_exception,
         """
         Returns the future's exception.
         

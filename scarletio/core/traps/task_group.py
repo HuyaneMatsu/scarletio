@@ -387,30 +387,12 @@ def _handler_wait_all(task_group):
         yield 1
 
 
-def _waited_done_callback_with_weak_self(task_group_reference, future):
-    """
-    Calls ``TaskGroup._waited_done_callback`` if ``TaskGroup`` has not been garbage collected yet.
-    
-    Parameters
-    ----------
-    task_group_reference : ``WeakReferer`` to ``TaskGroup``
-        Weak reference to a task group.
-    future : ``Future``
-        The completed future.
-    """
-    task_group = task_group_reference()
-    if (task_group is not None):
-        task_group._waited_done_callback(future)
-
-
 class TaskGroup(RichAttributeErrorBaseType):
     """
     Represents grouped tasks (actually futures) on which it is possible to execute shared operations.
     
     Attributes
     ----------
-    _callback : `MethodType`
-        Callback put on pending futures.
     done : `set` of ``Future``
         The done tasks.
     loop : ``EventThread``
@@ -420,7 +402,7 @@ class TaskGroup(RichAttributeErrorBaseType):
     waiters : `dict` of (``Future``, ``Generator``)
         Contains the active waiters with their handlers.
     """
-    __slots__ = ('__weakref__', '_callback', 'done', 'loop', 'pending', 'waiters')
+    __slots__ = ('done', 'loop', 'pending', 'waiters')
     
     def __new__(cls, loop, tasks = None):
         """
@@ -445,12 +427,10 @@ class TaskGroup(RichAttributeErrorBaseType):
         self.loop = loop
         self.pending = pending
         self.waiters = {}
-        callback = MethodType(_waited_done_callback_with_weak_self, WeakReferer(self))
-        self._callback = callback
         
         if pending:
             for task in pending:
-                task.add_done_callback(callback)
+                task.add_done_callback(self._waited_done_callback)
         
         return self
     
@@ -581,7 +561,7 @@ class TaskGroup(RichAttributeErrorBaseType):
         if future.is_done():
             self._waited_done_callback(future)
         else:
-            future.add_done_callback(self._callback)
+            future.add_done_callback(self._waited_done_callback)
             self.pending.add(future)
         
         return future
@@ -643,7 +623,7 @@ class TaskGroup(RichAttributeErrorBaseType):
         ```
         """
         future = Future(self.loop)
-        future.add_done_callback(self._callback)
+        future.add_done_callback(self._waited_done_callback)
         self.pending.add(future)
         return future
     
@@ -673,7 +653,7 @@ class TaskGroup(RichAttributeErrorBaseType):
         ```
         """
         task = Task(coroutine, self.loop)
-        task.add_done_callback(self._callback)
+        task.add_done_callback(self._waited_done_callback)
         self.pending.add(task)
         return task
     

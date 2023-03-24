@@ -1,4 +1,5 @@
 from .highlight import *
+from .type_proxies import *
 
 from .analyzer import *
 from .async_utils import *
@@ -21,6 +22,7 @@ from .keep_type import *
 from .method_like import *
 from .multi_value_dictionary import *
 from .properties import *
+from .reference import *
 from .removed_descriptor import *
 from .rich_attribute_error import *
 from .sorted_list import *
@@ -35,8 +37,10 @@ from .weak_map import *
 from .weak_set import *
 from .weak_value_dictionary import *
 
+
 __all__ = (
     *highlight.__all__,
+    *type_proxies.__all__,
     
     *analyzer.__all__,
     *async_utils.__all__,
@@ -59,6 +63,7 @@ __all__ = (
     *method_like.__all__,
     *multi_value_dictionary.__all__,
     *properties.__all__,
+    *reference.__all__,
     *removed_descriptor.__all__,
     *rich_attribute_error.__all__,
     *sorted_list.__all__,

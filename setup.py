@@ -35,6 +35,7 @@ setup(
         'scarletio.tools.asynchronous_interactive_console.editors',
         'scarletio.utils',
         'scarletio.utils.highlight',
+        'scarletio.utils.type_proxies',
         'scarletio.web_common',
         'scarletio.websocket',
     ],

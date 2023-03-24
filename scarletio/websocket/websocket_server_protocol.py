@@ -174,7 +174,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
         handler, host, port, is_ssl, origin, available_extensions, available_subprotocols , extra_response_headers, \
         request_processor, subprotocol_selector, websocket_kwargs = server.protocol_parameters
         
-        self = WebSocketCommonProtocol.__new__(cls, server.loop, host, port, is_ssl=is_ssl, **websocket_kwargs)
+        self = WebSocketCommonProtocol.__new__(cls, server.loop, host, port, is_ssl = is_ssl, **websocket_kwargs)
         self.handler = handler
         self.server = server
         self.origin = origin
@@ -190,6 +190,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
         self.origin = None
         
         return self
+    
     
     def connection_made(self, transport):
         """
@@ -558,7 +559,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
             headers.setdefault(CONNECTION, 'close')
             
             try:
-                self.write_http_response(status, headers, body=body)
+                self.write_http_response(status, headers, body = body)
                 self.fail_connection()
                 await self.wait_for_connection_lost()
             except (GeneratorExit, CancelledError):

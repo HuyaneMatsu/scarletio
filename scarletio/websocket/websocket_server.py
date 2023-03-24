@@ -233,16 +233,19 @@ class WebSocketServer:
         self.websockets = set()
         self.close_connection_task = None
         self.server = None
-        self.protocol_parameters = (handler, host, port, is_ssl, origin, available_extensions, available_subprotocols,
-            extra_response_headers, request_processor, subprotocol_selector, websocket_kwargs)
+        self.protocol_parameters = (
+            handler, host, port, is_ssl, origin, available_extensions, available_subprotocols, extra_response_headers,
+            request_processor, subprotocol_selector, websocket_kwargs
+        )
         
         factory = partial_func(protocol, self,)
-        server = await loop.create_server_to(factory, host, port, ssl=ssl, **server_kwargs)
+        server = await loop.create_server_to(factory, host, port, ssl = ssl, **server_kwargs)
         
         self.server = server
         await server.start()
         
         return self
+    
     
     def register(self, protocol):
         """
@@ -325,7 +328,7 @@ class WebSocketServer:
         
         websockets = self.websockets
         if websockets:
-            await TaskGroup(loop, (websocket.close(1001) for websocket in websockets)).wait_all()
+            await TaskGroup(loop, (loop.create_task(websocket.close(1001)) for websocket in websockets)).wait_all()
             
         if websockets:
             tasks = []

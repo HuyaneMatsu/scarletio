@@ -554,6 +554,6 @@ class WaitContinuously(WaitTillFirst):
     #    `__silence__` is same as ``Future.__silence__``
     #    `__silence_callback__` is same as ``Future.__silence_callback__``
     # `cancel_handles` is same as ``Future.cancel_handles``
-    # `clear` same as ``WaitTilLFirst.clear``
+    # `clear` same as ``WaitTillFirst.clear``
     # `sync_wrap` is same as ``Future.sync_wrap``
     # `async_wrap` is same as ``Future.async_wrap``

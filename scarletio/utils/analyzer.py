@@ -999,7 +999,7 @@ class CallableAnalyzer:
     
     def has_parameter(self, parameter_name):
         """
-        Returns whether the analyzed callable hast he given parameter by name.
+        Returns whether the analyzed callable has the given parameter by name.
         
         Parameters
         ----------

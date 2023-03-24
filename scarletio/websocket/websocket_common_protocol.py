@@ -5,7 +5,7 @@ import http as module_http
 from collections import OrderedDict
 from os import urandom
 
-from ..core import AsyncQueue, CancelledError, Future, Lock, Task, future_or_timeout, shield, write_exception_async
+from ..core import AsyncQueue, CancelledError, Future, Lock, Task, shield, write_exception_async
 from ..utils import include
 from ..web_common import ConnectionClosed, HttpReadWriteProtocol, PayloadError, WebSocketFrame, WebSocketProtocolError
 from ..web_common.websocket_frame import (
@@ -354,7 +354,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         await self.write_frame(operation_code, data)
     
     
-    async def close(self, code=1000, reason = ''):
+    async def close(self, code = 1000, reason = ''):
         """
         Closes the websocket.
         
@@ -806,7 +806,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             ping_id = b''
             while ping_id != frame.data:
                 ping_id, pong_waiter = self.pings.popitem(0)
-                pong_waiter.set_result_if_pending(None)
+                pong_waiter.set_resultd_if_pending(None)
         
         return True
     

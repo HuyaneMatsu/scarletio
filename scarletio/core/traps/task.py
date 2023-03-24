@@ -48,7 +48,7 @@ class Task(Future):
         The exception raised by task's internal coroutine. Defaults to `None`.
     _loop : ``EventThread``
         The loop to what the created task is bound.
-    _result : `None`, `Any`
+    _result : `None`, `object`
         The result of the task. Defaults to `None`.
     _state : `str`
         The state of the task.
@@ -384,7 +384,7 @@ class Task(Future):
         
         Parameters
         ----------
-        result : `Any`
+        result : `object`
             The object to set as result.
         
         Raises
@@ -403,7 +403,7 @@ class Task(Future):
         
         Parameters
         ----------
-        result : `Any`
+        result : `object`
             The object to set as result.
         
         Raises

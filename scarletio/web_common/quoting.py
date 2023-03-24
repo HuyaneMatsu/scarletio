@@ -18,7 +18,7 @@ UNQUOTE_UNSAFE_MAP = {}
 
 def iter_nullable_string(string):
     """
-    Iterates overt he given nullable string.
+    Iterates over the given nullable string.
     
     Parameters
     ----------
