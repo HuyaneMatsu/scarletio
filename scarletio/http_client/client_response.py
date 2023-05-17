@@ -127,7 +127,7 @@ class ClientResponse:
         return f'<{self.__class__.__name__}({ascii_encodable_url}) [{self.status} {self.reason!r}]>'
     
     
-    async def start(self,):
+    async def start(self):
         """
         Starts response processing.
         

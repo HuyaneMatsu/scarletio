@@ -1,8 +1,6 @@
 __all__ = ('TaskGroup',)
 
-from types import MethodType
-
-from ...utils import RichAttributeErrorBaseType, WeakReferer
+from ...utils import RichAttributeErrorBaseType
 
 from .future import Future
 from .task import Task

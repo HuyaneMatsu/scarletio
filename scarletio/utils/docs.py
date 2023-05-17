@@ -13,12 +13,12 @@ def has_docs(target):
     
     Parameter
     ---------
-    target : `Any`
+    target : `object`
         The object to modify the docstring of.
     
     Returns
     -------
-    target : `Any`
+    target : `object`
         The target object.
     """
     if not DOCS_ENABLED:
@@ -40,14 +40,14 @@ def set_docs(target, docs):
     
     Parameter
     ---------
-    target : `Any`
+    target : `object`
         The object to set the docstring to.
     docs : `str`
         Docstring to set.
     
     Returns
     -------
-    target : `Any`
+    target : `object`
         The target object.
     """
     if DOCS_ENABLED:
@@ -63,14 +63,14 @@ def _do_copy_docs(source, target):
     
     Parameters
     ----------
-    source : `Any`
+    source : `object`
         The source object to copy it's doc-string from.
-    target : `Any`
+    target : `object`
         The target object to copy it's doc-string to.
     
     Returns
     -------
-    target : `Any`
+    target : `object`
         The target object.
     """
     target.__doc__ = source.__doc__
@@ -84,7 +84,7 @@ def copy_docs(source):
     
     Parameters
     ----------
-    source : `Any`
+    source : `object`
         The source object to copy it's docs from.
     
     Returns

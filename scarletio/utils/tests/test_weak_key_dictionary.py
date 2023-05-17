@@ -93,7 +93,7 @@ def test_WeakKeyDictionary_iter():
     vampytest.assert_eq(sorted(iter(weak_key_dictionary_empty)), sorted(weak_key_dictionary_empty.keys()))
 
 
-def test_WeakKeyDictionary_len():
+def test__WeakKeyDictionary__len():
     relations = {WeakReferencable(x): x for x in range(3)}
     weak_key_dictionary = WeakKeyDictionary(relations)
     weak_key_dictionary_empty = WeakKeyDictionary()

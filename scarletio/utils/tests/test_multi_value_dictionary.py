@@ -95,7 +95,7 @@ def test_MultiValueDictionary_iter():
     vampytest.assert_eq(sorted(iter(multi_value_dictionary_empty)), sorted(multi_value_dictionary_empty.keys()))
 
 
-def test_MultiValueDictionary_len():
+def test__MultiValueDictionary__len():
     relations = [('a', 'a'), ('b', 'b'), ('a', 'c')]
     multi_value_dictionary = MultiValueDictionary(relations)
     multi_value_dictionary_empty = MultiValueDictionary()

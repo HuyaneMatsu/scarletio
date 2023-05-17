@@ -381,7 +381,7 @@ def test_WeakSet_le():
     vampytest.assert_eq(test_case.__le__([1]), True)
 
 
-def test_WeakSet_len():
+def test__WeakSet__len():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = []
     

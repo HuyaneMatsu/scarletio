@@ -1,3 +1,13 @@
+## 1.0.56
+
+#### Renames, Deprecation & Removals
+
+- Deprecate `Future.result`.
+- Deprecate `Future.exception`.
+- Set due date to `Future.pending`'s deprecation.
+- Set due date to `Future.done`'s deprecation.
+- Set due date to `Future.cancelled`'s deprecation.
+
 ## 1.0.55 *\[2023-03-24\]*
 
 #### Improvements

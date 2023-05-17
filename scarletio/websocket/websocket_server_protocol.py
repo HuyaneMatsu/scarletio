@@ -331,7 +331,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
             key = received_keys[0]
         
             try:
-                raw_key = b64decode(key.encode(), validate=True)
+                raw_key = b64decode(key.encode(), validate = True)
             except BinasciiError:
                 raise InvalidHandshake(
                     f'Invalid {SEC_WEBSOCKET_KEY!r}: {key!r}.',

@@ -88,7 +88,7 @@ def test_HybridValueDictionary_iter():
     vampytest.assert_eq(sorted(iter(hybrid_value_dictionary_empty)), sorted(hybrid_value_dictionary_empty.keys()))
 
 
-def test_HybridValueDictionary_len():
+def test__HybridValueDictionary__len():
     relations = {0: WeakReferencable(0), 1: 1, 2: WeakReferencable(2)}
     hybrid_value_dictionary = HybridValueDictionary(relations)
     hybrid_value_dictionary_empty = HybridValueDictionary()

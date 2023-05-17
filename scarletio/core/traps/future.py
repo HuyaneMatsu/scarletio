@@ -124,7 +124,7 @@ class Future:
         The exception set to the future as it's result. Defaults to `None`.
     _loop : ``EventThread``
         The loop to what the created future is bound.
-    _result : `None`, `Any`
+    _result : `None`, `object`
         The result of the future. Defaults to `None`.
     _state : `int`
         The state of the future.
@@ -265,7 +265,10 @@ class Future:
     
     def cancelled(self):
         warnings.warn(
-            f'`{self.__class__.__name__}.cancelled` is deprecated.',
+            (
+                f'`{self.__class__.__name__}.cancelled` is deprecated and will be removed in 2023 November. '
+                f'Please use `.is_cancelled()` instead.'
+            ),
             FutureWarning,
             stacklevel = 2,
         )
@@ -285,7 +288,10 @@ class Future:
     
     def done(self):
         warnings.warn(
-            f'`{self.__class__.__name__}.done` is deprecated.',
+            (
+                f'`{self.__class__.__name__}.done` is deprecated and will be removed in 2023 November. '
+                f'Please use `.is_done()` instead.'
+            ),
             FutureWarning,
             stacklevel = 2,
         )
@@ -305,7 +311,10 @@ class Future:
     
     def pending(self):
         warnings.warn(
-            f'`{self.__class__.__name__}.pending` is deprecated.',
+            (
+                f'`{self.__class__.__name__}.pending` is deprecated and will be removed in 2023 November. '
+                f'Please use `.is_pending()` instead.'
+            ),
             FutureWarning,
             stacklevel = 2,
         )
@@ -368,7 +377,7 @@ class Future:
         
         Returns
         -------
-        result : `Any`
+        result : `object`
         
         Raises
         ------
@@ -385,6 +394,14 @@ class Future:
     
     @property
     def result(self):
+        warnings.warn(
+            (
+                f'`{self.__class__.__name__}.result` is deprecated and will be removed in 2023 November. '
+                f'Use `.get_result()` instead.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
         return self.get_result
     
     
@@ -430,7 +447,7 @@ class Future:
         
         Returns
         -------
-        exception : `Any`
+        exception : `object`
         
         Raises
         ------
@@ -444,6 +461,14 @@ class Future:
     
     @property
     def exception(self):
+        warnings.warn(
+            (
+                f'`{self.__class__.__name__}.exception` is deprecated and will be removed in 2023 November. '
+                f'Use `.get_exception()` instead.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
         return self.get_exception
     
     
@@ -474,7 +499,7 @@ class Future:
         
         Parameters
         ----------
-        func : `Any`
+        func : `object`
             The callback to remove.
         
         Returns
@@ -500,7 +525,7 @@ class Future:
         
         Parameters
         ----------
-        result : `Any`
+        result : `object`
             The object to set as result.
         
         Raises
@@ -523,7 +548,7 @@ class Future:
         
         Parameters
         ----------
-        result : `Any`
+        result : `object`
             The object to set as result.
         
         Returns

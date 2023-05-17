@@ -68,7 +68,6 @@ class CoroutineFunctionTypeProxy(ProxyBase):
     __doc__ = proxy_property_factory('__doc__')
     __globals__ = proxy_property_factory('__globals__')
     __kwdefaults__ = proxy_property_factory('__kwdefaults__')
-    __module__ = proxy_property_factory('__module__')
     __name__ = proxy_property_factory('__name__')
     
     

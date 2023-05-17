@@ -114,7 +114,7 @@ def test_WeakMap_iter():
     vampytest.assert_eq(sorted(weak_map_2), objects_2)
 
 
-def test_WeakMap_len():
+def test__WeakMap__len():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = []
     

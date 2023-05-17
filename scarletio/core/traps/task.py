@@ -419,7 +419,7 @@ class Task(Future):
     # We will not send an exception to a task, but we will cancel it.
     # The exception will show up as ``._exception`` tho.
     # We also wont change the state of the Task, it will be changed, when the next `._step` is done with the
-    # #cancelling.
+    # cancelling.
     @copy_docs(Future.set_exception)
     def set_exception(self, exception):
         if self._state != FUTURE_STATE_PENDING:

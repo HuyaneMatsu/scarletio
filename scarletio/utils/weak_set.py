@@ -336,7 +336,7 @@ class WeakSet(set):
         
         Yields
         ------
-        element : `Any`
+        element : `object`
         """
         self._iterating += 1
         
@@ -662,7 +662,7 @@ class WeakSet(set):
         
         Parameters
         ----------
-        element : `Any`
+        element : `object`
             The element to add.
         
         Raises
@@ -776,7 +776,7 @@ class WeakSet(set):
         
         Parameters
         ----------
-        element : `Any`
+        element : `object`
             The element to remove.
         """
         try:
@@ -996,7 +996,7 @@ class WeakSet(set):
         
         Returns
         -------
-        element : `Any`
+        element : `object`
             The removed element.
         
         Raises
@@ -1019,7 +1019,7 @@ class WeakSet(set):
         
         Parameters
         ----------
-        element : `Any`
+        element : `object`
             The element ot remove.
         
         Raises

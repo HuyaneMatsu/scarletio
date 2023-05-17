@@ -122,7 +122,6 @@ def test__CoroutineFunctionTypeProxy__proxies():
     vampytest.assert_eq(test_function_proxied.__doc__, test_function.__doc__)
     vampytest.assert_eq(test_function_proxied.__globals__, test_function.__globals__)
     vampytest.assert_eq(test_function_proxied.__kwdefaults__, test_function.__kwdefaults__)
-    vampytest.assert_eq(test_function_proxied.__module__, test_function.__module__)
     vampytest.assert_eq(test_function_proxied.__name__, test_function.__name__)
     
     # Skip the rest
