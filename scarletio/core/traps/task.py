@@ -113,6 +113,8 @@ class Task(Future):
         """
         Return the list of stack frames for the task. If the task is already done, returns an empty list.
         
+        If there are recursive frames puts `None` at the end of the list.
+        
         Parameters
         ----------
         limit : `int` = `-1`, Optional
@@ -121,7 +123,7 @@ class Task(Future):
         
         Returns
         -------
-        frames : `list` of `frame`
+        frames : `list` of (`None`, `FrameType`)
             The stack frames of the task.
         """
         frames = []
@@ -304,7 +306,7 @@ class Task(Future):
                     del frames[-1]
                 
                 extracted = ['Stack for ', repr(self), ' (most recent call last):\n']
-                extracted = render_frames_into(frames, extend=extracted)
+                extracted = render_frames_into(frames, extend = extracted)
                 if recursive:
                     extracted.append(
                         'Last frame is a repeat from a frame above. Rest of the recursive part is not rendered.'
@@ -313,7 +315,7 @@ class Task(Future):
                 extracted = ['No stack for ', repr(self), '\n']
         else:
             extracted = ['Traceback for ', repr(self), ' (most recent call last):\n']
-            extracted = render_exception_into(exception, extend=extracted)
+            extracted = render_exception_into(exception, extend = extracted)
         
         file.write(''.join(extracted))
     

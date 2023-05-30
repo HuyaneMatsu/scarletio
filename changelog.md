@@ -1,5 +1,12 @@
 ## 1.0.56
 
+#### Improvements
+
+- Add `ExecutorThread.get_stack`.
+- Add `ExecutorThread.print_stack`.
+- Add `ExecutorThread.current_function`.
+- Add `ExecutorThread.__repr__`.
+
 #### Renames, Deprecation & Removals
 
 - Deprecate `Future.result`.

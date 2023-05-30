@@ -651,7 +651,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         CancelledError
             ``.transfer_data_task`` cancelled.
         """
-        frame = await self.read_data_frame(max_size=self.max_size)
+        frame = await self.read_data_frame(max_size = self.max_size)
         if frame is None: # close frame
             return
         
@@ -684,7 +684,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             if frame.is_final:
                 break
             
-            frame = await self.read_data_frame(max_size=max_size)
+            frame = await self.read_data_frame(max_size = max_size)
             if frame is None:
                 raise WebSocketProtocolError('Incomplete fragmented message.')
             
@@ -810,7 +810,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         
         return True
     
-    async def write_frame(self, operation_code, data, _expected_state=WEBSOCKET_STATE_OPEN):
+    async def write_frame(self, operation_code, data, _expected_state = WEBSOCKET_STATE_OPEN):
         """
         Writes the data as websocket.
         

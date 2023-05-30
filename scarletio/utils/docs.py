@@ -18,7 +18,7 @@ def has_docs(target):
     
     Returns
     -------
-    target : `object`
+    target : `target`
         The target object.
     """
     if not DOCS_ENABLED:

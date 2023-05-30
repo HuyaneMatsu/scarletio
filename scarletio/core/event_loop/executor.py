@@ -2,9 +2,10 @@ __all__ = ('ClaimedExecutor', 'Executor', 'ExecutorThread', 'SyncQueue', 'SyncWa
 
 import sys, warnings
 from collections import deque
+from sys import _current_frames as get_current_frames
 from threading import Event as SyncEvent, Lock as SyncLock, Thread, current_thread
 
-from ...utils import ignore_frame, include
+from ...utils import alchemy_incendiary, ignore_frame, include, render_frames_into
 from ...utils.trace import render_exception_into
 
 from ..exceptions import CancelledError
@@ -30,7 +31,7 @@ class SyncWait:
     
     Attributes
     ----------
-    _result : `Any`
+    _result : `object`
         The waiter's result if applicable. Defaults to `None`.
     _waiter : `threading.SyncEvent`
         Threading event, what is set, when the waiter's result is set.
@@ -43,14 +44,14 @@ class SyncWait:
         """
         self._result = None
         self._waiter = SyncEvent()
-    
+        
     def set_result(self, result):
         """
         Sets the waiter's result.
         
         Parameters
         ----------
-        result : `Any`
+        result : `object`
             The object to set as result.
         """
         self._result = result
@@ -63,7 +64,7 @@ class SyncWait:
         
         Returns
         -------
-        result : `Any`
+        result : `object`
         
         Raises
         ------
@@ -99,7 +100,7 @@ class SyncQueue:
         
         Parameters
         ----------
-        iterable : `None`, `iterable` of `Any` = `None`, Optional
+        iterable : `None`, `iterable` of `object` = `None`, Optional
             Iterable to set the queue's results initially from.
         max_length : `None`, `int` = `None`, Optional
             Maximal length of the queue. If the queue would pass it's maximal length, it's oldest results are popped.
@@ -118,7 +119,7 @@ class SyncQueue:
         
         Parameters
         ----------
-        result : `Any`
+        result : `object`
             Sets a result to the sync queue.
         """
         with self._lock:
@@ -155,7 +156,7 @@ class SyncQueue:
         
         Returns
         -------
-        result : `Any`
+        result : `object`
         """
         with self._lock:
             results = self._results
@@ -184,7 +185,7 @@ class SyncQueue:
         
         Returns
         -------
-        result : `Any`
+        result : `object`
         
         Raises
         ------
@@ -308,9 +309,11 @@ class SyncQueue:
         
         return result
 
+
 EXECUTOR_THREAD_CREATED = 0
 EXECUTOR_THREAD_RUNNING = 1
 EXECUTOR_THREAD_STOPPED = 2
+
 
 class ExecutorThread(Thread):
     """
@@ -318,6 +321,9 @@ class ExecutorThread(Thread):
     
     Attributes
     ----------
+    current_function : `object`
+        The currently ran function.
+    
     state : `int`
         Whether the executor thread is currently running.
         
@@ -335,17 +341,19 @@ class ExecutorThread(Thread):
     queue : ``SyncQueue`` of ``ExecutionPair``
         Synchronous queue of functions to execute and of their waiter future.
     """
-    __slots__ = ('state', 'queue',)
+    __slots__ = ('current_function', 'state', 'queue')
     
     def __init__(self):
         """
         Creates and start a ``ExecutorThread``.
         """
+        self.current_function = None
         self.state = EXECUTOR_THREAD_CREATED
         self.queue = SyncQueue()
-        Thread.__init__(self, daemon=True)
+        Thread.__init__(self, daemon = True)
         self.start()
-        
+    
+    
     def run(self):
         """
         The main runner of an ``ExecutorThread``.
@@ -369,6 +377,8 @@ class ExecutorThread(Thread):
                     continue
                 
                 func = pair.func
+                self.current_function = func
+                
                 try:
                     result = func()
                 except BaseException as err:
@@ -383,8 +393,10 @@ class ExecutorThread(Thread):
                     future._loop.call_soon_thread_safe(future.__class__.set_result_if_pending, future, result)
                     result = None
                 
-                future = None
-                func = None
+                finally:
+                    self.current_function = None
+                    future = None
+                    func = None
             
             except BaseException as err:
                 extracted = [
@@ -395,6 +407,7 @@ class ExecutorThread(Thread):
                 ]
                 render_exception_into(err, extend=extracted)
                 sys.stderr.write(''.join(extracted))
+    
     
     def execute(self, func, future = None):
         """
@@ -467,6 +480,123 @@ class ExecutorThread(Thread):
                 limit -= 1
             else:
                 index += 1
+    
+    
+    def get_stack(self, limit = -1):
+        """
+        Return the list of stack frames for the executor.
+        
+        Parameters
+        ----------
+        limit : `int` = `-1`, Optional
+            The maximal amount of stacks to fetch. By giving it as negative integer, there will be no stack limit
+            to fetch back.
+        
+        Returns
+        -------
+        frames : `list` of `FrameType`
+            The stack frames of the executor.
+        """
+        frames = []
+        
+        ident = self._ident
+        if (ident is None):
+            return frames
+        
+        frame = get_current_frames().get(ident, None)
+        
+        while limit:
+            limit -= 1
+            
+            if frame is None:
+                break
+            
+            frames.append(frame)
+            frame = frame.f_back
+            continue
+        
+        return frames
+    
+    
+    def print_stack(self, limit = -1, file = None):
+        """
+        Prints the stack of the executor.
+        
+        Parameters
+        ----------
+        limit : `int` = `-1`, Optional
+            The maximal amount of stacks to print. By giving it as negative integer, there will be no stack limit
+            to print out.
+        file : `None`, `I/O stream` = `None`, Optional
+            The file to print the stack to. Defaults to `sys.stderr`.
+        """
+        local_thread = current_thread()
+        if isinstance(local_thread, EventThread):
+            return local_thread.run_in_executor(alchemy_incendiary(self._print_stack, (self, limit, file),))
+        else:
+            self._print_stack(self, limit, file)
+    
+    
+    @staticmethod
+    def _print_stack(self, limit, file):
+        """
+        Prints the stack or traceback of the executor to the given `file`.
+        
+        Parameters
+        ----------
+        limit : `int`
+            The maximal amount of stacks to print. By giving it as negative integer, there will be no stack limit
+            to print out,
+        file : `None`, `I/O stream`
+            The file to print the stack to. Defaults to `sys.stderr`.
+        
+        Notes
+        -----
+        This function calls blocking operations and should not run inside of an event loop.
+        """
+        if file is None:
+            file = sys.stdout
+        
+        frames = self.get_stack(limit)
+        if frames:
+            extracted = ['Stack for ', repr(self), ' (most recent call last):\n']
+            extracted = render_frames_into(frames, extend = extracted)
+        else:
+            extracted = ['No stack for ', repr(self), '\n']
+        
+        file.write(''.join(extracted))
+
+
+    def __repr__(self):
+        """Returns the executor thread's representation."""
+        repr_parts = ['<', self.__class__.__name__]
+        
+        self.is_alive() # Updates status
+        if self._is_stopped:
+            status = 'stopped'
+        elif self._started.is_set():
+            status = 'started'
+        else:
+            status = 'initial'
+        
+        repr_parts.append(' status = ')
+        repr_parts.append(status)
+        
+        repr_parts.append(', daemon = ')
+        repr_parts.append(repr(self._daemonic))
+        
+        ident = self._ident
+        if (ident is not None):
+            repr_parts.append(', ident = ')
+            repr_parts.append(repr(ident))
+        
+        current_function = self.current_function
+        if (current_function is not None):
+            repr_parts.append(', current_function = ')
+            repr_parts.append(repr(current_function))
+        
+        repr_parts.append('>')
+        return ''.join(repr_parts)
 
 
 class ExecutionPair:
@@ -499,7 +629,7 @@ class ExecutionPair:
     
     def __repr__(self):
         """Returns the execution pair's representation."""
-        return f'{self.__class__.__name__}(func={self.func!r}, future={self.future!r})'
+        return f'{self.__class__.__name__}(func = {self.func!r}, future = {self.future!r})'
 
 
 class _ClaimEndedCallback:
@@ -738,7 +868,7 @@ class Executor:
     
     def __repr__(self):
         """Returns the executor's representation."""
-        return f'<{self.__class__.__name__} free={self.get_free_executor_count()}, used={self.get_used_executor_count()}>'
+        return f'<{self.__class__.__name__} free = {self.get_free_executor_count()}, used = {self.get_used_executor_count()}>'
     
     
     @property
