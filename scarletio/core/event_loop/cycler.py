@@ -254,7 +254,7 @@ class Cycler:
             try:
                 result = func.func(self)
                 if func.is_async:
-                    Task(result, self.loop)
+                    Task(self.loop, result)
             except BaseException as err:
                 write_exception_async(
                     err,

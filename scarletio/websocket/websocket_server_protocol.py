@@ -204,7 +204,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
         """
         WebSocketCommonProtocol.connection_made(self, transport)
         self.server.register(self)
-        self.handler_task = Task(self.lifetime_handler(), self._loop)
+        self.handler_task = Task(self._loop, self.lifetime_handler())
     
     
     async def lifetime_handler(self):

@@ -302,7 +302,7 @@ class WebSocketServer:
         """
         close_connection_task = self.close_connection_task
         if close_connection_task is None:
-            close_connection_task = Task(self._close(), self.loop)
+            close_connection_task = Task(self.loop, self._close())
             self.close_connection_task = close_connection_task
         
         return close_connection_task

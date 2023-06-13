@@ -1,4 +1,4 @@
-## 1.0.56
+## 1.0.56 *\[2023-06-13\]*
 
 #### Improvements
 
@@ -6,9 +6,15 @@
 - Add `ExecutorThread.print_stack`.
 - Add `ExecutorThread.current_function`.
 - Add `ExecutorThread.__repr__`.
+- Add `get_or_create_event_loop`.
 
+#### Bug fixes
+
+- `repeat_timeout` no longer marks the task as done with exception.
+- 
 #### Renames, Deprecation & Removals
 
+- Reverse `Task` parameters from `(coroutine, loop)` to `(loop, coroutine)`, so it matched other constructors in order.
 - Deprecate `Future.result`.
 - Deprecate `Future.exception`.
 - Set due date to `Future.pending`'s deprecation.

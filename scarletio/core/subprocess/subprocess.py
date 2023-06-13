@@ -770,19 +770,19 @@ class AsyncProcess:
         if input_value is None:
             stdin_task = None
         else:
-            stdin_task = Task(self._feed_stdin(input_value), loop)
+            stdin_task = Task(loop, self._feed_stdin(input_value))
             tasks.append(stdin_task)
         
         if self.stdout is None:
             stdout_task = None
         else:
-            stdout_task = Task(self._read_close_stdout_stream(), loop)
+            stdout_task = Task(loop, self._read_close_stdout_stream())
             tasks.append(stdout_task)
         
         if self.stderr is None:
             stderr_task = None
         else:
-            stderr_task = Task(self._read_close_stderr_stream(), loop)
+            stderr_task = Task(loop, self._read_close_stderr_stream())
             tasks.append(stderr_task)
         
         if tasks:

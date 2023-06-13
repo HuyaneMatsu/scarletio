@@ -5,13 +5,13 @@ from functools import partial as partial_func
 from math import floor, log
 from types import FunctionType
 
-from ...core import Future, get_default_trace_writer_highlighter, get_event_loop
+from ...core import Future, get_default_trace_writer_highlighter, get_event_loop, get_or_create_event_loop
 from ...utils import HIGHLIGHT_TOKEN_TYPES, is_awaitable, render_exception_into
 from ...utils.trace import (
     _render_syntax_error_representation_into, fixup_syntax_error_line_from_buffer, is_syntax_error
 )
 
-from .console_helpers import create_banner, create_exit_message, get_or_create_event_loop
+from .console_helpers import create_banner, create_exit_message
 from .editors import EditorAdvanced, EditorBase, EditorSimple, can_use_advanced_editor
 from .history import History
 
@@ -558,7 +558,7 @@ def run_asynchronous_interactive_console(
     stop_on_interruption : `bool` = `False`, Optional (Keyword only)
         Whether the console should be stopped on keyboard interrupt.
     """
-    event_loop = get_or_create_event_loop()
+    event_loop = get_or_create_event_loop(daemon = False)
     
     console = AsynchronousInteractiveConsole(
         banner = banner,

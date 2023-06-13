@@ -195,7 +195,7 @@ def _async_generator_finalizer_hook(async_generator):
         if not loop.running:
             return
             
-        Task(async_generator.aclose(), loop)
+        Task(loop, async_generator.aclose())
         loop.wake_up()
         return
     
@@ -203,7 +203,7 @@ def _async_generator_finalizer_hook(async_generator):
     if finalizer is not None:
         finalizer(async_generator)
 
-sys.set_asyncgen_hooks(firstiter=_async_generator_first_iteration_hook, finalizer=_async_generator_finalizer_hook)
+sys.set_asyncgen_hooks(firstiter = _async_generator_first_iteration_hook, finalizer = _async_generator_finalizer_hook)
 
 
 class EventThreadRunDescriptor:

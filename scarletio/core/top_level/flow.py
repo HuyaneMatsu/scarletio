@@ -82,7 +82,7 @@ def run_coroutine(coroutine, loop = None):
     """
     loop, is_current_thread = _get_event_loop_is_current_thread(loop)
     
-    task = Task(coroutine, loop)
+    task = Task(loop, coroutine)
     
     if is_current_thread:
         return task

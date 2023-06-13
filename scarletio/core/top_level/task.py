@@ -52,7 +52,7 @@ def create_task(coroutine, loop = None):
         There are are no detectable event loops.
     """
     loop, is_current_thread = _get_event_loop_is_current_thread(loop)
-    task = Task(coroutine, loop)
+    task = Task(loop, coroutine)
     if (not is_current_thread):
         loop.wake_up()
     

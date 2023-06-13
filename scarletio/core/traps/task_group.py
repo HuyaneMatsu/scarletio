@@ -548,12 +548,12 @@ class TaskGroup(RichAttributeErrorBaseType):
         --------
         ```py3
         task_group = TaskGroup(loop)
-        task_group.add_future(Task(coro(12), loop))
+        task_group.add_future(Task(loop, coro(12)))
         task_group.add_future(Future(loop))
         
         # Equals to:
         
-        task_group = TaskGroup(loop, [Task(coro(12), loop), Future(loop)])
+        task_group = TaskGroup(loop, [Task(loop, coro(12)), Future(loop)])
         ```
         """
         if future.is_done():
@@ -595,7 +595,7 @@ class TaskGroup(RichAttributeErrorBaseType):
         
         # Equals to:
         
-        task_group = TaskGroup(loop, [Task(coro(12), loop), Future(loop)])
+        task_group = TaskGroup(loop, [Task(loop, coro(12)), Future(loop)])
         ```
         """
         return self.add_future(self.loop.ensure_future(coroutine_or_future))
@@ -647,10 +647,10 @@ class TaskGroup(RichAttributeErrorBaseType):
         
         # Equals to:
         
-        task_group = TaskGroup(loop, [Task(coro(11), loop)])
+        task_group = TaskGroup(loop, [Task(loop, coro(11))])
         ```
         """
-        task = Task(coroutine, self.loop)
+        task = Task(self.loop, coroutine)
         task.add_done_callback(self._waited_done_callback)
         self.pending.add(task)
         return task

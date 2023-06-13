@@ -81,7 +81,7 @@ async def test__enter_executor__cancellation():
     waiter_1 = Future(loop)
     waiter_2 = Future(loop)
     
-    task = Task(_test__enter_executor__cancellation(ready_waiter, waiter_1, waiter_2), loop)
+    task = Task(loop, _test__enter_executor__cancellation(ready_waiter, waiter_1, waiter_2))
     
     await ready_waiter
     task.cancel()

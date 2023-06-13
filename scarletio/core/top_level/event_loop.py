@@ -1,4 +1,4 @@
-__all__ = ('create_event_loop', 'get_event_loop', 'set_event_loop')
+__all__ = ('create_event_loop', 'get_event_loop', 'get_or_create_event_loop', 'set_event_loop')
 
 from threading import current_thread, enumerate as list_threads
 
@@ -152,13 +152,13 @@ def _maybe_set_event_loop(event_loop):
     THREAD_TO_EVENT_LOOP_REFERENCE[local_thread] = event_loop
 
 
-def create_event_loop(**kwargs):
+def create_event_loop(**keyword_parameters):
     """
     Creates a new event loop.
     
     Parameters
     ----------
-    **kwargs : Keyword parameters
+    **keyword_parameters : Keyword parameters
         Parameters to create the event loop with.
     
     Other parameters
@@ -174,6 +174,41 @@ def create_event_loop(**kwargs):
     -------
     event_loop : ``EventThread``
     """
-    event_loop = EventThread(**kwargs)
+    event_loop = EventThread(**keyword_parameters)
     _maybe_set_event_loop(event_loop)
+    return event_loop
+
+
+def get_or_create_event_loop(**keyword_parameters):
+    """
+    Gets the local event loop if applicable. If not creates a new one.
+    
+    Parameters
+    ----------
+    **keyword_parameters : Keyword parameters
+        Parameters to create the event loop with.
+    
+    Other parameters
+    ----------------
+    daemon : `bool` = `False`, Optional (Keyword only)
+        Whether the event loop should be daemon.
+    name : `None`, `str` = `None`, Optional (Keyword only)
+        The event loop's name.
+    start_later : `bool` = `True`, Optional (Keyword only)
+        Whether the event loop should be started only later.
+
+    Returns
+    -------
+    event_loop : ``EventThread``
+    """
+    local_thread = current_thread()
+    if isinstance(local_thread, EventThread):
+        return local_thread
+    
+    event_loop = _try_detect_event_loop(local_thread)
+    if (event_loop is not None):
+        return event_loop
+    
+    event_loop = EventThread(**keyword_parameters)
+    THREAD_TO_EVENT_LOOP_REFERENCE[local_thread] = event_loop
     return event_loop

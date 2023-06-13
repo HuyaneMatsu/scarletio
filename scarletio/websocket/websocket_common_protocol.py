@@ -221,8 +221,8 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         """
         self.state = WEBSOCKET_STATE_OPEN
         loop = self._loop
-        self.transfer_data_task = Task(self.transfer_data(), loop)
-        self.close_connection_task = Task(self.close_connection(), loop)
+        self.transfer_data_task = Task(loop, self.transfer_data())
+        self.close_connection_task = Task(loop, self.close_connection())
     
     
     @property
@@ -379,7 +379,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         # if no close frame is received within the close_timeout we cancel the connection
         close_message = self._serialize_close(code, reason)
         try:
-            task = Task(self.write_close_frame(close_message), self._loop)
+            task = Task(self._loop, self.write_close_frame(close_message))
             task.apply_timeout(self.close_timeout)
             await task
         except TimeoutError:
@@ -1059,7 +1059,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         # start close_connection_task if the opening handshake didn't succeed.
         close_connection_task = self.close_connection_task
         if close_connection_task is None:
-            close_connection_task = Task(self.close_connection(), self._loop)
+            close_connection_task = Task(self._loop, self.close_connection())
             self.close_connection_task = close_connection_task
         
         return close_connection_task

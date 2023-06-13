@@ -152,9 +152,9 @@ class Lock:
 
 class ScarletLock(Lock):
     """
-    A hata scarlet lock can be used to guarantee access to a shared resource `n` amount of times.
+    A scarletio scarlet lock can be used to guarantee access to a shared resource `n` amount of times.
     
-    Should be used with `async with` statement
+    Should be used with `async with` statement.
     
     Attributes
     ----------
@@ -167,7 +167,7 @@ class ScarletLock(Lock):
     """
     __slots__ = ('_size',)
     
-    def __new__(cls, loop, size=1):
+    def __new__(cls, loop, size = 1):
         """
         Creates a new lock instance.
         

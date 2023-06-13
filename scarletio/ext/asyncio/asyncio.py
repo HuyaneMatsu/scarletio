@@ -2261,7 +2261,7 @@ class Task(HataTask, metaclass = TaskMeta, ignore = True):
         if loop is None:
             loop = get_event_loop()
         
-        return HataTask.__new__(cls, coroutine, loop)
+        return HataTask.__new__(cls, loop, coroutine)
     
     # Required by aiohttp 3.6
     def current_task(loop = None):

@@ -86,8 +86,6 @@ class repeat_timeout:
     
     Attributes
     ----------
-    _exception : `None`, ``CancelledError``
-        The dropped exception to the task.
     _handle : `None`, ``TimerHandle``
         The handle to cancel when the loop is over.
     _last_set : `float`
@@ -96,10 +94,12 @@ class repeat_timeout:
         The current event loop.
     _task : ``Task``
         The currently running task.
+    _timed_out : `bool`
+        Whether the timeout occurred.
     _timeout : `float`
         The time to drop `TimeoutError` after.
     """
-    __slots__ = ('_exception', '_handle', '_last_set', '_loop', '_task', '_timeout')
+    __slots__ = ('_exception', '_handle', '_last_set', '_loop', '_task', '_timed_out', '_timeout')
     
     def __new__(cls, timeout):
         """
@@ -128,7 +128,7 @@ class repeat_timeout:
         self._task = task
         self._timeout = timeout
         self._handle = thread.call_later(timeout, self)
-        self._exception = None
+        self._timed_out = None
         return self
     
     
@@ -154,8 +154,7 @@ class repeat_timeout:
             self._handle = None
             handle.cancel()
         
-        exception = self._exception
-        if (exception is not None) and (self._task._exception is exception):
+        if exc_type is CancelledError and self._timed_out:
             raise TimeoutError from None
         
         return False
@@ -171,8 +170,7 @@ class repeat_timeout:
             handle = self._loop.call_at(last_set + self._timeout, self)
         else:
             handle = None
-            exception = CancelledError()
-            self._exception = exception
-            self._task.set_exception_if_pending(exception)
+            self._timed_out = True
+            self._task.cancel()
         
         self._handle = handle

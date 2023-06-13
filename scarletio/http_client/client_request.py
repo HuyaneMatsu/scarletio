@@ -385,7 +385,7 @@ class ClientRequest:
             
             protocol.write_http_request(self.method, path, self.headers)
             
-            self.writer = Task(self.write_bytes(writer, connection), self.loop)
+            self.writer = Task(self.loop, self.write_bytes(writer, connection))
             
             self.response = response = ClientResponse(self, connection)
             

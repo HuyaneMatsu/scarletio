@@ -1,6 +1,7 @@
 __all__ = ('Task',)
 
-import reprlib, sys
+import reprlib, sys, warnings
+from datetime import datetime as DateTime
 from threading import current_thread
 from types import AsyncGeneratorType as CoroutineGeneratorType, CoroutineType, GeneratorType
 
@@ -23,6 +24,8 @@ ignore_frame(__spec__.origin, '_wake_up', 'future.get_result()')
 ignore_frame(__spec__.origin, '__call__', 'future.get_result()')
 
 EventThread = include('EventThread')
+
+CONSTRUCTOR_CHANGE_DEPRECATED = DateTime.utcnow() > DateTime(2023, 12, 12)
 
 
 class Task(Future):
@@ -79,17 +82,30 @@ class Task(Future):
     """
     __slots__ = ('_coroutine', '_should_cancel', '_waited_future')
     
-    def __new__(cls, coroutine, loop):
+    def __new__(cls, loop, coroutine):
         """
         Creates a new ``Task`` object running the given coroutine on the given event loop.
         
         Parameters
         ----------
-        coroutine : `CoroutineType`, `GeneratorType`
-            The coroutine, what the task will on the respective event loop.
         loop : ``EventThread``
             The event loop on what the coroutine will run.
+        coroutine : `CoroutineType`, `GeneratorType`
+            The coroutine, what the task will on the respective event loop.
         """
+        if isinstance(coroutine, EventThread):
+            loop, coroutine = coroutine, loop
+        
+            if CONSTRUCTOR_CHANGE_DEPRECATED:
+                warnings.warn(
+                    (
+                        f'`{cls.__name__}(coroutine, loop)` is deprecated and will be removed in 2024 Jun.'
+                        f'Please use `{cls.__name__}(loop, coroutine)` instead accordingly.'
+                    ),
+                    FutureWarning,
+                    stacklevel = 2,
+                )
+        
         self = object.__new__(cls)
         self._loop = loop
         self._state = FUTURE_STATE_PENDING

@@ -228,12 +228,12 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         
         ident = self._ident
         if (ident is not None):
-            repr_parts.append(' ident=')
+            repr_parts.append(' ident = ')
             repr_parts.append(str(ident))
         
-        repr_parts.append(' executor info: free=')
+        repr_parts.append(' executor info: free = ')
         repr_parts.append(str(self.get_free_executor_count()))
-        repr_parts.append(', used=')
+        repr_parts.append(', used = ')
         repr_parts.append(str(self.get_used_executor_count()))
         repr_parts.append(')>')
 
@@ -517,7 +517,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         task : ``Task``
             The created task instance.
         """
-        return Task(coroutine, self)
+        return Task(self, coroutine)
     
     
     def create_task_thread_safe(self, coroutine):
@@ -535,7 +535,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         task : ``Task``
             The created task instance.
         """
-        task = Task(coroutine, self)
+        task = Task(self, coroutine)
         self.wake_up()
         return task
     
@@ -577,7 +577,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             If `coroutine_or_future` is not `awaitable`.
         """
         if is_coroutine(coroutine_or_future):
-            return Task(coroutine_or_future, self)
+            return Task(self, coroutine_or_future)
         
         if isinstance(coroutine_or_future, Future):
             if coroutine_or_future._loop is not self:
@@ -586,7 +586,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         
         type_ = type(coroutine_or_future)
         if hasattr(type_, '__await__'):
-            return Task(type_.__await__(coroutine_or_future), self)
+            return Task(self, type_.__await__(coroutine_or_future))
         
         raise TypeError(
             f'`coroutine_or_future` can be `{Future.__name__}`, `Coroutine`, `awaitable`, got '
@@ -621,7 +621,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             If `coroutine_or_future` is not `awaitable`.
         """
         if is_coroutine(coroutine_or_future):
-            task = Task(coroutine_or_future, self)
+            task = Task(self, coroutine_or_future)
             self.wake_up()
             return task
         
@@ -632,7 +632,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         
         type_ = type(coroutine_or_future)
         if hasattr(type_, '__await__'):
-            task = Task(type_.__await__(coroutine_or_future), self)
+            task = Task(self, type_.__await__(coroutine_or_future))
             self.wake_up()
             return task
 
@@ -863,7 +863,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         
         results = await TaskGroup(
             self,
-            (Task(ag.aclose(), self) for ag in closing_async_generators),
+            (Task(self, ag.aclose()) for ag in closing_async_generators),
         )
         
         for result, async_generator in zip(results, closing_async_generators):
@@ -1111,7 +1111,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             
             else:
                 extra = {'peer_name': address}
-                Task(self._accept_connection_task(protocol_factory, connection_socket, extra, ssl, server), self)
+                Task(self, self._accept_connection_task(protocol_factory, connection_socket, extra, ssl, server))
     
     
     async def _accept_connection_task(self, protocol_factory, connection_socket, extra, ssl, server):

@@ -4,7 +4,6 @@ __all__ = ('collect_package_local_variables', 'collect_module_variables', 'creat
 import sys, warnings
 
 from ... import __package__ as PACKAGE_NAME
-from ...core import create_event_loop, get_event_loop
 from ...utils import HIGHLIGHT_TOKEN_TYPES
 from ...utils.trace import _iter_highlight_producer
 
@@ -18,22 +17,6 @@ if PYTHON_COMPILE_FLAG_ALLOW_TOP_LEVEL_AWAIT:
     AWAIT_NOTE = 'Use "await" directly.'
 else:
     AWAIT_NOTE = '!!! Direct "await" is not available on your python version. Please use python 3.8 or newer !!!'
-
-
-def get_or_create_event_loop():
-    """
-    Tries to get the current event loop. If not found creates a new one.
-    
-    Returns
-    -------
-    event_loop : ``EventThread``
-    """
-    try:
-        event_loop = get_event_loop()
-    except RuntimeError:
-        event_loop = create_event_loop(daemon=False)
-    
-    return event_loop
 
 
 def _produce_banner(package, logo):

@@ -650,7 +650,7 @@ class TCPConnector(ConnectorBase):
         try:
             event = self.dns_events[key]
         except KeyError:
-            event = Task(self.resolve(*key), self.loop)
+            event = Task(self.loop, self.resolve(*key))
             self.dns_events[key] = event
             host_info = await event
             if type(host_info) is HostInfoCont:

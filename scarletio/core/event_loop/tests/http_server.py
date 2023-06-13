@@ -39,7 +39,7 @@ class HttpServer:
     def close(self):
         close_connection_task = self.close_connection_task
         if close_connection_task is None:
-            close_connection_task = Task(self._close(), self.loop)
+            close_connection_task = Task(self.loop, self._close())
             self.close_connection_task = close_connection_task
         
         return close_connection_task
@@ -75,7 +75,7 @@ class HttpServerProtocol(HttpReadWriteProtocol):
     def connection_made(self, transport):
         HttpReadWriteProtocol.connection_made(self, transport)
         self.server.register(self)
-        self.handler_task = Task(self.lifetime_handler(), self._loop)
+        self.handler_task = Task(self._loop, self.lifetime_handler())
     
     
     async def lifetime_handler(self):
