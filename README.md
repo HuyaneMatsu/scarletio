@@ -60,7 +60,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 In [0]: 
 ```
 
-> **Info**
+> **Note**
 > a great deal of Scarletio features only works on Linux
 
 <div align="right">[ <a href="#table-of-contents">↑ Back to top ↑</a> ]</div>
