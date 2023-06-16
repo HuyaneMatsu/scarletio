@@ -21,11 +21,11 @@
 - [Coroutines](#coroutines)
 - [Running coroutines](#running-coroutines)
 - [Tasks](#tasks)
-- [Tasks groups](#tasks-groups)
+- [Task groups](#task-groups)
 - [Task cancellation](#task-cancellation)
 - [Task suspension](#task-suspension)
 - [Timeouts](#timeouts)
-- [Running threads](#running-threads)
+- [Running in threads](#running-in-threads)
 - [Scheduling from other threads](#scheduling-from-other-threads)
 - [Locks](#locks)
 - [Events](#events)
@@ -255,7 +255,7 @@ LOOP.stop()
 
 ---
 
-## Tasks groups
+## Task groups
 
 Task groups allow you to manage and coordinate a collection of tasks.
 They provide convenient way to work with multiple tasks concurrently and track their progress and results.
@@ -549,7 +549,7 @@ LOOP.stop()
 
 ---
 
-## Running threads
+## Running in threads
 
 While tasks run inside an event loop, it is possible to move their execution into a separate thread or,
 to be more accurate, into an executor.
