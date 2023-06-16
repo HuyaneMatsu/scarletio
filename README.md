@@ -14,14 +14,32 @@
 
 <br>
 
-----
+---
+
+## Table of contents
+- [Introduction](#introduction)
+- [Coroutines](#coroutines)
+- [Running coroutines](#running-coroutines)
+- [Tasks](#tasks)
+- [Tasks groups](#tasks-groups)
+- [Task cancellation](#task-cancellation)
+- [Task suspension](#task-suspension)
+- [Timeouts](#timeouts)
+- [Running threads](#running-threads)
+- [Scheduling from other threads](#scheduling-from-other-threads)
+- [Locks](#locks)
+- [Events](#events)
+
+---
+
+## Introduction
 
 Scarletio is a coroutine based concurrent Python library using modern `async / await` syntax.
 Originally inspired by asyncio.
 
-One of the core concept of the library, that event loops should not intercept with synchronous code execution. When
-an event loop is started it will not block the control flow. Instead it provides you various synchronization
-tools to start new asynchronous procedures and to retrieve their result cross environment.
+One of the core concepts of the library is that the event loops should not intercept with synchronous code execution.
+When an event loop is started it will not block the control flow, instead it provides you various synchronization
+tools to start new asynchronous procedures and to retrieve their results cross environment.
 
 You can experiment with scarletio in the REPL:
 ```
@@ -42,15 +60,20 @@ Type "help", "copyright", "credits" or "license" for more information.
 In [0]: 
 ```
 
-> Note that a great set of scarletio only works on linux.
+> **Note**
+> a great deal of Scarletio features only works on Linux
 
-### Coroutines
+<div align="right">[ <a href="#table-of-contents">↑ Back to top ↑</a> ]</div>
+
+---
+
+## Coroutines
 
 [Coroutines](https://docs.python.org/3/glossary.html#term-coroutine) are a special type of function that can be
 suspended and resumed, allowing other code to run in between.
 Coroutines enable developers to write asynchronous code in a more sequential and readable manner.
 
-In traditional programming, functions are called, executed, and completed before control is returned to the caller.
+In traditional programming functions are called, executed, and completed before control is returned to the caller.
 However, coroutines differ in that they can be suspended in the middle of their execution, allowing the program to
 switch to another task.
 When a coroutine is suspended, it yields control back to the event loop, allowing other code to be executed.
@@ -90,7 +113,11 @@ hello
 world
 ```
 
-### Running coroutines
+<div align="right">[ <a href="#table-of-contents">↑ Back to top ↑</a> ]</div>
+
+---
+
+## Running coroutines
 
 Scarletio repl provides a native way of using `await`, but traditionally `await` can only be used inside of coroutine
 functions.
@@ -158,7 +185,11 @@ LOOP.stop()
 While `scarletio.run` handles loop detection, creation and stopping as required, `loop.run` will not stop the event
 loop after our coroutine finishes.
 
-### Tasks
+<div align="right">[ <a href="#table-of-contents">↑ Back to top ↑</a> ]</div>
+
+---
+
+## Tasks
 
 Tasks are used to schedule coroutines concurrently. To schedule up a task we wrap our coroutine with a function
 just as `loop.create_task`. It will return our task and schedule up the coroutine.
@@ -220,7 +251,11 @@ LOOP.stop()
 # world
 ```
 
-### Tasks groups
+<div align="right">[ <a href="#table-of-contents">↑ Back to top ↑</a> ]</div>
+
+---
+
+## Tasks groups
 
 Task groups allow you to manage and coordinate a collection of tasks.
 They provide convenient way to work with multiple tasks concurrently and track their progress and results.
@@ -259,7 +294,11 @@ LOOP.stop()
 # world
 ```
 
-### Task cancellation
+<div align="right">[ <a href="#table-of-contents">↑ Back to top ↑</a> ]</div>
+
+---
+
+## Task cancellation
 
 Tasks can easily and safely be cancelled. When a task is cancelled a `scarletio.CancelledError` will be raised into
 task at the next opportunity.
@@ -293,9 +332,13 @@ LOOP.stop()
 # world
 ```
 
-### Task suspension
+<div align="right">[ <a href="#table-of-contents">↑ Back to top ↑</a> ]</div>
 
-Tasks can be suspended using either `sleep`, `skip_poll_cycle` and `skip_ready_cycle`.
+---
+
+## Task suspension
+
+Tasks can be suspended using either `sleep`, `skip_poll_cycle` or `skip_ready_cycle`.
 
 `sleep` suspends the task for the given amount of seconds.
 
@@ -318,7 +361,7 @@ finally:
     LOOP.stop()
 ```
 
-`sleep` returns a `Future`, so they can be *cancelled* or used inside of a task group simply too.
+`sleep` returns a `Future`, so they can be *cancelled* or simply used inside a task group too.
 
 ```py3
 from scarletio import TaskGroup, get_or_create_event_loop, sleep
@@ -353,7 +396,7 @@ LOOP.stop()
 `skip_ready_cycle` skips every scheduled and ready to run tasks. This can be used to synchronise between other tasks,
 or to wait for other scheduled callbacks to finish before we continue our tasks' execution.
 
-This is particularly useful in event driven programming when we know our event handlers will be ran, but we do not
+This is particularly useful in event driven programming when we know our event handlers will be run, but we do not
 know in what order.
 
 ```py3
@@ -429,10 +472,14 @@ LOOP.stop()
 # world
 ```
 
-Since tasks are usually scheduled after `io` operations, scarletio will always prefer to finish all the already
+Since tasks are usually scheduled after `io` operations, Scarletio will always prefer to finish all already
 scheduled and ready to run tasks before again polling from io.
 
-### Timeouts
+<div align="right">[ <a href="#table-of-contents">↑ Back to top ↑</a> ]</div>
+
+---
+
+## Timeouts
 
 Timeouts can be applied to `Future`-s and `Task`-s using their `apply_timeout` method. If timeout occurs the `Task`
 is cancelled and a `TimeoutError` is propagated.
@@ -464,7 +511,7 @@ LOOP.stop()
 # TIMEOUT!
 ```
 
-When executing a loop where timeout should be applied on each cycle, `repeat_timeout` can be used in this manner.
+We can use `repeat_timeout` when executing a loop where timeout should be applied on each cycle.
 
 ```py3
 from scarletio import get_or_create_event_loop, repeat_timeout, sleep
@@ -498,10 +545,14 @@ LOOP.stop()
 # TIMEOUT!
 ```
 
-### Running threads
+<div align="right">[ <a href="#table-of-contents">↑ Back to top ↑</a> ]</div>
 
-While tasks run inside of an event loop, it is possible to move their execution into a separate thread.
-To be more accurate into an executor.
+---
+
+## Running threads
+
+While tasks run inside an event loop, it is possible to move their execution into a separate thread or,
+to be more accurate, into an executor.
 It can be useful when running IO-bound functions that would otherwise block the event loop.
 
 ```py3
@@ -533,7 +584,11 @@ LOOP.stop()
 # after exiting: 140664167724800
 ```
 
-### Scheduling from other threads
+<div align="right">[ <a href="#table-of-contents">↑ Back to top ↑</a> ]</div>
+
+---
+
+## Scheduling from other threads
 
 We can create tasks from other threads by using the `create_task_thread_safe` method.
 If we want to retrieve their result we use `task.sync_wrap().wait()`.
@@ -562,7 +617,11 @@ LOOP.stop()
 
 It is also possible to wait for tasks' results from other event loop using `await task.async_wrap(loop)`.
 
-### Locks
+<div align="right">[ <a href="#table-of-contents">↑ Back to top ↑</a> ]</div>
+
+---
+
+## Locks
 
 Scarletio `Lock` can be used to guarantee exclusive access to a shared resource.
 Should be used with `async with` statement.
@@ -633,7 +692,11 @@ LOOP.run(main())
 LOOP.stop()
 ```
 
-### Events
+<div align="right">[ <a href="#table-of-contents">↑ Back to top ↑</a> ]</div>
+
+---
+
+## Events
 
 A scarletio `event` can be used to notify multiple tasks that some event has happened.
 
@@ -672,3 +735,5 @@ LOOP.stop()
 # hello
 # world
 ```
+
+<div align="right">[ <a href="#table-of-contents">↑ Back to top ↑</a> ]</div>
