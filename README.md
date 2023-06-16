@@ -37,9 +37,9 @@
 Scarletio is a coroutine based concurrent Python library using modern `async / await` syntax.
 Originally inspired by asyncio.
 
-One of the core concept of the library, that event loops should not intercept with synchronous code execution. When
-an event loop is started it will not block the control flow. Instead it provides you various synchronization
-tools to start new asynchronous procedures and to retrieve their result cross environment.
+One of the core concepts of the library is that the event loops should not intercept with synchronous code execution.
+When an event loop is started it will not block the control flow, instead it provides you various synchronization
+tools to start new asynchronous procedures and to retrieve their results cross environment.
 
 You can experiment with scarletio in the REPL:
 ```
@@ -60,7 +60,8 @@ Type "help", "copyright", "credits" or "license" for more information.
 In [0]: 
 ```
 
-> Note that a great set of scarletio only works on linux.
+> **Info**
+> a great deal of Scarletio features only works on Linux
 
 <div align="right">[ <a href="#table-of-contents">↑ Back to top ↑</a> ]</div>
 
@@ -72,7 +73,7 @@ In [0]:
 suspended and resumed, allowing other code to run in between.
 Coroutines enable developers to write asynchronous code in a more sequential and readable manner.
 
-In traditional programming, functions are called, executed, and completed before control is returned to the caller.
+In traditional programming functions are called, executed, and completed before control is returned to the caller.
 However, coroutines differ in that they can be suspended in the middle of their execution, allowing the program to
 switch to another task.
 When a coroutine is suspended, it yields control back to the event loop, allowing other code to be executed.
@@ -337,7 +338,7 @@ LOOP.stop()
 
 ## Task suspension
 
-Tasks can be suspended using either `sleep`, `skip_poll_cycle` and `skip_ready_cycle`.
+Tasks can be suspended using either `sleep`, `skip_poll_cycle` or `skip_ready_cycle`.
 
 `sleep` suspends the task for the given amount of seconds.
 
@@ -360,7 +361,7 @@ finally:
     LOOP.stop()
 ```
 
-`sleep` returns a `Future`, so they can be *cancelled* or used inside of a task group simply too.
+`sleep` returns a `Future`, so they can be *cancelled* or simply used inside a task group too.
 
 ```py3
 from scarletio import TaskGroup, get_or_create_event_loop, sleep
@@ -395,7 +396,7 @@ LOOP.stop()
 `skip_ready_cycle` skips every scheduled and ready to run tasks. This can be used to synchronise between other tasks,
 or to wait for other scheduled callbacks to finish before we continue our tasks' execution.
 
-This is particularly useful in event driven programming when we know our event handlers will be ran, but we do not
+This is particularly useful in event driven programming when we know our event handlers will be run, but we do not
 know in what order.
 
 ```py3
@@ -471,7 +472,7 @@ LOOP.stop()
 # world
 ```
 
-Since tasks are usually scheduled after `io` operations, scarletio will always prefer to finish all the already
+Since tasks are usually scheduled after `io` operations, Scarletio will always prefer to finish all already
 scheduled and ready to run tasks before again polling from io.
 
 <div align="right">[ <a href="#table-of-contents">↑ Back to top ↑</a> ]</div>
@@ -510,7 +511,7 @@ LOOP.stop()
 # TIMEOUT!
 ```
 
-When executing a loop where timeout should be applied on each cycle, `repeat_timeout` can be used in this manner.
+We can use `repeat_timeout` when executing a loop where timeout should be applied on each cycle.
 
 ```py3
 from scarletio import get_or_create_event_loop, repeat_timeout, sleep
@@ -550,8 +551,8 @@ LOOP.stop()
 
 ## Running threads
 
-While tasks run inside of an event loop, it is possible to move their execution into a separate thread.
-To be more accurate into an executor.
+While tasks run inside an event loop, it is possible to move their execution into a separate thread or,
+to be more accurate, into an executor.
 It can be useful when running IO-bound functions that would otherwise block the event loop.
 
 ```py3
