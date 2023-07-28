@@ -197,6 +197,8 @@ class AsynchronousInteractiveConsole:
         if local_variables is None:
             local_variables = {}
         
+        local_variables.setdefault('__builtins__', __builtins__)
+        
         console_id = cls._console_counter + 1
         cls._console_counter = console_id
         

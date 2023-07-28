@@ -1,3 +1,9 @@
+## 1.0.59 *\[2023-07-28\]*
+
+#### Bug fixes
+
+- It could happen that the interactive console didnt have builtins(?).
+
 ## 1.0.58 *\[2023-07-28\]*
 
 #### Improvements
