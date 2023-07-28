@@ -2790,7 +2790,7 @@ class TaskWrapperCallback:
 
 
 class TaskWrapper:
-    __slots__ = ('_additional_attributes', '_task', )
+    __slots__ = ('__weakref__', '_additional_attributes', '_task', )
     
     def __new__(cls, task):
         for callback in task._callbacks:
