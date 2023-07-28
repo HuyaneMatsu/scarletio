@@ -32,6 +32,19 @@ class Token:
     def __repr__(self):
         """Returns the token's representation."""
         return f'{self.__class__.__name__}({self.type}, {self.value!r})'
+    
+    
+    def __eq__(self, other):
+        if type(self) is not type(other):
+            return NotImplemented
+        
+        if self.type != other.type:
+            return False
+        
+        if self.value != other.value:
+            return False
+        
+        return True
 
 
 def _merge_tokens(tokens, start_index, end_index):

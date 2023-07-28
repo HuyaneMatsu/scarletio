@@ -121,7 +121,7 @@ class HighlightFormatterContext:
         """
         detail = FormatterDetail(formatter_html, None)
         for node in self.formatter_nodes.values():
-            node.set_detail(detail, direct=False)
+            node.set_detail(detail, direct = False)
             
     
     def set_highlight_html_class(self, token_type_identifier, html_class):

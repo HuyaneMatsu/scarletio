@@ -375,13 +375,24 @@ def _try_match_string(context):
             
             matched = end_finder.match(line, index)
             if matched is None:
+                end = len(line)
+                if (end > index) and (line[end -1] == '\n'):
+                    end -= 1
+                    add_line_break = True
+                else:
+                    add_line_break = False
+                
+                if index != end:
+                    content_parts.append(line[index : end])
+                if add_line_break:
+                    content_parts.append('\n')
+                
                 context.set_line_character_index(-2)
-                content = line[index:]
-                content_parts.append(content)
                 continue
             
             content = matched.group(1)
-            content_parts.append(content)
+            if content:
+                content_parts.append(content)
             
             set_end_later = matched.end()
             break
@@ -394,20 +405,11 @@ def _try_match_string(context):
             context.add_tokens(format_string_context.tokens)
         
         else:
-            limit = len(content_parts)
-            if limit:
-                index = 0
-                while True:
-                    content = content_parts[index]
-                    
-                    index += 1
-                    context.add_token(token_type, content)
-                    
-                    if index == limit:
-                        break
-                    
+            for content in content_parts:
+                if content == '\n':
                     context.add_token(TOKEN_TYPE_LINEBREAK, '\n')
-                    continue
+                else:
+                    context.add_token(token_type, content)
     
     else:
         if len(line) != end:

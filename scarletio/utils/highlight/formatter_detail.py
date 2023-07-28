@@ -2,7 +2,7 @@ __all__ = ()
 
 from html import escape as html_escape
 
-from .token_types import TOKEN_TYPE_LINEBREAK, TOKEN_TYPE_LINEBREAK_ESCAPED
+from .token_types import TOKEN_TYPE_LINEBREAK
 
 
 class FormatterDetail:

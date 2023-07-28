@@ -99,7 +99,7 @@ class FormatterNode:
                     node._set_detail(detail)
     
     
-    def set_detail(self, detail, *, direct=True):
+    def set_detail(self, detail, *, direct = True):
         """
         Sets html class to the node.
         

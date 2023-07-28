@@ -125,7 +125,7 @@ class WordNode:
         
         return -1
     
-    def match(self, string, index=0):
+    def match(self, string, index = 0):
         """
         Matches pattern from the given string.
         
@@ -153,7 +153,7 @@ class WordNode:
                 else:
                     match_index = node._match_index(string, index + 1)
                     if match_index != -1:
-                        return string[index:index + match_index]
+                        return string[index : index + match_index]
         
         if self.is_final:
             return ''
