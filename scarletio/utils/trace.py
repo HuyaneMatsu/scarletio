@@ -2151,11 +2151,12 @@ def render_exception_into(exception, extend = None, *, filter = None, highlighte
                 reason_type = REASON_TYPE_CAUSE
             continue
         
-        context_exception = exception.__context__
-        if (context_exception is not None):
-            exception = context_exception
-            reason_type = REASON_TYPE_CONTEXT
-            continue
+        if not exception.__suppress_context__:
+            context_exception = exception.__context__
+            if (context_exception is not None):
+                exception = context_exception
+                reason_type = REASON_TYPE_CONTEXT
+                continue
         
         # no other cases
         break

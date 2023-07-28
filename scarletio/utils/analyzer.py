@@ -328,17 +328,17 @@ class CallableAnalyzer:
             repr_parts.append(repr(real_function))
             repr_parts.append(')')
         
-        repr_parts.append(', parameters=')
+        repr_parts.append(', parameters = ')
         repr_parts.append(repr(self.parameters))
         
         args_parameter = self.args_parameter
         if (args_parameter is not None):
-            repr_parts.append(', args=')
+            repr_parts.append(', args = ')
             repr_parts.append(repr(args_parameter))
         
         kwargs_parameter = self.kwargs_parameter
         if (kwargs_parameter is not None):
-            repr_parts.append(', kwargs=')
+            repr_parts.append(', kwargs = ')
             repr_parts.append(repr(kwargs_parameter))
         
         repr_parts.append('>')

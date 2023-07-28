@@ -1,3 +1,9 @@
+## 1.0.57 *\[2023-07-28\]*
+
+#### Bug fixes
+
+- When using `raise ... from None` exception context is no longer shown.
+
 ## 1.0.56 *\[2023-06-13\]*
 
 #### Improvements
@@ -11,7 +17,7 @@
 #### Bug fixes
 
 - `repeat_timeout` no longer marks the task as done with exception.
-- 
+
 #### Renames, Deprecation & Removals
 
 - Reverse `Task` parameters from `(coroutine, loop)` to `(loop, coroutine)`, so it matched other constructors in order.
