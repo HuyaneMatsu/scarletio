@@ -32,7 +32,7 @@ from ...core import (
 )
 from ...core.event_loop.event_loop_functionality_helpers import _is_stream_socket, _set_reuse_port
 from ...core.top_level import get_event_loop as scarletio_get_event_loop, write_exception_async
-from ...utils import IS_UNIX, KeepType,  WeakReferer, alchemy_incendiary, is_coroutine
+from ...utils import IS_UNIX, KeepType, WeakValueDictionary, WeakReferer, alchemy_incendiary, is_coroutine
 
 
 __path__ = os.path.dirname(__file__)
@@ -2765,16 +2765,25 @@ def all_tasks(loop = None):
     return {}
 
 
+TASK_WRAPPER_CACHE = WeakValueDictionary()
+
+
 def current_task(loop = None):
     """Return a currently executed task."""
     if loop is None:
         loop = get_running_loop()
     
     task = loop.current_task
-    if (task is not None):
-        task = TaskWrapper(task)
+    if task is None:
+        return None
     
-    return task
+    try:
+        task_wrapper = TASK_WRAPPER_CACHE[task]
+    except KeyError:
+        task_wrapper = TaskWrapper(task)
+        TASK_WRAPPER_CACHE[task] = task_wrapper
+    
+    return task_wrapper
 
 
 class TaskWrapperCallback:
