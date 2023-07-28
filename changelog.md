@@ -1,3 +1,10 @@
+## 1.0.58 *\[2023-07-28\]*
+
+#### Improvements
+
+##### ext.asyncio
+- `current_task` return improved with `weakref`, `eq`, `is`, `hash` to fix errors coming from anyio.
+
 ## 1.0.57 *\[2023-07-28\]*
 
 #### Bug fixes
