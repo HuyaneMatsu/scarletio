@@ -2805,6 +2805,7 @@ class TaskWrapper:
         object.__setattr__(self, '_additional_attributes', additional_attributes)
         return self
     
+    
     def __getattr__(self, attribute_name):
         additional_attributes = object.__getattribute__(self, '_additional_attributes')
         if (additional_attributes is not None):
@@ -2834,6 +2835,7 @@ class TaskWrapper:
         
         additional_attributes[attribute_name] = attribute_value
     
+    
     def __repr__(self):
         return (
             f'<{self.__class__.__name__} '
@@ -2842,17 +2844,40 @@ class TaskWrapper:
             f'>'
         )
     
+    
     def __iter__(self):
         return object.__getattribute__(self, '_task').__iter__()
+    
     
     def __await__(self):
         return object.__getattribute__(self, '_task').__await__()
     
+    
     def __instancecheck__(cls, instance):
         return isinstance(instance, HataTask) or isinstance(instance, cls)
-
+    
+    
     def __subclasscheck__(cls, klass):
         return issubclass(klass, HataTask) or (klass is cls)
+    
+    
+    def __hash__(self):
+        """Returns the task wrapper's representation."""
+        return hash(self._task)
+    
+    
+    def __eq__(self, other):
+        """Returns whether the two tasks are equal."""
+        if isinstance(other, type(self)):
+            other_task = other._task
+        
+        elif isinstance(other, HataTask):
+            other_task = other
+        
+        else:
+            return NotImplemented
+        
+        return self._task == other_task
 
 
 # asyncio.threads
