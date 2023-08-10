@@ -135,16 +135,16 @@ class FutureSyncWrapper:
             
             exception = self._exception
             if exception is None:
-                repr_parts.append(' result=')
+                repr_parts.append(' result = ')
                 repr_parts.append(reprlib.repr(self._result))
             else:
-                repr_parts.append(' exception=')
+                repr_parts.append(' exception = ')
                 repr_parts.append(get_exception_short_representation(exception))
         
         future = self._future
         if future is not None:
             # we do not want to repr it, keep it thread safe
-            repr_parts.append(' future=')
+            repr_parts.append(' future = ')
             repr_parts.append(future.__class__.__name__)
             repr_parts.append('(...)')
         repr_parts.append('>')
@@ -346,7 +346,8 @@ class FutureSyncWrapper:
                 self._waiter.set()
     
     
-    set_docs(_done_callback,
+    set_docs(
+        _done_callback,
         """
         Callback added to the waited future to retrieve it's result.
         

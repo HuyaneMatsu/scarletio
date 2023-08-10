@@ -23,7 +23,7 @@ from collections import deque
 from functools import partial, partial as partial_func
 from stat import S_ISSOCK
 from subprocess import DEVNULL, PIPE, STDOUT
-from threading import current_thread, enumerate as list_threads
+from threading import current_thread
 
 from ...core import (
     AbstractProtocolBase, AsyncLifoQueue, AsyncProcess, AsyncQueue, DatagramSocketTransportLayer, Event as HataEvent,
@@ -1097,6 +1097,7 @@ class Event:
     def __subclasscheck__(cls, klass):
         return issubclass(klass, HataEvent) or (klass is cls)
 
+
 class Condition:
     """
     Asynchronous equivalent to threading.Condition.
@@ -1106,9 +1107,159 @@ class Condition:
     
     A new Lock object is created and used as the underlying lock.
     """
+    __slots__ = ('_lock', '_loop', '_waiters')
     
     def __new__(cls, lock = None, *, loop = None):
-        raise NotImplementedError
+        if loop is None:
+            loop = get_event_loop()
+        else:
+            warnings.warn(
+                'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
+                DeprecationWarning,
+                stacklevel = 2,
+            )
+        
+        
+        if lock is None:
+            lock = Lock(loop = loop)
+        elif lock._loop is not loop:
+            raise RuntimeError(
+                f'The lock\'s loop must match with the loop parameter; got lock.loop = {lock._loop!r}; loop = {loop!r}.'
+            )
+        
+        self = object.__new__(cls)
+        self._loop = loop
+        self._lock = lock
+        self._waiters = deque()
+        return self
+    
+    
+    def locked(self):
+        return self._lock.is_locked()
+    
+    
+    async def acquire(self):
+        await self._lock.acquire()
+        return True
+    
+    
+    def release(self):
+        return self._lock.release()
+    
+    
+    async def __aenter__(self):
+        await self._lock.acquire()
+        return None
+    
+    
+    async def __aexit__(self, exception_type, exception, exception_traceback):
+        self._lock.release()
+        return False
+    
+    
+    def __repr__(self):
+        repr_parts = ['<', self.__class__.__name__, ' ']
+        
+        if not self._lock.is_locked():
+            repr_parts.append('un')
+        repr_parts.append('locked')
+        
+        waiter_count = len(self._waiters)
+        if waiter_count:
+            repr_parts.append(', waiters: ')
+            repr_parts.append(str(waiter_count))
+        
+        repr_parts.append('>')
+        return ''.join(repr_parts)
+    
+    
+    async def wait(self):
+        """
+        Wait until notified.
+
+        If the calling coroutine has not acquired the lock when this method is called, a RuntimeError is raised.
+
+        This method releases the underlying lock, and then blocks until it is awakened by a notify() or notify_all()
+        call for the same condition variable in another coroutine. Once awakened, it re-acquires the lock and returns
+        True.
+        """
+        if not self._lock.is_locked():
+            raise RuntimeError(f'cannot wait on un-acquired lock; self = {self!r}.')
+        
+        self._lock.release()
+        try:
+            future = self._loop.create_future()
+            self._waiters.append(future)
+            try:
+                await future
+            finally:
+                self._waiters.remove(future)
+        except GeneratorExit:
+            self._lock._waiters.appendleft(self._loop.create_future())
+            raise
+        
+        except BaseException as err:
+            exception = err
+        else:
+            exception = None
+        
+        try:
+            await self._lock.acquire()
+        except BaseException as err:
+            self._lock._waiters.appendleft(self._loop.create_future())
+            raise err from exception
+        
+        if (exception is not None):
+            raise exception
+        
+        return True
+    
+    
+    async def wait_for(self, predicate):
+        """
+        Wait until a predicate becomes true.
+
+        The predicate should be a callable which result will be interpreted as a boolean value. The final predicate
+        value is the return value.
+        """
+        result = predicate()
+        while not result:
+            await self.wait()
+            result = predicate()
+        
+        return result
+    
+    
+    def notify(self, n = 1):
+        """
+        By default, wake up one coroutine waiting on this condition, if any. If the calling coroutine has not acquired
+        the lock when this method is called, a RuntimeError is raised.
+
+        This method wakes up at most n of the coroutines waiting for the condition variable; it is a no-op if no
+        coroutines are waiting.
+
+        Note: an awakened coroutine does not actually return from its wait() call until it can reacquire the lock.
+        Since notify() does not release the lock, its caller should.
+        """
+        if not self._lock.is_locked():
+            raise RuntimeError(f'cannot wait on un-acquired lock; self = {self!r}.')
+
+        index = 0
+        for future in self._waiters:
+            if index >= n:
+                break
+            
+            index += future.set_result_if_pending(False)
+    
+    
+    def notify_all(self):
+        """
+        Wake up all threads waiting on this condition. This method acts like notify(), but wakes up all waiting threads
+        instead of one. If the calling thread has not acquired the lock when this method is called, a RuntimeError is
+        raised.
+        """
+        self.notify(len(self._waiters))
+
 
 class Semaphore:
     """
@@ -1136,7 +1287,7 @@ class Semaphore:
             )
         
         if value < 0:
-            raise ValueError('Semaphore initial value must be >= 0')
+            raise ValueError(f'Semaphore initial value must be >= 0; value = {value!r}')
         
         self = object.__new__(cls)
         self._loop = loop
@@ -1176,12 +1327,12 @@ class Semaphore:
     
     
     async def acquire(self):
-        """Acquire a semaphore.
-        If the internal counter is larger than zero on entry,
-        decrement it by one and return True immediately.  If it is
-        zero on entry, block, waiting until some other coroutine has
-        called release() to make it larger than 0, and then return
-        True.
+        """
+        Acquire a semaphore.
+        
+        If the internal counter is larger than zero on entry, decrement it by one and return True immediately.
+        If it is zero on entry, block, waiting until some other coroutine has called release() to make it larger than
+        0, and then return True.
         """
         while self._value <= 0:
             future = HataFuture(self._loop)
@@ -1202,9 +1353,9 @@ class Semaphore:
     
     
     def release(self):
-        """Release a semaphore, incrementing the internal counter by one.
-        When it was zero on entry and another coroutine is waiting for it to
-        become larger than zero again, wake up that coroutine.
+        """
+        Release a semaphore, incrementing the internal counter by one. When it was zero on entry and another
+        coroutine is waiting for it to become larger than zero again, wake up that coroutine.
         """
         self._value += 1
         self._wake_up_next()

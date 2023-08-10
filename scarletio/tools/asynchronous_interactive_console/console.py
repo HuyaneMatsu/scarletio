@@ -108,7 +108,7 @@ class AsynchronousInteractiveConsole:
         Formatter storing highlighting details.
     history : ``History``
         History used for caching inputs.
-    local_variables : `dict` of (`str`, `Any`) items
+    local_variables : `dict` of (`str`, `object`) items
         Variables to run the compiled code with.
     loop : ``EventThread``
         The event loop on which the console runs it's code.
@@ -155,7 +155,7 @@ class AsynchronousInteractiveConsole:
         highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
             Formatter storing highlighting details.
         
-        local_variables : `None`, `dict` of (`str`, `Any`) items = `None`, Optional (Keyword only)
+        local_variables : `None`, `dict` of (`str`, `object`) items = `None`, Optional (Keyword only)
             Initial local variables for the executed code inside of the console.
         
         stop_on_interruption : `bool` = `False`, Optional (Keyword only)
@@ -192,7 +192,7 @@ class AsynchronousInteractiveConsole:
             highlighter = get_default_trace_writer_highlighter()
         
         if banner is None:
-            banner = create_banner(highlighter=highlighter)
+            banner = create_banner(highlighter = highlighter)
         
         if local_variables is None:
             local_variables = {}
@@ -233,7 +233,7 @@ class AsynchronousInteractiveConsole:
         
         Returns
         -------
-        result : `Any`
+        result : `object`
             The value returned by the ran code.
         
         Raises
@@ -276,7 +276,7 @@ class AsynchronousInteractiveConsole:
             
             sys.stdout.write(
                 ''.join(
-                    render_exception_into(err, [], filter=_ignore_console_frames, highlighter=self.highlighter)
+                    render_exception_into(err, [], filter = _ignore_console_frames, highlighter = self.highlighter)
                 )
             )
             
@@ -516,7 +516,7 @@ class AsynchronousInteractiveConsole:
             _render_syntax_error_representation_into(syntax_error, into, self.highlighter)
             into.append('\n')
         else:
-            render_exception_into(syntax_error, into, filter=_ignore_console_frames, highlighter=self.highlighter)
+            render_exception_into(syntax_error, into, filter = _ignore_console_frames, highlighter = self.highlighter)
         
         sys.stdout.write(''.join(into))
         sys.stdout.flush()
@@ -537,7 +537,7 @@ def run_asynchronous_interactive_console(
     
     Parameters
     ----------
-    local_variables : `None`, `dict` of (`str`, `Any`) items = `None`, Optional
+    local_variables : `None`, `dict` of (`str`, `object`) items = `None`, Optional
         Local variables to start the console with.
     
     banner : `None`, `str` = `None`, Optional (Keyword only)
@@ -582,7 +582,7 @@ def run_asynchronous_interactive_console(
             if stop_event_loop_when_done:
                 warnings.filterwarnings(
                     'ignore',
-                    message = r'^coroutine .* was never awaited$',
+                    message = '^coroutine .* was never awaited$',
                     category = RuntimeWarning,
                 )
                 

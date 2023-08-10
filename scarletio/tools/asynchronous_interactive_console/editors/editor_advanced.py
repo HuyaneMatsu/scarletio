@@ -5,6 +5,7 @@ from os import get_blocking, get_terminal_size, set_blocking
 from select import poll as Poller, POLLOUT as EVENT_POLL_WRITE
 from selectors import DefaultSelector, EVENT_READ
 from socket import socketpair as create_socket_pair
+
 from ....utils import DEFAULT_ANSI_HIGHLIGHTER, copy_docs, create_ansi_format_code, iter_highlight_code_lines
 
 from .compilation import maybe_compile

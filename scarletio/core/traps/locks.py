@@ -1,6 +1,5 @@
 __all__ = ('Lock', 'ScarletLock')
 
-import warnings
 from collections import deque
 
 from .future import Future
@@ -54,6 +53,7 @@ class Lock:
         self._waiters = deque()
         return self
     
+    
     async def __aenter__(self):
         """
         Acquires the lock.
@@ -76,6 +76,7 @@ class Lock:
                 
                 raise
     
+    
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """
         Releases the lock.
@@ -85,15 +86,6 @@ class Lock:
         future = self._waiters.pop()
         future.set_result_if_pending(None)
         return False
-    
-    
-    def locked(self):
-        warnings.warn(
-            f'{self.__class__.__name__}.locked` is deprecated.',
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return self.is_locked()
     
     
     def is_locked(self):
@@ -130,17 +122,18 @@ class Lock:
         future = self._waiters.pop()
         future.set_result_if_pending(None)
     
+    
     def __repr__(self):
         """Returns the lock's representation."""
         repr_parts = [
             '<',
             self.__class__.__name__,
-            ' locked=',
+            ' locked = ',
         ]
         
         count = len(self._waiters)
         if count:
-            repr_parts.append('True, waiting=')
+            repr_parts.append('True, waiting = ')
             repr_parts.append(repr(count))
         else:
             repr_parts.append('False')
@@ -294,13 +287,13 @@ class ScarletLock(Lock):
         repr_parts = [
             '<',
             self.__class__.__name__,
-            ' size=',
+            ' size = ',
         ]
         
         size = self._size
         repr_parts.append(repr(size))
         
-        repr_parts.append(', locked=')
+        repr_parts.append(', locked = ')
         count = len(self._waiters)
         if count >= size:
             repr_parts.append('True')
@@ -308,7 +301,7 @@ class ScarletLock(Lock):
             repr_parts.append('False')
         
         if count:
-            repr_parts.append(', waiting=')
+            repr_parts.append(', waiting = ')
             repr_parts.append(repr(count))
         
         repr_parts.append('>')
