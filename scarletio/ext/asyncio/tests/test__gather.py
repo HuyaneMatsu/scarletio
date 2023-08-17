@@ -331,13 +331,13 @@ async def test__gather__homogenous_futures():
         future = asyncio.gather(a, b, c)
         vampytest.assert_is(future._loop, other_loop)
         
-        await sleep(0.00001, loop = other_loop).async_wrap(loop)
+        await sleep(0.0001, loop = other_loop).async_wrap(loop)
         
         vampytest.assert_false(future.done())
         future = asyncio.gather(a, b, c)
         vampytest.assert_is(future._loop, other_loop)
         
-        await sleep(0.00001, loop = other_loop).async_wrap(loop)
+        await sleep(0.0001, loop = other_loop).async_wrap(loop)
         
         vampytest.assert_false(future.done())
     finally:

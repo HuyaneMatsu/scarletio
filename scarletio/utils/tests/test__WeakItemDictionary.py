@@ -9,19 +9,19 @@ import vampytest
 
 # Test constructor
 
-def test_WeakItemDictionary_constructor():
+def test__WeakItemDictionary__constructor():
     weak_item_dictionary = WeakItemDictionary()
     vampytest.assert_eq(len(weak_item_dictionary), 0)
     vampytest.assert_eq(sorted(weak_item_dictionary), [])
 
 
-def test_WeakItemDictionary_constructor_empty():
+def test__WeakItemDictionary__constructor_empty():
     weak_item_dictionary = WeakItemDictionary([])
     vampytest.assert_eq(len(weak_item_dictionary), 0)
     vampytest.assert_eq(sorted(weak_item_dictionary.items()), [])
 
 
-def test_WeakItemDictionary_constructor_filled():
+def test__WeakItemDictionary__constructor_filled():
     relations = {WeakReferencable(x): WeakReferencable(x) for x in range(3)}
     
     weak_item_dictionary = WeakItemDictionary(relations)
@@ -32,7 +32,7 @@ def test_WeakItemDictionary_constructor_filled():
 # test magic methods
 
 
-def test_WeakItemDictionary_contains():
+def test__WeakItemDictionary__contains():
     relations = {WeakReferencable(x): WeakReferencable(x) for x in range(3)}
     
     key_1 = WeakReferencable(0)
@@ -46,7 +46,7 @@ def test_WeakItemDictionary_contains():
     vampytest.assert_not_in(key_3, weak_item_dictionary)
 
 
-def test_WeakItemDictionary_eq():
+def test__WeakItemDictionary__eq():
     relations_1 = {WeakReferencable(x): WeakReferencable(x) for x in range(3)}
     relations_2 = {WeakReferencable(x): WeakReferencable(x) for x in range(2)}
     relations_3 = {}
@@ -67,7 +67,7 @@ def test_WeakItemDictionary_eq():
     vampytest.assert_is(weak_item_dictionary_1.__eq__(1), NotImplemented)
 
 
-def test_WeakItemDictionary_getitem():
+def test__WeakItemDictionary__getitem():
     relations = {WeakReferencable(x): WeakReferencable(x+4) for x in range(3)}
     weak_item_dictionary = WeakItemDictionary(relations)
     weak_item_dictionary_empty = WeakItemDictionary()
@@ -89,7 +89,7 @@ def test_WeakItemDictionary_getitem():
         weak_item_dictionary_empty[key_3]
 
 
-def test_WeakItemDictionary_iter():
+def test__WeakItemDictionary__iter():
     relations = {WeakReferencable(x): WeakReferencable(x) for x in range(3)}
     weak_item_dictionary = WeakItemDictionary(relations)
     weak_item_dictionary_empty = WeakItemDictionary()
@@ -107,7 +107,7 @@ def test__WeakItemDictionary__len():
     vampytest.assert_eq(len(weak_item_dictionary_empty), 0)
 
 
-def test_WeakItemDictionary_ne():
+def test__WeakItemDictionary__ne():
     relations_1 = {WeakReferencable(x): WeakReferencable(x) for x in range(3)}
     relations_2 = {WeakReferencable(x): WeakReferencable(x) for x in range(2)}
     relations_3 = {}
@@ -128,7 +128,7 @@ def test_WeakItemDictionary_ne():
     vampytest.assert_is(weak_item_dictionary_1.__ne__(1), NotImplemented)
 
 
-def test_WeakItemDictionary_setitem():
+def test__WeakItemDictionary__setitem():
     relations = {WeakReferencable(x): WeakReferencable(x) for x in range(3)}
     weak_item_dictionary = WeakItemDictionary(relations)
     
@@ -162,7 +162,7 @@ def test_WeakItemDictionary_setitem():
 # methods
 
 
-def test_WeakItemDictionary_clear():
+def test__WeakItemDictionary__clear():
     relations = {WeakReferencable(x): WeakReferencable(x) for x in range(3)}
     
     weak_item_dictionary_empty = WeakItemDictionary()
@@ -179,7 +179,7 @@ def test_WeakItemDictionary_clear():
     vampytest.assert_eq(len(test_case), 0)
 
 
-def test_WeakItemDictionary_copy():
+def test__WeakItemDictionary__copy():
     relations = {WeakReferencable(x): WeakReferencable(x) for x in range(3)}
     
     weak_item_dictionary = WeakItemDictionary(relations)
@@ -195,7 +195,7 @@ def test_WeakItemDictionary_copy():
     vampytest.assert_eq(test_case, weak_item_dictionary_empty)
 
 
-def test_WeakItemDictionary_get():
+def test__WeakItemDictionary__get():
     relations = {WeakReferencable(x): WeakReferencable(x) for x in range(3)}
     weak_item_dictionary = WeakItemDictionary(relations)
     
@@ -208,7 +208,7 @@ def test_WeakItemDictionary_get():
     vampytest.assert_is(weak_item_dictionary.get(key_2), None)
 
 
-def test_WeakItemDictionary_items():
+def test__WeakItemDictionary__items():
     relations = {WeakReferencable(x): WeakReferencable(x) for x in range(3)}
     
     item_1 = (WeakReferencable(2), WeakReferencable(2))
@@ -237,7 +237,7 @@ def test_WeakItemDictionary_items():
     vampytest.assert_not_in(item_3, items)
 
 
-def test_WeakItemDictionary_keys():
+def test__WeakItemDictionary__keys():
     relations = {WeakReferencable(x): WeakReferencable(x) for x in range(3)}
     key_1 = WeakReferencable(2)
     key_2 = WeakReferencable(6)
@@ -263,7 +263,7 @@ def test_WeakItemDictionary_keys():
     vampytest.assert_not_in(key_2, keys)
 
 
-def test_WeakItemDictionary_pop():
+def test__WeakItemDictionary__pop():
     relations = {WeakReferencable(x): WeakReferencable(x) for x in range(3)}
     
     key_1 = WeakReferencable(2)
@@ -283,7 +283,7 @@ def test_WeakItemDictionary_pop():
     vampytest.assert_eq(len(weak_item_dictionary), 2)
 
 
-def test_WeakItemDictionary_popitem():
+def test__WeakItemDictionary__popitem():
     item_1 = (WeakReferencable(1), WeakReferencable(1))
     item_2 = (WeakReferencable(2), WeakReferencable(2))
     relations = dict([item_1, item_2])
@@ -305,7 +305,7 @@ def test_WeakItemDictionary_popitem():
     vampytest.assert_eq(len(weak_item_dictionary), 0)
 
 
-def test_WeakItemDictionary_setdefault():
+def test__WeakItemDictionary__setdefault():
     relations = {WeakReferencable(x): WeakReferencable(x) for x in range(2)}
     
     key_1 = WeakReferencable(6)
@@ -335,7 +335,7 @@ def test_WeakItemDictionary_setdefault():
         weak_item_dictionary.setdefault(key_3, value_3)
 
 
-def test_WeakItemDictionary_update():
+def test__WeakItemDictionary__update():
     relations_1 = {WeakReferencable(x): WeakReferencable(x) for x in range(2)}
     relations_2 = {WeakReferencable(x): WeakReferencable(x+1) for x in range(3)}
     relations_3 = {WeakReferencable(x): WeakReferencable(x-1) for x in range(1)}
@@ -400,7 +400,7 @@ def test_WeakItemDictionary_update():
         test_case.update([(1,), ])
 
 
-def test_WeakItemDictionary_values():
+def test__WeakItemDictionary__values():
     relations = {WeakReferencable(x): WeakReferencable(x) for x in range(3)}
     
     value_1 = WeakReferencable(2)

@@ -131,7 +131,7 @@ class ConnectorBase:
             del alive_protocols_per_host[key]
         
         if alive_protocols_per_host:
-            self.cleanup_handle = self.loop.call_later_weak(KEEP_ALIVE_TIMEOUT, self._cleanup,)
+            self.cleanup_handle = self.loop.call_after_weak(KEEP_ALIVE_TIMEOUT, self._cleanup,)
     
     
     def close(self):
@@ -305,7 +305,7 @@ class ConnectorBase:
             alive_protocols_for_host.append((protocol, LOOP_TIME()))
             
             if self.cleanup_handle is None:
-                self.cleanup_handle = self.loop.call_later_weak(KEEP_ALIVE_TIMEOUT, self._cleanup,)
+                self.cleanup_handle = self.loop.call_after_weak(KEEP_ALIVE_TIMEOUT, self._cleanup,)
     
     
     async def create_connection(self, request):

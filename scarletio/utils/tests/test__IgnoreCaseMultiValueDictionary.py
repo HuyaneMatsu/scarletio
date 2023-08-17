@@ -4,19 +4,19 @@ import vampytest
 
 # Test IgnoreCaseString
 
-def test_IgnoreCaseMultiValueDictionary_constructor():
+def test__IgnoreCaseMultiValueDictionary__constructor():
     multi_value_dictionary = IgnoreCaseMultiValueDictionary()
     vampytest.assert_eq(len(multi_value_dictionary), 0)
     vampytest.assert_eq(sorted(multi_value_dictionary), [])
 
 
-def test_IgnoreCaseMultiValueDictionary_constructor_empty():
+def test__IgnoreCaseMultiValueDictionary__constructor_empty():
     multi_value_dictionary = IgnoreCaseMultiValueDictionary([])
     vampytest.assert_eq(len(multi_value_dictionary), 0)
     vampytest.assert_eq(sorted(multi_value_dictionary), [])
 
 
-def test_IgnoreCaseMultiValueDictionary_constructor_filled():
+def test__IgnoreCaseMultiValueDictionary__constructor_filled():
     relations_1 = [('a', 'a'), ('b', 'b'), ('A', 'c'), ('B', 'b')]
     relations_2 = [('a', 'a'), ('b', 'b'), ('a', 'c')]
     

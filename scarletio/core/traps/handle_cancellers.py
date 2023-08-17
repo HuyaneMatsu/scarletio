@@ -15,6 +15,7 @@ class _HandleCancellerBase:
     """
     __slots__ = ('_handle',)
     
+    
     def __init__(self):
         """
         Creates a new handle canceller.
@@ -23,6 +24,7 @@ class _HandleCancellerBase:
         function at the same time, so ``.handle`` is needed to be set from outside.
         """
         self._handle = None
+    
     
     def __call__(self, future):
         """
@@ -36,6 +38,7 @@ class _HandleCancellerBase:
             The respective future to what the handle canceller was added as callback.
         """
         pass
+    
     
     def cancel(self):
         """
@@ -65,7 +68,7 @@ class _HandleCancellerBase:
         repr_parts.append(state)
         
         if (handle is not None):
-            repr_parts.append(' handle=')
+            repr_parts.append(' handle = ')
             repr_parts.append(handle._get_repr_without(self))
         
         repr_parts.append('>')

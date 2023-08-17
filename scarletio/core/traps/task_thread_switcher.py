@@ -6,8 +6,13 @@ from ...utils import ignore_frame, include
 
 from ..exceptions import CancelledError
 
-from .future import FUTURE_STATE_CANCELLED, FUTURE_STATE_PENDING, Future
+from .future import Future
+from .future_states import FUTURE_STATE_CANCELLING_SELF, FUTURE_STATE_CANCELLED, FUTURE_STATE_RESULT_RETURN, \
+    FUTURE_STATE_RESULT_RAISE
 from .task import Task
+
+
+FUTURE_MASK_CANCEL_INITIALISED_BEFORE = FUTURE_STATE_CANCELLING_SELF | FUTURE_STATE_CANCELLED
 
 
 ignore_frame(__spec__.origin, 'get_result', 'raise exception',)
@@ -115,7 +120,7 @@ class enter_executor:
         Callback added to the wrapped task. If the wrapped task is cancelled, then the section running inside of the
         executor will be cancelled as well, whenever it gives back the context with an `await`.
         """
-        if future._state != FUTURE_STATE_CANCELLED:
+        if future.is_cancelled():
             return
         
         waited_future = self._waited_future
@@ -139,7 +144,6 @@ class enter_executor:
         # Set result to the enter task, so it can be retrieved.
         self._enter_future.set_result(None)
         
-        exception = None
         coroutine = task._coroutine
         
         # If some1 await at the block, we will sync_wrap it. If the exit future is awaited, then we quit.
@@ -154,7 +158,7 @@ class enter_executor:
                         break
                     
                     self._waited_future = local_waited_future
-                    if task.is_cancelled() or task._should_cancel:
+                    if task._state & FUTURE_MASK_CANCEL_INITIALISED_BEFORE:
                         local_waited_future.cancel()
                     
                     try:
@@ -162,42 +166,44 @@ class enter_executor:
                     finally:
                         local_waited_future = None
                 
-                if task._state != FUTURE_STATE_PENDING:
+                if task.is_done():
                     # there is no reason to raise
                     break
                 
                 try:
-                    # Get cancellation exception
-                    if task._should_cancel:
-                        task._should_cancel = False
-                        
-                        exception = task._exception
-                        if exception is None:
-                            exception = CancelledError()
-                    
-                        # call either coroutine.throw(err) or coroutine.send(None).
-                        result = coroutine.throw(exception)
+                    # Call either coroutine.throw(err) or coroutine.send(None).
+                    if task._state & FUTURE_STATE_CANCELLING_SELF:
+                        result = coroutine.throw(CancelledError())
                     else:
                         result = coroutine.send(None)
                 
-                except StopIteration as exception:
-                    if task._should_cancel:
-                        # the task is cancelled meanwhile
-                        task._should_cancel = False
-                        Future.set_exception(task, CancelledError())
+                except StopIteration as retrieved_exception:
+                    state = task._state
+                    if state & FUTURE_STATE_CANCELLING_SELF:
+                        state |= FUTURE_STATE_CANCELLED
+                        task._loop._schedule_callbacks(self)
                     else:
-                        Future.set_result(task, exception.value)
+                        task._result = retrieved_exception.value
+                        state |= FUTURE_STATE_RESULT_RETURN
                     
+                    task._state = state
+                    loop._schedule_callbacks(self)
                     loop.wake_up()
                     break
                     
                 except CancelledError:
-                    Future.cancel(task)
+                    state = task._state | FUTURE_STATE_CANCELLED
+                    if (task._result is not None):
+                        state |= FUTURE_STATE_RESULT_RAISE
+                    task._state = state
+                    loop._schedule_callbacks(self)
                     loop.wake_up()
                     break
                 
-                except BaseException as exception:
-                    Future.set_exception(task, exception)
+                except BaseException as retrieved_exception:
+                    task._result = retrieved_exception
+                    task._state |= FUTURE_STATE_RESULT_RAISE
+                    loop._schedule_callbacks(self)
                     loop.wake_up()
                     break
                 
@@ -206,14 +212,13 @@ class enter_executor:
                         result._blocking = False
                         local_waited_future = result
                         task._waited_future = result
-                        if task._should_cancel:
-                            if local_waited_future.cancel():
-                                task._should_cancel = False
+                        
+                        state = task._state
+                        if state & FUTURE_STATE_CANCELLING_SELF:
+                            if result.cancel():
+                                task._state = state & ~FUTURE_STATE_CANCELLING_SELF
                     else:
                         continue
-                
-                finally:
-                    exception = None
         
         finally:
             task.remove_done_callback(self._cancel_callback)

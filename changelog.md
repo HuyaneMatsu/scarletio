@@ -1,3 +1,48 @@
+# 1.0.61 *\[2023-08-??\]*
+
+#### Improvements
+
+- `Future`-s now can have multiple states.
+- Add `Future.silence` to silence cleanup warnings. This replaces the old `.__silence__` method.
+- Add `Future.is_silenced`.
+- Add `InvalidStateError.__eq__`.
+- Add `InvalidStateError.__hash__`.
+- Add keyword parameter support to `InvalidStateError.__new__`.
+- Add `Future.is_cancelling`.
+- Disable `Task.set_exception` and `.set_exception_if_pending`. Add `Future.cancel_with` instead.
+- Add `FutureWrapperSync.cancel_with`.
+- Add `FutureWrapperSync.is_cancelling`.
+- Add `FutureWrapperAsync.cancel_with`.
+- Add `FutureWrapperAsync.is_cancelling`.
+- Add `FutureWrapperBase`.
+- `FutureWrapperAsync.wait` now waits till the future is cancelled.
+- `FutureWrapperSync.wait` now waits till the future is cancelled.
+
+#### Bug fixes
+
+- `FutureAsyncWrapper` re-implemented slots, allocating more memory as required (This is actually a python bug).
+- Timeout dropped `TimeoutError` into the cancelled task instead of `CancelledError`.
+
+#### Renames, Deprecation & Removals
+
+- Deprecate `FutureAsyncWrapper.__call__`. It resets the future which should not happen.
+- Remove `Gatherer`.
+- Remove `ResultGatheringFuture`.
+- Remove `WaitContinuously`.
+- Remove `WaitTillAll`.
+- Remove `WaitTillExc`.
+- Remove `WaitTillFirst`.
+- Remove `FutureSyncWrapper.__call__`.
+- Remove `FutureAsyncWrapper.__call__`.
+- Rename `EventThread.call_later` to `.call_after`.
+- Rename `EventThread.call_later_weak` to `.call_after_weak`.
+- Deprecate `EventThread.call_later`.
+- Deprecate `EventThread.call_later_weak`.
+- Rename `FutureSyncWrapper` to `FutureWrapperSync`.
+- Rename `FutureAsyncWrapper` to `FutureWrapperAsync`.
+- Deprecate `FutureSyncWrapper`.
+- Deprecate `FutureAsyncWrapper`.
+
 ## 1.0.60 *\[2023-08-10\]*
 
 #### Improvements

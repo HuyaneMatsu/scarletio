@@ -71,7 +71,7 @@ def run_coroutine(coroutine, loop = None):
     
     Returns
     -------
-    task : ``Task``, ``FutureAsyncWrapper``, `Any`
+    task : ``Task``, ``FutureWrapperAsync``, `object`
     
     Raises
     ------

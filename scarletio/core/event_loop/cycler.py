@@ -238,9 +238,9 @@ class Cycler:
         self.funcs = validated_funcs
         self.cycle_time = cycle_time
         if current_thread() is loop:
-            handle = loop.call_later(cycle_time, cls._run, self)
+            handle = loop.call_after(cycle_time, cls._run, self)
         else:
-            handle = loop.call_soon_thread_safe_lazy(loop.__class__.call_later, loop, cycle_time, cls._run, self)
+            handle = loop.call_soon_thread_safe_lazy(loop.__class__.call_after, loop, cycle_time, cls._run, self)
         
         self.handle = handle
         
@@ -267,7 +267,7 @@ class Cycler:
                     loop = self.loop,
                 )
         
-        self.handle = self.loop.call_later(self.cycle_time, self.__class__._run, self)
+        self.handle = self.loop.call_after(self.cycle_time, self.__class__._run, self)
     
     def __repr__(self):
         """Returns the cycler's representation."""
@@ -388,7 +388,7 @@ class Cycler:
         if (handle is not None):
             handle.cancel()
         
-        self.handle = self.loop.call_later(self.cycle_time, self.__class__._run, self)
+        self.handle = self.loop.call_after(self.cycle_time, self.__class__._run, self)
     
     
     @property

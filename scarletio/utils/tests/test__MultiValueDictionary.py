@@ -7,19 +7,19 @@ import vampytest
 
 # Test constructor
 
-def test_MultiValueDictionary_constructor():
+def test__MultiValueDictionary__constructor():
     multi_value_dictionary = MultiValueDictionary()
     vampytest.assert_eq(len(multi_value_dictionary), 0)
     vampytest.assert_eq(sorted(multi_value_dictionary), [])
 
 
-def test_MultiValueDictionary_constructor_empty():
+def test__MultiValueDictionary__constructor_empty():
     multi_value_dictionary = MultiValueDictionary([])
     vampytest.assert_eq(len(multi_value_dictionary), 0)
     vampytest.assert_eq(sorted(multi_value_dictionary), [])
 
 
-def test_MultiValueDictionary_constructor_filled():
+def test__MultiValueDictionary__constructor_filled():
     relations = [('a', 'a'), ('b', 'b'), ('a', 'c'), ('b', 'b')]
     
     multi_value_dictionary = MultiValueDictionary(relations)
@@ -30,7 +30,7 @@ def test_MultiValueDictionary_constructor_filled():
 # Test magic methods
 
 
-def test_MultiValueDictionary_contains():
+def test__MultiValueDictionary__contains():
     relations = [('a', 'a'), ('b', 'b'), ('a', 'c')]
     
     key_1 = 'a'
@@ -42,7 +42,7 @@ def test_MultiValueDictionary_contains():
     vampytest.assert_not_in(key_2, multi_value_dictionary)
 
 
-def test_MultiValueDictionary_eq():
+def test__MultiValueDictionary__eq():
     relations_1 = [('a', 'a'), ('b', 'b'), ('a', 'c')]
     relations_2 = [('a', 'a'), ('b', 'b')]
     relations_3 = []
@@ -64,7 +64,7 @@ def test_MultiValueDictionary_eq():
     vampytest.assert_is(multi_value_dictionary_1.__eq__(1), NotImplemented)
 
 
-def test_MultiValueDictionary_ne():
+def test__MultiValueDictionary__ne():
     relations_1 = [('a', 'a'), ('b', 'b'), ('a', 'c')]
     relations_2 = [('a', 'a'), ('b', 'b')]
     relations_3 = []
@@ -86,7 +86,7 @@ def test_MultiValueDictionary_ne():
     vampytest.assert_is(multi_value_dictionary_1.__ne__(1), NotImplemented)
 
 
-def test_MultiValueDictionary_iter():
+def test__MultiValueDictionary__iter():
     relations = [('a', 'a'), ('b', 'b'), ('a', 'c')]
     multi_value_dictionary = MultiValueDictionary(relations)
     multi_value_dictionary_empty = MultiValueDictionary()
@@ -104,7 +104,7 @@ def test__MultiValueDictionary__len():
     vampytest.assert_eq(len(multi_value_dictionary_empty), 0)
 
 
-def test_MultiValueDictionary_setitem():
+def test__MultiValueDictionary__setitem():
     relations = [('a', 'a'), ('b', 'b'), ('a', 'c')]
     multi_value_dictionary = MultiValueDictionary(relations)
     
@@ -137,7 +137,7 @@ def test_MultiValueDictionary_setitem():
         multi_value_dictionary[key_3] = value_3
 
 
-def test_MultiValueDictionary_getitem():
+def test__MultiValueDictionary__getitem():
     relations = [('a', 'a'), ('b', 'b'), ('a', 'c')]
     multi_value_dictionary = MultiValueDictionary(relations)
     multi_value_dictionary_empty = MultiValueDictionary()
@@ -151,7 +151,7 @@ def test_MultiValueDictionary_getitem():
         multi_value_dictionary_empty['d']
 
 
-def test_MultiValueDictionary_delitem():
+def test__MultiValueDictionary__delitem():
     relations = [('a', 'a'), ('b', 'b'), ('a', 'c')]
     multi_value_dictionary = MultiValueDictionary(relations)
     multi_value_dictionary_empty = MultiValueDictionary()
@@ -176,7 +176,7 @@ def test_MultiValueDictionary_delitem():
 # Test methods
 
 
-def test_MultiValueDictionary_get_all():
+def test__MultiValueDictionary__get_all():
     relations = [('a', 'a'), ('b', 'b'), ('a', 'c')]
     multi_value_dictionary = MultiValueDictionary(relations)
     
@@ -196,7 +196,7 @@ def test_MultiValueDictionary_get_all():
     
     
     
-def test_MultiValueDictionary_get_one():
+def test__MultiValueDictionary__get_one():
     relations = [('a', 'a'), ('b', 'b'), ('a', 'c')]
     multi_value_dictionary = MultiValueDictionary(relations)
     
@@ -209,11 +209,11 @@ def test_MultiValueDictionary_get_one():
     vampytest.assert_is(multi_value_dictionary.get_one(key_2), None)
 
 
-def test_MultiValueDictionary_get():
+def test__MultiValueDictionary__get():
     vampytest.assert_is(MultiValueDictionary.get, MultiValueDictionary.get_one)
 
 
-def test_MultiValueDictionary_pop_all():
+def test__MultiValueDictionary__pop_all():
     relations = [('a', 'a'), ('b', 'b'), ('a', 'c')]
     multi_value_dictionary = MultiValueDictionary(relations)
     
@@ -231,7 +231,7 @@ def test_MultiValueDictionary_pop_all():
     vampytest.assert_is(multi_value_dictionary.pop_all(key_2, None), None)
 
 
-def test_MultiValueDictionary_pop_one():
+def test__MultiValueDictionary__pop_one():
     relations = [('a', 'a'), ('b', 'b'), ('a', 'c')]
     multi_value_dictionary = MultiValueDictionary(relations)
     
@@ -261,11 +261,11 @@ def test_MultiValueDictionary_pop_one():
     vampytest.assert_is(multi_value_dictionary.pop_one(key_4, None), None)
 
 
-def test_MultiValueDictionary_pop():
+def test__MultiValueDictionary__pop():
     vampytest.assert_is(MultiValueDictionary.pop, MultiValueDictionary.pop_one)
 
 
-def test_MultiValueDictionary_popitem():
+def test__MultiValueDictionary__popitem():
     item_1 = ('a', 'a')
     item_2 = ('b', 'b')
     item_3 = ('a', 'c')
@@ -289,7 +289,7 @@ def test_MultiValueDictionary_popitem():
     vampytest.assert_eq(sorted([popped_item_1, popped_item_2, popped_item_3]), sorted(relations))
 
 
-def test_MultiValueDictionary_setdefault():
+def test__MultiValueDictionary__setdefault():
     relations = [('a', 'a'), ('b', 'b'), ('a', 'c')]
     
     key_1 = 'd'
@@ -319,7 +319,7 @@ def test_MultiValueDictionary_setdefault():
         multi_value_dictionary.setdefault(key_3, value_3)
 
 
-def test_MultiValueDictionary_copy():
+def test__MultiValueDictionary__copy():
     relations = [('a', 'a'), ('b', 'b'), ('a', 'c')]
     
     multi_value_dictionary = MultiValueDictionary(relations)
@@ -351,7 +351,7 @@ def _build_sorted_multi_value_dictionary_items_by_keys(multi_value_dictionary):
     return items
 
 
-def test_MultiValueDictionary_items():
+def test__MultiValueDictionary__items():
     relations = [('a', 'a'), ('b', 'b'), ('a', 'c')]
     
     item_1 = ('a', 'a')
@@ -381,7 +381,7 @@ def test_MultiValueDictionary_items():
     vampytest.assert_not_in(item_4, items)
 
 
-def test_MultiValueDictionary_values():
+def test__MultiValueDictionary__values():
     relations = [('a', 'a'), ('b', 'b'), ('a', 'c')]
     
     value_1 = 'a'
@@ -406,7 +406,7 @@ def test_MultiValueDictionary_values():
 
 
 
-def test_MultiValueDictionary_keys():
+def test__MultiValueDictionary__keys():
     relations = [('a', 'a'), ('b', 'b'), ('a', 'c')]
     key_1 = 'a'
     key_2 = 'd'
@@ -432,7 +432,7 @@ def test_MultiValueDictionary_keys():
     vampytest.assert_not_in(key_2, keys)
 
 
-def test_MultiValueDictionary_kwargs():
+def test__MultiValueDictionary__kwargs():
     relations = [('a', 'a'), ('b', 'b'), ('a', 'c')]
     multi_value_dictionary = MultiValueDictionary(relations)
     
@@ -441,7 +441,7 @@ def test_MultiValueDictionary_kwargs():
     vampytest.assert_eq(expected_kwargs, multi_value_dictionary.kwargs())
 
 
-def test_MultiValueDictionary_extend():
+def test__MultiValueDictionary__extend():
     relations_1 = [('a', 'a'), ('b', 'b'), ('a', 'c')]
     relations_2 = [('a', 'e'), ('c', 'c'), ('c', 'k')]
     

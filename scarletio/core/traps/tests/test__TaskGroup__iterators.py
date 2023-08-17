@@ -118,7 +118,7 @@ async def test__TaskGroup__exhaust__0():
     
     # After `future_0`'s result is set ensure that `future_1`'s result is set too.
     # # This will make `future_0` done always first and `future_1` will follow it.
-    future_0.add_done_callback(lambda f: loop.call_later(0.0, future_1.set_result, 1))
+    future_0.add_done_callback(lambda f: loop.call_after(0.0, future_1.set_result, 1))
     future_0.set_result(0)
     
     vampytest.assert_eq(await _list_construction_async(task_group.exhaust()), [future_0, future_1])

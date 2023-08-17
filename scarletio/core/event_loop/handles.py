@@ -178,7 +178,7 @@ class Handle:
 class TimerHandle(Handle):
     """
     Object returned by a callback registration method:
-    - ``EventThread.call_later``
+    - ``EventThread.call_after``
     - ``EventThread.call_at``.
     
     Attributes
@@ -303,7 +303,7 @@ class TimerHandle(Handle):
 class TimerWeakHandle(TimerHandle):
     """
     Object returned by a callback registration method:
-    - ``EventThread.call_later_weak``
+    - ``EventThread.call_after_weak``
     - ``EventThread.call_at_weak``.
     
     Used when the respective `func`, might be garbage collected before it callback would run.

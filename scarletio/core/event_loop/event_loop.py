@@ -1,8 +1,9 @@
 __all__ = ('EventThread', )
 
-import errno, os, subprocess, sys, warnings
+import errno, os, subprocess, sys
 import socket as module_socket
 from collections import deque
+from datetime import datetime as DateTime
 from functools import partial as partial_func
 from heapq import heappop, heappush
 from itertools import chain
@@ -10,6 +11,7 @@ from selectors import DefaultSelector, EVENT_READ, EVENT_WRITE
 from ssl import SSLContext, create_default_context
 from stat import S_ISSOCK
 from threading import Thread, current_thread
+from warnings import warn
 
 from ...utils import IS_UNIX, Reference, WeakSet, alchemy_incendiary, copy_docs, export, include, is_coroutine
 
@@ -20,7 +22,7 @@ from ..protocols_and_transports import (
 )
 from ..subprocess import AsyncProcess
 from ..time import LOOP_TIME, LOOP_TIME_RESOLUTION
-from ..traps import Future, FutureAsyncWrapper, Task, TaskGroup
+from ..traps import Future, FutureWrapperAsync, Task, TaskGroup
 
 from .cycler import Cycler
 from .event_loop_functionality_helpers import (
@@ -32,9 +34,11 @@ from .executor import Executor
 from .handles import Handle, TimerHandle, TimerWeakHandle
 from .server import Server
 
-
 write_exception_async = include('write_exception_async')
 write_exception_maybe_async = include('write_exception_maybe_async')
+
+
+CALL_LATER_DEPRECATED = DateTime.utcnow() > DateTime(2024, 1, 1)
 
 
 @export
@@ -98,29 +102,14 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         'started',
     )
     
-    def __init__(self, keep_executor_count = ...):
+    def __init__(self):
         """
         Creates a new ``EventThread`` with the given parameters.
-        
-        Parameters
-        ----------
-        keep_executor_count : `int` = `1`, Optional
-            The minimal amount of executors, what the event thread should keep alive.
         
         Notes
         -----
         This magic method is called by ``EventThreadType.__call__``, what does the other steps of the initialization.
         """
-        if keep_executor_count is not ...:
-            warnings.warn(
-                (
-                    f'`{self.__class__.__name__}`\'s `keep_executor_count` parameter is deprecated and will be removed '
-                    f'in 2023 January. The kept executor count is now auto-calculated.'
-                ),
-                FutureWarning,
-                stacklevel = 2,
-            )
-        
         Executor.__init__(self)
         self.should_run = True
         self.running = False
@@ -213,34 +202,55 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
     
     def __repr__(self):
         """Returns the event thread's representation."""
-        repr_parts = ['<', self.__class__.__name__, '(', self._name]
+        repr_parts = ['<', self.__class__.__name__, ' ', self._name]
         self.is_alive() # easy way to get ._is_stopped set when appropriate
+        
         if not self.started:
             state = ' created'
         elif self._is_stopped or (not self.running):
             state = ' stopped'
         else:
             state = ' started'
+        repr_parts.append(', state = ')
         repr_parts.append(state)
         
-        if self._daemonic:
-            repr_parts.append(' daemon')
+        daemon = self._daemonic
+        if daemon:
+            repr_parts.append(', daemon = ')
+            repr_parts.append(repr(daemon))
         
         ident = self._ident
         if (ident is not None):
-            repr_parts.append(' ident = ')
+            repr_parts.append(', ident = ')
             repr_parts.append(str(ident))
         
         repr_parts.append(' executor info: free = ')
         repr_parts.append(str(self.get_free_executor_count()))
         repr_parts.append(', used = ')
         repr_parts.append(str(self.get_used_executor_count()))
-        repr_parts.append(')>')
-
+        
+        repr_parts.append(' >')
         return ''.join(repr_parts)
     
     
     def call_later(self, delay, callback, *args):
+        """
+        Deprecated and will be removed in 2024 August. Please use ``.call_after`` instead.
+        """
+        if CALL_LATER_DEPRECATED:
+            warn(
+                (
+                    f'`{self.__class__.__name__}.call_later` is deprecated and will be removed in 2024 August. '
+                    f'Please use `.call_after` instead.'
+                ),
+                FutureWarning,
+                stacklevel = 2,
+            )
+        
+        return self.call_after(delay, callback, *args)
+    
+    
+    def call_after(self, delay, callback, *args):
         """
         Schedule callback to be called after the given delay.
         
@@ -295,6 +305,23 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
     
     
     def call_later_weak(self, delay, callback, *args):
+        """
+        Deprecated and will be removed in 2024 August. Please use ``.call_after_weak`` instead.
+        """
+        if CALL_LATER_DEPRECATED:
+            warn(
+                (
+                    f'`{self.__class__.__name__}.call_later_weak` is deprecated and will be removed in 2024 August. '
+                    f'Please use `.call_after_weak` instead.'
+                ),
+                FutureWarning,
+                stacklevel = 2,
+            )
+        
+        return self.call_after_weak(delay, callback, *args)
+    
+    
+    def call_after_weak(self, delay, callback, *args):
         """
         Schedule callback with weakreferencing it to be called after the given delay.
         
@@ -568,7 +595,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             - If `coroutine_or_future` is given as `CoroutineType`, `GeneratorType`, returns a ``Task``.
             - If `coroutine_or_future` is given as ``Future``, bound to the current event loop, returns it.
             - If `coroutine_or_future`is given as ``Future``, bound to an other event loop, returns a
-                ``FutureAsyncWrapper``.
+                ``FutureWrapperAsync``.
             - If `coroutine_or_future` defines an `__await__` method, then returns a ``Task``.
         
         Raises
@@ -581,7 +608,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         
         if isinstance(coroutine_or_future, Future):
             if coroutine_or_future._loop is not self:
-                coroutine_or_future = FutureAsyncWrapper(coroutine_or_future, self)
+                coroutine_or_future = FutureWrapperAsync(coroutine_or_future, self)
             return coroutine_or_future
         
         type_ = type(coroutine_or_future)
@@ -612,7 +639,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             - If `coroutine_or_future` is given as `CoroutineType`, `GeneratorType`, returns a ``Task``.
             - If `coroutine_or_future` is given as ``Future``, bound to the current event loop, returns it.
             - If `coroutine_or_future`is given as ``Future``, bound to an other event loop, returns a
-                ``FutureAsyncWrapper``.
+                ``FutureWrapperAsync``.
             - If `coroutine_or_future` defines an `__await__` method, then returns a ``Task``.
         
         Raises
@@ -627,7 +654,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         
         if isinstance(coroutine_or_future, Future):
             if coroutine_or_future._loop is not self:
-                coroutine_or_future = FutureAsyncWrapper(coroutine_or_future, self)
+                coroutine_or_future = FutureWrapperAsync(coroutine_or_future, self)
             return coroutine_or_future
         
         type_ = type(coroutine_or_future)
@@ -745,83 +772,6 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             raise RuntimeError(f'`{self.__class__.__name__}.run` should not be called from itself.')
         
         return self.ensure_future_thread_safe(awaitable).sync_wrap().wait(timeout, True)
-    
-    
-    def render_exception_async(self, exception, before = None, after = None, file = None):
-        """
-        Renders the given exception's traceback in a non blocking way.
-        
-        Deprecated and will be removed in 2023.
-        
-        Parameters
-        ----------
-        exception : ``BaseException``
-            The exception to render.
-        
-        before : `None`, `str`, `list` of `str` = `None`, Optional
-            Any content, what should go before the exception's traceback.
-            
-            If given as `str`, or if `list`, then the last element of it should end with linebreak.
-        
-        after : `None`, `str`, `list` of `str` = `None`, Optional
-            Any content, what should go after the exception's traceback.
-            
-            If given as `str`, or if `list`, then the last element of it should end with linebreak.
-
-        file : `None`, `I/O stream` = `None`, Optional
-            The file to print the stack to. Defaults to `sys.stderr`.
-        
-        Returns
-        -------
-        future : ``Future``
-            Returns a future, what can be awaited to wait for the rendering to be done.
-        """
-        warnings.warn(
-            (
-                f'`{self.__class__.__name__}.render_exception_async` is deprecated and will be removed in 2023. '
-                f'Please use `.write_exception_async` instead.'
-            ),
-            FutureWarning,
-        )
-        
-        return write_exception_async(exception, before, after, file, loop = self)
-    
-    
-    @classmethod
-    def render_exception_maybe_async(cls, exception, before = None, after = None, file = None):
-        """
-        Renders the given exception's traceback. If called from an ``EventThread``, then will not block it.
-        
-        This method is called from function or methods, where being on an ``EventThread`` is not guaranteed.
-        
-        Deprecated and will be removed in 2023.
-        
-        Parameters
-        ----------
-        exception : ``BaseException``
-            The exception to render.
-        before : `None`, `str`, `list` of `str` = `None`, Optional
-            Any content, what should go before the exception's traceback.
-            
-            If given as `str`, or if `list`, then the last element of it should end with linebreak.
-        
-        after : `None`, `str`, `list` of `str` = `None`, Optional
-            Any content, what should go after the exception's traceback.
-            
-            If given as `str`, or if `list`, then the last element of it should end with linebreak.
-
-        file : `None`, `I/O stream` = `None`, Optional
-            The file to print the stack to. Defaults to `sys.stderr`.
-        """
-        warnings.warn(
-            (
-                f'`{cls.__name__}.render_exception_maybe_async` is deprecated and will be removed in 2023. '
-                f'Please use `.write_exception_async` instead.'
-            ),
-            FutureWarning,
-        )
-        
-        return write_exception_maybe_async(exception, before, after, file)
     
     
     def stop(self):
@@ -1089,15 +1039,16 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             except (BlockingIOError, InterruptedError, ConnectionAbortedError):
                 # Early exit because the socket accept buffer is empty.
                 return None
+            
             except OSError as err:
                 # There's nowhere to send the error, so just log it.
                 if err.errno not in (errno.EMFILE, errno.ENFILE, errno.ENOBUFS, errno.ENOMEM):
                     raise # The event loop will catch and log it.
-                    
+                
                 # Some platforms (e.g. Linux keep reporting the FD as ready, so we remove the read handler
                 # temporarily. We'll try again in a while.
                 self.remove_reader(socket.fileno())
-                self.call_later(1., self._start_serving, protocol_factory, socket, ssl, server, backlog)
+                self.call_after(1.0, self._start_serving, protocol_factory, socket, ssl, server, backlog)
                 
                 write_exception_async(
                     err,

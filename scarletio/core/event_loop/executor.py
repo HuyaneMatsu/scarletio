@@ -838,25 +838,10 @@ class Executor:
         'free_executors', 'running_executors'
     )
     
-    def __init__(self, keep_executor_count=...):
+    def __init__(self):
         """
         Initializes the executor.
-        
-        Parameters
-        ----------
-        keep_executor_count : `int` = `1`, Optional
-            The minimal amount of executors to keep alive (or not close).
         """
-        if keep_executor_count is not ...:
-            warnings.warn(
-                (
-                    f'`{self.__class__.__name__}`\'s `keep_executor_count` parameter is deprecated and will be removed '
-                    f'in 2023 January. The kept executor count is now auto-calculated.'
-                ),
-                FutureWarning,
-                stacklevel = 2,
-            )
-        
         self._kept_executor_count = 0
         self._kept_executor_last_schedule = 0.0
         self._kept_executor_release_handle = None
@@ -865,31 +850,9 @@ class Executor:
         self.running_executors = set()
         
     
-    
     def __repr__(self):
         """Returns the executor's representation."""
         return f'<{self.__class__.__name__} free = {self.get_free_executor_count()}, used = {self.get_used_executor_count()}>'
-    
-    
-    @property
-    def used_executor_count(self):
-        """
-        Returns how much executor threads of the executors are currently under use.
-        
-        Returns
-        -------
-        executor_count : `int`
-        """
-        warnings.warn(
-            (
-                f'`{self.__class__.__name__}.used_executor_count` parameter is deprecated and will be removed in '
-                f'2023 January. Please use `.get_used_executor_count()` instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        
-        return self.get_used_executor_count()
     
     
     def get_used_executor_count(self):
@@ -901,27 +864,6 @@ class Executor:
         executor_count : `int`
         """
         return len(self.running_executors) + len(self.claimed_executors)
-    
-    
-    @property
-    def free_executor_count(self):
-        """
-        Returns how much executor threads of the executors are currently under use.
-        
-        Returns
-        -------
-        executor_count : `int`
-        """
-        warnings.warn(
-            (
-                f'`{self.__class__.__name__}.free_executor_count` parameter is deprecated and will be removed in '
-                f'2023 January. Please use `.get_free_executor_count()` instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        
-        return self.get_free_executor_count()
     
     
     def get_free_executor_count(self):

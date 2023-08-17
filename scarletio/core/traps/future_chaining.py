@@ -1,8 +1,6 @@
 __all__ = ('shield',)
 
-from ...utils import set_docs
-
-from .future import FUTURE_STATE_FINISHED, FUTURE_STATE_PENDING, FUTURE_STATE_RETRIEVED, Future
+from .future import Future
 
 
 class _FutureChainer:
@@ -27,61 +25,7 @@ class _FutureChainer:
         """
         self.target = target
     
-    if __debug__:
-        def __call__(self, future):
-            # remove chain remover
-            target = self.target
-            callbacks = target._callbacks
-            for index in range(len(callbacks)):
-                callback = callbacks[index]
-                if (type(callback) is _ChainRemover) and (callback.target is future):
-                    del callbacks[index]
-                    break
-            
-            # set result
-            state = future._state
-            if state == FUTURE_STATE_FINISHED:
-                future._state = FUTURE_STATE_RETRIEVED
-                if future._exception is None:
-                    target.set_result(future._result)
-                else:
-                    target.set_exception(future._exception)
-                return
-            
-            if state == FUTURE_STATE_RETRIEVED:
-                if future._exception is None:
-                    target.set_result(future._result)
-                else:
-                    target.set_exception(future._exception)
-                return
-            
-            # if state == FUTURE_STATE_CANCELLED: normally, but the future can be cleared as well.
-            target.cancel()
-    
-    else:
-        def __call__(self, future):
-            # remove chain remover
-            target = self.target
-            callbacks = target._callbacks
-            for index in range(len(callbacks)):
-                callback = callbacks[index]
-                if type(callback) is _ChainRemover and callback.target is future:
-                    del callbacks[index]
-                    break
-            
-            # set result
-            if future._state == FUTURE_STATE_FINISHED:
-                exception = future._exception
-                if exception is None:
-                    target.set_result(future._result)
-                else:
-                    target.set_exception(exception)
-                return
-            
-            # if state == FUTURE_STATE_CANCELLED: normally, but the future can be cleared as well.
-            target.cancel()
-    
-    set_docs(__call__,
+    def __call__(self, future):
         """
         Chains the source future's result into the target one.
         
@@ -90,7 +34,22 @@ class _FutureChainer:
         future : ``Future``
             The source future to chain it's result from.
         """
-    )
+        # remove chain remover
+        target = self.target
+        callbacks = target._callbacks
+        for index in range(len(callbacks)):
+            callback = callbacks[index]
+            if (type(callback) is _ChainRemover) and (callback.target is future):
+                del callbacks[index]
+                break
+        
+        # set result
+        if target.is_pending():
+            target._state |= future._state
+            target._result = future._result
+            
+            target._loop._schedule_callbacks(target)
+
 
 class _ChainRemover:
     """
@@ -113,9 +72,8 @@ class _ChainRemover:
             callback = callbacks[index]
             if (type(callback) is _FutureChainer) and (callback.target is future):
                 del callbacks[index]
-                if __debug__:
-                    # because this might be the only place, where we retrieve the result, we will just silence it.
-                    future.__silence__()
+                # because this might be the only place, where we retrieve the result, we will just silence it.
+                future.silence()
                 break
 
 
@@ -142,7 +100,7 @@ def shield(awaitable, loop):
         The given `awaitable` is not `awaitable`.
     """
     protected = loop.ensure_future(awaitable)
-    if protected._state != FUTURE_STATE_PENDING:
+    if protected.is_done():
         return protected # already done, we can return
     
     un_protected = Future(loop)

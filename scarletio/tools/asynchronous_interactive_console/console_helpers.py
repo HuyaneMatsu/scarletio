@@ -1,4 +1,4 @@
-__all__ = ('collect_package_local_variables', 'collect_module_variables', 'create_banner', 'create_exit_message')
+__all__ = ('collect_module_variables', 'create_banner', 'create_exit_message')
 
 
 import sys, warnings
@@ -175,19 +175,3 @@ def collect_module_variables(module):
             interactive_console_locals[variable_name] = getattr(module, variable_name)
         
     return interactive_console_locals
-
-
-def collect_package_local_variables(package):
-    """
-    Deprecated and will be removed in 2023 Marc. Please use ``collect_module_variables`` instead.
-    """
-    warnings.warn(
-        (
-            f'`collect_package_local_variables` is deprecated and will be removed in 2023 Marc. '
-            f'Please use `collect_module_variables` instead.'
-        ),
-        FutureWarning,
-        stacklevel = 2,
-    )
-    
-    return collect_module_variables(package)

@@ -1,79 +1,32 @@
 __all__ = ('Future',)
 
-import reprlib, sys, warnings
+import sys
+from datetime import datetime as DateTime
 from types import MethodType
+from warnings import warn
 
-from ...utils import export, ignore_frame, include, set_docs, to_coroutine
-from ...utils.trace import format_callback
+from ...utils import ignore_frame, include, to_coroutine
 
 from ..exceptions import CancelledError, InvalidStateError
 
-from .handle_cancellers import _HandleCancellerBase
+from .future_repr import render_callbacks_into, render_result_into, render_state_into
+from .future_states import (
+    FUTURE_STATE_CANCELLED, FUTURE_STATE_CANCELLING_SELF, FUTURE_STATE_MASK_DONE, FUTURE_STATE_MASK_SILENCED,
+    FUTURE_STATE_RESULT_RAISE, FUTURE_STATE_RESULT_RAISE_RETRIEVED, FUTURE_STATE_RESULT_RETURN, FUTURE_STATE_SILENCED
+)
 
 
-FutureSyncWrapper = include('FutureSyncWrapper')
-FutureAsyncWrapper = include('FutureAsyncWrapper')
+FutureWrapperSync = include('FutureWrapperSync')
+FutureWrapperAsync = include('FutureWrapperAsync')
 write_exception_async = include('write_exception_async')
 write_exception_maybe_async = include('write_exception_maybe_async')
 
-ignore_frame(__spec__.origin, 'get_result', 'raise exception',)
+ignore_frame(__spec__.origin, 'get_result', 'raise self._result')
 ignore_frame(__spec__.origin, '__iter__', 'yield self',)
 ignore_frame(__spec__.origin, '__iter__', 'return self.get_result()',)
 
 
-FUTURE_STATE_PENDING = 0
-FUTURE_STATE_CANCELLED = 1
-FUTURE_STATE_FINISHED = 2
-FUTURE_STATE_RETRIEVED = 3
-
-FUTURE_STATE_TO_NAME = {
-    FUTURE_STATE_PENDING: 'pending',
-    FUTURE_STATE_CANCELLED: 'cancelled',
-    FUTURE_STATE_FINISHED: 'finished',
-    FUTURE_STATE_RETRIEVED: 'retrieved'
-}
-
-
-@export
-def get_future_state_name(state):
-    """
-    Returns the given future's state's name.
-    
-    Parameters
-    ----------
-    state : `int`
-        The future's name.
-    
-    Returns
-    -------
-    state_name : `str`
-    """
-    try:
-        state_name = FUTURE_STATE_TO_NAME[state]
-    except KeyError:
-        state_name = f'unknown[{state}]'
-    
-    return state_name
-
-
-def get_exception_short_representation(exception):
-    """
-    Gets the exception's representation. If it is too long builds a shorter one instead.
-    
-    Parameters
-    ----------
-    exception : ``BaseException``
-        The exception to get representation of.
-    
-    Returns
-    -------
-    exception_representation : `str`
-    """
-    exception_representation = repr(exception)
-    if (len(exception_representation) > 80) or ('\n' in exception_representation):
-        exception_representation = f'<{exception.__class__.__name__} ...>'
-    
-    return exception_representation
+SILENCE_DEPRECATED =  DateTime.utcnow() > DateTime(2023, 11, 12)
 
 
 def _set_timeout_if_pending(future):
@@ -85,7 +38,7 @@ def _set_timeout_if_pending(future):
     future : ``Future``
         The future to set timeout to.
     """
-    future.set_exception_if_pending(TimeoutError())
+    future.cancel_with(TimeoutError)
 
 
 def _cancel_handle_callback(handle, future):
@@ -113,6 +66,7 @@ class Future:
     ----------
     _blocking : `bool`
         Whether the future is already being awaited, so it blocks the respective coroutine.
+    
     _callbacks : `list` of `callable`
         The callbacks of the future, which are queued up on the respective event loop to be called, when the future is
         finished. These callback should accept `1` parameter, the future itself.
@@ -120,35 +74,17 @@ class Future:
         Note, if the future is already done, then the newly added callbacks are queued up instantly on the respective
         event loop to be called.
     
-    _exception : `None`, `BaseException`
-        The exception set to the future as it's result. Defaults to `None`.
     _loop : ``EventThread``
         The loop to what the created future is bound.
+    
     _result : `None`, `object`
         The result of the future. Defaults to `None`.
-    _state : `int`
-        The state of the future.
-        
-        Can be set as one of the following:
-        
-        +---------------------------+-----------+
-        | Respective name           | Value     |
-        +===========================+===========+
-        | FUTURE_STATE_PENDING      | `0`       |
-        +---------------------------+-----------+
-        | FUTURE_STATE_CANCELLED    | `1`       |
-        +---------------------------+-----------+
-        | FUTURE_STATE_FINISHED     | `2`       |
-        +---------------------------+-----------+
-        | FUTURE_STATE_RETRIEVED    | `3`       |
-        +---------------------------+-----------+
-        
-        Note, that states are checked by memory address and not by equality. Also `RETRIEVED` is used only if
-        `__debug__` is set as `True`.
-    """
-    __slots__ = ('_blocking', '_callbacks', '_exception', '_loop', '_result', '_state')
     
-    # If parameters are not passed will not call `__del__`
+    _state : `int`
+        The state of the future stored as a bitwise flags.
+    """
+    __slots__ = ('_blocking', '_callbacks', '_loop', '_result', '_state')
+    
     def __new__(cls, loop):
         """
         Creates a new ``Future`` object bound to the given `loop`.
@@ -159,97 +95,119 @@ class Future:
             The loop to what the created future will be bound to.
         """
         self = object.__new__(cls)
-        self._loop = loop
-        self._state = FUTURE_STATE_PENDING
-
-        self._result = None
-        self._exception = None
-        
-        self._callbacks = []
         self._blocking = False
-
+        self._callbacks = []
+        self._loop = loop
+        self._result = None
+        self._state = 0
         return self
     
     
     def __repr__(self):
         """Returns the future's representation."""
-        repr_parts = ['<', self.__class__.__name__, ' ']
+        repr_parts = ['<', self.__class__.__name__]
         
         state = self._state
-        repr_parts.append(get_future_state_name(state))
-        
-        if state >= FUTURE_STATE_FINISHED:
-            exception = self._exception
-            if exception is None:
-                result = self._result
-                if (result is not None):
-                    repr_parts.append(', result = ')
-                    repr_parts.append(reprlib.repr(result))
-            else:
-                repr_parts.append(', exception = ')
-                repr_parts.append(get_exception_short_representation(exception))
-        
-        callbacks = self._callbacks
-        limit = len(callbacks)
-        if limit:
-            repr_parts.append(', callbacks = [')
-            index = 0
-            while True:
-                callback = callbacks[index]
-                repr_parts.append(format_callback(callback))
-                index += 1
-                if index == limit:
-                    break
-                
-                repr_parts.append(', ')
-                continue
-            
-            repr_parts.append(']')
+        repr_parts, field_added = render_state_into(repr_parts, False, state)
+        repr_parts, field_added = render_result_into(repr_parts, field_added, state, self._result)
+        repr_parts, field_added = render_callbacks_into(repr_parts, field_added, self._callbacks)
         
         repr_parts.append('>')
-        
         return ''.join(repr_parts)
     
     
-    if __debug__:
-        def cancel(self):
-            state = self._state
-            
-            if state != FUTURE_STATE_PENDING:
-                # If the future is cancelled, we should not show up not retrieved message at `.__del__`
-                if state == FUTURE_STATE_FINISHED:
-                    self._state = FUTURE_STATE_RETRIEVED
-                
-                return 0
-            
-            self._state = FUTURE_STATE_CANCELLED
-            self._loop._schedule_callbacks(self)
-            return 1
-    else:
-        def cancel(self):
-            if self._state != FUTURE_STATE_PENDING:
-                return 0
-            
-            self._state = FUTURE_STATE_CANCELLED
-            self._loop._schedule_callbacks(self)
-            return 1
-    
-    set_docs(
-        cancel,
+    def cancel(self):
         """
         Cancels the future if it is pending.
         
         Returns
         -------
-        cancelled : `int` (`0`, `1`)
-            If the future is already done, returns `0`, if it got cancelled, returns `1`-
-        
-        Notes
-        -----
-        If `__debug__` is set as `True`, then `.cancel()` also marks the future as retrieved, causing it to not render
-        non-retrieved exceptions.
+        result : `int` (`0`, `1`)
+            If the future is already done, returns `0`, if it got cancelled, returns `1`.
         """
-    )
+        state = self._state
+        
+        if state & FUTURE_STATE_MASK_DONE:
+            state |= FUTURE_STATE_SILENCED
+            result = 0
+        else:
+            state |= FUTURE_STATE_CANCELLED
+            result = 1
+            self._loop._schedule_callbacks(self)
+        
+        self._state = state
+        return result
+    
+    
+    def cancel_with(self, exception):
+        """
+        Cancels the future with a custom exception.
+        
+        Returns
+        -------
+        result : `int` (`0`, `1`)
+            If the future is already done, returns `0`, if it got cancelled, returns `1`.
+        """
+        state = self._state
+        
+        if state & FUTURE_STATE_MASK_DONE:
+            state |= FUTURE_STATE_SILENCED
+            result = 0
+        
+        else:
+            if isinstance(exception, type):
+                exception = exception()
+            
+            if isinstance(exception, StopIteration):
+                raise TypeError(
+                    f'{exception!r} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
+                )
+            
+            state |= FUTURE_STATE_CANCELLED | FUTURE_STATE_RESULT_RAISE
+            self._result = exception
+            self._loop._schedule_callbacks(self)
+            result = 1
+        
+        self._state = state
+        return result
+        
+    
+    def silence(self):
+        """
+        Silences cleanup warnings of the future.
+        
+        When a task is cancelled these warnings are also silenced.
+        """
+        self._state |= FUTURE_STATE_SILENCED
+    
+    
+    def is_silenced(self):
+        """
+        Returns whether clean up warning are silenced of the future.
+        
+        Also returns `True` if it is in a state without possible cleanup warning.
+        
+        Returns
+        -------
+        is_silenced : `bool`
+        """
+        return True if self._state & FUTURE_STATE_MASK_SILENCED else False
+    
+    
+    def is_cancelling(self):
+        """
+        Returns whether the future is currently being cancelled.
+        
+        Returns
+        -------
+        is_cancelling : `bool`
+        """
+        state = self._state
+        # Cancelling flag might not cleared when the future is already done.
+        if state & FUTURE_STATE_MASK_DONE:
+            return False
+        
+        return True if state & FUTURE_STATE_CANCELLING_SELF else False
     
     
     def is_cancelled(self):
@@ -260,19 +218,7 @@ class Future:
         -------
         is_cancelled : `bool`
         """
-        return (self._state == FUTURE_STATE_CANCELLED)
-    
-    
-    def cancelled(self):
-        warnings.warn(
-            (
-                f'`{self.__class__.__name__}.cancelled` is deprecated and will be removed in 2023 November. '
-                f'Please use `.is_cancelled()` instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return self.is_cancelled()
+        return True if self._state & FUTURE_STATE_CANCELLED else False
     
     
     def is_done(self):
@@ -283,19 +229,7 @@ class Future:
         -------
         is_done : `bool`
         """
-        return (self._state != FUTURE_STATE_PENDING)
-    
-    
-    def done(self):
-        warnings.warn(
-            (
-                f'`{self.__class__.__name__}.done` is deprecated and will be removed in 2023 November. '
-                f'Please use `.is_done()` instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return self.is_done()
+        return True if self._state & FUTURE_STATE_MASK_DONE else False
     
         
     def is_pending(self):
@@ -306,62 +240,10 @@ class Future:
         -------
         pending : `bool`
         """
-        return (self._state == FUTURE_STATE_PENDING)
+        return False if self._state & FUTURE_STATE_MASK_DONE else True
     
     
-    def pending(self):
-        warnings.warn(
-            (
-                f'`{self.__class__.__name__}.pending` is deprecated and will be removed in 2023 November. '
-                f'Please use `.is_pending()` instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return self.is_pending()
-    
-    
-    if __debug__:
-        def get_result(self):
-            state = self._state
-            
-            if state == FUTURE_STATE_FINISHED:
-                self._state = FUTURE_STATE_RETRIEVED
-                exception = self._exception
-                if exception is None:
-                    return self._result
-                raise exception
-            
-            if state == FUTURE_STATE_RETRIEVED:
-                exception = self._exception
-                if exception is None:
-                    return self._result
-                raise exception
-            
-            if state == FUTURE_STATE_CANCELLED:
-                raise CancelledError
-            
-            # still pending
-            raise InvalidStateError(self, 'result')
-    else:
-        def get_result(self):
-            state = self._state
-            
-            if state == FUTURE_STATE_FINISHED:
-                exception = self._exception
-                if exception is None:
-                    return self._result
-                raise exception
-            
-            if state == FUTURE_STATE_CANCELLED:
-                raise CancelledError
-            
-            # still pending
-            raise InvalidStateError(self, 'result')
-    
-    
-    set_docs(
-        get_result,
+    def get_result(self):
         """
         Returns the result of the future.
         
@@ -373,7 +255,7 @@ class Future:
         If the future has result set with `.set_result`, `.set_result_if_pending` successfully, then returns the
         given object.
         
-        If the future is not done yet, raises ``InvalidStateError``.
+        If the future is not done yet, or is destroyed, raises ``InvalidStateError``.
         
         Returns
         -------
@@ -390,52 +272,23 @@ class Future:
         BaseException
             The future's set exception.
         """
-    )
-    
-    @property
-    def result(self):
-        warnings.warn(
-            (
-                f'`{self.__class__.__name__}.result` is deprecated and will be removed in 2023 November. '
-                f'Use `.get_result()` instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return self.get_result
-    
-    
-    if __debug__:
-        def get_exception(self):
-            state = self._state
-            if state == FUTURE_STATE_FINISHED:
-                self._state = FUTURE_STATE_RETRIEVED
-                return self._exception
-            
-            if state == FUTURE_STATE_RETRIEVED:
-                return self._exception
-            
-            if state == FUTURE_STATE_CANCELLED:
-                raise CancelledError
-            
-            # still pending
-            raise InvalidStateError(self, 'exception')
+        state = self._state
         
-    else:
-        def get_exception(self):
-            state = self._state
-            
-            if state == FUTURE_STATE_FINISHED:
-                return self._exception
-            
-            if state == FUTURE_STATE_CANCELLED:
-                raise CancelledError
-            
-            # still pending
-            raise InvalidStateError(self, 'exception')
+        if state & FUTURE_STATE_RESULT_RETURN:
+            return self._result
+        
+        if state & FUTURE_STATE_RESULT_RAISE:
+            self._state = state | FUTURE_STATE_RESULT_RAISE_RETRIEVED
+            raise self._result
+        
+        if state & FUTURE_STATE_CANCELLED:
+            raise CancelledError
+        
+        # still pending or destroyed
+        raise InvalidStateError(self, 'get_result')
     
-    set_docs(
-        get_exception,
+    
+    def get_exception(self):
         """
         Returns the future's exception.
         
@@ -443,7 +296,7 @@ class Future:
         
         If the future is cancelled, raises ``CancelledError``.
         
-        If the future is not done yet, raises ``InvalidStateError``.
+        If the future is not done yet, or is destroyed, raises ``InvalidStateError``.
         
         Returns
         -------
@@ -456,20 +309,20 @@ class Future:
         InvalidStateError
             The futures is not done yet.
         """
-    )
-    
-    
-    @property
-    def exception(self):
-        warnings.warn(
-            (
-                f'`{self.__class__.__name__}.exception` is deprecated and will be removed in 2023 November. '
-                f'Use `.get_exception()` instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return self.get_exception
+        state = self._state
+        
+        if state & FUTURE_STATE_RESULT_RETURN:
+            return None
+        
+        if state & FUTURE_STATE_RESULT_RAISE:
+            self._state = state | FUTURE_STATE_RESULT_RAISE_RETRIEVED
+            return self._result
+        
+        if state & FUTURE_STATE_CANCELLED:
+            raise CancelledError
+        
+        # still pending
+        raise InvalidStateError(self, 'get_exception')
     
     
     def add_done_callback(self, func):
@@ -487,10 +340,10 @@ class Future:
         If the future is already done, then the newly added callbacks are queued up instantly on the respective
         event loop to be called.
         """
-        if self._state == FUTURE_STATE_PENDING:
-            self._callbacks.append(func)
-        else:
+        if self._state & FUTURE_STATE_MASK_DONE:
             self._loop.call_soon(func, self)
+        else:
+            self._callbacks.append(func)
     
     
     def remove_done_callback(self, func):
@@ -533,11 +386,12 @@ class Future:
         InvalidStateError
             If the future is already done.
         """
-        if self._state != FUTURE_STATE_PENDING:
+        state = self._state
+        if state & FUTURE_STATE_MASK_DONE:
             raise InvalidStateError(self, 'set_result')
             
         self._result = result
-        self._state = FUTURE_STATE_FINISHED
+        self._state = state | FUTURE_STATE_RESULT_RETURN
         self._loop._schedule_callbacks(self)
     
     
@@ -556,11 +410,12 @@ class Future:
         set_result : `int` (`0`, `1`)
             If the future is already done, returns `0`, else `1`.
         """
-        if self._state != FUTURE_STATE_PENDING:
+        state = self._state
+        if state & FUTURE_STATE_MASK_DONE:
             return 0
         
         self._result = result
-        self._state = FUTURE_STATE_FINISHED
+        self._state = state | FUTURE_STATE_RESULT_RETURN
         self._loop._schedule_callbacks(self)
         return 1
     
@@ -581,7 +436,8 @@ class Future:
         TypeError
             If `StopIteration` is given as `exception`.
         """
-        if self._state != FUTURE_STATE_PENDING:
+        state = self._state
+        if state & FUTURE_STATE_MASK_DONE:
             raise InvalidStateError(self, 'set_exception')
         
         if isinstance(exception, type):
@@ -589,11 +445,11 @@ class Future:
         
         if isinstance(exception, StopIteration):
             raise TypeError(
-                f'{exception} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
+                f'{exception!r} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
             )
         
-        self._exception = exception
-        self._state = FUTURE_STATE_FINISHED
+        self._result = exception
+        self._state = state | FUTURE_STATE_RESULT_RAISE
         self._loop._schedule_callbacks(self)
     
     
@@ -617,7 +473,8 @@ class Future:
         TypeError
             If `StopIteration` is given as `exception`.
         """
-        if self._state != FUTURE_STATE_PENDING:
+        state = self._state
+        if state & FUTURE_STATE_MASK_DONE:
             return 0
         
         if isinstance(exception, type):
@@ -625,11 +482,11 @@ class Future:
         
         if isinstance(exception, StopIteration):
             raise TypeError(
-                f'{exception} cannot be raised to a(n) {self.__class__.__name__}; {self!r}.'
+                f'{exception!r} cannot be raised to a(n) {self.__class__.__name__}; {self!r}.'
             )
         
-        self._exception = exception
-        self._state = FUTURE_STATE_FINISHED
+        self._result = exception
+        self._state = state | FUTURE_STATE_RESULT_RAISE
         self._loop._schedule_callbacks(self)
         return 1
     
@@ -640,7 +497,7 @@ class Future:
         
         This method is a generator. Should be used with `await` expression.
         """
-        if self._state == FUTURE_STATE_PENDING:
+        if not (self._state & FUTURE_STATE_MASK_DONE):
             self._blocking = True
             yield self
         
@@ -660,108 +517,43 @@ class Future:
         -----
         This method do not protects the future from task cancellation, or from timeout context managers.
         """
-        if self._state == FUTURE_STATE_PENDING:
+        if not (self._state & FUTURE_STATE_MASK_DONE):
             self._blocking = True
             yield self
     
     
-    if __debug__:
-        def __del__(self):
-            """
-            If the future is pending, but it's result was not set, meanwhile anything awaits at it, notifies it.
-            
-            Also notifies if the future's result was set with ``.set_exception``, or with
-            ``.set_exception_if_pending``, and it was not retrieved.
-            
-            Notes
-            -----
-            This method is present only if `__debug__` is set as `True`.
-            """
-            if not self._loop.running:
-                return
-            
-            state = self._state
-            if state == FUTURE_STATE_PENDING:
-                if self._callbacks:
-                    
-                    # ignore being silenced
-                    silence_callback = type(self).__silence_callback__
-                    for callback in self._callbacks:
-                        if callback is silence_callback:
-                            return
-                    
-                    sys.stderr.write(
-                        f'{self.__class__.__name__} is not finished, but still pending: {self!r}\n',
-                    )
-                    sys.stderr.flush()
-                return
-            
-            if state == FUTURE_STATE_FINISHED:
-                if (self._exception is not None):
-                    write_exception_maybe_async(
-                        self._exception,
-                        f'{self.__class__.__name__} exception was never retrieved: {self!r}\n',
-                    )
-                return
-            
-            # no more notify case
+    def __del__(self):
+        """
+        If the future is pending, but it's result was not set, meanwhile anything awaits at it, notifies it.
         
-        def __silence__(self):
-            """
-            Silences the future's `__del__`, so it will not notify if it would.
-            
-            Notes
-            -----
-            This method is present only if `__debug__` is set as `True`.
-            """
-            state = self._state
-            if state == FUTURE_STATE_PENDING:
-                self._callbacks.append(type(self).__silence_callback__)
-                return
-            
-            if state == FUTURE_STATE_FINISHED:
-                self._state = FUTURE_STATE_RETRIEVED
+        Also notifies if the future's result was set with ``.set_exception``, or with
+        ``.set_exception_if_pending``, and it was not retrieved.
+        """
+        if not self._loop.running:
+            return
         
-        def __silence_callback__(self):
-            """
-            Callback added to the future, when ``.__silence__`` is called, when the future is still pending.
-            
-            Notes
-            -----
-            This method is present only if `__debug__` is set as `True`.
-            """
-            if self._state == FUTURE_STATE_FINISHED:
-                self._state = FUTURE_STATE_RETRIEVED
-    
-    
-    def cancel_handles(self):
-        """
-        Cancels the handles (``_HandleCancellerBase``) added as callbacks to the future.
-        """
-        callbacks = self._callbacks
-        if callbacks:
-            for index in reversed(range(len(callbacks))):
-                callback = callbacks[index]
-                if isinstance(callback, _HandleCancellerBase):
-                    del callbacks[index]
-                    callback.cancel()
-    
-    
-    def clear(self):
-        """
-        Clears the future, making it reusable.
-        """
-        warnings.warn(
-            f'`{self.__class__.__name__}.clear` is deprecated and will be removed at 2023 July.',
-            FutureWarning,
-            stacklevel = 2,
-        )
+        state = self._state
+        # Do not notify if we have any silenced state
+        if state & FUTURE_STATE_MASK_SILENCED:
+            return
         
-        self._state = FUTURE_STATE_PENDING
-        self._exception = None
-        self._result = None
-        self.cancel_handles()
-        self._blocking = False
+        # If we are not done, btu have callbacks, we want to notify
+        if not (state & FUTURE_STATE_MASK_DONE):
+            if self._callbacks:
+                sys.stderr.write(
+                    f'{self.__class__.__name__} is not finished, but still pending: {self!r}\n',
+                )
+                sys.stderr.flush()
+            
+            return
+        
+        # Notify un-retrieved exceptions
+        if state & FUTURE_STATE_RESULT_RAISE:
+            write_exception_maybe_async(
+                self._result,
+                f'{self.__class__.__name__} exception was never retrieved: {self!r}\n',
+            )
+            return
     
     
     def sync_wrap(self):
@@ -770,10 +562,10 @@ class Future:
         
         Returns
         -------
-        future_wrapper : ``FutureSyncWrapper``
+        future_wrapper : ``FutureWrapperSync``
             A future awaitable from sync threads.
         """
-        return FutureSyncWrapper(self)
+        return FutureWrapperSync(self)
     
     
     def async_wrap(self, loop):
@@ -787,10 +579,10 @@ class Future:
         
         Returns
         -------
-        future_wrapper : ``FutureAsyncWrapper``
+        future_wrapper : ``FutureWrapperAsync``
             An awaitable future from the given event loop.
         """
-        return FutureAsyncWrapper(self, loop)
+        return FutureWrapperAsync(self, loop)
     
     
     def apply_timeout(self, timeout):
@@ -813,7 +605,7 @@ class Future:
             if self.is_done():
                 return 0
             
-            handle = self._loop.call_later(timeout, _set_timeout_if_pending, self)
+            handle = self._loop.call_after(timeout, _set_timeout_if_pending, self)
             if (handle is not None):
                 self.add_done_callback(MethodType(_cancel_handle_callback, handle))
         
@@ -833,3 +625,107 @@ class Future:
         callbacks = self._callbacks
         if (callbacks is not None):
             yield from callbacks
+    
+    
+    # Deprecations
+    
+    
+    def cancelled(self):
+        warn(
+            (
+                f'`{self.__class__.__name__}.cancelled` is deprecated and will be removed in 2023 November. '
+                f'Please use `.is_cancelled()` instead.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
+        return self.is_cancelled()
+    
+    
+    def pending(self):
+        warn(
+            (
+                f'`{self.__class__.__name__}.pending` is deprecated and will be removed in 2023 November. '
+                f'Please use `.is_pending()` instead.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
+        return self.is_pending()
+    
+    
+    def done(self):
+        warn(
+            (
+                f'`{self.__class__.__name__}.done` is deprecated and will be removed in 2023 November. '
+                f'Please use `.is_done()` instead.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
+        return self.is_done()
+    
+    
+    @property
+    def result(self):
+        warn(
+            (
+                f'`{self.__class__.__name__}.result` is deprecated and will be removed in 2023 November. '
+                f'Use `.get_result()` instead.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
+        return self.get_result
+    
+    
+    @property
+    def exception(self):
+        warn(
+            (
+                f'`{self.__class__.__name__}.exception` is deprecated and will be removed in 2023 November. '
+                f'Use `.get_exception()` instead.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
+        return self.get_exception
+    
+    
+    if __debug__:
+        def __silence__(self):
+            """
+            Silences the future's `__del__`, so it will not notify if it would.
+            
+            Deprecated and will be removed in 2024 February.
+            
+            Notes
+            -----
+            This method is present only if `__debug__` is set as `True`.
+            """
+            if SILENCE_DEPRECATED:
+                warn(
+                    (
+                        f'`{self.__class__.__name__}.__silence__` is deprecated and will be removed in 2024 february.'
+                        f'Please use `.silence()` instead.'
+                    ),
+                    FutureWarning,
+                    stacklevel = 2,
+                )
+            
+            self.silence()
+    
+    
+    @property
+    def _exception(self):
+        """
+        Deprecated and will be removed in 2024 february.
+        """
+        warn(
+            f'`{self.__class__.__name__}._exception` is deprecated and will be removed in 2024 february.',
+            FutureWarning,
+            stacklevel = 2,
+        )
+        
+        if self._state & FUTURE_STATE_RESULT_RAISE:
+            return self._result

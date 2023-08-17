@@ -9,19 +9,19 @@ import vampytest
 
 # Test constructor
 
-def test_HybridValueDictionary_constructor():
+def test__HybridValueDictionary__constructor():
     hybrid_value_dictionary = HybridValueDictionary()
     vampytest.assert_eq(len(hybrid_value_dictionary), 0)
     vampytest.assert_eq(sorted(hybrid_value_dictionary), [])
 
 
-def test_HybridValueDictionary_constructor_empty():
+def test__HybridValueDictionary__constructor_empty():
     hybrid_value_dictionary = HybridValueDictionary([])
     vampytest.assert_eq(len(hybrid_value_dictionary), 0)
     vampytest.assert_eq(sorted(hybrid_value_dictionary), [])
 
 
-def test_HybridValueDictionary_constructor_filled():
+def test__HybridValueDictionary__constructor_filled():
     relations = {0: WeakReferencable(0), 1: 1, 2: WeakReferencable(2)}
     
     hybrid_value_dictionary = HybridValueDictionary(relations)
@@ -32,7 +32,7 @@ def test_HybridValueDictionary_constructor_filled():
 # test magic methods
 
 
-def test_HybridValueDictionary_contains():
+def test__HybridValueDictionary__contains():
     relations = {0: WeakReferencable(0), 1: 1, 2: WeakReferencable(2)}
     
     key_1 = 0
@@ -44,7 +44,7 @@ def test_HybridValueDictionary_contains():
     vampytest.assert_not_in(key_2, hybrid_value_dictionary)
 
 
-def test_HybridValueDictionary_eq():
+def test__HybridValueDictionary__eq():
     relations_1 = {0: WeakReferencable(0), 1: 1, 2: WeakReferencable(2)}
     relations_2 = {0: WeakReferencable(0), 1: 1}
     relations_3 = {}
@@ -65,7 +65,7 @@ def test_HybridValueDictionary_eq():
     vampytest.assert_is(hybrid_value_dictionary_1.__eq__(1), NotImplemented)
 
 
-def test_HybridValueDictionary_getitem():
+def test__HybridValueDictionary__getitem():
     relations = {0: WeakReferencable(0), 1: 1, 2: WeakReferencable(2)}
     hybrid_value_dictionary = HybridValueDictionary(relations)
     hybrid_value_dictionary_empty = HybridValueDictionary()
@@ -79,7 +79,7 @@ def test_HybridValueDictionary_getitem():
         hybrid_value_dictionary_empty[6]
 
 
-def test_HybridValueDictionary_iter():
+def test__HybridValueDictionary__iter():
     relations = {0: WeakReferencable(0), 1: 1, 2: WeakReferencable(2)}
     hybrid_value_dictionary = HybridValueDictionary(relations)
     hybrid_value_dictionary_empty = HybridValueDictionary()
@@ -97,7 +97,7 @@ def test__HybridValueDictionary__len():
     vampytest.assert_eq(len(hybrid_value_dictionary_empty), 0)
 
 
-def test_HybridValueDictionary_ne():
+def test__HybridValueDictionary__ne():
     relations_1 = {0: WeakReferencable(0), 1: 1, 2: WeakReferencable(2)}
     relations_2 = {x: WeakReferencable(x) for x in range(2)}
     relations_3 = {}
@@ -118,7 +118,7 @@ def test_HybridValueDictionary_ne():
     vampytest.assert_is(hybrid_value_dictionary_1.__ne__(1), NotImplemented)
 
 
-def test_HybridValueDictionary_setitem():
+def test__HybridValueDictionary__setitem():
     relations = {0: WeakReferencable(0), 1: 1, 2: WeakReferencable(2)}
     hybrid_value_dictionary = HybridValueDictionary(relations)
     
@@ -149,7 +149,7 @@ def test_HybridValueDictionary_setitem():
 # methods
 
 
-def test_HybridValueDictionary_clear():
+def test__HybridValueDictionary__clear():
     relations = {0: WeakReferencable(0), 1: 1, 2: WeakReferencable(2)}
     
     hybrid_value_dictionary_empty = HybridValueDictionary()
@@ -166,7 +166,7 @@ def test_HybridValueDictionary_clear():
     vampytest.assert_eq(len(test_case), 0)
 
 
-def test_HybridValueDictionary_copy():
+def test__HybridValueDictionary__copy():
     relations = {0: WeakReferencable(0), 1: 1, 2: WeakReferencable(2)}
     
     hybrid_value_dictionary = HybridValueDictionary(relations)
@@ -182,7 +182,7 @@ def test_HybridValueDictionary_copy():
     vampytest.assert_eq(test_case, hybrid_value_dictionary_empty)
 
 
-def test_HybridValueDictionary_get():
+def test__HybridValueDictionary__get():
     relations = {0: WeakReferencable(0), 1: 1, 2: WeakReferencable(2)}
     hybrid_value_dictionary = HybridValueDictionary(relations)
     
@@ -195,7 +195,7 @@ def test_HybridValueDictionary_get():
     vampytest.assert_is(hybrid_value_dictionary.get(key_2), None)
 
 
-def test_HybridValueDictionary_items():
+def test__HybridValueDictionary__items():
     relations = {0: WeakReferencable(0), 1: 1, 2: WeakReferencable(2)}
     
     item_1 = (2, WeakReferencable(2))
@@ -229,7 +229,7 @@ def test_HybridValueDictionary_items():
     vampytest.assert_not_in(item_3, items)
 
 
-def test_HybridValueDictionary_keys():
+def test__HybridValueDictionary__keys():
     relations = {0: WeakReferencable(0), 1: 1, 2: WeakReferencable(2)}
     key_1 = 2
     key_2 = 6
@@ -255,7 +255,7 @@ def test_HybridValueDictionary_keys():
     vampytest.assert_not_in(key_2, keys)
 
 
-def test_HybridValueDictionary_pop():
+def test__HybridValueDictionary__pop():
     relations = {0: WeakReferencable(0), 1: 1, 2: WeakReferencable(2)}
     
     key_1 = 2
@@ -275,7 +275,7 @@ def test_HybridValueDictionary_pop():
     vampytest.assert_eq(len(hybrid_value_dictionary), 2)
 
 
-def test_HybridValueDictionary_popitem():
+def test__HybridValueDictionary__popitem():
     item_1 = (1, 1)
     item_2 = (2, WeakReferencable(2))
     
@@ -298,7 +298,7 @@ def test_HybridValueDictionary_popitem():
     vampytest.assert_eq(len(hybrid_value_dictionary), 0)
 
 
-def test_HybridValueDictionary_setdefault():
+def test__HybridValueDictionary__setdefault():
     relations = {0: WeakReferencable(0), 1: 1, 2: WeakReferencable(2)}
     
     key_1 = 6
@@ -331,7 +331,7 @@ def test_HybridValueDictionary_setdefault():
     vampytest.assert_eq(hybrid_value_dictionary[key_3], expected_value_3)
 
 
-def test_HybridValueDictionary_update():
+def test__HybridValueDictionary__update():
     relations_1 = {0: WeakReferencable(0), 1: 1}
     relations_2 = {0: 2, 1: WeakReferencable(4)}
     relations_3 = {1: WeakReferencable(-1)}
@@ -396,7 +396,7 @@ def test_HybridValueDictionary_update():
         test_case.update([(1,), ])
 
 
-def test_HybridValueDictionary_values():
+def test__HybridValueDictionary__values():
     relations = {0: WeakReferencable(0), 1: 1, 2: WeakReferencable(2)}
     
     value_1 = WeakReferencable(2)

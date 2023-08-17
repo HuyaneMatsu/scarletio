@@ -273,10 +273,11 @@ class Timeout:
         """
         self = object.__new__(cls)
         self._loop = loop
-        self._handle = loop.call_later(timeout, cls._timeout, self)
+        self._handle = loop.call_after(timeout, cls._timeout, self)
         self._task = None
         self._state = TIMEOUT_STATE_NONE
         return self
+    
     
     def cancel(self):
         """

@@ -53,7 +53,7 @@ def future_or_timeout(future, timeout):
     
     loop = future._loop
     callback = _TimeoutHandleCanceller()
-    handle = loop.call_later(timeout, callback, future)
+    handle = loop.call_after(timeout, callback, future)
     if handle is None:
         raise RuntimeError(
             f'`future_or_timeout` was called on future with a stopped loop; loop = {loop!r}.'
@@ -127,7 +127,7 @@ class repeat_timeout:
         self._loop = thread
         self._task = task
         self._timeout = timeout
-        self._handle = thread.call_later(timeout, self)
+        self._handle = thread.call_after(timeout, self)
         self._timed_out = None
         return self
     

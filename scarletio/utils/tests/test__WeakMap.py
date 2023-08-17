@@ -9,19 +9,19 @@ import vampytest
 
 # Test constructor
 
-def test_WeakMap_constructor():
+def test__WeakMap__constructor():
     weak_map = WeakMap()
     vampytest.assert_eq(len(weak_map), 0)
     vampytest.assert_eq(sorted(weak_map), [])
 
 
-def test_WeakMap_constructor_empty():
+def test__WeakMap__constructor_empty():
     weak_map = WeakMap([])
     vampytest.assert_eq(len(weak_map), 0)
     vampytest.assert_eq(sorted(weak_map), [])
 
 
-def test_WeakMap_constructor_filled():
+def test__WeakMap__constructor_filled():
     objects_ = [WeakReferencable(x) for x in range(3)]
 
     weak_map = WeakMap(objects_)
@@ -32,7 +32,7 @@ def test_WeakMap_constructor_filled():
 # Test magic methods
 
 
-def test_WeakMap_contains():
+def test__WeakMap__contains():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     object_1 = objects_1[0]
     object_2 = WeakReferencable(10)
@@ -45,7 +45,7 @@ def test_WeakMap_contains():
     vampytest.assert_not_in(object_3, weak_map)
 
 
-def test_WeakMap_delitem():
+def test__WeakMap__delitem():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     
     object_1 = objects_1[0]
@@ -62,7 +62,7 @@ def test_WeakMap_delitem():
     vampytest.assert_eq(len(weak_map), 2)
 
 
-def test_WeakMap_eq():
+def test__WeakMap__eq():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = []
@@ -82,7 +82,7 @@ def test_WeakMap_eq():
     vampytest.assert_is(weak_map_1.__eq__(1), NotImplemented)
 
 
-def test_WeakMap_getitem():
+def test__WeakMap__getitem():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     
     object_1 = objects_1[0]
@@ -103,7 +103,7 @@ def test_WeakMap_getitem():
     vampytest.assert_eq(weak_map[object_3], object_3_expected)
 
 
-def test_WeakMap_iter():
+def test__WeakMap__iter():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = []
     
@@ -125,7 +125,7 @@ def test__WeakMap__len():
     vampytest.assert_eq(len(weak_map_2), len(objects_2))
 
 
-def test_WeakMap_ne():
+def test__WeakMap__ne():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = []
@@ -148,7 +148,7 @@ def test_WeakMap_ne():
 # Test Methods
 
 
-def test_WeakMap_clear():
+def test__WeakMap__clear():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     weak_map = WeakMap(objects_1)
     
@@ -160,7 +160,7 @@ def test_WeakMap_clear():
     vampytest.assert_eq(weak_map, weak_map_empty)
 
 
-def test_WeakMap_copy():
+def test__WeakMap__copy():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     weak_map_1 = WeakMap(objects_1)
     
@@ -177,7 +177,7 @@ def test_WeakMap_copy():
     vampytest.assert_eq(weak_map_empty, test_case)
 
 
-def test_WeakMap_get():
+def test__WeakMap__get():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     weak_map_1 = WeakMap(objects_1)
     
@@ -197,7 +197,7 @@ def test_WeakMap_get():
     vampytest.assert_is(weak_map_1.get(object_4), None)
 
 
-def test_WeakMap_pop():
+def test__WeakMap__pop():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     weak_map_1 = WeakMap(objects_1)
     
@@ -234,7 +234,7 @@ def test_WeakMap_pop():
     vampytest.assert_eq(len(weak_map_1), 1)
 
 
-def test_WeakMap_set():
+def test__WeakMap__set():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     weak_map_1 = WeakMap(objects_1)
     
@@ -263,7 +263,7 @@ def test_WeakMap_set():
     vampytest.assert_eq(len(weak_map_1), 4)
 
 
-def test_WeakMap_ior():
+def test__WeakMap__ior():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(x) for x in range(4)]

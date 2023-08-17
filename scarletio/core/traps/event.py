@@ -13,8 +13,10 @@ class Event:
     ----------
     _loop : ``EventThread``
         The event loop to what the event is bound.
+    
     _value : `bool`
         The internal flag of the event, which defines, whether it is set.
+    
     _waiters : `list` of ``Future``
         A list of futures waiting on the event to be set.
     """

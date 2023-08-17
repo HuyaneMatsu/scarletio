@@ -7,19 +7,19 @@ import vampytest
 
 # Test constructor
 
-def test_IgnoreCaseString_constructor():
+def test__IgnoreCaseString__constructor():
     ignore_case_string = IgnoreCaseString()
     vampytest.assert_eq(len(ignore_case_string), 0)
     vampytest.assert_eq(ignore_case_string, '')
 
 
-def test_IgnoreCaseString_constructor_empty():
+def test__IgnoreCaseString__constructor_empty():
     ignore_case_string = IgnoreCaseString('')
     vampytest.assert_eq(len(ignore_case_string), 0)
     vampytest.assert_eq(ignore_case_string, '')
 
 
-def test_IgnoreCaseString_constructor_filled():
+def test__IgnoreCaseString__constructor_filled():
     string = 'value'
     ignore_case_string = IgnoreCaseString(string)
     vampytest.assert_eq(len(ignore_case_string), len(string))
@@ -27,7 +27,7 @@ def test_IgnoreCaseString_constructor_filled():
 
 # Test magic methods
 
-def test_IgnoreCaseString_eq():
+def test__IgnoreCaseString__eq():
     string = 'vAlUe'
 
     ignore_case_string = IgnoreCaseString(string)

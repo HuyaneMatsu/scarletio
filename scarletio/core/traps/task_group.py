@@ -3,7 +3,11 @@ __all__ = ('TaskGroup',)
 from ...utils import RichAttributeErrorBaseType
 
 from .future import Future
+from .future_states import FUTURE_STATE_CANCELLED, FUTURE_STATE_RESULT_RAISE
 from .task import Task
+
+
+FUTURE_STATE_CANCELLED_OR_RAISE = FUTURE_STATE_CANCELLED | FUTURE_STATE_RESULT_RAISE
 
 
 def _context_manager_leaver_cancel_on_exception(task_group, exception):
@@ -204,7 +208,7 @@ def _handler_wait_exception(task_group):
         The first failing task.
     """
     for future in task_group.done:
-        if future._exception is not None:
+        if future._state & FUTURE_STATE_RESULT_RAISE:
             return 1, future
     
     pending = task_group.pending
@@ -213,7 +217,7 @@ def _handler_wait_exception(task_group):
             return 1, None
         
         future = (yield 1)
-        if future._exception is not None:
+        if future._state & FUTURE_STATE_RESULT_RAISE:
             return 1, future
 
 
@@ -241,7 +245,7 @@ def _handler_wait_exception_and_pop(task_group):
         The first failing task.
     """
     for future in task_group.done:
-        if future._exception is not None:
+        if future._state & FUTURE_STATE_RESULT_RAISE:
             task_group.done.discard(future)
             return 0, future
     
@@ -251,7 +255,7 @@ def _handler_wait_exception_and_pop(task_group):
             return 1, None
         
         future = (yield 1)
-        if future._exception is not None:
+        if future._state & FUTURE_STATE_RESULT_RAISE:
             return 0, future
 
 
@@ -277,7 +281,7 @@ def _handler_wait_exception_or_cancellation(task_group):
         The first failing task.
     """
     for future in task_group.done:
-        if future.is_cancelled() or (future._exception is not None):
+        if future._state & FUTURE_STATE_CANCELLED_OR_RAISE:
             return 1, future
     
     pending = task_group.pending
@@ -286,7 +290,7 @@ def _handler_wait_exception_or_cancellation(task_group):
             return 1, None
         
         future = (yield 1)
-        if future.is_cancelled() or (future._exception is not None):
+        if future._state & FUTURE_STATE_CANCELLED_OR_RAISE:
             return 1, future
 
 
@@ -314,7 +318,7 @@ def _handler_wait_exception_or_cancellation_and_pop(task_group):
         The first failing task.
     """
     for future in task_group.done:
-        if future.is_cancelled() or (future._exception is not None):
+        if future._state & FUTURE_STATE_CANCELLED_OR_RAISE:
             task_group.done.discard(future)
             return 0, future
     
@@ -324,7 +328,7 @@ def _handler_wait_exception_or_cancellation_and_pop(task_group):
             return 1, None
         
         future = (yield 1)
-        if future.is_cancelled() or (future._exception is not None):
+        if future._state & FUTURE_STATE_CANCELLED_OR_RAISE:
             return 0, future
 
 

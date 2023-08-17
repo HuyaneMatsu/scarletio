@@ -1,33 +1,37 @@
 __all__ = ('Task',)
 
-import reprlib, sys, warnings
+import sys
 from datetime import datetime as DateTime
 from threading import current_thread
 from types import AsyncGeneratorType as CoroutineGeneratorType, CoroutineType, GeneratorType
+from warnings import warn
 
-from ...utils import alchemy_incendiary, copy_docs, ignore_frame, include, render_frames_into
-from ...utils.trace import format_callback, format_coroutine, render_exception_into
+from ...utils import alchemy_incendiary, copy_docs, export, ignore_frame, include, render_frames_into
+from ...utils.trace import render_exception_into
 
 from ..exceptions import CancelledError, InvalidStateError
 
-from .future import (
-    FUTURE_STATE_FINISHED, FUTURE_STATE_PENDING, FUTURE_STATE_RETRIEVED, Future, get_exception_short_representation,
-    get_future_state_name
+from .future import Future
+from .future_repr import (
+    render_callbacks_into, render_coroutine_into, render_result_into, render_state_into, render_waits_into
+)
+from .future_states import (
+    FUTURE_STATE_CANCELLED, FUTURE_STATE_CANCELLING_SELF, FUTURE_STATE_DESTROYED, FUTURE_STATE_MASK_DONE,
+    FUTURE_STATE_RESULT_RAISE, FUTURE_STATE_RESULT_RETURN, FUTURE_STATE_SILENCED
 )
 
 
-ignore_frame(__spec__.origin, 'get_result', 'raise exception')
+ignore_frame(__spec__.origin, 'get_result', 'raise self._result')
 ignore_frame(__spec__.origin, '__iter__', 'yield self')
-ignore_frame(__spec__.origin, '_step', 'result = coroutine.throw(exception)')
+ignore_frame(__spec__.origin, '_step', 'result = coroutine.throw(CancelledError())')
 ignore_frame(__spec__.origin, '_step', 'result = coroutine.send(None)')
-ignore_frame(__spec__.origin, '_wake_up', 'future.get_result()')
-ignore_frame(__spec__.origin, '__call__', 'future.get_result()')
 
 EventThread = include('EventThread')
 
 CONSTRUCTOR_CHANGE_DEPRECATED = DateTime.utcnow() > DateTime(2023, 12, 12)
 
 
+@export
 class Task(Future):
     """
     A Future-like object that runs a Python coroutine.
@@ -40,6 +44,7 @@ class Task(Future):
     ----------
     _blocking : `bool`
         Whether the task is already being awaited, so it blocks the respective coroutine.
+    
     _callbacks : `list` of `callable`
         The callbacks of the task, which are queued up on the respective event loop to be called, when the task is
         finished. These callback should accept `1` parameter, the task itself.
@@ -47,40 +52,22 @@ class Task(Future):
         Note, if the task is already done, then the newly added callbacks are queued up instantly on the respective
         event loop to be called.
     
-    _exception : `None`, `BaseException`
-        The exception raised by task's internal coroutine. Defaults to `None`.
-    _loop : ``EventThread``
-        The loop to what the created task is bound.
-    _result : `None`, `object`
-        The result of the task. Defaults to `None`.
-    _state : `str`
-        The state of the task.
-        
-        Can be set as one of the following:
-        
-        +---------------------------+-----------+
-        | Respective name           | Value     |
-        +===========================+===========+
-        | FUTURE_STATE_PENDING      | `0`       |
-        +---------------------------+-----------+
-        | FUTURE_STATE_CANCELLED    | `1`       |
-        +---------------------------+-----------+
-        | FUTURE_STATE_FINISHED     | `2`       |
-        +---------------------------+-----------+
-        | FUTURE_STATE_RETRIEVED    | `3`       |
-        +---------------------------+-----------+
-        
-        Note, that states are checked by memory address and not by equality. Also ``FUTURE_STATE_RETRIEVED`` is used
-        only if `__debug__` is set as `True`.
-    
     _coroutine : `CoroutineType`, `GeneratorType`
         The wrapped coroutine.
-    _should_cancel : `bool`
-        Whether the task is cancelled, and at it's next step a ``CancelledError`` would be raised into it's coroutine.
+    
+    _loop : ``EventThread``
+        The loop to what the created task is bound.
+    
+    _result : `None`, `object`
+        The result of the task. Defaults to `None`.
+    
+    _state : `str`
+        The state of the task.
+    
     _waited_future : `None`, ``Future``
         The future on what's result the future is waiting right now.
     """
-    __slots__ = ('_coroutine', '_should_cancel', '_waited_future')
+    __slots__ = ('_coroutine', '_waited_future')
     
     def __new__(cls, loop, coroutine):
         """
@@ -90,14 +77,15 @@ class Task(Future):
         ----------
         loop : ``EventThread``
             The event loop on what the coroutine will run.
+        
         coroutine : `CoroutineType`, `GeneratorType`
             The coroutine, what the task will on the respective event loop.
         """
         if isinstance(coroutine, EventThread):
             loop, coroutine = coroutine, loop
-        
+            
             if CONSTRUCTOR_CHANGE_DEPRECATED:
-                warnings.warn(
+                warn(
                     (
                         f'`{cls.__name__}(coroutine, loop)` is deprecated and will be removed in 2024 Jun.'
                         f'Please use `{cls.__name__}(loop, coroutine)` instead accordingly.'
@@ -107,23 +95,303 @@ class Task(Future):
                 )
         
         self = object.__new__(cls)
-        self._loop = loop
-        self._state = FUTURE_STATE_PENDING
-
-        self._result = None
-        self._exception = None
-        
-        self._callbacks = []
         self._blocking = False
-
-        self._should_cancel = False
-        self._waited_future = None
+        self._callbacks = []
         self._coroutine = coroutine
+        self._loop = loop
+        self._result = None
+        self._state = 0
+        self._waited_future = None
         
         loop.call_soon(self._step)
-
+        
         return self
     
+    
+    def __repr__(self):
+        """Returns the task's representation."""
+        repr_parts = ['<', self.__class__.__name__]
+        
+        state = self._state
+        repr_parts, field_added = render_state_into(repr_parts, False, state)
+        repr_parts, field_added = render_coroutine_into(repr_parts, field_added, self._coroutine)
+        repr_parts, field_added = render_waits_into(repr_parts, field_added, self._waited_future)
+        repr_parts, field_added = render_result_into(repr_parts, field_added, state, self._result)
+        repr_parts, field_added = render_callbacks_into(repr_parts, field_added, self._callbacks)
+        
+        repr_parts.append('>')
+        return ''.join(repr_parts)
+    
+    
+    @copy_docs(Future.cancel)
+    def cancel(self):
+        state = self._state
+        
+        if state & FUTURE_STATE_MASK_DONE:
+            state |= FUTURE_STATE_SILENCED
+            result = 0
+        else:
+            waited_future = self._waited_future
+            if (waited_future is None) or (not waited_future.cancel()):
+                state |= FUTURE_STATE_CANCELLING_SELF
+            
+            result = 1
+        
+        self._state = state
+        return result
+    
+    
+    @copy_docs(Future.cancel_with)
+    def cancel_with(self, exception):
+        state = self._state
+        if state & FUTURE_STATE_MASK_DONE:
+            state |= FUTURE_STATE_SILENCED
+            result = 0
+        
+        else:
+            if isinstance(exception, type):
+                exception = exception()
+            
+            if isinstance(exception, StopIteration):
+                raise TypeError(
+                    f'{exception} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
+                )
+            
+            waited_future = self._waited_future
+            if (waited_future is None) or waited_future.cancel():
+                state |= FUTURE_STATE_CANCELLING_SELF
+            
+            self._result = exception
+            result = 1
+        
+        self._state = state
+        return result
+    
+    
+    @copy_docs(Future.is_cancelling)
+    def is_cancelling(self):
+        waited_future = self._waited_future
+        if (waited_future is not None):
+            return waited_future.is_cancelled() or waited_future.is_cancelling()
+        
+        return Future.is_cancelling(self)
+    
+    
+    def set_result(self, result):
+        """
+        Tasks do not support `.set_result` operation.
+        
+        Parameters
+        ----------
+        result : `object`
+            The object to set as result.
+        
+        Raises
+        ------
+        RuntimeError
+            Tasks do not support `.set_result` operation.
+        """
+        raise RuntimeError(
+            f'`{self.__class__.__name__}` does not support `.set_result` operation.'
+        )
+    
+    
+    def set_result_if_pending(self, result):
+        """
+        Tasks do not support `.set_result_if_pending` operation.
+        
+        Parameters
+        ----------
+        result : `object`
+            The object to set as result.
+        
+        Raises
+        ------
+        RuntimeError
+            Tasks do not support `.set_result_if_pending` operation.
+        """
+        raise RuntimeError(
+            f'`{self.__class__.__name__}` does not support `.set_result_if_pending` operation.'
+        )
+    
+    
+    @copy_docs(Future.set_exception)
+    def set_exception(self, exception):
+        """
+        Tasks do not support `.set_exception` operation.
+        
+        Parameters
+        ----------
+        exception : `BaseException`, `type<BaseException>`
+            The exception to set as the task's exception.
+        
+        Raises
+        ------
+        RuntimeError
+            Tasks do not support `.set_exception` operation.
+        """
+        raise RuntimeError(
+            f'`{self.__class__.__name__}` does not support `.set_exception` operation.'
+        )
+    
+    
+    @copy_docs(Future.set_exception_if_pending)
+    def set_exception_if_pending(self, exception):
+        """
+        Tasks do not support `.set_exception_if_pending` operation.
+        
+        Parameters
+        ----------
+        exception : `BaseException`, `type<BaseException>`
+            The exception to set as the task's exception.
+        
+        Raises
+        ------
+        RuntimeError
+            Tasks do not support `.set_exception_if_pending` operation.
+        """
+        raise RuntimeError(
+            f'`{self.__class__.__name__}` does not support `.set_exception_if_pending` operation.'
+        )
+    
+    
+    # Task running
+    
+    def _step(self):
+        """
+        Does a step, by giving control to the wrapped coroutine by the task.
+        
+        Raises
+        ------
+        InvalidStateError
+            If the task is already done.
+        """
+        state = self._state
+        if state & FUTURE_STATE_MASK_DONE:
+            # If a task is destroyed it may happen that we are still stepping it.
+            if state & FUTURE_STATE_DESTROYED:
+                return
+            
+            raise InvalidStateError(
+                self,
+                '_step',
+                message = f'`{self.__class__.__name__}._step` already done of {self!r}.',
+            )
+        
+        self._loop.current_task = self
+        
+        try:
+            # Call either coroutine.throw(err) or coroutine.send(None).
+            if state & FUTURE_STATE_CANCELLING_SELF:
+                state &= ~FUTURE_STATE_CANCELLING_SELF
+                self._state = state
+                
+                result = self._coroutine.throw(CancelledError())
+            else:
+                result = self._coroutine.send(None)
+            
+        except StopIteration as retrieved_exception:
+            # Cancellation has higher priority than result
+            state = self._state
+            if state & FUTURE_STATE_CANCELLING_SELF:
+                state |= FUTURE_STATE_CANCELLED
+                
+                if (self._result is not None):
+                    state |= FUTURE_STATE_RESULT_RAISE
+                
+            else:
+                self._result = retrieved_exception.value
+                state |= FUTURE_STATE_RESULT_RETURN
+            
+            self._state = state
+            self._loop._schedule_callbacks(self)
+        
+        except CancelledError:
+            state = self._state | FUTURE_STATE_CANCELLED
+            
+            if (self._result is not None):
+                state |= FUTURE_STATE_RESULT_RAISE
+            
+            self._state = state
+            self._loop._schedule_callbacks(self)
+        
+        except BaseException as retrieved_exception:
+            # Exception has higher priority than cancellation
+            self._result = retrieved_exception
+            self._state |= FUTURE_STATE_RESULT_RAISE
+            self._loop._schedule_callbacks(self)
+        
+        else:
+            if isinstance(result, Future) and result._blocking:
+                result._blocking = False
+                result.add_done_callback(self._wake_up)
+                
+                self._waited_future = result
+                
+                state = self._state
+                if state & FUTURE_STATE_CANCELLING_SELF:
+                    if result.cancel():
+                        self._state = state & ~FUTURE_STATE_CANCELLING_SELF
+            else:
+                self._loop.call_soon(self._step)
+        
+        finally:
+            self._loop.current_task = None
+            self = None # Need to set `self` as `None`. Else `self` might never get garbage collected.
+    
+    
+    def _wake_up(self, future):
+        """
+        Callback used by ``._step`` when the wrapped coroutine waits on a future to be marked as done.
+        
+        Parameters
+        ----------
+        future : ``Future``
+            The future for what's completion the task is waiting for.
+        """
+        try:
+            self._waited_future = None
+            
+            self._step()
+        finally:
+            # set self as `None`, so when exception occurs, self can be garbage collected.
+            self = None
+    
+    
+    # Task utils
+
+    @property
+    def name(self):
+        """
+        Returns the task's wrapped coroutine's name.
+        
+        Returns
+        -------
+        name : `str`
+        """
+        coroutine = self._coroutine
+        try:
+            return coroutine.__name__
+        except AttributeError:
+            return coroutine.__class__.__name__
+    
+    
+    @property
+    def qualname(self):
+        """
+        Returns the task's wrapped coroutine's qualname.
+        
+        Returns
+        -------
+        qualname : `str`
+        """
+        coroutine = self._coroutine
+        try:
+            return coroutine.__qualname__
+        except AttributeError:
+            return coroutine.__class__.__qualname__
+    
+    # Stack related | will need a rewrite # TODO
     
     def get_stack(self, limit = -1):
         """
@@ -214,59 +482,6 @@ class Task(Future):
         return frames
     
     
-    def __repr__(self):
-        """Returns the task's representation."""
-        repr_parts = ['<', self.__class__.__name__, ' ']
-        
-        state = self._state
-        repr_parts.append(get_future_state_name(state))
-        
-        if self._should_cancel:
-            repr_parts.append(' (cancelling)')
-        
-        repr_parts.append(' coroutine = ')
-        repr_parts.append(format_coroutine(self._coroutine))
-        
-        waited_future = self._waited_future
-        if waited_future is not None:
-            repr_parts.append(', waits for = ')
-            if type(waited_future) is type(self):
-                repr_parts.append(waited_future.qualname)
-            else:
-                repr_parts.append(repr(waited_future))
-        
-        if (not self._should_cancel) and (state >= FUTURE_STATE_FINISHED):
-            exception = self._exception
-            if exception is None:
-                result = self._result
-                if (result is not None):
-                    repr_parts.append(', result = ')
-                    repr_parts.append(reprlib.repr(result))
-            else:
-                repr_parts.append(', exception = ')
-                repr_parts.append(get_exception_short_representation(exception))
-        
-        callbacks = self._callbacks
-        limit = len(callbacks)
-        if limit:
-            repr_parts.append(', callbacks = [')
-            index = 0
-            while True:
-                callback = callbacks[index]
-                repr_parts.append(format_callback(callback))
-                index += 1
-                if index == limit:
-                    break
-                
-                repr_parts.append(', ')
-                continue
-            
-            repr_parts.append(']')
-        
-        repr_parts.append('>')
-        return ''.join(repr_parts)
-    
-    
     def print_stack(self, limit = -1, file = None):
         """
         Prints the stack or traceback of the task.
@@ -312,7 +527,10 @@ class Task(Future):
         if file is None:
             file = sys.stdout
         
-        exception = self._exception
+        if self._state & FUTURE_STATE_RESULT_RAISE:
+            exception = self._result
+        else:
+            exception = None
         
         if exception is None:
             frames = self.get_stack(limit)
@@ -335,237 +553,32 @@ class Task(Future):
         
         file.write(''.join(extracted))
     
-    if __debug__:
-        @copy_docs(Future.cancel)
-        def cancel(self):
-            state = self._state
-            if state != FUTURE_STATE_PENDING:
-                if state == FUTURE_STATE_FINISHED:
-                    self._state = FUTURE_STATE_RETRIEVED
-                
-                return 0
-            
-            waited_future = self._waited_future
-            if (waited_future is None) or (not waited_future.cancel()):
-                self._should_cancel = True
-            
-            return 1
-        
-    else:
-        @copy_docs(Future.cancel)
-        def cancel(self):
-            if self._state != FUTURE_STATE_PENDING:
-                return 0
-            
-            waited_future = self._waited_future
-            if (waited_future is None) or (not waited_future.cancel()):
-                self._should_cancel = True
-            
-            return 1
-    
+    # Deprecations
     
     @property
-    def name(self):
+    def _should_cancel(self):
         """
-        Returns the task's wrapped coroutine's name.
-        
-        Returns
-        -------
-        name : `str`
+        Deprecated and will be removed in 2024 february.
         """
-        coroutine = self._coroutine
-        try:
-            return coroutine.__name__
-        except AttributeError:
-            return coroutine.__class__.__name__
-    
-    
-    @property
-    def qualname(self):
-        """
-        Returns the task's wrapped coroutine's qualname.
-        
-        Returns
-        -------
-        qualname : `str`
-        """
-        coroutine = self._coroutine
-        try:
-            return coroutine.__qualname__
-        except AttributeError:
-            return coroutine.__class__.__qualname__
-        
-        
-    def set_result(self, result):
-        """
-        Tasks do not support `.set_result` operation.
-        
-        Parameters
-        ----------
-        result : `object`
-            The object to set as result.
-        
-        Raises
-        ------
-        RuntimeError
-            Tasks do not support `.set_result` operation.
-        """
-        raise RuntimeError(
-            f'`{self.__class__.__name__}` does not support `.set_result` operation.'
+        warn(
+            f'`{self.__class__.__name__}._should_cancel` is deprecated and will be removed in 2024 february.',
+            FutureWarning,
+            stacklevel = 2,
         )
+        return True if self._state & FUTURE_STATE_CANCELLING_SELF else False
     
     
-    def set_result_if_pending(self, result):
-        """
-        Tasks do not support `.set_result_if_pending` operation.
-        
-        Parameters
-        ----------
-        result : `object`
-            The object to set as result.
-        
-        Raises
-        ------
-        RuntimeError
-            Tasks do not support `.set_result_if_pending` operation.
-        """
-        raise RuntimeError(
-            f'`{self.__class__.__name__}` does not support `.set_result_if_pending` operation.'
+    @_should_cancel.setter
+    def _should_cancel(self, value):
+        warn(
+            f'`{self.__class__.__name__}._should_cancel` is deprecated and will be removed in 2024 february.',
+            FutureWarning,
+            stacklevel = 2,
         )
-    
-    
-    # We will not send an exception to a task, but we will cancel it.
-    # The exception will show up as ``._exception`` tho.
-    # We also wont change the state of the Task, it will be changed, when the next `._step` is done with the
-    # cancelling.
-    @copy_docs(Future.set_exception)
-    def set_exception(self, exception):
-        if self._state != FUTURE_STATE_PENDING:
-            raise InvalidStateError(self, 'set_exception')
-        
-        if (self._waited_future is None) or self._waited_future.cancel():
-            self._should_cancel = True
-        
-        if isinstance(exception, type):
-            exception = exception()
-        
-        if isinstance(exception, StopIteration):
-            raise TypeError(
-                f'{exception} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
-            )
-        
-        self._exception = exception
-    
-    
-    @copy_docs(Future.set_exception_if_pending)
-    def set_exception_if_pending(self, exception):
-        if self._state != FUTURE_STATE_PENDING:
-            return 0
-        
-        if (self._waited_future is None) or self._waited_future.cancel():
-            self._should_cancel = True
-        
-        if isinstance(exception, type):
-            exception = exception()
-        
-        if isinstance(exception, StopIteration):
-            raise TypeError(
-                f'{exception} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
-            )
-        
-        self._exception = exception
-        return 1
-    
-    
-    def clear(self):
-        """
-        Tasks do not support `.clear` operation.
-        
-        Raises
-        ------
-        RuntimeError
-            Tasks do not support `.clear` operation.
-        """
-        raise RuntimeError(
-            f'`{self.__class__.__name__}` does not support `.clear` operation.'
-        )
-    
-    
-    def _step(self):
-        """
-        Does a step, by giving control to the wrapped coroutine by the task.
-        
-        Raises
-        ------
-        InvalidStateError
-            If the task is already done.
-        """
-        if self._state != FUTURE_STATE_PENDING:
-            raise InvalidStateError(
-                self,
-                '_step',
-                message = f'`{self.__class__.__name__}._step` already done of {self!r}.',
-            )
-        
-        coroutine = self._coroutine
-        self._waited_future = None
-        
-        self._loop.current_task = self
-        try:
-            # Get cancellation exception
-            if self._should_cancel:
-                self._should_cancel = False
-                
-                exception = self._exception
-                if exception is None:
-                    exception = CancelledError()
-            
-                # call either coroutine.throw(err) or coroutine.send(None).
-                result = coroutine.throw(exception)
-            else:
-                result = coroutine.send(None)
-            
-        except StopIteration as exception:
-            if self._should_cancel:
-                # the task is cancelled meanwhile
-                self._should_cancel = False
-                Future.set_exception(self, CancelledError())
-            else:
-                Future.set_result(self, exception.value)
-        
-        except CancelledError:
-            Future.cancel(self)
-        
-        except BaseException as exception:
-            Future.set_exception(self, exception)
-        
+        state = self._state
+        if value:
+            state |= FUTURE_STATE_CANCELLING_SELF
         else:
-            if isinstance(result, Future) and result._blocking:
-                result._blocking = False
-                result.add_done_callback(self._wake_up)
-                self._waited_future = result
-                if self._should_cancel:
-                    if result.cancel():
-                        self._should_cancel = False
-            else:
-                self._loop.call_soon(self._step)
+            state &= ~FUTURE_STATE_CANCELLING_SELF
         
-        finally:
-            self._loop.current_task = None
-            self = None # Need to set `self` as `None`. Else `self` might never get garbage collected.
-    
-    
-    def _wake_up(self, future):
-        """
-        Callback used by ``._step`` when the wrapped coroutine waits on a future to be marked as done.
-        
-        Parameters
-        ----------
-        future : ``Future``
-            The future for what's completion the task is waiting for.
-        """
-        try:
-            self._step()
-        finally:
-            # set self as `None`, so when exception occurs, self can be garbage collected.
-            self = None
+        self._state = state

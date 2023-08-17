@@ -9,19 +9,19 @@ import vampytest
 
 # Test constructor
 
-def test_WeakSet_constructor():
+def test__WeakSet__constructor():
     weak_set = WeakSet()
     vampytest.assert_eq(len(weak_set), 0)
     vampytest.assert_eq(sorted(weak_set), [])
 
 
-def test_WeakSet_constructor_empty():
+def test__WeakSet__constructor_empty():
     weak_set = WeakSet([])
     vampytest.assert_eq(len(weak_set), 0)
     vampytest.assert_eq(sorted(weak_set), [])
 
 
-def test_WeakSet_constructor_filled():
+def test__WeakSet__constructor_filled():
     objects_ = [WeakReferencable(x) for x in range(3)]
 
     weak_set = WeakSet(objects_)
@@ -30,7 +30,7 @@ def test_WeakSet_constructor_filled():
 
 # Test magic methods
 
-def test_WeakSet_and():
+def test__WeakSet__and():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(x) for x in range(4)]
@@ -70,7 +70,7 @@ def test_WeakSet_and():
     vampytest.assert_eq(len(intersection), 0)
 
 
-def test_WeakSet_contains():
+def test__WeakSet__contains():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     object_1 = objects_1[0]
     object_2 = WeakReferencable(10)
@@ -83,7 +83,7 @@ def test_WeakSet_contains():
     vampytest.assert_not_in(object_3, weak_set)
 
 
-def test_WeakSet_eq():
+def test__WeakSet__eq():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = []
@@ -106,7 +106,7 @@ def test_WeakSet_eq():
     vampytest.assert_eq(test_case.__eq__([1]), False)
 
 
-def test_WeakSet_ge():
+def test__WeakSet__ge():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(x) for x in range(4)]
@@ -129,7 +129,7 @@ def test_WeakSet_ge():
     vampytest.assert_eq(test_case.__ge__([1]), False)
 
 
-def test_WeakSet_gt():
+def test__WeakSet__gt():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(x) for x in range(4)]
@@ -152,7 +152,7 @@ def test_WeakSet_gt():
     vampytest.assert_eq(test_case.__gt__([1]), False)
 
 
-def test_WeakSet_iand():
+def test__WeakSet__iand():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(x) for x in range(4)]
@@ -205,7 +205,7 @@ def test_WeakSet_iand():
     vampytest.assert_eq(len(test_case), 0)
 
 
-def test_WeakSet_ior():
+def test__WeakSet__ior():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(x) for x in range(4)]
@@ -257,7 +257,7 @@ def test_WeakSet_ior():
     vampytest.assert_eq(len(test_case), 0)
 
 
-def test_WeakSet_isub():
+def test__WeakSet__isub():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(x) for x in range(4)]
@@ -303,7 +303,7 @@ def test_WeakSet_isub():
     vampytest.assert_eq(len(test_case), 0)
 
 
-def test_WeakSet_iter():
+def test__WeakSet__iter():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = []
     
@@ -314,7 +314,7 @@ def test_WeakSet_iter():
     vampytest.assert_eq(sorted(weak_set_2), objects_2)
 
 
-def test_WeakSet_ixor():
+def test__WeakSet__ixor():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(1), 1]
@@ -358,7 +358,7 @@ def test_WeakSet_ixor():
     vampytest.assert_eq(len(test_case), 0)
 
 
-def test_WeakSet_le():
+def test__WeakSet__le():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(x) for x in range(4)]
@@ -392,7 +392,7 @@ def test__WeakSet__len():
     vampytest.assert_eq(len(weak_set_2), len(objects_2))
 
 
-def test_WeakSet_lt():
+def test__WeakSet__lt():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(x) for x in range(4)]
@@ -415,7 +415,7 @@ def test_WeakSet_lt():
     vampytest.assert_eq(test_case.__lt__([1]), True)
 
 
-def test_WeakSet_ne():
+def test__WeakSet__ne():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(2)]
     weak_set_1 = WeakSet(objects_1)
@@ -434,7 +434,7 @@ def test_WeakSet_ne():
     vampytest.assert_eq(test_case.__ne__([1]), True)
 
 
-def test_WeakSet_or():
+def test__WeakSet__or():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(x) for x in range(4)]
@@ -469,11 +469,11 @@ def test_WeakSet_or():
     vampytest.assert_is(test_case.__or__([1]), NotImplemented)
 
 
-def test_WeakSet_rand():
+def test__WeakSet__rand():
     vampytest.assert_is(WeakSet.__rand__, WeakSet.__and__)
 
 
-def test_WeakSet_rsub():
+def test__WeakSet__rsub():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(x) for x in range(4)]
@@ -499,7 +499,7 @@ def test_WeakSet_rsub():
     vampytest.assert_is(test_case.__rsub__([1]), NotImplemented)
 
 
-def test_WeakSet_rxor():
+def test__WeakSet__rxor():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     
@@ -527,7 +527,7 @@ def test_WeakSet_rxor():
     vampytest.assert_is(weak_set_empty.__rxor__([1]), NotImplemented)
 
 
-def test_WeakSet_sub():
+def test__WeakSet__sub():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(x) for x in range(4)]
@@ -565,14 +565,14 @@ def test_WeakSet_sub():
     vampytest.assert_is(weak_set_empty.__sub__(1), NotImplemented)
 
 
-def test_WeakSet_xor():
+def test__WeakSet__xor():
     vampytest.assert_is(WeakSet.__xor__, WeakSet.__rxor__)
 
 
 # Test methods
 
 
-def test_WeakSet_add():
+def test__WeakSet__add():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     object_1 = objects_1[0]
     object_2 = WeakReferencable(4)
@@ -599,7 +599,7 @@ def test_WeakSet_add():
         test_case.add(object_3)
 
 
-def test_WeakSet_clear():
+def test__WeakSet__clear():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     weak_set_1 = WeakSet(objects_1)
     
@@ -611,7 +611,7 @@ def test_WeakSet_clear():
     vampytest.assert_eq(weak_set_1, weak_set_empty)
 
 
-def test_WeakSet_copy():
+def test__WeakSet__copy():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     weak_set_1 = WeakSet(objects_1)
     
@@ -628,7 +628,7 @@ def test_WeakSet_copy():
     vampytest.assert_eq(weak_set_empty, test_case)
 
 
-def test_WeakSet_difference():
+def test__WeakSet__difference():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(x) for x in range(4)]
@@ -667,7 +667,7 @@ def test_WeakSet_difference():
         weak_set_empty.difference(1)
 
 
-def test_WeakSet_difference_update():
+def test__WeakSet__difference_update():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(x) for x in range(4)]
@@ -714,7 +714,7 @@ def test_WeakSet_difference_update():
     vampytest.assert_eq(len(test_case), 0)
 
 
-def test_WeakSet_discard():
+def test__WeakSet__discard():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     object_1 = objects_1[0]
     object_2 = WeakReferencable(4)
@@ -742,7 +742,7 @@ def test_WeakSet_discard():
     vampytest.assert_eq(test_case, expected_state)
 
 
-def test_WeakSet_intersection():
+def test__WeakSet__intersection():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(x) for x in range(4)]
@@ -780,7 +780,7 @@ def test_WeakSet_intersection():
     vampytest.assert_eq(len(intersection), 0)
 
 
-def test_WeakSet_intersection_update():
+def test__WeakSet__intersection_update():
 
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
@@ -826,7 +826,7 @@ def test_WeakSet_intersection_update():
     vampytest.assert_eq(len(test_case), 0)
 
 
-def test_WeakSet_isdisjoint():
+def test__WeakSet__isdisjoint():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(x) for x in range(4, 6)]
@@ -848,7 +848,7 @@ def test_WeakSet_isdisjoint():
     vampytest.assert_eq(weak_set_1.isdisjoint([]), True)
 
 
-def test_WeakSet_issubset():
+def test__WeakSet__issubset():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(x) for x in range(4)]
@@ -873,7 +873,7 @@ def test_WeakSet_issubset():
     vampytest.assert_eq(test_case.issubset([1]), True)
 
 
-def test_WeakSet_issuperset():
+def test__WeakSet__issuperset():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(x) for x in range(4)]
@@ -898,7 +898,7 @@ def test_WeakSet_issuperset():
     vampytest.assert_eq(test_case.issuperset([1]), False)
 
 
-def test_WeakSet_pop():
+def test__WeakSet__pop():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     
     test_case = WeakSet(objects_1)
@@ -915,7 +915,7 @@ def test_WeakSet_pop():
         test_case.remove(test_case.pop())
 
 
-def test_WeakSet_remove():
+def test__WeakSet__remove():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     object_1 = objects_1[0]
     object_2 = WeakReferencable(4)
@@ -945,7 +945,7 @@ def test_WeakSet_remove():
         test_case.remove(object_4)
 
 
-def test_WeakSet_symmetric_difference():
+def test__WeakSet__symmetric_difference():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     
@@ -976,7 +976,7 @@ def test_WeakSet_symmetric_difference():
         weak_set_empty.symmetric_difference([1])
 
 
-def test_WeakSet_symmetric_difference_update():
+def test__WeakSet__symmetric_difference_update():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(2), {}]
@@ -1022,7 +1022,7 @@ def test_WeakSet_symmetric_difference_update():
     vampytest.assert_eq(len(test_case), 1)
 
 
-def test_WeakSet_union():
+def test__WeakSet__union():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(x) for x in range(4)]
@@ -1060,7 +1060,7 @@ def test_WeakSet_union():
         test_case.union([1])
 
 
-def test_WeakSet_update():
+def test__WeakSet__update():
     objects_1 = [WeakReferencable(x) for x in range(3)]
     objects_2 = [WeakReferencable(x) for x in range(2)]
     objects_3 = [WeakReferencable(x) for x in range(4)]

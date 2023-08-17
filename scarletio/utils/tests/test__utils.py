@@ -7,7 +7,7 @@ import vampytest
 
 # test any_to_any
 
-def test_any_to_any():
+def test__any_to_any():
     container_0 = {0}
     container_1 = {}
     container_2 = {1, 2}
@@ -25,7 +25,7 @@ def test_any_to_any():
     vampytest.assert_eq(any_to_any(container_2, container_3), True)
 
 
-def test_get_short_executable():
+def test__get_short_executable():
     executable = get_short_executable()
     assert isinstance(executable, str)
 
@@ -37,17 +37,17 @@ def where_key_0(value):
 def here_key_1(value):
     return value == 1
 
-def test_where():
+def test__where():
     container = [0, 1, 2]
     
     with vampytest.assert_raises(LookupError):
-        assert where(container, where_key_0)
+        where(container, where_key_0)
     
     
     vampytest.assert_eq(where(container, here_key_1), 1)
 
 
-def test_relative_index():
+def test__relative_index():
     container_0 = [1, 2, 3, 4]
     container_1 = []
     container_2 = [1, 6, 10]
