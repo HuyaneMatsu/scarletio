@@ -301,7 +301,7 @@ class Future:
         
         Returns
         -------
-        exception : `BaseException`
+        exception : `None`, `BaseException`
         
         Raises
         ------
@@ -332,7 +332,7 @@ class Future:
         
         Returns
         -------
-        exception : `BaseException`
+        exception : `None`, `BaseException`
         """
         if not (self._state & FUTURE_STATE_CANCELLED):
             return None
