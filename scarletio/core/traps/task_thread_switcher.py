@@ -7,12 +7,14 @@ from ...utils import ignore_frame, include
 from ..exceptions import CancelledError
 
 from .future import Future
-from .future_states import FUTURE_STATE_CANCELLING_SELF, FUTURE_STATE_CANCELLED, FUTURE_STATE_RESULT_RETURN, \
-    FUTURE_STATE_RESULT_RAISE
+from .future_states import (
+    FUTURE_STATE_CANCELLED, FUTURE_STATE_CANCELLING_SELF, FUTURE_STATE_RESULT_RAISE, FUTURE_STATE_RESULT_RETURN
+)
 from .task import Task
 
 
 FUTURE_MASK_CANCEL_INITIALISED_BEFORE = FUTURE_STATE_CANCELLING_SELF | FUTURE_STATE_CANCELLED
+FUTURE_MASK_CANCEL_WITH_EXCEPTION = FUTURE_STATE_RESULT_RAISE | FUTURE_STATE_CANCELLED
 
 
 ignore_frame(__spec__.origin, 'get_result', 'raise exception',)
@@ -191,11 +193,15 @@ class enter_executor:
                     loop.wake_up()
                     break
                     
-                except CancelledError:
-                    state = task._state | FUTURE_STATE_CANCELLED
-                    if (task._result is not None):
-                        state |= FUTURE_STATE_RESULT_RAISE
-                    task._state = state
+                except CancelledError as retrieved_exception:
+                    task._state |= FUTURE_MASK_CANCEL_WITH_EXCEPTION
+                    
+                    result = task._result
+                    if (result is None):
+                        task._result = retrieved_exception
+                    else:
+                        result.__cause__ = retrieved_exception
+                    
                     loop._schedule_callbacks(self)
                     loop.wake_up()
                     break

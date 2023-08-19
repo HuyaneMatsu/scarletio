@@ -2,7 +2,7 @@ from time import sleep as blocking_sleep
 
 import vampytest
 
-from ...exceptions import InvalidStateError
+from ...exceptions import CancelledError, InvalidStateError
 from ...top_level import create_event_loop, get_event_loop
 
 from ..future import Future
@@ -149,7 +149,7 @@ def test__FutureWrapperBase__cancel__new():
         vampytest.assert_eq(output, 1)
         vampytest.assert_true(future.is_cancelled())
         
-        blocking_sleep(0.0001)
+        blocking_sleep(0.00015)
         vampytest.assert_true(loop_waken_up)
     
     finally:
@@ -331,6 +331,54 @@ async def test__FutureWrapperBase__is_pending():
     vampytest.assert_true(wrapper.is_pending())
     future.cancel()
     vampytest.assert_false(wrapper.is_pending())
+
+
+async def test__FutureWrapperBase__get_result():
+    """
+    Tests whether ``FutureWrapperBase.get_result`` works as intended.
+    
+    This function is a coroutine.
+    """
+    result = object()
+    future = Future(get_event_loop())
+    future.set_result(result)
+    
+    wrapper = FutureWrapperBase(future)
+    
+    output = wrapper.get_result()
+    vampytest.assert_is(output, result)
+
+
+async def test__FutureWrapperBase__get_exception():
+    """
+    Tests whether ``FutureWrapperBase.get_exception`` works as intended.
+    
+    This function is a coroutine.
+    """
+    exception = IndexError()
+    future = Future(get_event_loop())
+    future.set_exception(exception)
+    
+    wrapper = FutureWrapperBase(future)
+    
+    output = wrapper.get_exception()
+    vampytest.assert_is(output, exception)
+
+
+
+async def test__FutureWrapperBase__get_cancellation_exception():
+    """
+    Tests whether ``FutureWrapperBase.get_cancellation_exception`` works as intended.
+    
+    This function is a coroutine.
+    """
+    future = Future(get_event_loop())
+    future.cancel()
+    
+    wrapper = FutureWrapperBase(future)
+    
+    output = wrapper.get_cancellation_exception()
+    vampytest.assert_instance(output, CancelledError)
 
 
 def test__FutureWrapperBase__set_result__new():

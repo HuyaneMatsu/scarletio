@@ -65,7 +65,7 @@ async def _propagate_cancellation_async(future, loop):
     
     Returns
     -------
-    success : `bool`
+    cancellation_exception : `None`, ``BaseException``
     """
     future_loop = future._loop
     if future.cancel():
@@ -88,7 +88,9 @@ async def _propagate_cancellation_async(future, loop):
         if result_set:
             timeout_handle.cancel()
     
-    return future.is_cancelled()
+    # Use get exception in case an exception occurred while cancellation
+    if future.is_done():
+        return future.get_exception()
 
 
 @export
@@ -192,7 +194,7 @@ class FutureWrapperAsync(FutureWrapperBase):
                 if isinstance(err, GeneratorExit):
                     future.cancel()
                 else:
-                    await _propagate_cancellation_async(future, self._loop)
+                    err.__cause__ = await _propagate_cancellation_async(future, self._loop)
             
             raise
         
@@ -203,9 +205,11 @@ class FutureWrapperAsync(FutureWrapperBase):
         future.remove_done_callback(callback)
         # Cancel source future
         if propagate_cancellation:
-            await _propagate_cancellation_async(future, self._loop)
+            cancellation_exception = await _propagate_cancellation_async(future, self._loop)
+        else:
+            cancellation_exception = None
         
-        raise TimeoutError
+        raise TimeoutError from cancellation_exception
     
     
     
@@ -258,7 +262,7 @@ class FutureWrapperAsync(FutureWrapperBase):
                 if isinstance(err, GeneratorExit):
                     future.cancel()
                 else:
-                    await _propagate_cancellation_async(future, self._loop)
+                    err.__cause__ = await _propagate_cancellation_async(future, self._loop)
             
             raise
         

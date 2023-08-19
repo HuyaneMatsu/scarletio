@@ -1,9 +1,10 @@
 import vampytest
 
-from ..future_wrapper_sync import FutureWrapperSync
-from ..future import Future
-from ...top_level import get_event_loop, create_event_loop
 from ...time import LOOP_TIME
+from ...top_level import create_event_loop, get_event_loop
+
+from ..future import Future
+from ..future_wrapper_sync import FutureWrapperSync
 from ..task import Task
 from ..task_suppression import skip_poll_cycle
 

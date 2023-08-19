@@ -426,6 +426,29 @@ async def test__Task__cancel_with___waiting_on_cancelled():
     vampytest.assert_is(task.get_exception(), exception)
 
 
+async def test__Task__cancel_with___cause():
+    """
+    Tests whether ``Task.cancel_with`` works as intended.
+    
+    Case: Check cause.
+    
+    This function is a coroutine.
+    """
+    exception = TimeoutError()
+    
+    loop = get_event_loop()
+    
+    task = Task(loop, _coroutine_0())
+    task.cancel_with(exception)
+    
+    await skip_ready_cycle()
+    
+    
+    cause = task.get_exception().__cause__
+    vampytest.assert_is_not(cause, None)
+    vampytest.assert_instance(cause, CancelledError)
+
+
 async def test__Task__is_cancelling__pending():
     """
     Tests whether ``Task.is_cancelling`` works as intended.
@@ -801,11 +824,7 @@ async def test__Task__step__resulting_while_cancelled():
     vampytest.assert_true(task.is_cancelled())
     vampytest.assert_false(task.is_cancelling())
     
-    with vampytest.assert_raises(CancelledError):
-        task.get_result()
-    
-    with vampytest.assert_raises(CancelledError):
-        task.get_exception()
+    vampytest.assert_instance(task.get_exception(), CancelledError)
 
 
 async def test__Task__step__raising_while_cancelled():
@@ -858,11 +877,7 @@ async def test__Task__step__raising_cancellation():
     vampytest.assert_true(task.is_cancelled())
     vampytest.assert_false(task.is_cancelling())
     
-    with vampytest.assert_raises(CancelledError):
-        task.get_result()
-    
-    with vampytest.assert_raises(CancelledError):
-        task.get_exception()
+    vampytest.assert_instance(task.get_exception(), CancelledError)
 
 
 async def test__Task__step__waiting_on_future():
@@ -963,11 +978,7 @@ async def test__Task__step__loop_cancelling():
     vampytest.assert_true(task.is_cancelled())
     vampytest.assert_false(task.is_cancelling())
     
-    with vampytest.assert_raises(CancelledError):
-        task.get_result()
-    
-    with vampytest.assert_raises(CancelledError):
-        task.get_exception()
+    vampytest.assert_instance(task.get_exception(), CancelledError)
 
 
 async def test__Task__step__waiting_on_future_while_cancelling():
@@ -1005,12 +1016,8 @@ async def test__Task__step__waiting_on_future_while_cancelling():
     vampytest.assert_true(task.is_cancelled())
     vampytest.assert_false(task.is_cancelling())
     
-    with vampytest.assert_raises(CancelledError):
-        task.get_result()
-    
-    with vampytest.assert_raises(CancelledError):
-        task.get_exception()
-
+    vampytest.assert_instance(task.get_exception(), CancelledError)
+        
 
 async def test__Task__wake_up__waited_future_reset():
     """

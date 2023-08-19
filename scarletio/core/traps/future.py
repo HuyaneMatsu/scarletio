@@ -22,6 +22,7 @@ write_exception_async = include('write_exception_async')
 write_exception_maybe_async = include('write_exception_maybe_async')
 
 ignore_frame(__spec__.origin, 'get_result', 'raise self._result')
+ignore_frame(__spec__.origin, 'get_result', 'raise CancelledError')
 ignore_frame(__spec__.origin, '__iter__', 'yield self',)
 ignore_frame(__spec__.origin, '__iter__', 'return self.get_result()',)
 
@@ -294,18 +295,16 @@ class Future:
         
         If the future is done, returns it's exception. (Cab be `None`)
         
-        If the future is cancelled, raises ``CancelledError``.
+        If the future is cancelled, returns ``CancelledError``.
         
         If the future is not done yet, or is destroyed, raises ``InvalidStateError``.
         
         Returns
         -------
-        exception : `object`
+        exception : `BaseException`
         
         Raises
         ------
-        CancelledError
-            The future is cancelled.
         InvalidStateError
             The futures is not done yet.
         """
@@ -319,10 +318,30 @@ class Future:
             return self._result
         
         if state & FUTURE_STATE_CANCELLED:
-            raise CancelledError
+            return CancelledError()
         
         # still pending
         raise InvalidStateError(self, 'get_exception')
+    
+    
+    def get_cancellation_exception(self):
+        """
+        Returns the exception with what the future was cancelled with. This is usually ``CancelledError``.
+        
+        Returns `None` if it was not yet cancelled.
+        
+        Returns
+        -------
+        exception : `BaseException`
+        """
+        if not (self._state & FUTURE_STATE_CANCELLED):
+            return None
+        
+        result = self._result
+        if (result is not None):
+            return result
+        
+        return CancelledError()
     
     
     def add_done_callback(self, func):
@@ -599,7 +618,7 @@ class Future:
             Returns `1` if timeout was applied. `0` if the future is already finished.
         """
         if timeout <= 0.0:
-            return self.set_exception_if_pending(TimeoutError)
+            return self.cancel_with(TimeoutError)
         
         else:
             if self.is_done():

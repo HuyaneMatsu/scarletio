@@ -14,6 +14,8 @@ class EditorSimple(EditorBase):
     
     Attributes
     ----------
+    auto_completer : ``AutoCompleter``
+        Auto completer to use.
     buffer : `list` of `str`
         A precreated buffer which commands the initial lines of the input to write.
     compiled_code : `None`, ``CodeType``
@@ -30,11 +32,14 @@ class EditorSimple(EditorBase):
     __slots__ = ('buffer', )
     
     @copy_docs(EditorBase.__new__)
-    def __new__(cls, buffer, file_name, prefix_initial, prefix_continuous, prefix_length, highlighter, history):
+    def __new__(
+        cls, buffer, file_name, prefix_initial, prefix_continuous, prefix_length, highlighter, history, auto_completer
+    ):
         buffer = _validate_buffer(buffer)
         
         self = EditorBase.__new__(
-            cls, buffer, file_name, prefix_initial, prefix_continuous, prefix_length, highlighter, history
+            cls, buffer, file_name, prefix_initial, prefix_continuous, prefix_length, highlighter, history,
+            auto_completer
         )
         self.buffer = buffer
         return self

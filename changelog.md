@@ -15,8 +15,20 @@
 - Add `FutureWrapperAsync.cancel_with`.
 - Add `FutureWrapperAsync.is_cancelling`.
 - Add `FutureWrapperBase`.
-- `FutureWrapperAsync.wait` now waits till the future is cancelled.
-- `FutureWrapperSync.wait` now waits till the future is cancelled.
+- `FutureWrapperAsync.wait` now waits till the future is cancelled when propagating cancellation.
+- `FutureWrapperSync.wait` now waits till the future is cancelled when propagating cancellation.
+- `FutureWrapperAsync.wait_till_completion` now waits till the future is cancelled when propagating cancellation.
+- `FutureWrapperSync.wait_till_completion` now waits till the future is cancelled when propagating cancellation.
+- `Future.get_exception` no longer raises `CancelledError`. Instead returns it.
+- `TimeoutError` caused by `Task.apply_timeout` now will include the cancellation exception as cause.
+- Add `Future.get_cancellation_exception`.
+- `FutureWrapperAsync.wait` now includes cancellation exception in the traceback.
+- `FutureWrapperSync.wait` now includes cancellation exception in the traceback.
+- `FutureWrapperAsync.wait_till_completion` now includes cancellation exception in the traceback.
+- `FutureWrapperSync.wait_till_completion` now includes cancellation exception in the traceback.
+- Add `AutoCompleter` for interactive console editors to use.
+- `EditorAdvanced` supports auto completion.
+- Add `FutureBaseWrapper.get_cancellation_exception`.
 
 #### Bug fixes
 

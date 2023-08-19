@@ -97,14 +97,19 @@ class FutureWrapperBase:
         return self._future.is_pending()
     
     
-    @copy_docs(Future.result)
+    @copy_docs(Future.get_result)
     def get_result(self):
         return self._future.get_result()
     
     
-    @copy_docs(Future.exception)
+    @copy_docs(Future.get_exception)
     def get_exception(self):
         return self._future.get_exception()
+    
+    
+    @copy_docs(Future.get_cancellation_exception)
+    def get_cancellation_exception(self):
+        return self._future.get_cancellation_exception()
     
     
     @copy_docs(Future.set_result)

@@ -746,8 +746,7 @@ async def test__Future__get_exception__cancelled():
     future = Future(get_event_loop())
     future.cancel()
     
-    with vampytest.assert_raises(CancelledError):
-        future.get_exception()
+    vampytest.assert_instance(future.get_exception(), CancelledError)
 
 
 async def test__Future__get_exception__cancelled_with():
@@ -764,6 +763,79 @@ async def test__Future__get_exception__cancelled_with():
     
     output = future.get_exception()
     vampytest.assert_is(output, exception)
+
+
+async def test__Future__get_cancellation_exception__pending():
+    """
+    Tests whether ``Future.get_cancellation_exception`` works as intended.
+    
+    Case: pending.
+    
+    This function is a coroutine.
+    """
+    future = Future(get_event_loop())
+    
+    vampytest.assert_is(future.get_cancellation_exception(), None)
+
+
+async def test__Future__get_cancellation_exception__done_result():
+    """
+    Tests whether ``Future.get_cancellation_exception`` works as intended.
+    
+    Case: done with result.
+    
+    This function is a coroutine.
+    """
+    future = Future(get_event_loop())
+    future.set_result(object())
+    
+    vampytest.assert_is(future.get_cancellation_exception(), None)
+
+
+async def test__Future__get_cancellation_exception__done_exception():
+    """
+    Tests whether ``Future.get_cancellation_exception`` works as intended.
+    
+    Case: done with exception.
+    
+    This function is a coroutine.
+    """
+    future = Future(get_event_loop())
+    future.set_exception(IndexError)
+    future.silence()
+    
+    vampytest.assert_is(future.get_cancellation_exception(), None)
+
+
+async def test__Future__get_cancellation_exception__cancelled():
+    """
+    Tests whether ``Future.get_cancellation_exception`` works as intended.
+    
+    Case: cancelled.
+    
+    This function is a coroutine.
+    """
+    future = Future(get_event_loop())
+    future.cancel()
+    
+    vampytest.assert_instance(future.get_cancellation_exception(), CancelledError)
+
+
+async def test__Future__get_cancellation_exception__cancelled_with():
+    """
+    Tests whether ``Future.get_cancellation_exception`` works as intended.
+    
+    Case: cancelled with exception.
+    
+    This function is a coroutine.
+    """
+    exception = TimeoutError()
+    future = Future(get_event_loop())
+    future.cancel_with(exception)
+    
+    output = future.get_cancellation_exception()
+    vampytest.assert_is(output, exception)
+
 
 
 async def test__Future__add_done_callback__pending():

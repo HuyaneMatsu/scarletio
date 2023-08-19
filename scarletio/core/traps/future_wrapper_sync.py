@@ -60,7 +60,7 @@ def _propagate_cancellation_sync(future):
     
     Returns
     -------
-    success : `bool`
+    cancellation_exception : `None`, ``BaseException``
     """
     future_loop = future._loop
     if future.cancel():
@@ -73,7 +73,9 @@ def _propagate_cancellation_sync(future):
         
         waiter.wait(CANCELLATION_TIMEOUT)
     
-    return future.is_cancelled()
+    # Use get exception in case an exception occurred while cancellation
+    if future.is_done():
+        return future.get_exception()
 
 
 @export
@@ -138,12 +140,12 @@ class FutureWrapperSync(FutureWrapperBase):
         
         try:
             result_set = waiter.wait(timeout)
-        except:
+        except BaseException as err:
             # Interrupted -> remove callback
             future.remove_done_callback(callback)
             # Cancel source future
             if propagate_cancellation:
-                _propagate_cancellation_sync(future)
+                err.__cause__ = _propagate_cancellation_sync(future)
             
             raise
         
@@ -154,9 +156,11 @@ class FutureWrapperSync(FutureWrapperBase):
         future.remove_done_callback(callback)
         # Cancel source future
         if propagate_cancellation:
-            _propagate_cancellation_sync(future)
+            cancellation_exception = _propagate_cancellation_sync(future)
+        else:
+            cancellation_exception = None
         
-        raise TimeoutError
+        raise TimeoutError from cancellation_exception
     
     
     def wait_for_completion(self, timeout = None, propagate_cancellation = False):
@@ -189,12 +193,12 @@ class FutureWrapperSync(FutureWrapperBase):
         
         try:
             result_set = waiter.wait(timeout)
-        except:
+        except BaseException as err:
             # Interrupted -> remove callback
             future.remove_done_callback(callback)
             # Cancel source future
             if propagate_cancellation:
-                _propagate_cancellation_sync(future)
+                err.__cause__ = _propagate_cancellation_sync(future)
             
             raise
         

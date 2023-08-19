@@ -21,10 +21,13 @@ from .future_states import (
 )
 
 
+FUTURE_MASK_CANCEL_WITH_EXCEPTION = FUTURE_STATE_RESULT_RAISE | FUTURE_STATE_CANCELLED
+
+
 ignore_frame(__spec__.origin, 'get_result', 'raise self._result')
 ignore_frame(__spec__.origin, '__iter__', 'yield self')
-ignore_frame(__spec__.origin, '_step', 'result = coroutine.throw(CancelledError())')
-ignore_frame(__spec__.origin, '_step', 'result = coroutine.send(None)')
+ignore_frame(__spec__.origin, '_step', 'result = self._coroutine.throw(CancelledError())')
+ignore_frame(__spec__.origin, '_step', 'result = self._coroutine.send(None)')
 
 EventThread = include('EventThread')
 
@@ -306,13 +309,15 @@ class Task(Future):
             self._state = state
             self._loop._schedule_callbacks(self)
         
-        except CancelledError:
-            state = self._state | FUTURE_STATE_CANCELLED
+        except CancelledError as retrieved_exception:
+            self._state |= FUTURE_MASK_CANCEL_WITH_EXCEPTION
             
-            if (self._result is not None):
-                state |= FUTURE_STATE_RESULT_RAISE
+            result = self._result
+            if (result is None):
+                self._result = retrieved_exception
+            else:
+                result.__cause__ = retrieved_exception
             
-            self._state = state
             self._loop._schedule_callbacks(self)
         
         except BaseException as retrieved_exception:

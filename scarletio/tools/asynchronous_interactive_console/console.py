@@ -11,6 +11,7 @@ from ...utils.trace import (
     _render_syntax_error_representation_into, fixup_syntax_error_line_from_buffer, is_syntax_error
 )
 
+from .auto_completer import AutoCompleter
 from .console_helpers import create_banner, create_exit_message
 from .editors import EditorAdvanced, EditorBase, EditorSimple, can_use_advanced_editor
 from .history import History
@@ -452,6 +453,7 @@ class AsynchronousInteractiveConsole:
                     self.get_prefix_length(),
                     self.highlighter,
                     self.history,
+                    AutoCompleter(self.local_variables),
                 )
                 
                 compiled_code = editor()

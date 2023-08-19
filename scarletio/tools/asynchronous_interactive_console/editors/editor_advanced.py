@@ -46,6 +46,11 @@ DEDENT_WORDS = frozenset((
 ))
 
 EMPTY_CHARACTERS = frozenset((' ', '\t', '\n'))
+AUTO_COMPLETE_BREAK_CHARACTERS = frozenset((
+    ' ', '"', '#', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '@', '[', '\\', ']',
+    '{', '|', '}', '~'
+))
+
 
 INDEXED_INPUT_RP = re.compile('\s*in\s*\[\s*(\d+)\s*\]\s*', re.I)
 
@@ -716,6 +721,62 @@ def _check_should_try_compile(display_state):
     return _check_should_try_compile_multi_line(display_state)
 
 
+def _get_identifier_to_autocomplete(line, index):
+    """
+    Gets identifier to autocomplete.
+    
+    Parameters
+    ----------
+    line : `str`
+        Current line.
+    index : `int`
+        The cursor's index in the line.
+    
+    Returns
+    -------
+    identifier_to_autocomplete : `None`, `str`
+    """
+    line_length = len(line)
+    # We only want to autocomplete if the end does not contain identifier characters.
+    if line_length > index:
+        if line[index] not in AUTO_COMPLETE_BREAK_CHARACTERS:
+            return None
+    
+    # Collect the last word
+    last_word_parts = []
+    
+    for index__in_loop in reversed(range(0, index)):
+        character = line[index__in_loop]
+        if character in AUTO_COMPLETE_BREAK_CHARACTERS:
+            break
+        
+        last_word_parts.append(character)
+        continue
+    
+    # Nothing to auto complete
+    if not last_word_parts:
+        return None
+    
+    # Do not auto complete if we are in an attribute access operation
+    for index__in_loop in reversed(range(0, index - len(last_word_parts))):
+        character = line[index__in_loop]
+        if character == '.':
+            return None
+        
+        if character == ' ':
+            continue
+        
+        break
+    
+    # Last word should be an identifier
+    last_word_parts.reverse()
+    last_word = ''.join(last_word_parts)
+    if not last_word.isidentifier():
+        return None
+    
+    return last_word
+
+
 class DisplayState:
     """
     A current display state of ``EditorAdvanced``.
@@ -1262,6 +1323,8 @@ class EditorAdvanced(EditorBase):
         Async content to write. Set if the end of content is not decodable.
     async_output_written : `bool`
         Whether async output was already written.
+    auto_completer : ``AutoCompleter``
+        Auto completer to use.
     compiled_code : `None`, ``CodeType``
         The compiled inputted code.
     display_state : ``DisplayState``
@@ -1303,7 +1366,9 @@ class EditorAdvanced(EditorBase):
     )
     
     @copy_docs(EditorBase.__new__)
-    def __new__(cls, buffer, file_name, prefix_initial, prefix_continuous, prefix_length, highlighter, history):
+    def __new__(
+        cls, buffer, file_name, prefix_initial, prefix_continuous, prefix_length, highlighter, history, auto_completer
+    ):
         
         display_state = DisplayState(buffer)
         
@@ -1318,7 +1383,8 @@ class EditorAdvanced(EditorBase):
         
         
         self = EditorBase.__new__(
-            cls, buffer, file_name, prefix_initial, prefix_continuous, prefix_length, highlighter, history
+            cls, buffer, file_name, prefix_initial, prefix_continuous, prefix_length, highlighter, history,
+            auto_completer
         )
         
         self.alive = False
@@ -1751,30 +1817,50 @@ class EditorAdvanced(EditorBase):
         cursor_line_index = new_display_state.cursor_line_index
         line = buffer[cursor_line_index]
         
-        if should_auto_format:
-            add_spaces_count =  4 - (cursor_index & 3)
-            line_length = len(line)
-            while add_spaces_count:
-                if cursor_index >= line_length:
+        # Use goto
+        while True:
+            if should_auto_format:
+                identifier_to_auto_complete = _get_identifier_to_autocomplete(line, cursor_index)
+                if (identifier_to_auto_complete is not None):
+                    common_prefix = self.auto_completer.get_common_prefix(identifier_to_auto_complete)
+                    if (common_prefix is None):
+                        modified = False
+                        break
+                    
+                    added_content = common_prefix[len(identifier_to_auto_complete):]
+                    buffer[cursor_line_index] = f'{line[:cursor_index]}{added_content}{line[cursor_index:]}'
+                    cursor_index += len(added_content)
+                    modified = True
                     break
-                
-                if line[cursor_index] != ' ':
-                    break
-                
-                cursor_index += 1
-                add_spaces_count -= 1
-        else:
-            add_spaces_count = 4
-        
-        if add_spaces_count:
-            buffer[cursor_line_index] = f'{line[:cursor_index]}{" " * add_spaces_count}{line[cursor_index:]}'
-            cursor_index += add_spaces_count
-        
+            
+            if should_auto_format:
+                add_spaces_count =  4 - (cursor_index & 3)
+                line_length = len(line)
+                while add_spaces_count:
+                    if cursor_index >= line_length:
+                        break
+                    
+                    if line[cursor_index] != ' ':
+                        break
+                    
+                    cursor_index += 1
+                    add_spaces_count -= 1
+            else:
+                add_spaces_count = 4
+            
+            if add_spaces_count:
+                buffer[cursor_line_index] = f'{line[:cursor_index]}{" " * add_spaces_count}{line[cursor_index:]}'
+                cursor_index += add_spaces_count
+                modified = True
+                break
+            
+            modified = False
+            break
         
         new_display_state.cursor_index = cursor_index
         new_display_state.cursor_line_index = cursor_line_index
         
-        self.modified = True
+        self.modified = modified
         
         return new_display_state
     

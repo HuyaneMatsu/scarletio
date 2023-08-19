@@ -34,6 +34,8 @@ class EditorBase:
     
     Attributes
     ----------
+    auto_completer : ``AutoCompleter``
+        Auto completer to use.
     compiled_code : `None`, ``CodeType``
         The compiled inputted code.
     file_name : `str`
@@ -45,9 +47,13 @@ class EditorBase:
     prefix_length : `int`
         As how long should the prefix's length be interpreted.
     """
-    __slots__ = ('compiled_code', 'file_name', 'prefix_initial', 'prefix_continuous', 'prefix_length')
+    __slots__ = (
+        'auto_completer', 'compiled_code', 'file_name', 'prefix_initial', 'prefix_continuous', 'prefix_length'
+    )
     
-    def __new__(cls, buffer, file_name, prefix_initial, prefix_continuous, prefix_length, highlighter, history):
+    def __new__(
+        cls, buffer, file_name, prefix_initial, prefix_continuous, prefix_length, highlighter, history, auto_completer
+    ):
         """
         Creates a new editor. Initialises with given buffer.
         
@@ -67,6 +73,8 @@ class EditorBase:
             Formatter storing highlighting details.
         history : ``History``
             History used for caching inputs.
+        auto_completer : ``AutoCompleter``
+            Auto completer to use.
         
         Raises
         ------
@@ -74,6 +82,7 @@ class EditorBase:
             - If a parameter's type is incorrect.
         """
         self = object.__new__(cls)
+        self.auto_completer = auto_completer
         self.compiled_code = None
         self.file_name = file_name
         self.prefix_initial = prefix_initial
