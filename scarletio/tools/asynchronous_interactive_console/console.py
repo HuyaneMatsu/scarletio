@@ -5,7 +5,9 @@ from functools import partial as partial_func
 from math import floor, log
 from types import FunctionType
 
-from ...core import Future, get_default_trace_writer_highlighter, get_event_loop, get_or_create_event_loop
+from ...core import (
+    Future, get_default_trace_writer_highlighter, get_event_loop, get_or_create_event_loop, write_exception_sync
+)
 from ...utils import HIGHLIGHT_TOKEN_TYPES, is_awaitable, render_exception_into
 from ...utils.trace import (
     _render_syntax_error_representation_into, fixup_syntax_error_line_from_buffer, is_syntax_error
@@ -71,20 +73,20 @@ def run_code_callback(console, future, code):
     try:
         coroutine = function()
     except BaseException as err:
-        future.set_exception_if_pending(err)
+        future.set_result_if_pending((True, err))
         return
     
     if not is_awaitable(coroutine):
-        future.set_result_if_pending(coroutine)
+        future.set_result_if_pending((False, coroutine))
         return
     
     try:
         task = console.loop.ensure_future(coroutine)
     except BaseException as err:
-        future.set_exception_if_pending(err)
+        future.set_result_if_pending((True, err))
     else:
         console.task = task
-        future.set_result_if_pending(None)
+        future.set_result_if_pending((False, None))
 
 
 class AsynchronousInteractiveConsole:
@@ -246,21 +248,31 @@ class AsynchronousInteractiveConsole:
         self.loop.call_soon_thread_safe(partial_func(run_code_callback, self, future, compiled_code))
         
         try:
-            result = future.sync_wrap().wait()
+            is_exception, result = future.sync_wrap().wait()
             future = None
             
+            if is_exception:
+                write_exception_sync(
+                    result, file = sys.stdout, filter = _ignore_console_frames, highlighter = self.highlighter
+                )
+                return None
+            
             task = self.task
-            if (task is not None):
-                
-                sync_wrapper = task.sync_wrap()
-                task = None
-                
-                try:
-                    result = sync_wrapper.wait()
-                except:
-                    # Cancel the sync wrapper if exception occurs. This will stop warnings.
-                    sync_wrapper.cancel()
-                    raise
+            if (task is None):
+                return result
+            
+            sync_wrapper = task.sync_wrap()
+            task = None
+            
+            try:
+                result = sync_wrapper.wait()
+            except:
+                # Cancel the sync wrapper if exception occurs. This will stop warnings.
+                sync_wrapper.cancel()
+                raise
+            
+            else:
+                return result
         
         except BaseException as err:
             if (future is not None):
@@ -275,18 +287,13 @@ class AsynchronousInteractiveConsole:
             if isinstance(err, SystemExit):
                 raise
             
-            sys.stdout.write(
-                ''.join(
-                    render_exception_into(err, [], filter = _ignore_console_frames, highlighter = self.highlighter)
-                )
+            write_exception_sync(
+                err, file = sys.stdout, filter = _ignore_console_frames, highlighter = self.highlighter
             )
             
             if isinstance(err, KeyboardInterrupt):
                 if self.stop_on_interruption:
                     sys.stdout.write('[Interrupt again to exit]\n')
-        
-        else:
-            return result
         
         finally:
             self.task = None

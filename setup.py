@@ -78,4 +78,9 @@ setup(
             'cchardet>=2.0',
         ],
     },
+    entry_points = {
+        'console_scripts': [
+            'scarletio = scarletio.__main__:__main__'
+        ],
+    },
 )

@@ -1,5 +1,6 @@
 import vampytest
 
+from ...exceptions import CancelledError
 from ...top_level import create_event_loop
 
 from ..future import Future
@@ -187,34 +188,54 @@ def _iter_options__render_result_into():
     
     yield (
         False,
-        FUTURE_STATE_CANCELLED,
+        FUTURE_STATE_CANCELLED | FUTURE_STATE_RESULT_RAISE,
+        CancelledError(),
+        (
+            '',
+            False,
+        )
+    )
+    
+    yield (
+        True,
+        FUTURE_STATE_CANCELLED | FUTURE_STATE_RESULT_RAISE,
+        CancelledError(123),
+        (
+            ', cancellation_exception = CancelledError(123)',
+            True,
+        )
+    )
+    
+    yield (
+        False,
+        FUTURE_STATE_CANCELLED | FUTURE_STATE_RESULT_RAISE,
         ValueError(),
         (
-            ' exception = ValueError()',
+            ' cancellation_exception = ValueError()',
             True,
         )
     )
     
     yield (
         True,
-        FUTURE_STATE_CANCELLED,
+        FUTURE_STATE_CANCELLED | FUTURE_STATE_RESULT_RAISE,
         ValueError(),
         (
-            ', exception = ValueError()',
+            ', cancellation_exception = ValueError()',
             True,
         )
     )
 
     yield (
         False,
-        FUTURE_STATE_CANCELLED,
+        FUTURE_STATE_CANCELLED | FUTURE_STATE_RESULT_RAISE,
         ValueError('a' * (EXCEPTION_REPR_LENGTH_MAX + 1)), 
         (
-            ' exception = <ValueError ...>',
+            ' cancellation_exception = <ValueError ...>',
             True,
         )
     )
-
+    
     yield (
         False,
         FUTURE_STATE_RESULT_RAISE,
@@ -234,7 +255,7 @@ def _iter_options__render_result_into():
             True,
         )
     )
-
+    
     yield (
         False,
         FUTURE_STATE_RESULT_RAISE,

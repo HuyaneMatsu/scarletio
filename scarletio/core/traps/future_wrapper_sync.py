@@ -3,10 +3,16 @@ __all__ = ('FutureWrapperSync', )
 from threading import Event as SyncEvent
 from types import MethodType
 
-from ...utils import export
+from ...utils import export, ignore_frame
 
 from .future import Future
 from .future_wrapper_base import CANCELLATION_TIMEOUT, FutureWrapperBase
+
+
+ignore_frame(__spec__.origin, 'wait', 'return future.get_result()')
+ignore_frame(__spec__.origin, 'wait', 'raise TimeoutError from cancellation_exception')
+ignore_frame(__spec__.origin, 'wait', 'result_set = waiter.wait(timeout)')
+ignore_frame(__spec__.origin, 'wait_for_completion', 'result_set = waiter.wait(timeout)')
 
 
 def _set_waiter_future_callback(waiter, future):

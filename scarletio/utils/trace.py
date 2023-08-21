@@ -126,7 +126,7 @@ class ConsoleLineCache:
         """
         Creates a new console line cache instance.
         
-        parameters
+        Parameters
         ----------
         max_size : `int` = `1000_000`, Optional
             The maximal amount of input to remember.

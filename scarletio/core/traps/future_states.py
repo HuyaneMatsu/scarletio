@@ -36,11 +36,11 @@ FUTURE_STATE_MASK_SILENCED = (
 
 
 DONE_MASK_AND_NAME_PAIRS = (
+    (FUTURE_STATE_CANCELLED, 'cancelled'),
     (FUTURE_STATE_RESULT_RETURN, 'result~return'),
     (FUTURE_STATE_RESULT_RAISE_RETRIEVED, 'result~raise~retrieved'),
     (FUTURE_STATE_RESULT_RAISE, 'result~raise'),
     (FUTURE_STATE_DESTROYED, 'destroyed'),
-    (FUTURE_STATE_CANCELLED, 'cancelled'),
 )
 
 

@@ -1,3 +1,16 @@
+# 1.0.62 *\[2023-08-21\]*
+
+#### Improvements
+
+- `Future.__repr__` now will show a new `cancellation_exception` option field if cancelled with a custom exception.
+- Add cli entry point.
+
+#### Bug fixes
+
+- Interactive console got stuck when `StopIteration` was raised into it.
+- `Task.__repr__` showed bare `CancelledError()`.
+- In `Future:__repr__` `result~raise` state had priority over `cancelled`.
+
 # 1.0.61 *\[2023-08-19\]*
 
 #### Improvements

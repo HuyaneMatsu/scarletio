@@ -2,10 +2,18 @@ __all__ = ('FutureWrapperAsync', )
 
 from types import MethodType
 
-from ...utils import export
+from ...utils import export, ignore_frame
 
 from .future import Future
 from .future_wrapper_base import CANCELLATION_TIMEOUT, FutureWrapperBase
+
+
+ignore_frame(__spec__.origin, 'wait', 'return future.get_result()')
+ignore_frame(__spec__.origin, 'wait', 'result_set = await waiter')
+ignore_frame(__spec__.origin, 'wait', 'return future.get_result()')
+ignore_frame(__spec__.origin, 'wait_for_completion', 'result_set = await waiter')
+ignore_frame(__spec__.origin, '__iter__', 'return future.get_result()')
+ignore_frame(__spec__.origin, '__iter__', 'yield from waiter')
 
 
 def _set_future_waiter_callback(waiter, future):

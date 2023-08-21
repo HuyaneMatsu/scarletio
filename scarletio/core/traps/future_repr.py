@@ -5,6 +5,8 @@ from reprlib import repr as short_repr
 from ...utils import include
 from ...utils.trace import format_callback, format_coroutine
 
+from ..exceptions import CancelledError
+
 from .future_states import FUTURE_STATE_CANCELLED, FUTURE_STATE_RESULT_RAISE, FUTURE_STATE_RESULT_RETURN
 from .future_states import render_future_state_name_into
 
@@ -132,20 +134,27 @@ def render_result_into(into, field_added, state, result):
     into : `list<str>`
     field_added : `bool`
     """
-    if state & FUTURE_STATE_RESULT_RETURN:
-        field_name = 'result'
-        field_repr_getter = short_repr
-    
-    elif (
-        (state & FUTURE_STATE_RESULT_RAISE) or # Exception
-        ((state & FUTURE_STATE_CANCELLED) and (result is not None)) # Cancellation with exception
-    ):
-        field_name = 'exception'
-        field_repr_getter = get_exception_short_representation
-    
-    else:
+    # Use goto
+    while True:
+        if (state & FUTURE_STATE_RESULT_RETURN):
+            field_name = 'result'
+            field_repr_getter = short_repr
+            break
+        
+        elif (state & FUTURE_STATE_CANCELLED):
+            if (result is not None) and ((not isinstance(result, CancelledError)) or result.args):
+                field_name = 'cancellation_exception'
+                field_repr_getter = get_exception_short_representation
+                break
+        
+        elif (state & FUTURE_STATE_RESULT_RAISE):
+            field_name = 'exception'
+            field_repr_getter = get_exception_short_representation
+            break
+        
         field_name = None
         field_repr_getter = None
+        break
     
     if (field_name is not None):
         if field_added:

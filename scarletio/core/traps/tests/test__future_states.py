@@ -1,8 +1,9 @@
 import vampytest
 
 from ..future_states import (
-    FUTURE_STATE_CANCELLING_SELF, FUTURE_STATE_RESULT_RAISE, FUTURE_STATE_RESULT_RAISE_RETRIEVED, FUTURE_STATE_RESULT_RETURN,
-    FUTURE_STATE_SILENCED, get_future_state_name, render_future_state_name_into
+    FUTURE_STATE_CANCELLED, FUTURE_STATE_CANCELLING_SELF, FUTURE_STATE_RESULT_RAISE,
+    FUTURE_STATE_RESULT_RAISE_RETRIEVED, FUTURE_STATE_RESULT_RETURN, FUTURE_STATE_SILENCED, get_future_state_name,
+    render_future_state_name_into
 )
 
 
@@ -15,6 +16,7 @@ def _iter_options():
     yield FUTURE_STATE_RESULT_RAISE | FUTURE_STATE_RESULT_RAISE_RETRIEVED, 'result~raise~retrieved'
     yield FUTURE_STATE_RESULT_RETURN | FUTURE_STATE_SILENCED, 'result~return, silenced'
     yield FUTURE_STATE_CANCELLING_SELF | FUTURE_STATE_SILENCED, 'pending, cancelling~self, silenced'
+    yield FUTURE_STATE_CANCELLED | FUTURE_STATE_RESULT_RAISE, 'cancelled'
 
 
 @vampytest._(vampytest.call_from(_iter_options()).returning_last())

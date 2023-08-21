@@ -1,4 +1,4 @@
-__version__ = '1.0.61'
+__version__ = '1.0.62'
 
 from .core import *
 from .ext import *
