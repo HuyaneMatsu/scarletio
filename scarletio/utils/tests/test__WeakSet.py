@@ -93,12 +93,12 @@ def test__WeakSet__eq():
     weak_set_3 = WeakSet(objects_3)
     
     vampytest.assert_eq(weak_set_1, weak_set_1)
-    vampytest.assert_eq(weak_set_1, weak_set_2, reverse=True)
-    vampytest.assert_eq(weak_set_1, weak_set_3, reverse=True)
+    vampytest.assert_eq(weak_set_1, weak_set_2, reverse = True)
+    vampytest.assert_eq(weak_set_1, weak_set_3, reverse = True)
     
     vampytest.assert_eq(weak_set_1, objects_1)
-    vampytest.assert_eq(weak_set_1, objects_2, reverse=True)
-    vampytest.assert_eq(weak_set_1, objects_3, reverse=True)
+    vampytest.assert_eq(weak_set_1, objects_2, reverse = True)
+    vampytest.assert_eq(weak_set_1, objects_3, reverse = True)
     
     
     test_case = WeakSet()
@@ -422,11 +422,11 @@ def test__WeakSet__ne():
     weak_set_2 = WeakSet(objects_2)
     weak_set_empty = WeakSet()
     
-    vampytest.assert_ne(weak_set_1, weak_set_1, reverse=True)
+    vampytest.assert_ne(weak_set_1, weak_set_1, reverse = True)
     vampytest.assert_ne(weak_set_1, weak_set_2)
     vampytest.assert_ne(weak_set_1, weak_set_empty)
-    vampytest.assert_ne(weak_set_1, objects_1, reverse=True)
-    vampytest.assert_ne(weak_set_2, objects_2, reverse=True)
+    vampytest.assert_ne(weak_set_1, objects_1, reverse = True)
+    vampytest.assert_ne(weak_set_2, objects_2, reverse = True)
     vampytest.assert_ne(weak_set_1, objects_2)
 
     test_case = WeakSet()

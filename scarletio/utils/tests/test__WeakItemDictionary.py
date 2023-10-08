@@ -56,19 +56,19 @@ def test__WeakItemDictionary__eq():
     weak_item_dictionary_3 = WeakItemDictionary(relations_3)
     
     vampytest.assert_eq(weak_item_dictionary_1, weak_item_dictionary_1)
-    vampytest.assert_eq(weak_item_dictionary_1, weak_item_dictionary_2, reverse=True)
-    vampytest.assert_eq(weak_item_dictionary_1, weak_item_dictionary_3, reverse=True)
+    vampytest.assert_eq(weak_item_dictionary_1, weak_item_dictionary_2, reverse = True)
+    vampytest.assert_eq(weak_item_dictionary_1, weak_item_dictionary_3, reverse = True)
     
     vampytest.assert_eq(weak_item_dictionary_1, relations_1)
-    vampytest.assert_eq(weak_item_dictionary_1, relations_2, reverse=True)
-    vampytest.assert_eq(weak_item_dictionary_1, relations_3, reverse=True)
+    vampytest.assert_eq(weak_item_dictionary_1, relations_2, reverse = True)
+    vampytest.assert_eq(weak_item_dictionary_1, relations_3, reverse = True)
 
     vampytest.assert_is(weak_item_dictionary_1.__eq__([1, ]), NotImplemented)
     vampytest.assert_is(weak_item_dictionary_1.__eq__(1), NotImplemented)
 
 
 def test__WeakItemDictionary__getitem():
-    relations = {WeakReferencable(x): WeakReferencable(x+4) for x in range(3)}
+    relations = {WeakReferencable(x): WeakReferencable(x + 4) for x in range(3)}
     weak_item_dictionary = WeakItemDictionary(relations)
     weak_item_dictionary_empty = WeakItemDictionary()
     
@@ -116,11 +116,11 @@ def test__WeakItemDictionary__ne():
     weak_item_dictionary_2 = WeakItemDictionary(relations_2)
     weak_item_dictionary_3 = WeakItemDictionary(relations_3)
     
-    vampytest.assert_ne(weak_item_dictionary_1, weak_item_dictionary_1, reverse=True)
+    vampytest.assert_ne(weak_item_dictionary_1, weak_item_dictionary_1, reverse = True)
     vampytest.assert_ne(weak_item_dictionary_1, weak_item_dictionary_2)
     vampytest.assert_ne(weak_item_dictionary_1, weak_item_dictionary_3)
     
-    vampytest.assert_ne(weak_item_dictionary_1, relations_1, reverse=True)
+    vampytest.assert_ne(weak_item_dictionary_1, relations_1, reverse = True)
     vampytest.assert_ne(weak_item_dictionary_1, relations_2)
     vampytest.assert_ne(weak_item_dictionary_1, relations_3)
 

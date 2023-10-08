@@ -55,7 +55,7 @@ class SortedList(list):
             index = 0
             while True:
                 element = self[index]
-                index +=1
+                index += 1
                 result.append(repr(element))
                 
                 if index == limit:
@@ -160,7 +160,7 @@ class SortedList(list):
         bot = 0
         if self._reversed:
             if type(self) is not type(iterable):
-                other = sorted(iterable, reverse=True)
+                other = sorted(iterable, reverse = True)
             elif not iterable._reversed:
                 other = reversed(iterable)
             else:
@@ -328,7 +328,7 @@ class SortedList(list):
         """
         Resorts the SortedList.
         """
-        list.sort(self, reverse=self._reversed)
+        list.sort(self, reverse = self._reversed)
     
     
     @has_docs

@@ -82,7 +82,7 @@ class Fingerprint:
             return
         
         ssl_object = protocol.get_extra_info('ssl_object')
-        cert = ssl_object.getpeercert(binary_form=True)
+        cert = ssl_object.getpeercert(binary_form = True)
         received = self.hash_function(cert).digest()
         fingerprint = self.fingerprint
         if received == fingerprint:
@@ -91,6 +91,6 @@ class Fingerprint:
         host, port, *_ = protocol.get_extra_info('peer_name')
         
         raise ValueError(
-            f'The expected fingerprint: {fingerprint!r} not matches the received; received={received!r}; '
-            f'host={host!r}; port={port!r}.'
+            f'The expected fingerprint: {fingerprint!r} not matches the received; received = {received!r}; '
+            f'host = {host!r}; port = {port!r}.'
         )

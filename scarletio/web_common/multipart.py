@@ -102,7 +102,7 @@ class PayloadBase:
                 `BytesIO`, `StringIO`, `TextIOBase`, `BufferedReader`, `BufferedRandom`, `IOBase`, ``AsyncIO``, \
                 `async-iterable`
             The payload's data.
-        keyword_parameters : `dict` of (`str`, `Any`) items
+        keyword_parameters : `dict` of (`str`, `object`) items
             Additional keyword parameters.
         """
         self.data = data
@@ -191,7 +191,7 @@ class BytesPayload(PayloadBase):
         ----------
         data : `bytes`, `bytearray`, `memoryview`
             The payload's data.
-        keyword_parameters : `dict` of (`str`, `Any`) items
+        keyword_parameters : `dict` of (`str`, `object`) items
             Additional keyword parameters.
         """
         keyword_parameters.setdefault('content_type', DEFAULT_CONTENT_TYPE)
@@ -243,7 +243,7 @@ class StringPayload(BytesPayload):
         ----------
         data : `str`
             The payload's data.
-        keyword_parameters : `dict` of (`str`, `Any`) items
+        keyword_parameters : `dict` of (`str`, `object`) items
             Additional keyword parameters.
         """
         encoding = keyword_parameters.get('encoding', None)
@@ -299,7 +299,7 @@ class StringIOPayload(StringPayload):
         ----------
         data : `StringIO`
             The payload's data.
-        keyword_parameters : `dict` of (`str`, `Any`) items
+        keyword_parameters : `dict` of (`str`, `object`) items
             Additional keyword parameters.
         """
         data = data.read()
@@ -334,7 +334,7 @@ class IOBasePayload(PayloadBase):
         ----------
         data : `IOBase`
             The payload's data.
-        keyword_parameters : `dict` of (`str`, `Any`) items
+        keyword_parameters : `dict` of (`str`, `object`) items
             Additional keyword parameters.
         """
         if 'filename' not in keyword_parameters:
@@ -404,7 +404,7 @@ class TextIOPayload(IOBasePayload):
         ----------
         data : `TextIOBase`
             The payload's data.
-        keyword_parameters : `dict` of (`str`, `Any`) items
+        keyword_parameters : `dict` of (`str`, `object`) items
             Additional keyword parameters.
         """
         encoding = keyword_parameters.get('encoding', None)
@@ -525,7 +525,7 @@ class BufferedReaderPayload(IOBasePayload):
         ----------
         data : `BufferedReader`, `BufferedRandom`
             The payload's data.
-        keyword_parameters : `dict` of (`str`, `Any`) items
+        keyword_parameters : `dict` of (`str`, `object`) items
             Additional keyword parameters.
         """
         IOBasePayload.__init__(self, data, keyword_parameters)
@@ -567,7 +567,7 @@ class JsonPayload(BytesPayload):
         ----------
         data : `None`, `str`, `int`, `float`, `list` of repeat, `dict` of (`str`, repeat) items
             The payload's data.
-        keyword_parameters : `dict` of (`str`, `Any`) items
+        keyword_parameters : `dict` of (`str`, `object`) items
             Additional keyword parameters.
         """
         encoding = keyword_parameters.get('encoding', None)
@@ -609,7 +609,7 @@ class AsyncIterablePayload(PayloadBase):
         ----------
         data : `async-iterable`
             The payload's data.
-        keyword_parameters : `dict` of (`str`, `Any`) items
+        keyword_parameters : `dict` of (`str`, `object`) items
             Additional keyword parameters.
         """
         keyword_parameters.setdefault('content_type', DEFAULT_CONTENT_TYPE)
@@ -707,7 +707,7 @@ class BodyPartReaderPayload(PayloadBase):
         ----------
         data : ``BodyPartReader``
             The payload's data.
-        keyword_parameters : `dict` of (`str`, `Any`) items
+        keyword_parameters : `dict` of (`str`, `object`) items
             Additional keyword parameters.
         """
         PayloadBase.__init__(self, data, keyword_parameters)
@@ -738,7 +738,7 @@ class BodyPartReaderPayload(PayloadBase):
         """
         field = self.data
         while True:
-            chunk = await field.read_chunk(size=65536)
+            chunk = await field.read_chunk(size = 65536)
             if chunk:
                 await writer.write(field.decode(chunk))
             else:
@@ -846,7 +846,7 @@ def _is_rfc5987(string):
     return _is_token(string) and string.count("'") == 2
 
 
-def _unescape(text, *, chars=''.join(map(re.escape, CHARS))):
+def _unescape(text, *, chars = ''.join(map(re.escape, CHARS))):
     """
     Unescapes the given part of a content disposition parameter.
     
@@ -1271,7 +1271,7 @@ class MultipartWriter(PayloadBase):
         
         Parameters
         ----------
-        obj : `mapping` of (`str`, `Any`) items, `sequence` of `tuple` (`str`, `Any`) items
+        obj : `mapping` of (`str`, `object`) items, `sequence` of `tuple` (`str`, `object`) items
             The object, what should be percent encoded for a post request.
         headers : `None`, ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items = `None`, Optional
             Optional headers for the url_encoded field.
@@ -1290,7 +1290,7 @@ class MultipartWriter(PayloadBase):
         if hasattr(obj.__class__, 'items'): # mapping type
             obj = list(obj.items())
         
-        data = url_encode(obj, doseq=True)
+        data = url_encode(obj, doseq = True)
         
         keyword_parameters = {'content_type': 'application/x-www-form-url_encoded'}
         
@@ -1379,19 +1379,19 @@ class MultipartPayloadWriter:
             
             Can be any of the following:
             
-            +---------------+-----------------------------------------------+
-            | Value         | Used compressor                               |
-            +===============+===============================================+
-            | `None`        | `None`                                        |
-            +---------------+-----------------------------------------------+
-            | `'gzip'`      | `ZLIB_COMPRESSOR(wbits=16 + ZLIB_MAX_WBITS)`  |
-            +---------------+-----------------------------------------------+
-            | `'deflate'`   | `ZLIB_COMPRESSOR(wbits=-ZLIB_MAX_WBITS)`      |
-            +---------------+-----------------------------------------------+
-            | `'br'`        | `BROTLI_COMPRESSOR()`                         |
-            +---------------+-----------------------------------------------+
-            | `'identity'`  | `None`                                        |
-            +---------------+-----------------------------------------------+
+            +---------------+-------------------------------------------------+
+            | Value         | Used compressor                                 |
+            +===============+=================================================+
+            | `None`        | `None`                                          |
+            +---------------+-------------------------------------------------+
+            | `'gzip'`      | `ZLIB_COMPRESSOR(wbits = 16 + ZLIB_MAX_WBITS)`  |
+            +---------------+-------------------------------------------------+
+            | `'deflate'`   | `ZLIB_COMPRESSOR(wbits = -ZLIB_MAX_WBITS)`      |
+            +---------------+-------------------------------------------------+
+            | `'br'`        | `BROTLI_COMPRESSOR()`                           |
+            +---------------+-------------------------------------------------+
+            | `'identity'`  | `None`                                          |
+            +---------------+-------------------------------------------------+
             
             You need to have `brotlipy` installed to handle `'br'` encoding.
         
@@ -1420,10 +1420,10 @@ class MultipartPayloadWriter:
             compressor = None
         
         elif content_encoding == 'gzip':
-            compressor = ZLIB_COMPRESSOR(wbits=16 + ZLIB_MAX_WBITS)
+            compressor = ZLIB_COMPRESSOR(wbits = 16 + ZLIB_MAX_WBITS)
         
         elif content_encoding == 'deflate':
-            compressor = ZLIB_COMPRESSOR(wbits=-ZLIB_MAX_WBITS)
+            compressor = ZLIB_COMPRESSOR(wbits = -ZLIB_MAX_WBITS)
         
         elif content_encoding == 'br':
             if BROTLI_COMPRESSOR is None:

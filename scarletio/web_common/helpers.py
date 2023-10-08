@@ -139,7 +139,7 @@ class BasicAuth:
         """Returns the basic authorisation's representation."""
         repr_parts = [
             self.__class__.__name__,
-            '(username  =',
+            '(username = ',
             repr(self.username),
         ]
         

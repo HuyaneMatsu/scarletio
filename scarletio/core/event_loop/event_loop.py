@@ -754,7 +754,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         
         Returns
         -------
-        result : `Any`
+        result : `object`
             Value returned by `awaitable`.
         
         Raises
@@ -766,7 +766,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         RuntimeError
             If called from itself.
         BaseException
-            Any exception raised by `awaitable`.
+            object exception raised by `awaitable`.
         """
         if current_thread() is self:
             raise RuntimeError(f'`{self.__class__.__name__}.run` should not be called from itself.')
@@ -880,7 +880,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             The protocol of the transport.
         waiter : `None`, ``Future`` = `None`, Optional
             Waiter, what's result should be set, when the transport is ready to use.
-        extra : `None`, `dict` of (`str`, `Any`) item = `None`, Optional (Keyword only)
+        extra : `None`, `dict` of (`str`, `object`) item = `None`, Optional (Keyword only)
             Optional transport information.
         server : `None`, ``Server`` = `None`, Optional (Keyword only)
             The server to what the created socket will be attached to.
@@ -925,7 +925,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             By default the value of the host parameter is used. If host is empty, there is no default and you must pass
             a value for `server_host_name`. If `server_host_name` is an empty string, hostname matching is disabled
             (which is a serious security risk, allowing for potential man-in-the-middle attacks).
-        extra : `None`, `dict` of (`str`, `Any`) items = `None`, Optional (Keyword only)
+        extra : `None`, `dict` of (`str`, `object`) items = `None`, Optional (Keyword only)
             Optional transport information.
         server : `None`, ``Server`` = `None`, Optional (Keyword only)
             The server to what the created socket will be attached to.
@@ -1080,7 +1080,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             Factory function for creating an asynchronous compatible protocol.
         connection_socket : `socket.socket`
             The accepted connection.
-        extra : `None`, `dict` of (`str`, `Any`) item
+        extra : `None`, `dict` of (`str`, `object`) item
             Optional transport information.
         ssl : `None`, `SSLContext`
             The ssl type of the connection if any.
@@ -1606,7 +1606,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             transport = self._make_socket_transport(socket, protocol, waiter)
         else:
             transport = self._make_ssl_transport(
-                socket, protocol, ssl, waiter, server_side=server_side, server_host_name = server_host_name
+                socket, protocol, ssl, waiter, server_side = server_side, server_host_name = server_host_name
             )
         
         try:
@@ -2594,8 +2594,13 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             # join address by (socket_family, socket_protocol)
             address_infos = {}
             if (local_address is not None):
-                infos = await self._ensure_resolved(local_address, family=socket_family, type=module_socket.SOCK_DGRAM,
-                    protocol=socket_protocol, flags=socket_flags)
+                infos = await self._ensure_resolved(
+                    local_address,
+                    family = socket_family,
+                    type = module_socket.SOCK_DGRAM,
+                    protocol = socket_protocol,
+                    flags = socket_flags,
+                )
                 
                 if not infos:
                     raise OSError('`get_address_info` returned empty list')
@@ -2610,8 +2615,13 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
                     address_infos[(iterated_socket_family, iterated_socket_protocol)] = (iterated_socket_address, None)
             
             if (remote_address is not None):
-                infos = await self._ensure_resolved(remote_address, family=socket_family, type=module_socket.SOCK_DGRAM,
-                    protocol=socket_protocol, flags=socket_flags)
+                infos = await self._ensure_resolved(
+                    remote_address,
+                    family = socket_family,
+                    type = module_socket.SOCK_DGRAM,
+                    protocol = socket_protocol,
+                    flags = socket_flags,
+                )
                 
                 if not infos:
                     raise OSError('`get_address_info` returned empty list.')
@@ -3062,7 +3072,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         """
         Create a subprocess from cmd.
         
-        This is similar to the standard library `subprocess.Popen` class called with `shell=True`.
+        This is similar to the standard library `subprocess.Popen` class called with `shell = True`.
         
         This method is a coroutine.
         
@@ -3076,7 +3086,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             Standard output for the created shell.
         stderr : `file-like`, `subprocess.PIPE`, `subprocess.DEVNULL`, `subprocess.STDOUT` = `subprocess.PIPE`, Optional
             Standard error for the created shell
-        extra : `None`, `dict` of (`str`, `Any`) items = `None`, Optional (Keyword only)
+        extra : `None`, `dict` of (`str`, `object`) items = `None`, Optional (Keyword only)
             Optional transport information.
         preexecution_function : `None`, `callable` = `None`, Optional (Keyword only)
             This object is called in the child process just before the child is executed. POSIX only, defaults to
@@ -3172,7 +3182,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         """
         Create a subprocess from one or more string parameters specified by args.
         
-        This is similar to the standard library `subprocess.Popen` class called with `shell=False`.
+        This is similar to the standard library `subprocess.Popen` class called with `shell = False`.
         
         This method is a coroutine.
         
@@ -3189,7 +3199,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         stderr : `file-like`, `subprocess.PIPE`, `subprocess.DEVNULL`, `subprocess.STDOUT` = `subprocess.PIPE`
                 , Optional (Keyword only)
             Standard error for the created shell.
-        extra : `None`, `dict` of (`str`, `Any`) items = `None`, Optional (Keyword only)
+        extra : `None`, `dict` of (`str`, `object`) items = `None`, Optional (Keyword only)
             Optional transport information.
         preexecution_function : `None`, `callable` = `None`, Optional (Keyword only)
             This object is called in the child process just before the child is executed. POSIX only, defaults to

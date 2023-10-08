@@ -1,3 +1,9 @@
+# 1.0.32 *\[2023-10-??\]*
+
+#### Bug fixes
+
+- `URL` now handles inheritance correctly.
+
 # 1.0.62 *\[2023-08-21\]*
 
 #### Improvements
@@ -9,7 +15,7 @@
 
 - Interactive console got stuck when `StopIteration` was raised into it.
 - `Task.__repr__` showed bare `CancelledError()`.
-- In `Future:__repr__` `result~raise` state had priority over `cancelled`.
+- In `Future.__repr__` `result~raise` state had priority over `cancelled`.
 
 # 1.0.61 *\[2023-08-19\]*
 

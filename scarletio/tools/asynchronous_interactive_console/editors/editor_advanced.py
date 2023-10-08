@@ -826,10 +826,10 @@ class DisplayState:
         """
         repr_parts = ['<', self.__class__.__name__]
         
-        repr_parts.append(' cursor_index=')
+        repr_parts.append(' cursor_index = ')
         repr_parts.append(repr(self.cursor_index))
         
-        repr_parts.append(', cursor_line_index=')
+        repr_parts.append(', cursor_line_index = ')
         repr_parts.append(repr(self.cursor_line_index))
         
         repr_parts.append('>')

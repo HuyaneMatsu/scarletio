@@ -122,18 +122,18 @@ class RawMessage:
         
         yield repr_parts
         
-        repr_parts.append(' headers=')
+        repr_parts.append(' headers = ')
         repr_parts.append(repr(self.headers))
         
-        repr_parts.append(', upgraded=')
+        repr_parts.append(', upgraded = ')
         repr_parts.append(repr(self.upgraded))
         
-        repr_parts.append(', chunked=')
+        repr_parts.append(', chunked = ')
         repr_parts.append(repr(self.chunked))
         
         encoding = self.encoding
         if (encoding is not None):
-            repr_parts.append(', encoding=')
+            repr_parts.append(', encoding = ')
             repr_parts.append(repr(encoding))
         
         repr_parts.append('>')
@@ -196,10 +196,10 @@ class RawResponseMessage(RawMessage):
     def _cursed_repr_builder(self):
         for repr_parts in RawMessage._cursed_repr_builder(self):
             
-            repr_parts.append(', version=')
+            repr_parts.append(', version = ')
             repr_parts.append(repr(self.version))
             
-            repr_parts.append(', status=')
+            repr_parts.append(', status = ')
             repr_parts.append(repr(self.status))
             
             reason = self.reason
@@ -259,15 +259,15 @@ class RawRequestMessage(RawMessage):
     def _cursed_repr_builder(self):
         for repr_parts in RawMessage._cursed_repr_builder(self):
             
-            repr_parts.append(', version=')
+            repr_parts.append(', version = ')
             repr_parts.append(repr(self.version))
             
-            repr_parts.append(', method=')
+            repr_parts.append(', method = ')
             repr_parts.append(repr(self.method))
             
-            reason = self.reason
-            if reason:
-                repr_parts.append(', reason = ')
-                repr_parts.append(repr(self.path))
+            path = self.path
+            if path:
+                repr_parts.append(', path = ')
+                repr_parts.append(repr(path))
             
             yield repr_parts

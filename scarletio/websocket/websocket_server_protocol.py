@@ -490,7 +490,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
                 for key, value in extra_response_headers.items():
                     response_headers[key] = value
             
-            response_headers.setdefault(DATE, formatdate(usegmt=True))
+            response_headers.setdefault(DATE, formatdate(usegmt = True))
             response_headers.setdefault(SERVER, '')
             
             self.response_headers = response_headers
@@ -552,7 +552,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
                 headers = IgnoreCaseMultiValueDictionary()
                 body = b'Failed to open a WebSocket connection.\n'
             
-            headers.setdefault(DATE, formatdate(usegmt=True))
+            headers.setdefault(DATE, formatdate(usegmt = True))
             headers.setdefault(SERVER, '')
             headers.setdefault(CONTENT_LENGTH, repr(len(body)))
             headers.setdefault(CONTENT_TYPE, 'text/plain')

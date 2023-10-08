@@ -72,12 +72,12 @@ def test__WeakMap__eq():
     weak_map_3 = WeakMap(objects_3)
     
     vampytest.assert_eq(weak_map_1, weak_map_1)
-    vampytest.assert_eq(weak_map_1, weak_map_2, reverse=True)
-    vampytest.assert_eq(weak_map_1, weak_map_3, reverse=True)
+    vampytest.assert_eq(weak_map_1, weak_map_2, reverse = True)
+    vampytest.assert_eq(weak_map_1, weak_map_3, reverse = True)
     
     vampytest.assert_eq(weak_map_1, objects_1)
-    vampytest.assert_eq(weak_map_1, objects_2, reverse=True)
-    vampytest.assert_eq(weak_map_1, objects_3, reverse=True)
+    vampytest.assert_eq(weak_map_1, objects_2, reverse = True)
+    vampytest.assert_eq(weak_map_1, objects_3, reverse = True)
 
     vampytest.assert_is(weak_map_1.__eq__(1), NotImplemented)
 
@@ -134,11 +134,11 @@ def test__WeakMap__ne():
     weak_map_2 = WeakMap(objects_2)
     weak_map_3 = WeakMap(objects_3)
     
-    vampytest.assert_ne(weak_map_1, weak_map_1, reverse=True)
+    vampytest.assert_ne(weak_map_1, weak_map_1, reverse = True)
     vampytest.assert_ne(weak_map_1, weak_map_2)
     vampytest.assert_ne(weak_map_1, weak_map_3)
     
-    vampytest.assert_ne(weak_map_1, objects_1, reverse=True)
+    vampytest.assert_ne(weak_map_1, objects_1, reverse = True)
     vampytest.assert_ne(weak_map_1, objects_2)
     vampytest.assert_ne(weak_map_1, objects_3)
     

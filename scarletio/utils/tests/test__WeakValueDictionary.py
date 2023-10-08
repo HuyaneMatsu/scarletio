@@ -54,12 +54,12 @@ def test__WeakValueDictionary__eq():
     weak_value_dictionary_3 = WeakValueDictionary(relations_3)
     
     vampytest.assert_eq(weak_value_dictionary_1, weak_value_dictionary_1)
-    vampytest.assert_eq(weak_value_dictionary_1, weak_value_dictionary_2, reverse=True)
-    vampytest.assert_eq(weak_value_dictionary_1, weak_value_dictionary_3, reverse=True)
+    vampytest.assert_eq(weak_value_dictionary_1, weak_value_dictionary_2, reverse = True)
+    vampytest.assert_eq(weak_value_dictionary_1, weak_value_dictionary_3, reverse = True)
     
     vampytest.assert_eq(weak_value_dictionary_1, relations_1)
-    vampytest.assert_eq(weak_value_dictionary_1, relations_2, reverse=True)
-    vampytest.assert_eq(weak_value_dictionary_1, relations_3, reverse=True)
+    vampytest.assert_eq(weak_value_dictionary_1, relations_2, reverse = True)
+    vampytest.assert_eq(weak_value_dictionary_1, relations_3, reverse = True)
     
     
     vampytest.assert_is(weak_value_dictionary_1.__eq__([1, ]), NotImplemented)
@@ -107,11 +107,11 @@ def test__WeakValueDictionary__ne():
     weak_value_dictionary_2 = WeakValueDictionary(relations_2)
     weak_value_dictionary_3 = WeakValueDictionary(relations_3)
     
-    vampytest.assert_ne(weak_value_dictionary_1, weak_value_dictionary_1, reverse=True)
+    vampytest.assert_ne(weak_value_dictionary_1, weak_value_dictionary_1, reverse = True)
     vampytest.assert_ne(weak_value_dictionary_1, weak_value_dictionary_2)
     vampytest.assert_ne(weak_value_dictionary_1, weak_value_dictionary_3)
     
-    vampytest.assert_ne(weak_value_dictionary_1, relations_1, reverse=True)
+    vampytest.assert_ne(weak_value_dictionary_1, relations_1, reverse = True)
     vampytest.assert_ne(weak_value_dictionary_1, relations_2)
     vampytest.assert_ne(weak_value_dictionary_1, relations_3)
 

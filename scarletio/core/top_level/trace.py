@@ -298,7 +298,7 @@ def write_exception_sync(exception, before = None, after = None, file = None, *,
             highlighter,
         )
     
-    render_exception_into(exception, extend, filter=filter, highlighter=highlighter)
+    render_exception_into(exception, extend, filter = filter, highlighter = highlighter)
     
     if (after is not None):
         _add_typed_part_into(
@@ -435,9 +435,11 @@ def write_exception_maybe_async(
     """
     local_thread = current_thread()
     if isinstance(local_thread, EventThread):
-        write_exception_async(exception, before, after, file, filter=filter, highlighter=highlighter, loop=local_thread)
+        write_exception_async(
+            exception, before, after, file, filter = filter, highlighter = highlighter, loop = local_thread
+        )
     else:
-        write_exception_sync(exception, before, after, file, filter=filter, highlighter=highlighter)
+        write_exception_sync(exception, before, after, file, filter = filter, highlighter = highlighter)
 
 
 _DEFAULT_TRACE_WRITER_HIGHLIGHTER = None
@@ -613,7 +615,7 @@ class ExceptionWriterContextManager:
         # location
         location = self.location
         if (location is not None):
-            repr_parts.append(' location=')
+            repr_parts.append(' location = ')
             repr_parts.append(repr(location))
             
             field_added = True
@@ -628,7 +630,7 @@ class ExceptionWriterContextManager:
             else:
                 field_added = True
             
-            repr_parts.append(' include=')
+            repr_parts.append(' include = ')
             repr_parts.append(repr(include))
         
         # exclude
@@ -639,7 +641,7 @@ class ExceptionWriterContextManager:
             else:
                 field_added = True
             
-            repr_parts.append(' exclude=')
+            repr_parts.append(' exclude = ')
             repr_parts.append(repr(exclude))
         
         # filter
@@ -650,7 +652,7 @@ class ExceptionWriterContextManager:
             else:
                 field_added = True
             
-            repr_parts.append(' filter=')
+            repr_parts.append(' filter = ')
             repr_parts.append(repr(filter))
         
         # highlighter
@@ -659,7 +661,7 @@ class ExceptionWriterContextManager:
             if field_added:
                 repr_parts.append(',')
             
-            repr_parts.append(' highlighter=')
+            repr_parts.append(' highlighter = ')
             repr_parts.append(repr(highlighter))
         
         repr_parts.append('>')
@@ -920,7 +922,7 @@ def __threading_exception_hook__(threading_exception_hook_parameters):
         else:
             thread_name = thread.name
         
-        write_exception_sync(exception, before=f'Exception in thread: {thread_name}\n')
+        write_exception_sync(exception, before = f'Exception in thread: {thread_name}\n')
 
 
 @call

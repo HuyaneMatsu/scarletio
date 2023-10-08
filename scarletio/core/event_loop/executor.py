@@ -405,7 +405,7 @@ class ExecutorThread(Thread):
                     repr(self),
                     '\n',
                 ]
-                render_exception_into(err, extend=extracted)
+                render_exception_into(err, extend = extracted)
                 sys.stderr.write(''.join(extracted))
     
     

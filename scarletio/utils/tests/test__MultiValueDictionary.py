@@ -52,12 +52,12 @@ def test__MultiValueDictionary__eq():
     multi_value_dictionary_3 = MultiValueDictionary(relations_3)
     
     vampytest.assert_eq(multi_value_dictionary_1, multi_value_dictionary_1)
-    vampytest.assert_eq(multi_value_dictionary_1, multi_value_dictionary_2, reverse=True)
-    vampytest.assert_eq(multi_value_dictionary_1, multi_value_dictionary_3, reverse=True)
+    vampytest.assert_eq(multi_value_dictionary_1, multi_value_dictionary_2, reverse = True)
+    vampytest.assert_eq(multi_value_dictionary_1, multi_value_dictionary_3, reverse = True)
     
     vampytest.assert_eq(multi_value_dictionary_1, relations_1)
-    vampytest.assert_eq(multi_value_dictionary_1, relations_2, reverse=True)
-    vampytest.assert_eq(multi_value_dictionary_1, relations_3, reverse=True)
+    vampytest.assert_eq(multi_value_dictionary_1, relations_2, reverse = True)
+    vampytest.assert_eq(multi_value_dictionary_1, relations_3, reverse = True)
     
     
     vampytest.assert_is(multi_value_dictionary_1.__eq__([1, ]), NotImplemented)
@@ -73,11 +73,11 @@ def test__MultiValueDictionary__ne():
     multi_value_dictionary_2 = MultiValueDictionary(relations_2)
     multi_value_dictionary_3 = MultiValueDictionary(relations_3)
     
-    vampytest.assert_ne(multi_value_dictionary_1, multi_value_dictionary_1, reverse=True)
+    vampytest.assert_ne(multi_value_dictionary_1, multi_value_dictionary_1, reverse = True)
     vampytest.assert_ne(multi_value_dictionary_1, multi_value_dictionary_2)
     vampytest.assert_ne(multi_value_dictionary_1, multi_value_dictionary_3)
     
-    vampytest.assert_ne(multi_value_dictionary_1, relations_1, reverse=True)
+    vampytest.assert_ne(multi_value_dictionary_1, relations_1, reverse = True)
     vampytest.assert_ne(multi_value_dictionary_1, relations_2)
     vampytest.assert_ne(multi_value_dictionary_1, relations_3)
     

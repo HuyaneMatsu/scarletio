@@ -530,7 +530,7 @@ class WeakSet(set):
                 result.append(repr(element))
                 result.append(', ')
                 
-                collected +=1
+                collected += 1
                 if collected != limit:
                     continue
                 

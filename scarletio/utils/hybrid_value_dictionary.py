@@ -57,7 +57,7 @@ class _HybridValueDictionaryValueIterator(DictionaryValueIteratorBase):
                 continue
         
         finally:
-            parent._iterating -=1
+            parent._iterating -= 1
             parent._commit_removals()
     
     

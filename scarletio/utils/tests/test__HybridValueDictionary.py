@@ -54,12 +54,12 @@ def test__HybridValueDictionary__eq():
     hybrid_value_dictionary_3 = HybridValueDictionary(relations_3)
     
     vampytest.assert_eq(hybrid_value_dictionary_1, hybrid_value_dictionary_1)
-    vampytest.assert_eq(hybrid_value_dictionary_1, hybrid_value_dictionary_2, reverse=True)
-    vampytest.assert_eq(hybrid_value_dictionary_1, hybrid_value_dictionary_3, reverse=True)
+    vampytest.assert_eq(hybrid_value_dictionary_1, hybrid_value_dictionary_2, reverse = True)
+    vampytest.assert_eq(hybrid_value_dictionary_1, hybrid_value_dictionary_3, reverse = True)
     
     vampytest.assert_eq(hybrid_value_dictionary_1, relations_1)
-    vampytest.assert_eq(hybrid_value_dictionary_1, relations_2, reverse=True)
-    vampytest.assert_eq(hybrid_value_dictionary_1, relations_3, reverse=True)
+    vampytest.assert_eq(hybrid_value_dictionary_1, relations_2, reverse = True)
+    vampytest.assert_eq(hybrid_value_dictionary_1, relations_3, reverse = True)
     
     vampytest.assert_is(hybrid_value_dictionary_1.__eq__([1, ]), NotImplemented)
     vampytest.assert_is(hybrid_value_dictionary_1.__eq__(1), NotImplemented)
@@ -106,11 +106,11 @@ def test__HybridValueDictionary__ne():
     hybrid_value_dictionary_2 = HybridValueDictionary(relations_2)
     hybrid_value_dictionary_3 = HybridValueDictionary(relations_3)
     
-    vampytest.assert_ne(hybrid_value_dictionary_1, hybrid_value_dictionary_1, reverse=True)
+    vampytest.assert_ne(hybrid_value_dictionary_1, hybrid_value_dictionary_1, reverse = True)
     vampytest.assert_ne(hybrid_value_dictionary_1, hybrid_value_dictionary_2)
     vampytest.assert_ne(hybrid_value_dictionary_1, hybrid_value_dictionary_3)
     
-    vampytest.assert_ne(hybrid_value_dictionary_1, relations_1, reverse=True)
+    vampytest.assert_ne(hybrid_value_dictionary_1, relations_1, reverse = True)
     vampytest.assert_ne(hybrid_value_dictionary_1, relations_2)
     vampytest.assert_ne(hybrid_value_dictionary_1, relations_3)
     

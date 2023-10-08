@@ -91,7 +91,7 @@ class ReadProtocolBase(AbstractProtocolBase):
             else:
                 field_added = True
             
-            repr_parts.append(' transport=')
+            repr_parts.append(' transport = ')
             repr_parts.append(repr(transport))
         
         exception = self._exception
@@ -101,7 +101,7 @@ class ReadProtocolBase(AbstractProtocolBase):
             else:
                 field_added = True
             
-            repr_parts.append(' exception=')
+            repr_parts.append(' exception = ')
             repr_parts.append(repr(exception))
         
         payload_reader = self._payload_reader
@@ -109,7 +109,7 @@ class ReadProtocolBase(AbstractProtocolBase):
             if field_added:
                 repr_parts.append(', ')
             
-            repr_parts.append(' payload_reader=')
+            repr_parts.append(' payload_reader = ')
             repr_parts.append(repr(payload_reader))
         
         repr_parts.append('>')

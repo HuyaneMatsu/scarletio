@@ -163,7 +163,7 @@ class Cycler:
     """
     __slots__ = ('cycle_time', 'funcs', 'handle', 'loop',)
     
-    def __new__(cls, loop, cycle_time, *funcs, priority=0):
+    def __new__(cls, loop, cycle_time, *funcs, priority = 0):
         """
         Creates a new ``Cycler`` with the given parameters.
         
@@ -301,7 +301,7 @@ class Cycler:
                     repr_parts.append(', ')
                     repr_parts.append(repr(func.func))
                 
-                repr_parts.append(', priority=')
+                repr_parts.append(', priority = ')
                 repr_parts.append(repr(priority))
         
         repr_parts.append(')')
@@ -438,7 +438,7 @@ class Cycler:
         self.cycle_time = cycle_time
     
     
-    def append(self, func, priority=0):
+    def append(self, func, priority = 0):
         """
         Adds the given `func` to the cycler to call.
         

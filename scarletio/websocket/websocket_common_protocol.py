@@ -32,7 +32,7 @@ EXTERNAL_CLOSE_CODES = (1000, 1001, 1002, 1003, 1007, 1008, 1009, 1010, 1011,)
 
 HTTPClient = include('HTTPClient')
 
-DECODER = codecs.getincrementaldecoder('utf-8')(errors='strict')
+DECODER = codecs.getincrementaldecoder('utf-8')(errors = 'strict')
 
 
 class WebSocketCommonProtocol(HttpReadWriteProtocol):
@@ -740,7 +740,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             extensions = self.extensions
             if (extensions is not None):
                 for extension in reversed(extensions):
-                    frame = extension.decode(frame, max_size=max_size)
+                    frame = extension.decode(frame, max_size = max_size)
             
             frame.check()
             
@@ -901,7 +901,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
                 await self.ensure_open()
     
     
-    async def write_close_frame(self, data=b''):
+    async def write_close_frame(self, data = b''):
         """
         Writes close frame to the websocket if the websocket is not yet closed.
         

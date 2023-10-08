@@ -60,7 +60,7 @@ class Connection:
         if connector.loop.running:
             protocol = self.protocol
             if (protocol is not None):
-                connector.release(self.key, protocol, should_close=True)
+                connector.release(self.key, protocol, should_close = True)
     
     
     @property
@@ -70,7 +70,7 @@ class Connection:
         
         Returns
         -------
-        transport : `Any`
+        transport : `object`
             Defaults to `None`.
         """
         protocol = self.protocol
@@ -86,7 +86,7 @@ class Connection:
         
         Returns
         -------
-        writer : `Any`
+        writer : `object`
             Defaults to `None`.
         """
         protocol = self.protocol
@@ -163,7 +163,7 @@ class Connection:
         protocol = self.protocol
         if (protocol is not None):
             self.protocol = None
-            self.connector.release(self.key, protocol, should_close=True)
+            self.connector.release(self.key, protocol, should_close = True)
     
     
     def release(self):
@@ -175,7 +175,7 @@ class Connection:
         protocol = self.protocol
         if (protocol is not None):
             self.protocol = None
-            self.connector.release(self.key, protocol, should_close=protocol.should_close())
+            self.connector.release(self.key, protocol, should_close = protocol.should_close())
     
     
     def detach(self):

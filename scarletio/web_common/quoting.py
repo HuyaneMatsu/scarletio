@@ -233,7 +233,7 @@ def unquote(value, unsafe = None, query_string = False):
             result.append(last_percentage)  # %F8
         else:
             if query_string and (unquoted in QUERY_STRING_NOT_SAFE):
-                result.append(quote(unquoted, query_string=True))
+                result.append(quote(unquoted, query_string = True))
             elif (unsafe is not None) and (unquoted in unsafe):
                 result.append(quote(unquoted))
             else:

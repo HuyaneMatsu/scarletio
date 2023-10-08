@@ -200,7 +200,7 @@ def _handler_wait_exception(task_group):
     should_add_to_done : `int`
         Whether the task should be added to done.
     
-    returns
+    Returns
     -------
     should_add_to_done : `int`
         Whether the task should be added to done.
@@ -237,7 +237,7 @@ def _handler_wait_exception_and_pop(task_group):
     should_add_to_done : `int`
         Whether the task should be added to done.
     
-    returns
+    Returns
     -------
     should_add_to_done : `int`
         Whether the task should be added to done.
@@ -273,7 +273,7 @@ def _handler_wait_exception_or_cancellation(task_group):
     should_add_to_done : `int`
         Whether the task should be added to done.
     
-    returns
+    Returns
     -------
     should_add_to_done : `int`
         Whether the task should be added to done.
@@ -310,7 +310,7 @@ def _handler_wait_exception_or_cancellation_and_pop(task_group):
     should_add_to_done : `int`
         Whether the task should be added to done.
     
-    returns
+    Returns
     -------
     should_add_to_done : `int`
         Whether the task should be added to done.

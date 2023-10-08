@@ -64,10 +64,10 @@ class Server:
         if self.serving:
             repr_parts.append(' serving')
             
-        repr_parts.append(' sockets=')
+        repr_parts.append(' sockets = ')
         repr_parts.append(repr(self.sockets))
         
-        repr_parts.append(', protocol_factory=')
+        repr_parts.append(', protocol_factory = ')
         repr_parts.append(repr(self.protocol_factory))
         
         repr_parts.append('>')

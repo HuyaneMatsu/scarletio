@@ -373,7 +373,7 @@ class WebSocketClient(WebSocketCommonProtocol):
             connection.detach()
             
             self = protocol.isekai_into(cls)
-            self._set_common_websocket_attributes(url.host, url.port, is_ssl=is_ssl, **websocket_kwargs)
+            self._set_common_websocket_attributes(url.host, url.port, is_ssl = is_ssl, **websocket_kwargs)
             self.extensions = accepted_extensions
             self.subprotocol = subprotocol
             self._transport.set_protocol(self)

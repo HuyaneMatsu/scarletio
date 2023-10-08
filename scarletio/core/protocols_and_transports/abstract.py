@@ -289,7 +289,7 @@ class AbstractProtocolBase:
         pass
     
     
-    def close_transport(self, force=False):
+    def close_transport(self, force = False):
         """
         Starts the shutdown process of the protocol's transport if applicable.
         

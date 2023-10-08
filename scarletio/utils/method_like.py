@@ -23,7 +23,7 @@ class SubCheckType(type):
 
 
 @has_docs
-class MethodLike(metaclass=SubCheckType):
+class MethodLike(metaclass = SubCheckType):
     """
     Base class for methods.
     

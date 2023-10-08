@@ -221,7 +221,7 @@ class CompoundMetaType(type):
     """
     __source_meta_type__ = None
     
-    def __new__(cls, type_name, base_types, type_attributes, *, build=False, **keyword_parameters):
+    def __new__(cls, type_name, base_types, type_attributes, *, build = False, **keyword_parameters):
         """
         Creates a new compound component.
         
@@ -478,7 +478,7 @@ class CompoundMetaType(type):
         raise AttributeError(attribute_name)
 
 
-class Compound(metaclass=ignore_meta_type(CompoundMetaType)):
+class Compound(metaclass = ignore_meta_type(CompoundMetaType)):
     """
     Compound component base type. Inherit from it to create a type component.
     """
@@ -553,7 +553,7 @@ class CompoundLayer:
     
     
     @classmethod
-    def from_component(cls, component, *, implemented=False):
+    def from_component(cls, component, *, implemented = False):
         """
         Creates a new component layer from the given component.
         
@@ -590,7 +590,7 @@ class CompoundLayer:
     
     
     @classmethod
-    def from_type(cls, type_, *, implemented=False):
+    def from_type(cls, type_, *, implemented = False):
         """
         Creates a new component layer from the given type.
         
@@ -663,7 +663,7 @@ class CompoundLayer:
     
     
     @classmethod
-    def from_name_and_attributes(cls, type_name, type_attributes,*, implemented=False):
+    def from_name_and_attributes(cls, type_name, type_attributes,*, implemented = False):
         """
         Creates a new component layer from the given `type_name` - `type_attributes` pair.
         
@@ -726,7 +726,7 @@ class CompoundLayer:
             yield from implemented_type_attributes
     
     
-    def get_implementation_detail_of(self, attribute_name, *, exhaust=False):
+    def get_implementation_detail_of(self, attribute_name, *, exhaust = False):
         """
         Gets the implementation details for the given attribute name.
         
@@ -845,9 +845,9 @@ class ImplementationDetail:
         
         
         if self.implemented:
-            repr_parts.append(', implemented=True')
+            repr_parts.append(', implemented = True')
             
-            repr_parts.append(', implementation=')
+            repr_parts.append(', implementation = ')
             
             implementation = self.implementation
             if isinstance(implementation, FunctionType):
@@ -1098,14 +1098,14 @@ class CompoundLogicUnit:
             - Instance attribute overwritten with other get-property.
             - Constant value mismatch.
         """
-        type_layer_implementation_detail = self.type_layer.get_implementation_detail_of(attribute_name, exhaust=True)
+        type_layer_implementation_detail = self.type_layer.get_implementation_detail_of(attribute_name, exhaust = True)
         
         base_layer = self.base_layer
         if (base_layer is None):
             base_layer_implementation_detail = None
         
         else:
-            base_layer_implementation_detail = base_layer.get_implementation_detail_of(attribute_name, exhaust=True)
+            base_layer_implementation_detail = base_layer.get_implementation_detail_of(attribute_name, exhaust = True)
         
         
         if (type_layer_implementation_detail is None):
@@ -1412,7 +1412,7 @@ def build_type_structure(type_name, base_types, type_attributes):
     logic = CompoundLogicUnit(base_layer)
     
     if (direct_inherit_type is not None):
-        logic.add_base_layer(CompoundLayer.from_type(direct_inherit_type, implemented=True))
+        logic.add_base_layer(CompoundLayer.from_type(direct_inherit_type, implemented = True))
     
     if (components is not None):
         for component in components:
@@ -1425,7 +1425,7 @@ def build_type_structure(type_name, base_types, type_attributes):
         implementation_detail = logic.try_get_base_implementation_for(attribute_name)
         
         for layer in logic.component_layers:
-            layer_implementation = layer.get_implementation_detail_of(attribute_name, exhaust=True)
+            layer_implementation = layer.get_implementation_detail_of(attribute_name, exhaust = True)
             if (layer_implementation is None):
                 continue
             

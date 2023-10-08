@@ -423,7 +423,7 @@ def build_content_disposition_header(disposition_type, parameters, quote_fields)
         for key, value in parameters.items():
             if (not key) or (not (TOKENS > set(key))):
                 raise ValueError(
-                    f'Bad content disposition parameter {key!r}={value!r}.'
+                    f'Bad content disposition parameter {key!r} = {value!r}.'
                 )
             
             if quote_fields:

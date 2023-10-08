@@ -45,7 +45,7 @@ class WordNode:
         
         nodes = self.nodes
         if (nodes is not None):
-            result.append(' nodes=')
+            result.append(' nodes = ')
             result.append(repr(nodes))
         
         result.append('>')

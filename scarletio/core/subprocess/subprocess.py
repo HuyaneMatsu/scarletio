@@ -45,13 +45,13 @@ class AsyncProcess:
         A future, what is used to block the writing task, till it's writen data is drained.
     _exit_waiters : `None`, `set of ``Future``
         Waiter futures which wait for the subprocess to shutdown.
-    _extra : `dict` of (`str`, `Any`) items
+    _extra : `dict` of (`str`, `object`) items
         Optional transport information.
     _loop : ``EventThread``
         the respective event loop of the async subprocess to what is bound to.
     _paused : `bool`
         Whether the subprocess is paused writing because it hit's the high water mark.
-    _pending_calls : `None`, `list` of (`callable`, `tuple` of `Any`)
+    _pending_calls : `None`, `list` of (`callable`, `tuple` of `object`)
         Meanwhile the subprocess connection is established, this attribute is set as a list to put connection lost
         and related calls it to with their parameters.
     _subprocess_stderr_protocol : `None`, ``SubprocessReadPipeProtocol``
@@ -93,7 +93,7 @@ class AsyncProcess:
         ----------
         loop : ``EventThread``
             The event loop to what the async process is bound to.
-        process_parameters : `tuple` of `Any`
+        process_parameters : `tuple` of `object`
             Process parameters to open the subprocess with.
         shell : `bool
             Whether the specified command will be executed through the shell.
@@ -114,16 +114,16 @@ class AsyncProcess:
             +===============+===========+=======================================================================+
             | unbuffered    | `0`       | Read and write are one system call and can return short.              |
             +---------------+-----------+-----------------------------------------------------------------------+
-            | line buffered | `1`       | Only usable if `universal_newlines=True`, for example in text mode.   |
+            | line buffered | `1`       | Only usable if `universal_newlines = True`, for example in text mode. |
             +---------------+-----------+-----------------------------------------------------------------------+
-            | buffer size   | `>1`      | Use a buffer of approximately to that value.                          |
+            | buffer size   | `> 1`     | Use a buffer of approximately to that value.                          |
             +---------------+-----------+-----------------------------------------------------------------------+
-            | default       | `<0`      | use the system default: `io.DEFAULT_BUFFER_SIZE`.                     |
+            | default       | `< 0`     | use the system default: `io.DEFAULT_BUFFER_SIZE`.                     |
             +---------------+-----------+-----------------------------------------------------------------------+
             
-        extra : `None`, `dict` of (`str`, `Any`) items
+        extra : `None`, `dict` of (`str`, `object`) items
             Optional transport information.
-        process_open_kwargs : `dict` of (`str`, `Any`) items
+        process_open_kwargs : `dict` of (`str`, `object`) items
             Additional parameters to open the process with.
         
         Raises
@@ -143,12 +143,20 @@ class AsyncProcess:
         process = None
         
         try:
-            process = Popen(process_parameters, shell=shell, stdin=stdin_r, stdout=stdout, stderr=stderr,
-                universal_newlines=False, bufsize=buffer_size, **process_open_kwargs)
+            process = Popen(
+                process_parameters,
+                shell = shell,
+                stdin = stdin_r,
+                stdout = stdout,
+                stderr = stderr,
+                universal_newlines = False,
+                bufsize = buffer_size,
+                **process_open_kwargs,
+            )
             
             if (stdin_w is not None):
                 stdin_r.close()
-                process.stdin = open(stdin_w.detach(), 'wb', buffering=buffer_size)
+                process.stdin = open(stdin_w.detach(), 'wb', buffering = buffer_size)
                 stdin_w = None
         except:
             if (process is not None) and (process.poll() is None):
@@ -251,7 +259,7 @@ class AsyncProcess:
             else:
                 field_added = True
             
-            repr_parts.append(' stdin=')
+            repr_parts.append(' stdin = ')
             repr_parts.append(repr(stdin))
         
         stdout = self.stdout
@@ -261,7 +269,7 @@ class AsyncProcess:
             else:
                 field_added = True
             
-            repr_parts.append(' stdout=')
+            repr_parts.append(' stdout = ')
             repr_parts.append(repr(stdout))
         
         stderr = self.stderr
@@ -269,7 +277,7 @@ class AsyncProcess:
             if field_added:
                 repr_parts.append(',')
             
-            repr_parts.append(' stderr=')
+            repr_parts.append(' stderr = ')
             repr_parts.append(repr(stderr))
         
         repr_parts.append('>')
@@ -284,12 +292,12 @@ class AsyncProcess:
         ----------
         name : `str`
             The extra information's name to get.
-        default : `Any` = `None`, Optional
+        default : `object` = `None`, Optional
             Default value to return if `name` could not be matched. Defaults to `None`.
         
         Returns
         -------
-        info : `default`, `Any`
+        info : `default`, `object`
         """
         return self._extra.get(name, default)
     

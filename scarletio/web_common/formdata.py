@@ -15,13 +15,13 @@ class Formdata:
     
     Attributes
     ----------
-    fields : `list` of `tuple` (`MultiValueDictionary` of (`str`, `str`) items, `MultiValueDictionary` of (`str`, `str`) items, `Any`)
+    fields : `list` of `tuple` (`MultiValueDictionary` of (`str`, `str`) items, `MultiValueDictionary` of (`str`, `str`) items, `object`)
         The fields of the formdata. Each element is a tuple, which contains the following elements:
         - `type_options` : `MultiValueDictionary` of (`str`, `str`) items;
             Additional information used by the created ``PayloadBase`` when the field is generated.
         - `headers` : `MultiValueDictionary` of (`str`, `str`) items;
             The field specific headers.
-        - value : `Any`;
+        - value : `object`
             The field's value.
     
     is_multipart : `bool`
@@ -32,7 +32,7 @@ class Formdata:
     """
     __slots__ = ('fields', 'is_multipart', 'quote_fields', )
     
-    def __init__(self, quote_fields=True):
+    def __init__(self, quote_fields = True):
         """
         Creates a new a ``Formdata``.
         
@@ -53,7 +53,7 @@ class Formdata:
         
         Parameters
         ----------
-        fields : `dict` of (`str`, `Any`) items, `list` of `tuple` (`str`, `Any`), `IOBase`
+        fields : `dict` of (`str`, `object`) items, `list` of `tuple` (`str`, `object`), `IOBase`
             The fields to convert to ``Formdata``.
         
         Returns
@@ -98,7 +98,7 @@ class Formdata:
         ----------
         name : `str`
             The field's name.
-        value : `Any`
+        value : `object`
             The field's value.
         content_type : `None`, `str` = `None`, Optional
             The field's content type.
@@ -182,7 +182,7 @@ class Formdata:
         else:
             content_type = f'application/x-www-form-urlencoded; charset={encoding}'
         
-        return BytesPayload(urlencode(data, doseq=True, encoding=encoding).encode(), {'content_type': content_type})
+        return BytesPayload(urlencode(data, doseq = True, encoding = encoding).encode(), {'content_type': content_type})
     
     
     def _gen_form_data(self, encoding):
@@ -239,7 +239,7 @@ class Formdata:
         
         return writer
     
-    def __call__(self, encoding='utf-8'):
+    def __call__(self, encoding = 'utf-8'):
         """
         Gets the payload of the ``Formdata``.
         

@@ -787,7 +787,7 @@ class HttpReadProtocol(ReadProtocolBase):
                 # Second case, when we are at the end.
                 elif end == offset:
                     # Increase offset by 2 to include \r\n
-                    offset +=2
+                    offset += 2
                     # If we are at the end remove the chunk and store offset, return
                     if offset == len(chunk):
                         del chunks[0]

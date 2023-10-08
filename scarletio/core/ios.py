@@ -117,7 +117,7 @@ class ReuBytesIO(BytesIO):
         return self._size
     
     
-    def seek(self, offset, whence=os.SEEK_SET):
+    def seek(self, offset, whence = os.SEEK_SET):
         """
         Changes the stream position by the given offset. Offset is interpreted relative to the position indicated
         by `whence`.
@@ -665,7 +665,7 @@ class AsyncIO:
         return await executor.execute(alchemy_incendiary(io.__class__.readlines, (io, hint,),))
     
     
-    async def seek(self, offset, whence=os.SEEK_SET):
+    async def seek(self, offset, whence = os.SEEK_SET):
         """
         Changes the stream position by the given offset. Offset is interpreted relative to the position indicated
         by `whence`.
@@ -855,7 +855,7 @@ class AsyncIO:
         repr_parts = [
             '<',
             self.__class__.__name__,
-            ' io=',
+            ' io = ',
             repr(self._io),
         ]
         
@@ -863,7 +863,7 @@ class AsyncIO:
         if executor is None:
             repr_parts.append(' closed')
         else:
-            repr_parts.append(', executor=')
+            repr_parts.append(', executor = ')
             repr_parts.append(repr(executor))
         
         repr_parts.append('>')
@@ -960,7 +960,7 @@ class ReuAsyncIO(AsyncIO):
     """
     __slots__ = ('_executor', '_io', '_should_seek',)
     
-    async def __new__(cls, path, mode='rb', *args, **kwargs):
+    async def __new__(cls, path, mode = 'rb', *args, **kwargs):
         """
         Creates a new ``AsyncIO`` with the given parameters.
         
@@ -1303,7 +1303,7 @@ class ReuAsyncIO(AsyncIO):
         return await executor.execute(task)
     
     
-    async def seek(self, offset, whence=os.SEEK_SET):
+    async def seek(self, offset, whence = os.SEEK_SET):
         """
         Changes the stream position by the given offset. Offset is interpreted relative to the position indicated
         by `whence`.

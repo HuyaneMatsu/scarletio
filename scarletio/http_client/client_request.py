@@ -164,7 +164,7 @@ class ClientRequest:
                 
                 cookie[key] = value
             
-            headers[COOKIE] = cookie.output(header='', sep=';').strip()
+            headers[COOKIE] = cookie.output(header = '', sep = ';').strip()
         
         # Check proxy settings.
         if proxy_url is not None:

@@ -401,7 +401,7 @@ class WeakItemDictionary(dict):
                 result.append(repr(value))
                 result.append(', ')
                 
-                collected +=1
+                collected += 1
                 if collected != limit:
                     continue
                 

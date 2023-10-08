@@ -147,7 +147,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
             else:
                 field_added = True
             
-            repr_parts.append(' transport=')
+            repr_parts.append(' transport = ')
             repr_parts.append(transport.__class__.__name__)
         
         protocol = self._protocol
@@ -155,7 +155,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
             if field_added:
                 repr_parts.append(',')
             
-            repr_parts.append(' protocol=')
+            repr_parts.append(' protocol = ')
             repr_parts.append(protocol.__class__.__name__)
         
         repr_parts.append('>')

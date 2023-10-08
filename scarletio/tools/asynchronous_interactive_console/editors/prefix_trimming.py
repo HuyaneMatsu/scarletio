@@ -49,7 +49,7 @@ class PrefixTrimmer:
         prefix_last_pattern = re_compile(prefix_last_pattern)
         
         if (excludes is not None):
-            excludes = frozenset(excludes )
+            excludes = frozenset(excludes)
             if not excludes:
                 excludes  = None
         
@@ -251,7 +251,7 @@ class PrefixTrimmer:
         
         else:
             if (len(lines) == 1) and (self.prefix_last_pattern.fullmatch(line) is not None):
-                return ''
+                line = ''
         
         
         yield line

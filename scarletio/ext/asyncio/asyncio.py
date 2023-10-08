@@ -146,7 +146,7 @@ class EventThread:
             extracted.append('*no exception provided*\n')
             sys.stderr.write(''.join(extracted))
         else:
-            write_exception_async(exception, extracted, loop=self)
+            write_exception_async(exception, extracted, loop = self)
     
     
     async def create_connection(
@@ -1799,7 +1799,7 @@ async def start_server(client_connected_cb, host = None, port = None, *, loop = 
         )
     
     def factory():
-        reader = StreamReader(limit=limit, loop = loop)
+        reader = StreamReader(limit = limit, loop = loop)
         protocol = StreamReaderProtocol(reader, client_connected_cb, loop = loop)
         return protocol
     
@@ -1820,7 +1820,7 @@ async def start_unix_server(client_connected_cb, path = None, *, loop = None, li
         )
     
     def factory():
-        reader = StreamReader(limit=limit, loop = loop)
+        reader = StreamReader(limit = limit, loop = loop)
         protocol = StreamReaderProtocol(reader, client_connected_cb, loop = loop)
         return protocol
 
@@ -2043,7 +2043,7 @@ class StreamWriter:
 
 
 class StreamReader:
-    def __init__(self, limit=_DEFAULT_LIMIT, loop = None):
+    def __init__(self, limit = _DEFAULT_LIMIT, loop = None):
         if limit <= 0:
             raise ValueError('Limit cannot be <= 0')
 
@@ -3212,7 +3212,7 @@ class _FlowControlMixin(Transport):
             except (SystemExit, KeyboardInterrupt):
                 raise
             except BaseException as err:
-                write_exception_async(err, 'protocol.pause_writing() failed\n', loop=self)
+                write_exception_async(err, 'protocol.pause_writing() failed\n', loop = self)
     
 
     def _maybe_resume_protocol(self):
@@ -3223,7 +3223,7 @@ class _FlowControlMixin(Transport):
             except (SystemExit, KeyboardInterrupt):
                 raise
             except BaseException as err:
-                write_exception_async(err, 'protocol.resume_writing() failed\n', loop=self)
+                write_exception_async(err, 'protocol.resume_writing() failed\n', loop = self)
     
     def get_write_buffer_limits(self):
         return (self._low_water, self._high_water)

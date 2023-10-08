@@ -49,7 +49,7 @@ async def test__Future__repr__pending():
     
     representation = repr(future)
     vampytest.assert_instance(representation, str)
-    vampytest.assert_in('state =', representation)
+    vampytest.assert_in('state = ', representation)
     vampytest.assert_in('pending', representation)
 
     
@@ -67,7 +67,7 @@ async def test__Future__repr__callback():
     
     representation = repr(future)
     vampytest.assert_instance(representation, str)
-    vampytest.assert_in('callbacks =', representation)
+    vampytest.assert_in('callbacks = ', representation)
 
 
 async def test__Future__repr__result():
@@ -86,7 +86,7 @@ async def test__Future__repr__result():
     
     representation = repr(future)
     vampytest.assert_instance(representation, str)
-    vampytest.assert_in('result =', representation)
+    vampytest.assert_in('result = ', representation)
     vampytest.assert_in(result, representation)
 
 
@@ -106,7 +106,7 @@ async def test__Future__repr__exception():
     
     representation = repr(future)
     vampytest.assert_instance(representation, str)
-    vampytest.assert_in('exception =', representation)
+    vampytest.assert_in('exception = ', representation)
     vampytest.assert_in(exception_type.__name__, representation)
 
 

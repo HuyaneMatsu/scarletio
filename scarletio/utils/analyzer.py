@@ -1,6 +1,5 @@
 __all__ = ('CallableAnalyzer', 'RichAnalyzer')
 
-import sys
 from itertools import zip_longest
 from types import FunctionType
 
@@ -9,7 +8,8 @@ from .code import CO_VARARGS, CO_VARKEYWORDS
 from .method_like import MethodLike
 
 
-IS_PYTHON_STULTUS = sys.version_info >= (3, 10, 0)
+IS_PYTHON_STULTUS = False
+
 
 INSTANCE_TO_ASYNC_FALSE = 1
 INSTANCE_TO_ASYNC_TRUE = 2
@@ -37,9 +37,9 @@ class Parameter:
     
     Attributes
     ----------
-    annotation : `Any`
+    annotation : `object`
         The parameter's annotation if applicable. Defaults to `None`.
-    default : `Any`
+    default : `object`
         The default value of the parameter if applicable. Defaults to `None`.
     has_annotation : `bool`
         Whether the parameter has annotation.
@@ -234,6 +234,7 @@ class Parameter:
         
         return False
 
+
 if IS_PYTHON_STULTUS:
     def compile_annotations(real_function, annotations):
         new_annotations = {}
@@ -314,7 +315,7 @@ class CallableAnalyzer:
         method_allocation = self.method_allocation
         if method_allocation:
             repr_parts.append(' method')
-            if method_allocation!=1:
+            if method_allocation != 1:
                 repr_parts.append(' (')
                 repr_parts.append(repr(method_allocation))
                 repr_parts.append(')')
@@ -346,7 +347,7 @@ class CallableAnalyzer:
         return ''.join(repr_parts)
     
     
-    def __new__(cls, callable_, as_method=False):
+    def __new__(cls, callable_, as_method = False):
         """
         Analyzes the given callable.
         
@@ -791,7 +792,7 @@ class CallableAnalyzer:
         
         Returns
         -------
-        instance_to_async_callable : `Any`
+        instance_to_async_callable : `object`
         """
         return self.callable()
     
@@ -878,7 +879,7 @@ class CallableAnalyzer:
             if parameter.reserved:
                 continue
             
-            count +=1
+            count += 1
             continue
         
         return count
@@ -903,7 +904,7 @@ class CallableAnalyzer:
             if parameter.has_default:
                 continue
             
-            count +=1
+            count += 1
             continue
         
         return count
@@ -1046,6 +1047,7 @@ class RichAnalyzerParameterAccess:
         self._analyzer = analyzer
         return self
     
+    
     def __getattr__(self, attribute_name):
         """
         Tries to find the specified attribute of the respective function.
@@ -1075,7 +1077,7 @@ class RichAnalyzer:
     _analyzer : ``CallableAnalyzer``
         Analyzer analyzing the respective function.
     """
-    def __new__(cls, callable_, as_method=False):
+    def __new__(cls, callable_, as_method = False):
         """
         Analyzes the given callable.
         
@@ -1092,7 +1094,7 @@ class RichAnalyzer:
         TypeError
             If the given object is not callable, or could not be used as probably intended.
         """
-        analyzer = CallableAnalyzer(callable_, as_method=as_method)
+        analyzer = CallableAnalyzer(callable_, as_method = as_method)
         
         self = object.__new__(cls)
         self._analyzer = analyzer

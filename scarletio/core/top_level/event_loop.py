@@ -161,7 +161,7 @@ def create_event_loop(**keyword_parameters):
     **keyword_parameters : Keyword parameters
         Parameters to create the event loop with.
     
-    Other parameters
+    Other Parameters
     ----------------
     daemon : `bool` = `False`, Optional (Keyword only)
         Whether the event loop should be daemon.
@@ -188,7 +188,7 @@ def get_or_create_event_loop(**keyword_parameters):
     **keyword_parameters : Keyword parameters
         Parameters to create the event loop with.
     
-    Other parameters
+    Other Parameters
     ----------------
     daemon : `bool` = `False`, Optional (Keyword only)
         Whether the event loop should be daemon.

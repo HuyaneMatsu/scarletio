@@ -69,9 +69,9 @@ class AsyncQueue:
                 )
         
         if iterable is None:
-            results = deque(maxlen=max_length)
+            results = deque(maxlen = max_length)
         else:
-            results = deque(iterable, maxlen=max_length)
+            results = deque(iterable, maxlen = max_length)
         
         self = object.__new__(cls)
         self._loop = loop
@@ -341,7 +341,7 @@ class AsyncQueue:
         
         exception = self._exception
         if (exception is not None):
-            repr_parts.append(', exception=')
+            repr_parts.append(', exception = ')
             repr_parts.append(str(exception))
         
         repr_parts.append(')')

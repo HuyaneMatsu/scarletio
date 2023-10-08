@@ -856,4 +856,4 @@ class HTTPClient:
             Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of it is
             removed.
         """
-        return WebSocketContextManager(WebSocketClient(self.loop, url, **kwargs, http_client=self))
+        return WebSocketContextManager(WebSocketClient(self.loop, url, **kwargs, http_client = self))

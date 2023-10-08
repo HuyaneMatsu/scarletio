@@ -89,7 +89,7 @@ if sys.platform == 'win32':
                         for writer in iter_w:
                             try:
                                 l = [writer]
-                                result_r, result_w, result_x=select(EMPTY, l, l, 0.0)
+                                result_r, result_w, result_x = select(EMPTY, l, l, 0.0)
                             except OSError:
                                 remove.append(writer)
                             else:

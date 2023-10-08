@@ -63,7 +63,7 @@ class ConnectorBase:
         'cleanup_handle', 'closed',  'cookies', 'force_close', 'loop'
     )
     
-    def __new__(cls, loop, force_close=False,):
+    def __new__(cls, loop, force_close = False):
         """
         Creates a new connector bound to the given loop.
         
@@ -272,7 +272,7 @@ class ConnectorBase:
                     del acquired_protocols_per_host[key]
     
     
-    def release(self, key, protocol, should_close=False):
+    def release(self, key, protocol, should_close = False):
         """
         Releases the given protocol from the connector. If the connection should not be closed, not closes it, instead
         stores it for future reuse.
@@ -622,14 +622,14 @@ class TCPConnector(ConnectorBase):
             A host info container containing the resolved addresses or the cached exception.
         """
         try:
-            infos = await self.loop.get_address_info(host, port, type=module_socket.SOCK_STREAM, family=self.family)
+            infos = await self.loop.get_address_info(host, port, type = module_socket.SOCK_STREAM, family = self.family)
         except BaseException as err:
             return err
         
         return HostInfoCont(host, infos,)
     
     
-    async def resolver_task(self, key,):
+    async def resolver_task(self, key):
         """
         Resolves addresses for the given `host` - `port` key.
         
@@ -875,7 +875,7 @@ class TCPConnector(ConnectorBase):
                 try:
                     fingerprint.check(protocol)
                 except ValueError as err:
-                    protocol.close_transport(force=True)
+                    protocol.close_transport(force = True)
                     last_error = err
                     continue
             

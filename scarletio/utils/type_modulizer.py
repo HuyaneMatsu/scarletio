@@ -56,7 +56,7 @@ def _modulize_function(old, globals_, source_module, module_name, module_path):
     new = FunctionType(old.__code__, globals_, old.__name__, old.__defaults__, old.__closure__)
     new.__module__ = module_path
     qualname = old.__qualname__
-    if (qualname is not None) and (len(qualname) > len(module_name)) and qualname[len(module_name)] =='.' and \
+    if (qualname is not None) and (len(qualname) > len(module_name)) and qualname[len(module_name)] == '.' and \
             qualname.startswith(module_name):
         new.__qualname__ = qualname[len(module_name) + 1:]
     

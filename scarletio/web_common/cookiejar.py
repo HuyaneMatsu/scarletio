@@ -97,7 +97,7 @@ def parse_cookie_date(date_str):
             or (day > 31) or (hour > 23) or (minute > 59) or (second > 59):
         return None
     
-    return datetime(year, month, day, hour, minute, second, tzinfo=timezone.utc)
+    return datetime(year, month, day, hour, minute, second, tzinfo = timezone.utc)
 
 
 def do_domains_match(domain, hostname):
@@ -184,7 +184,7 @@ class CookieJar:
     """
     __slots__ = ('cookies', 'expirations', 'host_only_cookies', 'next_expiration', 'unsafe', )
     
-    def __init__(self, unsafe=False):
+    def __init__(self, unsafe = False):
         """
         Creates a new cookie-jar.
         

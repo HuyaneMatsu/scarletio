@@ -219,7 +219,7 @@ class SSLPipe:
         self.feed_ssl_data(b'')
     
     
-    def feed_ssl_data(self, data, only_handshake=False):
+    def feed_ssl_data(self, data, only_handshake = False):
         """
         Feed SSL record level data into the pipe.
         

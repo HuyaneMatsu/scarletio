@@ -188,7 +188,7 @@ class SocketTransportLayerBase(TransportLayerBase):
         elif self._closing:
             repr_parts.append(' closing')
         
-        repr_parts.append(' file_descriptor=')
+        repr_parts.append(' file_descriptor = ')
         repr_parts.append(repr(self._socket_file_descriptor))
         
         loop = self._loop
@@ -202,7 +202,7 @@ class SocketTransportLayerBase(TransportLayerBase):
             else:
                 polling = key.events & selectors.EVENT_READ
             
-            repr_parts.append(' read=')
+            repr_parts.append(' read = ')
             if polling:
                 state = 'polling'
             else:
@@ -216,14 +216,14 @@ class SocketTransportLayerBase(TransportLayerBase):
             else:
                 polling = key.events & selectors.EVENT_WRITE
 
-            repr_parts.append(' write=<')
+            repr_parts.append(' write = <')
             if polling:
                 state = 'polling'
             else:
                 state = 'idle'
             repr_parts.append(state)
 
-            repr_parts.append(', buffer_size=')
+            repr_parts.append(', buffer_size = ')
             
             buffer_size = self.get_write_buffer_size()
             repr_parts.append(str(buffer_size))

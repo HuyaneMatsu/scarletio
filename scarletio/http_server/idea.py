@@ -26,7 +26,7 @@ class TaskLocal:
     
     Attributes
     ----------
-    _kwargs : `dict` of (`str`, `Any`) items
+    _kwargs : `dict` of (`str`, `object`) items
         `name` - `object` pairs to add as task local.
     _task : `None`, ``Task``
         The entered task.
@@ -39,7 +39,7 @@ class TaskLocal:
         
         Parameters
         ----------
-        **kwargs : `Any`
+        **kwargs : `object`
             `name` - `object` pairs to add as task local.
         """
         self = object.__new__(cls)
@@ -149,7 +149,7 @@ class HTTPRequestHandler(HttpReadWriteProtocol):
         Payload waiter of the protocol, what's result is set, when the ``.payload_reader`` generator returns.
         
         If cancelled or marked by done or any other methods, the payload reader will not be cancelled.
-    _transport : `None`, `Any`
+    _transport : `None`, `object`
         Asynchronous transport implementation. Is set meanwhile the protocol is alive.
     _drain_waiter : `None`, ``Future``
         A future, what is used to block the writing task, till it's writen data is drained.
@@ -180,7 +180,7 @@ class HTTPRequestHandler(HttpReadWriteProtocol):
         
         Parameters
         ----------
-        transport : `Any`
+        transport : `object`
             Asynchronous transport implementation, what calls the protocol's ``.data_received`` when data is
             received.
         """
@@ -197,7 +197,7 @@ class HTTPRequestHandler(HttpReadWriteProtocol):
         except:
             # We will let Task.__del__ to render the exception...
             
-            self.close_transport(force=True)
+            self.close_transport(force = True)
             raise
         
         finally:
@@ -251,8 +251,8 @@ class HTTPRequestHandler(HttpReadWriteProtocol):
             body = f'Http version: {version[0]}.{version[1]} is not supported.\n'.encode()
         
         try:
-            self.write_http_response(status, headers, body=body)
-            self.close_transport(force=True)
+            self.write_http_response(status, headers, body = body)
+            self.close_transport(force = True)
         except BaseException as err2:
             await write_exception_async(
                 err2,
@@ -332,7 +332,7 @@ class HTTPServer:
         self.server = None
         
         factory = functools.partial(HTTPRequestHandler, self,)
-        server = await loop.create_server(factory, host, port, ssl=ssl, **server_kwargs)
+        server = await loop.create_server(factory, host, port, ssl = ssl, **server_kwargs)
         
         self.server = server
         await server.start()
@@ -346,7 +346,7 @@ class HTTPServer:
         
         Parameters
         ----------
-        protocol : ``HTTPRequestHandler``, `Any`
+        protocol : ``HTTPRequestHandler``, `object`
             The connected server side http request handler.
         """
         self.handlers.add(protocol)
@@ -357,7 +357,7 @@ class HTTPServer:
         
         Parameters
         ----------
-        protocol : ``HTTPRequestHandler``, `Any`
+        protocol : ``HTTPRequestHandler``, `object`
             The connected server side http request handler.
         """
         self.handlers.discard(protocol)
@@ -486,11 +486,11 @@ class Route:
         
         parameters = self.parameters
         if (parameters is not None):
-            result.append(' parameters=')
+            result.append(' parameters = ')
             result.append(repr(parameters))
             result.append(', ')
         
-        result.append(' rule=')
+        result.append(' rule = ')
         result.append(repr(self.rule))
         
         result.append('>')
@@ -1310,7 +1310,7 @@ class _RouteAdder:
     ----------
     endpoint  : `None`, `str`
         The internal endpoint of the url. Defaults to the name of the added function.
-    options : `dict` of (`str`, `Any`) items.
+    options : `dict` of (`str`, `object`) items.
         Additional options to be forward to the underlying ``Rule`` object.
     parent : ``AppBase``
         The parent webapp.
@@ -1331,7 +1331,7 @@ class _RouteAdder:
             The url rule as string.
         endpoint  : `None`, `str`
             The internal endpoint of the url. Defaults to the name of the added function.
-        options : `dict` of (`str`, `Any`) items.
+        options : `dict` of (`str`, `object`) items.
             Additional options to be forward to the underlying ``Rule`` object.
         """
         self = object.__new__(cls)
@@ -1356,8 +1356,9 @@ class _RouteAdder:
         rule : ``Rule``
             The added rule object.
         """
-        return self.parent.add_url_rule(self.rule, self.endpoint, view_func,
-            provide_automatic_options=None, **self.options)
+        return self.parent.add_url_rule(
+            self.rule, self.endpoint, view_func, provide_automatic_options = None, **self.options
+        )
 
 
 class _ErrorHandlerAdder:
@@ -1451,7 +1452,7 @@ def _validate_parameters(parameters, parameters_name):
     
     Parameters
     ----------
-    parameters : `None`, `dict` of (`str`, `Any`) items or (`set`, `tuple`, `list`) of `tuple` (`str`, `Any`)
+    parameters : `None`, `dict` of (`str`, `object`) items or (`set`, `tuple`, `list`) of `tuple` (`str`, `object`)
         Initial parameters to add to the route.
     
     Returns
@@ -1643,14 +1644,14 @@ def _validate_options(options):
     
     Parameters
     ----------
-    options : `dict` of (`str`, `Any`) items.
+    options : `dict` of (`str`, `object`) items.
         Additional options forward to the underlying ``Rule`` object.
     
     Returns
     -------
     request_methods : `set` of `str`
         A set of the validated http methods. If none is given, `'GET'` is auto added to it.
-    parameters : `None`, `list` of `tuple` (`str`, `Any`)
+    parameters : `None`, `list` of `tuple` (`str`, `object`)
         Defaults parameters to the dispatched router.
     subdomain : `None`, `str`
         Whether the respective route should match the specified subdomain.
@@ -1997,14 +1998,14 @@ def _merge_parameters(primary_parameters, secondary_parameters):
     
     Parameters
     ----------
-    primary_parameters : `None`, `tuple` of `tuple` (`str`, `Any`)
+    primary_parameters : `None`, `tuple` of `tuple` (`str`, `object`)
         Priority parameters, which element's wont be removed.
-    secondary_parameters : `None`, `tuple` of `tuple` (`str`, `Any`)
+    secondary_parameters : `None`, `tuple` of `tuple` (`str`, `object`)
         Secondary parameters, which will be merged to `primary_parameters`.
     
     Returns
     -------
-    merged_parameters : `None`, `tuple` of `tuple` (`str`, `Any`)
+    merged_parameters : `None`, `tuple` of `tuple` (`str`, `object`)
         The merged parameters.
     """
     if primary_parameters is None:
@@ -2111,7 +2112,7 @@ class RuleDirectory:
             The url rule to register.
         request_methods : `None`, `set` of `str`
             Request methods to call `view_func` when received.
-        parameters : `None`, `tuple` of `tuple` (`str`, `Any`)
+        parameters : `None`, `tuple` of `tuple` (`str`, `object`)
             Default parameters to pass to the `view_func`.
         subdomain : `None`, `str`
             Whether the route should match the specified subdomain.
@@ -2156,7 +2157,7 @@ class RuleDirectory:
         
         Parameters
         ----------
-        parameters : `None`, `tuple` of `tuple` (`str`, `Any`)
+        parameters : `None`, `tuple` of `tuple` (`str`, `object`)
         """
         for rule in self.rules:
             rule.set_parameters(parameters)
@@ -2233,7 +2234,7 @@ class Rule:
         Keyword only parameter names accepted by `view_func`.
     kwargs_parameter_supported : `bool`
         Whether `view_func` accepts `**kwargs` parameter.
-    parameters : `None`, `tuple` of `tuple` (`str`, `Any`)
+    parameters : `None`, `tuple` of `tuple` (`str`, `object`)
         Default parameters to pass to the `view_func`.
     positional_parameter_names : `None`, `tuple` of `str`
         Positional only parameter names accepted by `view_func`.
@@ -2272,7 +2273,7 @@ class Rule:
             The endpoint's internal name.
         request_methods : `None`, `set` of `str`
             Request methods to call `view_func` when received.
-        parameters : `None`, `tuple` of `tuple` (`str`, `Any`)
+        parameters : `None`, `tuple` of `tuple` (`str`, `object`)
             Default parameters to pass to the `view_func`.
         subdomain : `None`, `str`
             Whether the route should match the specified subdomain.
@@ -2364,7 +2365,7 @@ class Rule:
         
         Parameters
         ----------
-        parameters : `None`, `tuple` of `tuple` (`str`, `Any`)
+        parameters : `None`, `tuple` of `tuple` (`str`, `object`)
         """
         self.parameters = _merge_parameters(self.parameters, parameters)
     
@@ -2401,10 +2402,10 @@ class Rule:
     
     def __repr__(self):
         """Returns the rule's representation."""
-        result = ['<', self.__class__.__name__, ' endpoint=', repr(self.endpoint)]
+        result = ['<', self.__class__.__name__, ' endpoint = ', repr(self.endpoint)]
         parameters = self.parameters
         if (parameters is not None):
-            result.append(', parameters=')
+            result.append(', parameters = ')
             result.append(repr(parameters))
         
         request_methods = self.request_methods
@@ -2420,20 +2421,20 @@ class Rule:
             
             request_method_repr = ''.join(request_method_repr_parts)
         
-        result.append(', request_methods=')
+        result.append(', request_methods = ')
         result.append(request_method_repr)
         
         rule = self.rule
         if (rule is not None):
-            result.append(', rule=')
+            result.append(', rule = ')
             result.append(repr(rule))
         
         subdomain = self.subdomain
         if (subdomain is not None):
-            result.append(', subdomain=')
+            result.append(', subdomain = ')
             result.append(repr(subdomain))
         
-        result.append(', view_func=')
+        result.append(', view_func = ')
         result.append(repr(self.view_func))
         
         result.append('>')
@@ -2652,7 +2653,7 @@ class AppBase:
         The name of the package or module that this app belongs to.
     root_path : `str`
         Absolute path to the package on the filesystem.
-    rules : `dict` of (`str`, `Any`)
+    rules : `dict` of (`str`, `object`)
         The added rules to the application or blueprint. The keys are their endpoint name.
     static_directory : `None`, `str`
         Absolute path to the static file's directory.
@@ -2693,7 +2694,7 @@ class AppBase:
         +===================+===========================+=======================================================+
         | endpoint          | `None`, `str`           | The endpoint what matched the request url.            |
         +-------------------+---------------------------+-------------------------------------------------------+
-        | kwargs            | `dict` of (`str`, `Any`)  | Additional keyword parameters passed to ``url_for``.  |
+        | kwargs            | `dict` of (`str`, `object`)  | Additional keyword parameters passed to ``url_for``.  |
         +-------------------+---------------------------+-------------------------------------------------------+
     
     url_value_preprocessors : `None`, `list` of `async-callable`
@@ -2708,7 +2709,7 @@ class AppBase:
         | endpoint          | `None`, `str`           | The endpoint what matched the request url.    |
         |                   |                           | Set as `None` if exception occurred.          |
         +-------------------+---------------------------+-----------------------------------------------+
-        | parameters        | `dict` of (`str`, `Any`)  | Parameters parsed from the request url.       |
+        | parameters        | `dict` of (`str`, `object`)  | Parameters parsed from the request url.       |
         +-------------------+---------------------------+-----------------------------------------------+
     """
     __slots__ = (
@@ -3172,7 +3173,7 @@ class AppBase:
             +===================+===========================+=======================================================+
             | endpoint          | `None`, `str`           | The endpoint what matched the request url.            |
             +-------------------+---------------------------+-------------------------------------------------------+
-            | kwargs            | `dict` of (`str`, `Any`)  | Additional keyword parameters passed to ``url_for``.  |
+            | kwargs            | `dict` of (`str`, `object`)  | Additional keyword parameters passed to ``url_for``.  |
             +-------------------+---------------------------+-------------------------------------------------------+
         
         Returns
@@ -3209,7 +3210,7 @@ class AppBase:
             | endpoint          | `None`, `str`           | The endpoint what matched the request url.    |
             |                   |                           | Set as `None` if exception occurred.          |
             +-------------------+---------------------------+-----------------------------------------------+
-            | parameters        | `dict` of (`str`, `Any`)  | Parameters parsed from the request url.       |
+            | parameters        | `dict` of (`str`, `object`)  | Parameters parsed from the request url.       |
             +-------------------+---------------------------+-----------------------------------------------+
         
         Returns
@@ -3249,7 +3250,7 @@ class AppBase:
             Url prefix for a blueprint.
         subdomain : `None`, `str`
             Subdomain for the blueprint.
-        url_defaults : `None`, `dict` of (`str`, `Any`) items or (`set`, `list`, `tuple`) of (`str`, `Any`) items
+        url_defaults : `None`, `dict` of (`str`, `object`) items or (`set`, `list`, `tuple`) of (`str`, `object`) items
             Parameters which the routes of the blueprint will get by default.
         
         Raises
@@ -3286,7 +3287,7 @@ class BlueprintState:
         Url prefix for all the routes of the blueprint. Set as `None` if not applicable.
     subdomain : `None`, `str`
         Subdomain, what the routes of the blueprint gonna match.
-    parameters : `None`, `tuple` of `tuple` (`str`, `Any`)
+    parameters : `None`, `tuple` of `tuple` (`str`, `object`)
         Parameters which the routes of the blueprint will get by default.
     """
     __slots__ = ('blueprint', 'url_prefix', 'subdomain', 'parameters')
@@ -3299,7 +3300,7 @@ class BlueprintState:
         ----------
         blueprint : ``AppBase``
             The blueprint create overwrite state from.
-        options : `None`, `dict` of (`str`, `Any`) items
+        options : `None`, `dict` of (`str`, `object`) items
             Extra options
         
         Raises
@@ -3396,7 +3397,7 @@ class Blueprint(AppBase):
         The name of the package or module that this app belongs to.
     root_path : `str`
         Absolute path to the package on the filesystem.
-    rules : `dict` of (`str`, `Any`)
+    rules : `dict` of (`str`, `object`)
         The added rules to the application or blueprint. The keys are their endpoint name.
     static_directory : `None`, `str`
         Absolute path to the static file's directory.
@@ -3437,7 +3438,7 @@ class Blueprint(AppBase):
         +===================+===========================+=======================================================+
         | endpoint          | `None`, `str`           | The endpoint what matched the request url.            |
         +-------------------+---------------------------+-------------------------------------------------------+
-        | kwargs            | `dict` of (`str`, `Any`)  | Additional keyword parameters passed to ``url_for``.  |
+        | kwargs            | `dict` of (`str`, `object`)  | Additional keyword parameters passed to ``url_for``.  |
         +-------------------+---------------------------+-------------------------------------------------------+
     
     url_value_preprocessors : `None`, `list` of `async-callable`
@@ -3452,20 +3453,30 @@ class Blueprint(AppBase):
         | endpoint          | `None`, `str`           | The endpoint what matched the request url.    |
         |                   |                           | Set as `None` if exception occurred.          |
         +-------------------+---------------------------+-----------------------------------------------+
-        | parameters        | `dict` of (`str`, `Any`)  | Parameters parsed from the request url.       |
+        | parameters        | `dict` of (`str`, `object`)  | Parameters parsed from the request url.       |
         +-------------------+---------------------------+-----------------------------------------------+
     
     url_prefix : `None`, `tuple` of `tuple` (`str`, `int`)
         Url prefix for all the routes of the blueprint. Set as `None` if not applicable.
     subdomain : `None`, `str`
         Subdomain, what the routes of the blueprint gonna match.
-    parameters : `None`, `tuple` of `tuple` (`str`, `Any`)
+    parameters : `None`, `tuple` of `tuple` (`str`, `object`)
         Parameters which the routes of the blueprint will get by default.
     """
     __slots__ = ('url_prefix', 'subdomain', 'parameters')
     
-    def __new__(cls, import_name, *, template_directory=None, root_path=None, static_directory=None,
-            static_url_path=None, url_prefix = None, subdomain=None, url_defaults=None):
+    def __new__(
+        cls,
+        import_name,
+        *,
+        template_directory = None,
+        root_path = None,
+        static_directory = None,
+        static_url_path = None,
+        url_prefix = None,
+        subdomain = None,
+        url_defaults = None,
+    ):
         """
         Creates a new ``Blueprint``.
         
@@ -3486,7 +3497,7 @@ class Blueprint(AppBase):
             Url prefix for all the routes registered to the blueprint.
         subdomain : `None`, `str` = `None`, Optional (Keyword only)
             Subdomain, what the routes of the blueprint gonna match.
-        url_defaults : `None`, `dict` of (`str`, `Any`) items or (`set`, `list`, `tuple`) of (`str`, `Any`) items \
+        url_defaults : `None`, `dict` of (`str`, `object`) items or (`set`, `list`, `tuple`) of (`str`, `object`) items \
                 = `None` , Optional (Keyword only)
             Parameters which the routes of the blueprint will get by default.
         
@@ -3568,7 +3579,7 @@ class WebApp(AppBase):
         The name of the package or module that this app belongs to.
     root_path : `str`
         Absolute path to the package on the filesystem.
-    rules : `dict` of (`str`, `Any`)
+    rules : `dict` of (`str`, `object`)
         The added rules to the application or blueprint. The keys are their endpoint name.
     static_directory : `None`, `str`
         Absolute path to the static file's directory.
@@ -3609,7 +3620,7 @@ class WebApp(AppBase):
         +===================+===========================+=======================================================+
         | endpoint          | `None`, `str`           | The endpoint what matched the request url.            |
         +-------------------+---------------------------+-------------------------------------------------------+
-        | kwargs            | `dict` of (`str`, `Any`)  | Additional keyword parameters passed to ``url_for``.  |
+        | kwargs            | `dict` of (`str`, `object`)  | Additional keyword parameters passed to ``url_for``.  |
         +-------------------+---------------------------+-------------------------------------------------------+
     
     url_value_preprocessors : `None`, `list` of `async-callable`
@@ -3624,7 +3635,7 @@ class WebApp(AppBase):
         | endpoint          | `None`, `str`           | The endpoint what matched the request url.    |
         |                   |                           | Set as `None` if exception occurred.          |
         +-------------------+---------------------------+-----------------------------------------------+
-        | parameters        | `dict` of (`str`, `Any`)  | Parameters parsed from the request url.       |
+        | parameters        | `dict` of (`str`, `object`)  | Parameters parsed from the request url.       |
         +-------------------+---------------------------+-----------------------------------------------+
     
     _server : `None`, ``WebServer``
@@ -3632,8 +3643,15 @@ class WebApp(AppBase):
     """
     __slots__ = ('_server',)
     
-    def __new__(cls, import_name, *, template_directory=None, root_path=None, static_directory='static',
-            static_url_path=None):
+    def __new__(
+        cls,
+        import_name,
+        *,
+        template_directory = None,
+        root_path = None,
+        static_directory = 'static',
+        static_url_path = None,
+    ):
         """
         Creates a new ``WebApp``.
         
@@ -3693,7 +3711,7 @@ def _register_rules(application, blueprint_state_stack, rules, router, router_by
         Subdomain to overwrite the rules'.
     url_prefix : `None`, `tuple` of `None`, `tuple` of `tuple` (`str`, `int`)
         Additional url prefix for the rules.
-    parameters : `None`, `tuple` of `tuple` (`str`, `Any`)
+    parameters : `None`, `tuple` of `tuple` (`str`, `object`)
         Parameters which the routes of the blueprint will get by default.
     """
     for rule in rules:

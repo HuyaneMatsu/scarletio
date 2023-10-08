@@ -86,7 +86,7 @@ def _produce_banner(package, logo):
     yield AWAIT_NOTE, await_token_type
     
     yield '\n', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE
-    console_help ='Type "help", "copyright", "credits" or "license" for more information.'
+    console_help = 'Type "help", "copyright", "credits" or "license" for more information.'
     yield console_help, HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_BANNER_DESCRIPTION
     yield '\n', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE
 
