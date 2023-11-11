@@ -37,7 +37,7 @@ class IgnoreCaseString(str):
         
         Parameters
         ----------
-        value : `Any` = `''`, Optional
+        value : `object` = `''`, Optional
             The value, what is representation or encoded version is returned.
         encoding : `str` = `sys.getdefaultencoding()`, Optional
             Encoding to use when decoding a `bytes-like`.

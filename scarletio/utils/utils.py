@@ -69,7 +69,7 @@ def where(container, key):
     
     Returns
     -------
-    value : `Any`
+    value : `object`
         An element of `container`.
     
     Raises
@@ -93,9 +93,9 @@ def relative_index(list_, value):
     
     Parameters
     ----------
-    list_ : `list` of `Any`
+    list_ : `list` of `object`
         The list o which value would be inserted.
-    value : `Any`
+    value : `object`
         The value what would be inserted.
     
     Returns
@@ -123,9 +123,9 @@ def change_on_switch(list_, value, new_position, key = None):
     
     Parameters
     ----------
-    list_ : `list` of `Any`
+    list_ : `list` of `object`
         The list on what the changes will be calculated.
-    value : `Any`
+    value : `object`
         The object, what would be moved.
     new_position : `int`
         The new position of the value.
@@ -134,7 +134,7 @@ def change_on_switch(list_, value, new_position, key = None):
     
     Returns
     -------
-    result : `list` of (`tuple` (`int`, `Any`)) or `callable` returns
+    result : `list` of (`tuple` (`int`, `object`)) or `callable` returns
         The changed positions.
     
     Raises
@@ -212,7 +212,7 @@ def list_difference(list1, list2):
     
     Returns
     -------
-    difference : `tuple` (`list` of `Any`, `list` of `Any`)
+    difference : `tuple` (`list` of `object`, `list` of `object`)
         A tuple containing the inclusive element of the given parameters.
     
     Notes
@@ -291,7 +291,7 @@ class un_map_pack:
     ----------
     generator : ``GeneratorType``
         The generator to unpack.
-    next_value : `Any`
+    next_value : `object`
         The next key to return on get-item.
     """
     def __init__(self, generator):
@@ -342,7 +342,7 @@ def is_iterable(object_):
     
     Parameters
     ----------
-    object_ : `Any`
+    object_ : `object`
         The object to check.
     
     Returns
@@ -359,7 +359,7 @@ def is_hashable(object_):
     
     Parameters
     ----------
-    object_ : `Any`
+    object_ : `object`
         The object to check.
     
     Returns

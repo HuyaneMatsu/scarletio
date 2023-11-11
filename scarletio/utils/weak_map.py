@@ -357,14 +357,14 @@ class WeakMap(dict):
         
         Parameters
         ----------
-        key : `Any`
+        key : `object`
             A key to match.
-        default : `Any` = `None`, Optional
+        default : `object` = `None`, Optional
             Default value to return if the given `key` could not be matched.
         
         Returns
         -------
-        real_key : `Any`, `default`
+        real_key : `object`, `default`
             The matched key. If no key was matched returns the `default` value.
         """
         try:
@@ -399,14 +399,14 @@ class WeakMap(dict):
         
         Parameters
         ----------
-        key : `Any`
+        key : `object`
             A key to match.
-        default : `Any`, Optional
+        default : `object`, Optional
             Default value to return if the given `key` could not be matched.
         
         Returns
         -------
-        real_key : `Any`, `default`
+        real_key : `object`, `default`
             The matched key. If no key was matched and `default` value is given, then returns that.
         
         Raises
@@ -477,12 +477,12 @@ class WeakMap(dict):
         
         Parameters
         ----------
-        key : `Any`
+        key : `object`
             A key to match.
         
         Returns
         -------
-        real_key : `Any`
+        real_key : `object`
             The matched key, or the given one.
         
         Raises

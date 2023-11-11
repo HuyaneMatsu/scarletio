@@ -13,21 +13,21 @@ from .editor_base import EditorBase, _validate_buffer
 from .prefix_trimming import trim_console_prefix
 
 
-KEY_KEYBOARD_INTERRUPT = 3
-KEY_DESTROY = 4
-KEY_TAB = 9
-KEY_NEW_LINE_ALL = (10, 13)
-KEY_ARROW_ALL_INITIAL = 27
-KEY_ARROW_ALL = 91
-KEY_ARROW_UP = 65
-KEY_ARROW_DOWN = 66
-KEY_ARROW_RIGHT = 67
-KEY_ARROW_LEFT = 68
-KEY_ARROW_END = 70
-KEY_ARROW_HOME = 72
-KEY_ARROW_BACK_TAB = 90
-KEY_DELETE_LEFT = 127
-KEY_DELETE_RIGHT = 126
+KEY_KEYBOARD_INTERRUPT = '\x03'
+KEY_DESTROY = '\x04'
+KEY_TAB = '\x09'
+KEY_NEW_LINE_ALL = ('\x0a', '\x0d')
+KEY_ARROW_N_0 = '\x1b'
+KEY_ARROW_N_1 = '\x5b'
+KEY_ARROW_UP = KEY_ARROW_N_0 + KEY_ARROW_N_1 + '\x41'
+KEY_ARROW_DOWN = KEY_ARROW_N_0 + KEY_ARROW_N_1 + '\x42'
+KEY_ARROW_RIGHT = KEY_ARROW_N_0 + KEY_ARROW_N_1 + '\x43'
+KEY_ARROW_LEFT = KEY_ARROW_N_0 + KEY_ARROW_N_1 + '\x44'
+KEY_ARROW_END = KEY_ARROW_N_0 + KEY_ARROW_N_1 + '\x46'
+KEY_ARROW_HOME = KEY_ARROW_N_0 + KEY_ARROW_N_1 + '\x48'
+KEY_BACK_TAB = KEY_ARROW_N_0 + KEY_ARROW_N_1 + '\x5a'
+KEY_DELETE_RIGHT = KEY_ARROW_N_0 + KEY_ARROW_N_1 + '\x33' + '\x7e'
+KEY_DELETE_LEFT = '\x7f'
 
 COMMAND_NEXT_LINE = '\n'
 COMMAND_PREVIOUS_LINE = '\033[F'
@@ -54,9 +54,278 @@ AUTO_COMPLETE_BREAK_CHARACTERS = frozenset((
 
 INDEXED_INPUT_RP = re.compile('\s*in\s*\[\s*(\d+)\s*\]\s*', re.I)
 
-CHARACTER_CHAINED_OPERATION = chr(KEY_ARROW_ALL_INITIAL)
-
 STDOUT_WRITE_TIMEOUT = 30.0
+
+
+class KeyNode:
+    """
+    A key's node when parsing input stream.
+    
+    Attributes
+    ----------
+    character_sub_nodes : `None | dict<str, instance>`
+        Sub-nodes, character to sub-node relation.
+    end : `bool`
+        Whether the node is an acceptable end.
+    matcher_sub_nodes : `None | list<(FunctionType, instance)>`
+        Matchers, function to sub-node relation.
+    """
+    __slots__ = ('character_sub_nodes', 'end', 'matcher_sub_nodes')
+    
+    def __new__(cls):
+        """
+        Creates a new key node instance.
+        """
+        self = object.__new__(cls)
+        self.character_sub_nodes = None
+        self.end = False
+        self.matcher_sub_nodes = None
+        return self
+    
+    
+    def __repr__(self):
+        """Returns the key node's representation."""
+        repr_parts = ['<', self.__class__.__name__]
+        
+        field_added = False
+        
+        # end
+        end = self.end
+        if end:
+            if field_added:
+                repr_parts.append(',')
+            else:
+                field_added = True
+            
+            repr_parts.append(' end = ')
+            repr_parts.append(repr(end))
+        
+        # character_sub_nodes
+        character_sub_nodes = self.character_sub_nodes
+        if (character_sub_nodes is not None):
+            if field_added:
+                repr_parts.append(',')
+            else:
+                field_added = True
+            
+            repr_parts.append(' character_sub_nodes = ')
+            repr_parts.append(repr(character_sub_nodes))
+        
+        # matcher_sub_nodes
+        matcher_sub_nodes = self.matcher_sub_nodes
+        if (matcher_sub_nodes is not None):
+            if field_added:
+                repr_parts.append(',')
+            else:
+                field_added = True
+            
+            repr_parts.append(' matcher_sub_nodes = ')
+            repr_parts.append(repr(matcher_sub_nodes))
+        
+        
+        repr_parts.append('>')
+        return ''.join(repr_parts)
+    
+    
+    def __eq__(self, other):
+        """Returns whether the two key nodes are equal."""
+        if type(self) is not type(other):
+            return NotImplemented
+        
+        if self.character_sub_nodes != other.character_sub_nodes:
+            return False
+        
+        if self.end != other.end:
+            return False
+        
+        if self.matcher_sub_nodes != other.matcher_sub_nodes:
+            return False
+        
+        return True
+    
+    
+    def set_end(self):
+        """
+        Sets ``.end`` to true.
+        """
+        self.end = True
+    
+    
+    def add_character_sub_node(self, character):
+        """
+        Adds a character sub-node.
+        
+        Parameters
+        ----------
+        character : `str`
+            Character to add.
+        
+        Returns
+        -------
+        node : `instance<type<self>>`
+        """
+        character_sub_nodes = self.character_sub_nodes
+        if character_sub_nodes is None:
+            character_sub_nodes = {}
+            self.character_sub_nodes = character_sub_nodes
+            node = None
+        
+        else:
+            node = character_sub_nodes.get(character, None)
+        
+        if node is None:
+            node = type(self)()
+            character_sub_nodes[character] = node
+        
+        return node
+    
+    
+    def add_matcher_sub_node(self, matcher):
+        """
+        Adds a matcher sub-node.
+        
+        Parameters
+        ----------
+        matcher : `FunctionType`
+            Matcher to add.
+        
+        Returns
+        -------
+        node : `instance<type<self>>`
+        """
+        matcher_sub_nodes = self.matcher_sub_nodes
+        if matcher_sub_nodes is None:
+            matcher_sub_nodes = []
+            self.matcher_sub_nodes = matcher_sub_nodes
+            node = None
+        else:
+            for iterated_matched, iterated_node in matcher_sub_nodes:
+                if iterated_matched is matcher:
+                    node = iterated_node
+                    break
+            else:
+                node = None
+        
+        if node is None:
+            node = type(self)()
+            matcher_sub_nodes.append((matcher, node))
+        
+        return node
+    
+    
+    def match(self, character):
+        """
+        Tries to match the given character.
+        
+        Parameters
+        ----------
+        character : `bool`
+            The character to match.
+        
+        Returns
+        -------
+        node : `Node | KeyNode`
+        """
+        character_sub_nodes = self.character_sub_nodes
+        if (character_sub_nodes is not None):
+            try:
+                node = character_sub_nodes[character]
+            except KeyError:
+                pass
+            else:
+                return node
+            
+        matcher_sub_nodes = self.matcher_sub_nodes
+        if (matcher_sub_nodes is not None):
+            for matcher, node in matcher_sub_nodes:
+                if matcher(character):
+                    return node 
+        
+        return None
+
+
+def _add_keys(core_node, keys):
+    """
+    Adds a key to a node map.
+    
+    Parameters
+    ----------
+    core_node : ``KeyNode``
+        Key node to add the keys to.
+    keys : `list<str>`
+        Keys to build the node map with.
+    """
+    for key in keys:
+        node = core_node
+        for character in key:
+            node = node.add_character_sub_node(character)
+        
+        node.set_end()
+
+
+NODE_MAP = KeyNode()
+_add_keys(
+    NODE_MAP,
+    [
+        KEY_KEYBOARD_INTERRUPT,
+        KEY_DESTROY,
+        KEY_TAB,
+        *KEY_NEW_LINE_ALL,
+        KEY_ARROW_UP,
+        KEY_ARROW_DOWN,
+        KEY_ARROW_RIGHT,
+        KEY_ARROW_LEFT,
+        KEY_ARROW_END,
+        KEY_ARROW_HOME,
+        KEY_BACK_TAB,
+        KEY_DELETE_RIGHT,
+        KEY_DELETE_LEFT,
+    ],
+)
+NODE_MAP.add_matcher_sub_node(str.isprintable).set_end()
+
+
+def _read_from_node_map(node, input_stream):
+    """
+    Reads the next token from a node map.
+    
+    Parameters
+    ----------
+    node : `KeyNode`
+        The node to read from.
+    input_stream : ``InputStream``
+        Stream to read from.
+    
+    Returns
+    -------
+    output : `None | str`
+    """
+    end = 0
+    peek_count = 0
+    
+    while True:
+        character = input_stream.peek(peek_count)
+        if character is None:
+            break
+        
+        matched_node = node.match(character)
+        if matched_node is None:
+            break
+        
+        peek_count += 1
+        node = matched_node
+        
+        if node.end:
+            end = peek_count
+        
+        continue
+    
+    if end <= 0:
+        return None
+    
+    output = input_stream.read(end)
+    input_stream.consume(end)
+    return output
 
 
 def create_command_move_cursor(position):
@@ -1121,41 +1390,18 @@ class DisplayState:
             continue
 
 
-def _get_input_content_length(content):
-    """
-    Gets the input content's length.
-    
-    Parameter
-    ---------
-    content : `str`
-        Input content.
-    
-    Returns
-    -------
-    length : `int`
-    """
-    length = len(content)
-    if length:
-        length -= (content.count(CHARACTER_CHAINED_OPERATION) << 1)
-        
-        if length < 1:
-            length = 1
-    
-    return length
-
-
-class InputIterator:
+class InputStream:
     """
     Helper class for processing a bigger chunk of input data at once.
     
     Attributes
     ----------
-    iterator : `None, `str_iterator`
-        Content iterator.
-    length : `int`
-        The estimated length of the input.
+    content : `str`
+        Content to iterate over.
+    index : `str`
+        The last read index.
     """
-    __slots__ = ('iterator', 'length')
+    __slots__ = ('content', 'index')
     
     def __new__(cls, content):
         """
@@ -1166,53 +1412,209 @@ class InputIterator:
         content : `str`
             The content to iterate over.
         """
-        length = _get_input_content_length(content)
-        if length:
-            trimmed_content = trim_console_prefix(content)
-            if (trimmed_content is not None):
-                content = trimmed_content
-                length = _get_input_content_length(content)
-        
-        if length:
-            iterator = iter(content)
-        else:
-            iterator = None
-        
         self = object.__new__(cls)
-        self.iterator = iterator
-        self.length = length
+        self.content = content
+        self.index = 0
         return self
     
     
-    def __iter__(self):
-        """Returns self."""
+    def __repr__(self):
+        """Returns the input stream's representation."""
+        repr_parts = ['<', self.__class__.__name__]
+        
+        repr_parts.append(' index = ')
+        repr_parts.append(repr(self.index))
+        
+        repr_parts.append(', content = ')
+        repr_parts.append(repr(self.content))
+        
+        repr_parts.append('>')
+        return ''.join(repr_parts)
+    
+    
+    def __eq__(self, other):
+        """Returns whether the two input streams are equal."""
+        if type(self) is not type(other):
+            return NotImplemented
+        
+        if self.content != other.content:
+            return False
+        
+        if self.index != other.index:
+            return False
+        
+        return True
+    
+    
+    def peek(self, count):
+        """
+        Peeks forward or backwards. Defaults to not peeking, but getting the current character.
+        
+        Parameters
+        ----------
+        count : `int`
+            How much to peek.
+        
+        Returns
+        -------
+        character : `None | str`
+        """
+        content = self.content
+        index = self.index + count
+        if (index < 0) or (index >= len(content)):
+            return None
+        
+        return content[index]
+    
+    
+    def consume(self, count):
+        """
+        Consumes characters.
+        
+        Parameters
+        ----------
+        count : `int`
+            How much to consume.
+        """
+        if count < 1:
+            return
+        
+        # limit index to length, so it cant go wild.
+        index = self.index + count
+        length = len(self.content)
+        if index > length:
+            index = length
+        self.index = index
+    
+    
+    def read(self, count):
+        """
+        Reads from the stream from the current position.
+        
+        Parameters
+        ----------
+        count : `int
+            How much to read.
+        
+        Returns
+        -------
+        output : `None | str`
+        """
+        if count <= 0:
+            return None
+        
+        content = self.content
+        index = self.index
+        if index >= len(content):
+            return None
+        
+        return content[index : index + count]
+    
+    
+    def is_at_end_of_stream(self):
+        """
+        Returns whether the editor at the end of the stream.
+        
+        Returns
+        -------
+        is_at_end_of_stream : `bool` 
+        """
+        return self.index >= len(self.content)
+    
+    
+    def copy(self):
+        """
+        Copies the input stream.
+        
+        Returns
+        -------
+        new : `instance<type<self>>`
+        """
+        new = object.__new__(type(self))
+        new.content = self.content
+        new.index = self.index
+        return new
+
+
+class InputTokenizer:
+    """
+    Creates standalone tokens from an input stream. Nothing fancy.
+    
+    Attributes
+    ----------
+    stream : ``InputStream``
+        Stream to use.
+    """
+    __slots__ = ('stream',)
+    
+    def __new__(cls, stream):
+        """
+        Creates a new input tokenizer.
+        
+        Parameters
+        ----------
+        stream : ``InputStream``
+            Stream to use.
+        """
+        self = object.__new__(cls)
+        self.stream = stream
         return self
     
     
-    def __next__(self):
-        """Gets the next element of the input iterator."""
-        iterator = self.iterator
-        if iterator is not None:
-            next_ = next(iterator, None)
-            if next_ is not None:
-                return next_
-            
-            self.iterator = None
-        
-        raise StopIteration()
+    def __repr__(self):
+        """Returns the input tokenizer's representation."""
+        return ''.join(['<', self.__class__.__name__, ' stream = ', repr(self.stream), '>'])
     
     
-    def get_next(self):
-        """Manually reads the next element."""
-        iterator = self.iterator
-        if iterator is not None:
-            next_ = next(iterator, None)
-            if next_ is not None:
-                return next_
-            
-            self.iterator = None
+    def next(self):
+        """
+        Returns the next token in the tokenizer.
         
-        return None
+        Returns
+        -------
+        token : `None | str`
+            Returns `None` if there are no more tokens to read.
+        """
+        stream = self.stream
+        while not stream.is_at_end_of_stream():
+            output = _read_from_node_map(NODE_MAP, stream)
+            if output is not None:
+                return output
+            
+            stream.consume(1)
+            continue
+    
+    
+    def is_length_greater_than(self, value):
+        """
+        Returns whether the tokenizer's length is greater than the given value.
+        
+        Parameters
+        ----------
+        value : `bool`
+            The value to check for.
+        
+        Returns
+        -------
+        is_length_greater_than : `bool`
+        """
+        stream = self.stream
+        index = stream.index
+        
+        while value >= 0:
+            token = self.next()
+            if token is None:
+                outcome = False
+                break
+            
+            value -= 1
+            continue
+        
+        else:
+            outcome = True
+            
+        stream.index = index
+        return outcome
 
 
 def write_to_io(io, content):
@@ -2048,18 +2450,33 @@ class EditorAdvanced(EditorBase):
         SyntaxError
         """
         content = self.poll()
-        input_iterator = InputIterator(content)
-        should_auto_format = input_iterator.length <= 1
+        
+        input_stream = InputStream(content)
+        input_tokenizer = InputTokenizer(input_stream)
+        if not input_tokenizer.is_length_greater_than(1):
+            should_auto_format = True
+        else:
+            trimmed_content = trim_console_prefix(content)
+            if (trimmed_content is None):
+                should_auto_format = False
+            
+            else:
+                input_stream = InputStream(trimmed_content)
+                input_tokenizer = InputTokenizer(input_stream)
+                should_auto_format = not input_tokenizer.is_length_greater_than(1)
         
         old_display_state = self.display_state
         new_display_state = old_display_state
         
-        for character_string in input_iterator:
-            received_display_state = self.process_input(
-                new_display_state, input_iterator, character_string, should_auto_format
-            )
+        while True:
+            token = input_tokenizer.next()
+            if token is None:
+                break
+            
+            received_display_state = self.process_input(new_display_state, token, should_auto_format)
             if (received_display_state is not None):
                 new_display_state = received_display_state
+            continue
         
         if (new_display_state is old_display_state):
             new_display_state = None
@@ -2067,7 +2484,7 @@ class EditorAdvanced(EditorBase):
         return new_display_state
     
     
-    def process_input(self, old_display_state, input_iterator, character_string, should_auto_format):
+    def process_input(self, old_display_state, token, should_auto_format):
         """
         Processes one input.
         
@@ -2075,10 +2492,8 @@ class EditorAdvanced(EditorBase):
         ----------
         old_display_state : ``DisplayState``
             The old display state to work from.
-        input_iterator : ``InputIterator``
-            The input iterator to pull additional characters if required.
-        character_string : `str`
-            The input string.
+        token : `str`
+            A single input string.
         should_auto_format : `bool`
             Whether the content should be auto formatted.
         
@@ -2087,65 +2502,47 @@ class EditorAdvanced(EditorBase):
         new_display_state : `None`, ``DisplayState``
             The new display state.
         """
-        character_int = ord(character_string)
-        
-        if character_int == KEY_KEYBOARD_INTERRUPT:
+        if token == KEY_KEYBOARD_INTERRUPT:
             raise KeyboardInterrupt()
         
-        if character_int == KEY_DESTROY:
+        if token == KEY_DESTROY:
             raise SystemExit()
         
-        if character_int in KEY_NEW_LINE_ALL:
+        if token in KEY_NEW_LINE_ALL:
             return self.execute_enter(old_display_state, should_auto_format)
+    
+        if token == KEY_ARROW_LEFT:
+            return self.execute_arrow_left(old_display_state)
         
-        if character_int == KEY_ARROW_ALL_INITIAL:
-            next_1_string = input_iterator.get_next()
-            next_2_string = input_iterator.get_next()
-            
-            if (next_1_string is None) or (next_2_string is None):
-                # Escape was pressed.
-                return None
-            
-            next_1_int = ord(next_1_string)
-            next_2_int = ord(next_2_string)
-            
-            if next_1_int != KEY_ARROW_ALL:
-                return None
-            
-            if next_2_int == KEY_ARROW_LEFT:
-                return self.execute_arrow_left(old_display_state)
-            
-            if next_2_int == KEY_ARROW_RIGHT:
-                return self.execute_arrow_right(old_display_state)
-            
-            if next_2_int == KEY_ARROW_UP:
-                return self.execute_arrow_up(old_display_state, should_auto_format)
-            
-            if next_2_int == KEY_ARROW_DOWN:
-                return self.execute_arrow_down(old_display_state, should_auto_format)
-            
-            if next_2_int == KEY_ARROW_END:
-                return self.execute_arrow_end(old_display_state)
-            
-            if next_2_int == KEY_ARROW_HOME:
-                return self.execute_arrow_home(old_display_state)
-            
-            if next_2_int == KEY_ARROW_BACK_TAB:
-                return self.execute_arrow_back_tab(old_display_state)
-            
-            return None
+        if token == KEY_ARROW_RIGHT:
+            return self.execute_arrow_right(old_display_state)
         
-        if character_int == KEY_TAB:
-            return self.execute_tab(old_display_state, should_auto_format)
+        if token == KEY_ARROW_UP:
+            return self.execute_arrow_up(old_display_state, should_auto_format)
         
-        if character_int == KEY_DELETE_LEFT:
-            return self.execute_delete_left(old_display_state)
+        if token == KEY_ARROW_DOWN:
+            return self.execute_arrow_down(old_display_state, should_auto_format)
         
-        if character_int == KEY_DELETE_RIGHT:
+        if token == KEY_ARROW_END:
+            return self.execute_arrow_end(old_display_state)
+        
+        if token == KEY_ARROW_HOME:
+            return self.execute_arrow_home(old_display_state)
+        
+        if token == KEY_BACK_TAB:
+            return self.execute_arrow_back_tab(old_display_state)
+        
+        if token == KEY_DELETE_RIGHT:
             return self.execute_delete_right(old_display_state)
         
-        if character_string.isprintable():
-            return self.execute_print(old_display_state, character_string)
+        if token == KEY_TAB:
+            return self.execute_tab(old_display_state, should_auto_format)
+        
+        if token == KEY_DELETE_LEFT:
+            return self.execute_delete_left(old_display_state)
+        
+        if token.isprintable():
+            return self.execute_print(old_display_state, token)
         
         return None
     

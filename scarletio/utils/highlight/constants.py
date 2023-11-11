@@ -1,17 +1,17 @@
 __all__ = ()
 
-import re
+from re import compile as re_compile
 
 from .word_pattern import create_word_pattern
 
 
-COMPLEX_RP = re.compile('((?:\d(?:_?\d)*\.\d(?:_?\d)*|\d(?:_?\d)*\.|\.\d(?:_?\d)*)(?:[eE][+-]?\d(?:_?\d)*)?[jJ])')
-FLOAT_RP = re.compile('((?:\d(?:_?\d)*\.\d(?:_?\d)*|\d(?:_?\d)*\.|\.\d(?:_?\d)*)(?:[eE][+-]?\d(?:_?\d)*)?)')
-INTEGER_HEXADECIMAL_RP = re.compile('(0[xX](?:_?[0-9a-fA-F])+)')
-INTEGER_DECIMAL_RP = re.compile('(\d(?:_?\d)*)')
-INTEGER_OCTAL_RP = re.compile('(0[oO](?:_?[0-7])+)')
-INTEGER_BINARY_RP = re.compile('(0[bB](?:_?[01])+)')
-IDENTIFIER_RP = re.compile('([a-zA-Z_][a-zA-Z_0-9]*)')
+COMPLEX_RP = re_compile('((?:\d(?:_?\d)*\.\d(?:_?\d)*|\d(?:_?\d)*\.|\.\d(?:_?\d)*)(?:[eE][+-]?\d(?:_?\d)*)?[jJ])')
+FLOAT_RP = re_compile('((?:\d(?:_?\d)*\.\d(?:_?\d)*|\d(?:_?\d)*\.|\.\d(?:_?\d)*)(?:[eE][+-]?\d(?:_?\d)*)?)')
+INTEGER_HEXADECIMAL_RP = re_compile('(0[xX](?:_?[0-9a-fA-F])+)')
+INTEGER_DECIMAL_RP = re_compile('(\d(?:_?\d)*)')
+INTEGER_OCTAL_RP = re_compile('(0[oO](?:_?[0-7])+)')
+INTEGER_BINARY_RP = re_compile('(0[bB](?:_?[01])+)')
+IDENTIFIER_RP = re_compile('([a-zA-Z_][a-zA-Z_0-9]*)')
 
 ATTRIBUTE_ACCESS_OPERATOR = '.'
 KEYWORD_ELLIPSIS = '...'
@@ -84,19 +84,19 @@ OPERATORS = {
     '<', '<<', '<<=', '<=', '=', '==', '>', '>=', '>>', '>>=', '@', '@=', '\\', '^', '^=', '|', '|='
 }
 
-STRING_STARTER_RP = re.compile('(r[fb]?|[fb]r?|b|f)?(\'{3}|\"{3}|\'|\")')
-STRING_END_SINGLE_RP = re.compile('(.*?)(?<!\\\\)\'|\'')
-STRING_END_DOUBLE_RP = re.compile('(.*?)(?<!\\\\)\"|\'')
-STRING_MULTI_LINE_END_SINGLE_RP = re.compile('(.*?)(?<!\\\\)\'\'\'|\'\'\'')
-STRING_MULTI_LINE_END_DOUBLE_RP = re.compile('(.*?)(?<!\\\\)\"\"\"|\"\"\"')
+STRING_STARTER_RP = re_compile('(r[fb]?|[fb]r?|b|f)?(\'{3}|\"{3}|\'|\")')
+STRING_END_SINGLE_RP = re_compile('(.*?)(?<!\\\\)\'|\'')
+STRING_END_DOUBLE_RP = re_compile('(.*?)(?<!\\\\)\"|\'')
+STRING_MULTI_LINE_END_SINGLE_RP = re_compile('(.*?)(?<!\\\\)\'\'\'|\'\'\'')
+STRING_MULTI_LINE_END_DOUBLE_RP = re_compile('(.*?)(?<!\\\\)\"\"\"|\"\"\"')
 
-SPACE_MATCH_RP = re.compile('([ \t]+)')
+SPACE_MATCH_RP = re_compile('([ \t]+)')
 
-FORMAT_STRING_MATCH_STRING = re.compile('(.*?)(\{\{?|\}\}?|\n)')
+FORMAT_STRING_MATCH_STRING = re_compile('(.*?)(\{\{?|\}\}?|\n)')
 
-CONSOLE_PREFIX_RP = re.compile('(>>>>?|\.\.\.\.?| *\.\.\.\:|In \[\d+\]\:)( [ \t]*)')
+CONSOLE_PREFIX_RP = re_compile('(>>>>?|\.\.\.\.?| *\.\.\.\:|In \[\d+\]\:)( [ \t]*)')
 
-FORMAT_STRING_POSTFIX_RP = re.compile('(![sraSRA])\}')
+FORMAT_STRING_POSTFIX_RP = re_compile('(![sraSRA])\}')
 
 PUNCTUATION_WP = create_word_pattern(PUNCTUATIONS)
 OPERATOR_WP = create_word_pattern(OPERATORS)

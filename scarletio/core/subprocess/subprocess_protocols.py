@@ -15,7 +15,7 @@ class SubprocessWritePipeProtocol(AbstractProtocolBase):
         Whether the protocol is disconnected.
     _file_descriptor : `int`
         The used socket's file descriptor number.
-    _transport : ``UnixWritePipeTransport``, `Any`
+    _transport : ``UnixWritePipeTransport``, `object`
         Asynchronous transport implementation.
     _process : ``AsyncProcess``
         The parent process of the pipe protocol.
@@ -85,7 +85,7 @@ class SubprocessReadPipeProtocol(SubprocessWritePipeProtocol):
         Whether the protocol is disconnected.
     _file_descriptor : `int`
         The used socket's file descriptor number.
-    _transport : ``UnixWritePipeTransport``, `Any`
+    _transport : ``UnixWritePipeTransport``, `object`
         Asynchronous transport implementation.
     _process : ``AsyncProcess``
         The parent process of the pipe protocol.

@@ -22,7 +22,7 @@ def build_extensions(available_extensions):
     
     Parameters
     ----------
-    available_extensions : `list` of `Any`
+    available_extensions : `list` of `object`
         Each websocket extension should have the following `4` attributes / methods:
         - `name`: `str`. The extension's name.
         - `request_params` : `list` of `tuple` (`str`, `str`). Additional header parameters of the extension.
@@ -396,6 +396,45 @@ def parse_upgrades(header_value):
         )
 
 
+USASCII_ESCAPABLE_RP = re.compile('[^\\041\\043-\\133\\135-\\176]')
+USASCII_CHARACTERS = {'\t', *(chr(index) for index in range(0x20, 0x7F))}
+
+
+def _escape_matched(match):
+    """
+    Escapes the matched value.
+    
+    Parameters
+    ----------
+    match : `re.Match`
+        Regex match.
+    
+    Returns
+    -------
+    escaped : `str`
+    """
+    return '\\' + match.group(0)
+
+
+def _try_usascii_escape(value):
+    """
+    If the content is `7-bit` (or `usascii`) it escapes it, so there is no need to quote.
+    
+    Parameters
+    ----------
+    value : `str`
+        Value to escape.
+    
+    Returns
+    -------
+    escaped : `bool`
+    value : `str`
+    """
+    if not (USASCII_CHARACTERS > {*value}):
+        return False, value
+    return True, USASCII_ESCAPABLE_RP.sub(_escape_matched, value)
+
+
 def build_content_disposition_header(disposition_type, parameters, quote_fields):
     """
     Creates Content-Disposition header value.
@@ -411,37 +450,39 @@ def build_content_disposition_header(disposition_type, parameters, quote_fields)
     
     Returns
     -------
-    value : `str`
+    output : `str`
     """
-    if (not disposition_type) or not (TOKENS > set(disposition_type)):
+    if (not disposition_type) or not (TOKENS > {*disposition_type}):
         raise ValueError(
             f'Bad content disposition type {disposition_type!r}.'
         )
     
-    if parameters:
-        parameter_parts = [disposition_type]
-        for key, value in parameters.items():
-            if (not key) or (not (TOKENS > set(key))):
-                raise ValueError(
-                    f'Bad content disposition parameter {key!r} = {value!r}.'
-                )
-            
-            if quote_fields:
-                value = quote(value, '[]')
-            
-            parameter_parts.append('; ')
-            
-            parameter_parts.append(key)
-            parameter_parts.append('="')
-            parameter_parts.append(value)
-            parameter_parts.append('"')
-            
-            if key == 'filename':
-                parameter_parts.append('; filename*=utf-8\'\'')
-                parameter_parts.append(value)
-        
-        value = ''.join(parameter_parts)
-    else:
-        value = disposition_type
+    if not parameters:
+        return disposition_type
     
-    return value
+    parameter_parts = [disposition_type]
+    for key, value in parameters.items():
+        if (not key) or (not (TOKENS > {*key})):
+            raise ValueError(
+                f'Bad content disposition parameter {key!r} = {value!r}.'
+            )
+        
+        if quote_fields:
+            escaped, value = _try_usascii_escape(value)
+            if escaped:
+                value = f'"{value!s}"'
+            else:
+                key = key + '*'
+                value = quote(value)
+                value = f'utf-8\'\'{value!s}'
+        else:
+            value = value.replace('\\', '\\\\').replace('"', '\\"')
+            value = f'"{value!s}"'
+        
+        parameter_parts.append('; ')
+        
+        parameter_parts.append(key)
+        parameter_parts.append('=')
+        parameter_parts.append(value)
+    
+    return ''.join(parameter_parts)

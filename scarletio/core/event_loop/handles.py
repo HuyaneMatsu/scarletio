@@ -21,7 +21,7 @@ class Handle:
     ----------
     func : `callable`
         The wrapped function.
-    args : `tuple` of `Any`
+    args : `tuple` of `object`
         Parameters to call ``.func`` with.
     cancelled : `bool`
         Whether the handle is cancelled.
@@ -36,7 +36,7 @@ class Handle:
         ----------
         func : `callable`
             The function. to wrap.
-        args : `tuple` of `Any`
+        args : `tuple` of `object`
             Parameters to call `func` with.
         """
         self.func = func
@@ -185,7 +185,7 @@ class TimerHandle(Handle):
     ----------
     func : `callable`
         The wrapped function.
-    args : `tuple` of `Any`
+    args : `tuple` of `object`
         Parameters to call ``.func`` with.
     cancelled : `bool`
         Whether the handle is cancelled.
@@ -204,7 +204,7 @@ class TimerHandle(Handle):
             The respective loop's time, when the handle should be called.
         func : `callable`
             The function. to wrap.
-        args : `tuple` of `Any`
+        args : `tuple` of `object`
             Parameters to call `func` with.
         """
         self.func = func
@@ -312,7 +312,7 @@ class TimerWeakHandle(TimerHandle):
     ----------
     func : `callable`
         The wrapped function.
-    args : `tuple` of `Any`
+    args : `tuple` of `object`
         Parameters to call ``.func`` with.
     cancelled : `bool`
         Whether the handle is cancelled.
@@ -335,7 +335,7 @@ class TimerWeakHandle(TimerHandle):
             The respective loop's time, when the handle should be called.
         func : `callable`
             The function. to wrap.
-        args : `tuple` of `Any`
+        args : `tuple` of `object`
             Parameters to call `func` with.
         
         Raises

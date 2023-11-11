@@ -378,7 +378,7 @@ def tcp_nodelay(transport, value):
     
     Parameters
     ----------
-    transport : `Any`
+    transport : `object`
         Asynchronous transport implementation.
     value : `bool`
         Value to set tcp nodelay to.

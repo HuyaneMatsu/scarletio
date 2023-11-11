@@ -90,14 +90,14 @@ def export(obj, obj_name = None):
     
     Parameters
     ----------
-    obj : `Any`
+    obj : `object`
         The object to export.
     obj_name : `str` = `None`, Optional
         The name of the object. If not given, is detected from `obj` itself.
     
     Returns
     -------
-    obj : `Any`
+    obj : `obj`
         The exported object.
     """
     if obj_name is None:

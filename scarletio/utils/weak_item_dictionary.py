@@ -492,14 +492,14 @@ class WeakItemDictionary(dict):
         
         Parameters
         ----------
-        key : `Any`
+        key : `object`
             A key to match.
-        default : `None`, `Any` = `None`, Optional
+        default : `None`, `object` = `None`, Optional
             Default value to return if the given `key` could not be matched.
         
         Returns
         -------
-        value : `Any`, `default`
+        value : `object`, `default`
             The key's matched value. If no value was matched returns the `default` value.
         """
         try:
@@ -554,14 +554,14 @@ class WeakItemDictionary(dict):
         
         Parameters
         ----------
-        key : `Any`
+        key : `object`
             A key to match.
-        default : `Any`, Optional
+        default : `object`, Optional
             Default value to return if the given `key` could not be matched.
         
         Returns
         -------
-        value : `Any`, `default`
+        value : `object`, `default`
             The key's matched value. If no value was matched and `default` value is given, then returns that.
         
         Raises
@@ -600,7 +600,7 @@ class WeakItemDictionary(dict):
         
         Returns
         -------
-        item : `tuple` (`Any`, `Any`)
+        item : `tuple` (`object`, `object`)
         
         Raises
         ------
@@ -631,14 +631,14 @@ class WeakItemDictionary(dict):
         
         Parameters
         ----------
-        key : `Any`
+        key : `object`
             The key to match.
-        default : `Any`
+        default : `object`
             Default value to set and return if `key` is not present in the weak item dictionary.
         
         Returns
         -------
-        value : `default`, `Any`
+        value : `default`, `object`
             The matched value, or `default` if none.
         """
         value_reference = dict.get(self, WeakReferer(key), ...)

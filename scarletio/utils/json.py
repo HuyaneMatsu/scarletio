@@ -18,7 +18,7 @@ def added_json_serializer(obj):
     
     Returns
     -------
-    result : `Any`
+    result : `object`
     
     Raises
     ------
@@ -41,7 +41,7 @@ def to_json(data):
     
     Parameters
     ----------
-    data : `Any`
+    data : `object`
     
     Returns
     -------

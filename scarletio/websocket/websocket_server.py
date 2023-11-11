@@ -16,7 +16,7 @@ class WebSocketServer:
     ----------
     loop : ``EventThread``
         The event loop to what the websocket server is bound to.
-    websockets : `set` of (``WebSocketServerProtocol``, `Any`)
+    websockets : `set` of (``WebSocketServerProtocol``, `object`)
         Active server side asynchronous websocket protocol implementations.
     close_connection_task : `None`, ``Task`` of ``_close``
         Close connection task, what's result is set, when closing of the websocket is done.
@@ -31,7 +31,7 @@ class WebSocketServer:
         protocol implementations.
     server : `None`, ``Server``
         Asynchronous server instance. Set meanwhile the websocket server is running.
-    protocol_parameters : `tuple` of `Any`
+    protocol_parameters : `tuple` of `object`
         WebSocket protocol parameters.
         
         Contains the following elements:
@@ -41,7 +41,7 @@ class WebSocketServer:
             - `is_ssl` : `bool`
                 Whether the server is secure.
             - `origin` : `None`, `str`. Value of the Origin header.
-            - `available_extensions` : `None` or (`list` of `Any`).Available websocket extensions.
+            - `available_extensions` : `None` or (`list` of `object`).Available websocket extensions.
                 Each websocket extension should have the following `4` attributes / methods:
                 - `name`: `str`. The extension's name.
                 - `request_params` : `list` of `tuple` (`str`, `str`). Additional header parameters of the extension.
@@ -65,7 +65,7 @@ class WebSocketServer:
                 following parameters:
                 - `parsed_header_subprotocols` : `list` of `str`. The subprotocols supported by the client.
                 - `available_subprotocols` : `list` of `str`. The subprotocols supported by the server.
-            - `websocket_kwargs` : `dict` of (`str`, `Any`). Extra parameters for creating the websocket protocol.
+            - `websocket_kwargs` : `dict` of (`str`, `object`). Extra parameters for creating the websocket protocol.
                 
                 Can have any of the following items:
                 - `close_timeout` : `float`. The maximal duration in seconds what is waited for response after close
@@ -114,9 +114,9 @@ class WebSocketServer:
             
             Should be given as an `async-callable` accepting `1` parameter the respective asynchronous server side
             websocket protocol implementations.
-        protocol : `Any` = ``WebSocketServerProtocol``, Optional (Keyword only)
+        protocol : `object` = ``WebSocketServerProtocol``, Optional (Keyword only)
             Asynchronous server side websocket protocol implementation.
-        available_extensions : `None` or (`list` of `Any`) = `None`, Optional (Keyword only)
+        available_extensions : `None` or (`list` of `object`) = `None`, Optional (Keyword only)
             Available websocket extensions.
             
             Each websocket extension should have the following `4` attributes / methods:
@@ -147,7 +147,7 @@ class WebSocketServer:
             User hook to select subprotocols. Should accept the following parameters:
             - `parsed_header_subprotocols` : `list` of `str`. The subprotocols supported by the client.
             - `available_subprotocols` : `list` of `str`. The subprotocols supported by the server.
-        websocket_kwargs : `None`, `dict` of (`str`, `Any`) = `None`, Optional (Keyword only)
+        websocket_kwargs : `None`, `dict` of (`str`, `object`) = `None`, Optional (Keyword only)
             Extra parameters for creating the websocket protocol.
             
             Can have any of the following items:
@@ -253,7 +253,7 @@ class WebSocketServer:
         
         Parameters
         ----------
-        protocol : ``WebSocketServerProtocol``, `Any`
+        protocol : ``WebSocketServerProtocol``, `object`
             The connected server side websocket.
         """
         self.websockets.add(protocol)
@@ -265,7 +265,7 @@ class WebSocketServer:
         
         Parameters
         ----------
-        protocol : ``WebSocketServerProtocol``, `Any`
+        protocol : ``WebSocketServerProtocol``, `object`
             The disconnected server side websocket.
         """
         self.websockets.discard(protocol)

@@ -14,9 +14,9 @@ class SubprocessWriter(AbstractTransportLayerBase):
     ----------
     _loop : ``EventThread``
         The respective event loop of the stream.
-    _transport : ``UnixWritePipeTransport``, `Any`
+    _transport : ``UnixWritePipeTransport``, `object`
         Asynchronous transport implementation.
-    _protocol : ``AsyncProcess``, `Any`
+    _protocol : ``AsyncProcess``, `object`
         Asynchronous protocol implementation.
     """
     __slots__ = ('_loop', '_transport', '_protocol', )

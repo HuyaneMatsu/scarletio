@@ -22,7 +22,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
     
     Attributes
     ----------
-    _extra : `None`, `dict` of (`str`, `Any`) items
+    _extra : `None`, `dict` of (`str`, `object`) items
         Optional transport information.
     _loop : ``EventThread``
         The event loop to what the transport is bound to.

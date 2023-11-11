@@ -17,7 +17,7 @@ def is_weakreferable(object_):
     
     Parameters
     ----------
-    object_ : `Any`
+    object_ : `object`
         The object to check.
     
     Returns
@@ -96,7 +96,7 @@ def add_to_pending_removals(container, reference):
     
     Parameters
     ----------
-    container : `Any`
+    container : `object`
         The parent object, which is iterating right now, so it's items cannot be removed.
     reference : ``WeakReferer``
         The weakreference to add to the set.
@@ -153,7 +153,7 @@ class KeyedReferer(WeakReferer):
     
     Attributes
     ----------
-    key : `Any`
+    key : `object`
         Key to identify the weakreferenced object.
     """
     __slots__ = ('key', )
@@ -165,11 +165,11 @@ class KeyedReferer(WeakReferer):
         
         Parameters
         ----------
-        obj : `Any`
+        obj : `object`
             The object to weakreference.
-        callback : `Any`
+        callback : `object`
             Callback running when the object is garbage collected.
-        key : `Any`
+        key : `object`
             Key to identify the weakreferenced object.
         """
         self = WeakReferer.__new__(cls, obj, callback)
@@ -200,7 +200,7 @@ class WeakCallable(WeakReferer):
         
         Returns
         -------
-        result : `Any`
+        result : `object`
             The returned value by the referenced object. Returns `None` if the object is already collected.
         
         Raises
@@ -252,11 +252,11 @@ class weak_method(WeakReferer, MethodLike):
         
         Parameters
         ----------
-        obj : `Any`
+        obj : `object`
             The object to weakreference and pass to `func`.
         func : `callable`
             The function to call as a method.
-        callback : `Any` = `None`, Optional
+        callback : `object` = `None`, Optional
             Callback running when the object is garbage collected.
         """
         self = WeakReferer.__new__(cls, obj, callback)
@@ -271,7 +271,7 @@ class weak_method(WeakReferer, MethodLike):
         
         Returns
         -------
-        obj : `Any`
+        obj : `object`
             The weakreferenced object if not yet garbage collected. Defaults to `None`.
         """
         return WeakReferer.__call__(self)
@@ -290,7 +290,7 @@ class weak_method(WeakReferer, MethodLike):
         
         Returns
         -------
-        result : `Any`
+        result : `object`
             The returned value by the function. Returns `None` if the object is already collected.
         
         Raises
@@ -328,7 +328,7 @@ class weak_method(WeakReferer, MethodLike):
         ----------
         method_ : `method`
             The method tu turn into ``weak_method``.
-        callback : `Any`, Optional
+        callback : `object`, Optional
             Callback running when the respective object is garbage collected.
         """
         self = WeakReferer.__new__(cls, method_.__self__, callback)

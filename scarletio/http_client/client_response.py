@@ -357,7 +357,7 @@ class ClientResponse:
         
         Returns
         -------
-        json : `Any`
+        json : `object`
         
         Raises
         ------

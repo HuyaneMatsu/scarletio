@@ -13,7 +13,7 @@ class BaseMethodType(MethodLike):
     
     Attributes
     ----------
-    __base__ : `Any`
+    __base__ : `object`
         The instance from where the method was called from. Might be `None` if used as a classmethod.
     __func__ : `function`
         The method's function to call.
@@ -40,7 +40,7 @@ class BaseMethodType(MethodLike):
             The method's function to call.
         cls : `type`
             The class from where the method was called from.
-        base : `Any`
+        base : `object`
             The instance from where the method was called from. Can be given as `None` as well.
         """
         self.__base__ = base
@@ -61,7 +61,7 @@ class BaseMethodType(MethodLike):
         
         Returns
         -------
-        result : `Any`
+        result : `object`
             The object returned by the internal function.
         
         Raises

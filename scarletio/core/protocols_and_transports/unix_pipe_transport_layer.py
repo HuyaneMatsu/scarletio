@@ -23,7 +23,7 @@ class UnixReadPipeTransportLayer(TransportLayerBase):
     
     Attributes
     ----------
-    _extra : `dict` of (`str`, `Any`) items
+    _extra : `dict` of (`str`, `object`) items
         Optional transport information.
     _loop : ``EventThread``
         The respective event loop of the transport.
@@ -56,9 +56,9 @@ class UnixReadPipeTransportLayer(TransportLayerBase):
             The respective event loop of the transport.
         pipe : `file-like`
             The pipe to connect to on read end.
-        protocol : ``SubprocessReadPipeProtocol``, `Any`
+        protocol : ``SubprocessReadPipeProtocol``, `object`
             Asynchronous protocol implementation used by the transport.
-        extra : `None`, `dict` of (`str`, `Any`) items
+        extra : `None`, `dict` of (`str`, `object`) items
             Optional transport information.
         
         Raises
@@ -257,7 +257,7 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
     ----------
     _buffer : `bytearray`
         Data ensured to be written on the wrapped pipe as it becomes readable again.
-    _extra : `dict` of (`str`, `Any`) items
+    _extra : `dict` of (`str`, `object`) items
         Optional transport information.
     _high_water : `int`
         The ``.protocol`` is paused writing when the buffer size passes the high water mark. Defaults to `65536`.
@@ -275,7 +275,7 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
         Is set to non-blocking mode.
         
         After closing the transport is set to `None`.
-    _protocol : `None`, ``SubprocessWritePipeProtocol``, `Any`
+    _protocol : `None`, ``SubprocessWritePipeProtocol``, `object`
         Asynchronous protocol implementation used by the transport.
         
         After closing the transport is set to `None`.
@@ -299,9 +299,9 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
             The respective event loop of the transport.
         pipe `: file-like` object
             The pipe to connect to on read end.
-        protocol : ``SubprocessWritePipeProtocol``, `Any`
+        protocol : ``SubprocessWritePipeProtocol``, `object`
             Asynchronous protocol implementation used by the transport.
-        extra : `None`, `dict` of (`str`, `Any`) items = `None`, Optional
+        extra : `None`, `dict` of (`str`, `object`) items = `None`, Optional
             Optional transport information.
 
         Raises

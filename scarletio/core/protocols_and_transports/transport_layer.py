@@ -37,7 +37,7 @@ class TransportLayerBase(AbstractTransportLayerBase):
     
     Attributes
     ----------
-    _extra : `None`, `dict` of (`str`, `Any`) items
+    _extra : `None`, `dict` of (`str`, `object`) items
         Optional transport information.
     _loop : ``EventThread``
         The event loop to what the transport is bound to.
@@ -52,7 +52,7 @@ class TransportLayerBase(AbstractTransportLayerBase):
         ----------
         loop : ``EventThread``
             The event loop to what the transport is bound to.
-        extra : `None`, `dict` of (`str`, `Any`) items
+        extra : `None`, `dict` of (`str`, `object`) items
             Optional transport information.
         """
         self = object.__new__(cls)
@@ -95,7 +95,7 @@ class SocketTransportLayerBase(TransportLayerBase):
     
     Attributes
     ----------
-    _extra : `dict` of (`str`, `Any`) items
+    _extra : `dict` of (`str`, `object`) items
         Optional transport information.
     _loop : ``EventThread``
         The event loop to what the transport is bound to.
@@ -109,7 +109,7 @@ class SocketTransportLayerBase(TransportLayerBase):
         The ``.protocol`` is resumed writing when the buffer size goes under the low water mark. Defaults to `16384`.
     _paused : `bool`
         Whether the transport's reading is paused by the protocol.
-    _protocol : `None`, ``SSLProtocol, ``ReadProtocolBase``, `Any`
+    _protocol : `None`, ``SSLProtocol, ``ReadProtocolBase``, `object`
         Asynchronous protocol implementation used by the transport.
         
         After closing the transport is set to `None`.
@@ -133,7 +133,7 @@ class SocketTransportLayerBase(TransportLayerBase):
         ----------
         loop : ``EventThread``
             The event loop to what the transport is bound to.
-        extra : `None`, `dict` of (`str`, `Any`) items
+        extra : `None`, `dict` of (`str`, `object`) items
             Optional transport information.
         socket : `socket.socket`
             The socket used by the transport.
@@ -447,7 +447,7 @@ class SocketTransportLayer(SocketTransportLayerBase):
     
     Attributes
     ----------
-    _extra : `dict` of (`str`, `Any`) items
+    _extra : `dict` of (`str`, `object`) items
         Optional transport information.
     _loop : ``EventThread``
         The event loop to what the transport is bound to.
@@ -461,7 +461,7 @@ class SocketTransportLayer(SocketTransportLayerBase):
         The ``.protocol`` is resumed writing when the buffer size goes under the low water mark. Defaults to `16384`.
     _paused : `bool`
         Whether the transport's reading is paused by the protocol.
-    _protocol : `None`, ``SSLProtocol, ``ReadProtocolBase``, `Any`
+    _protocol : `None`, ``SSLProtocol, ``ReadProtocolBase``, `object`
         Asynchronous protocol implementation used by the transport.
         
         After closing the transport is set to `None`.
@@ -488,7 +488,7 @@ class SocketTransportLayer(SocketTransportLayerBase):
         ----------
         loop : ``EventThread``
             The event loop to what the transport is bound to.
-        extra : `None`, `dict` of (`str`, `Any`) items
+        extra : `None`, `dict` of (`str`, `object`) items
             Optional transport information.
         socket : `socket.socket`
             The socket used by the transport.
@@ -689,7 +689,7 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
     
     Attributes
     ----------
-    _extra : `dict` of (`str`, `Any`) items
+    _extra : `dict` of (`str`, `object`) items
         Optional transport information.
     _loop : ``EventThread``
         The event loop to what the transport is bound to.
@@ -703,7 +703,7 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
         The ``.protocol`` is resumed writing when the buffer size goes under the low water mark. Defaults to `16384`.
     _paused : `bool`
         Whether the transport's reading is paused by the protocol.
-    _protocol : `None`, ``SSLProtocol, ``ReadProtocolBase``, `Any`
+    _protocol : `None`, ``SSLProtocol, ``ReadProtocolBase``, `object`
         Asynchronous protocol implementation used by the transport.
         
         After closing the transport is set to `None`.
@@ -727,7 +727,7 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
         ----------
         loop : ``EventThread``
             The event loop to what the transport is bound to.
-        extra : `None`, `dict` of (`str`, `Any`) items
+        extra : `None`, `dict` of (`str`, `object`) items
             Optional transport information.
         socket : `socket.socket`
             The socket used by the transport.

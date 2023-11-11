@@ -1,8 +1,14 @@
-# 1.0.32 *\[2023-10-??\]*
+# 1.0.63 *\[2023-11-??\]*
+
+#### Improvements
+
+- Improve content disposition header format.
 
 #### Bug fixes
 
 - `URL` now handles inheritance correctly.
+- `asyncio.gather` did not silence all wrapped tasks' exception if multiple exception occurred or is going to occur.
+- `EditorAdvanced` did not allow typing `~`. Caused by incorrect handing of the `delete` key which also contained `~`.
 
 # 1.0.62 *\[2023-08-21\]*
 

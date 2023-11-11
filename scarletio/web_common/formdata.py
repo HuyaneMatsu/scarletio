@@ -127,8 +127,9 @@ class Formdata:
         if (filename is not None):
             if __debug__:
                 if not isinstance(filename, str):
-                    raise AssertionError(f'`filename` can be `None`, `str`, got '
-                        f'{filename.__class__.__name__}.')
+                    raise AssertionError(
+                        f'`filename` can be `None`, `str`, got {filename.__class__.__name__}; {filename!r}.'
+                    )
         
         if (filename is None) and isinstance(value, IOBase):
             filename = getattr(value, 'name', name)
@@ -141,8 +142,9 @@ class Formdata:
         if (content_type is not None):
             if __debug__:
                 if not isinstance(content_type, str):
-                    raise AssertionError('`content_type` can be `None`, `str`, got '
-                        f'{content_type.__class__.__name__}.')
+                    raise AssertionError(
+                        f'`content_type` can be `None`, `str`, got {content_type.__class__.__name__}; {content_type!r}.'
+                    )
             
             headers[CONTENT_TYPE] = content_type
             self.is_multipart = True
@@ -150,8 +152,10 @@ class Formdata:
         if (transfer_encoding is not None):
             if __debug__:
                 if not isinstance(transfer_encoding, str):
-                    raise AssertionError('`transfer_encoding` can be `None`, `str`, got: '
-                        f'{transfer_encoding.__class__.__name__}.')
+                    raise AssertionError(
+                        f'`transfer_encoding` can be `None`, `str`, got: {transfer_encoding.__class__.__name__}; '
+                        f'{transfer_encoding!r}.'
+                    )
             
             headers[CONTENT_TRANSFER_ENCODING] = transfer_encoding
             self.is_multipart = True
@@ -228,8 +232,9 @@ class Formdata:
                 part = create_payload(value, payload_kwargs)
             
             except BaseException as err:
-                raise TypeError(f'Can not serialize value type: {value.__class__.__name__}, headers: {headers!r}, '
-                    f'value: {value!r}.') from err
+                raise TypeError(
+                    f'Can not serialize value type: {value.__class__.__name__}, headers: {headers!r}, value: {value!r}.'
+                ) from err
             
             if type_options:
                 part.set_content_disposition('form-data', type_options.kwargs(), self.quote_fields)

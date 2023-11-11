@@ -134,7 +134,7 @@ class class_property:
         Setter method.
     fdel : `callable`
         Deleter method.
-    __instance_doc__ : `Any`
+    __instance_doc__ : `object`
         Documentation for the property.
     """)
     
@@ -152,7 +152,7 @@ class class_property:
             Setter method.
         fdel : `None`, `callable` = `None`, Optional
             Deleter method.
-        doc : `None`, `Any` = `None`, Optional
+        doc : `None`, `object` = `None`, Optional
             Documentation for the property.
         """
         if (doc is None) and (fget is not None):

@@ -61,7 +61,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         Payload waiter of the protocol, what's result is set, when the ``.payload_reader`` generator returns.
         
         If cancelled or marked by done or any other methods, the payload reader will not be cancelled.
-    _transport : `None`, `Any`
+    _transport : `None`, `object`
         Asynchronous transport implementation. Is set meanwhile the protocol is alive.
     _drain_waiter : `None`, ``Future``
         A future, what is used to block the writing task, till it's writen data is drained.
@@ -80,7 +80,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         A future, what's result is set as `None`, when the connection is closed. Used to wait for close frames.
         
         ``shield`` it if using from outside.
-    extensions : `None` or (`list` of `Any`)
+    extensions : `None` or (`list` of `object`)
         WebSocket extensions. Defaults to `None`, if there is not any.
     host : `str`
         The respective server's address to connect to.

@@ -24,16 +24,16 @@ def get_extra_info(extra, name, default):
     
     Parameters
     ----------
-    extra : `None`, `dict` of (`str`, `Any`) items
+    extra : `None`, `dict` of (`str`, `object`) items
         Optional transform information.
     name : `str`
         The extra information's name to get.
-    default : `Any`
+    default : `object`
         Default value to return if `name` could not be matched. Defaults to `None`.
     
     Returns
     -------
-    info : `default`, `Any`
+    info : `default`, `object`
     """
     if extra is None:
         info = None
@@ -57,16 +57,16 @@ def set_extra_info(extra, name, value):
     
     Parameters
     ----------
-    extra : `None`, `dict` of (`str`, `Any`) items
+    extra : `None`, `dict` of (`str`, `object`) items
         Optional transform information.
     name : `str`
         The extra info's name.
-    value : `Any`
+    value : `object`
         The value to set.
     
     Returns
     -------
-    extra : `dict` of (`str`, `Any`) items
+    extra : `dict` of (`str`, `object`) items
         The new transform information.
     """
     if extra is None:
@@ -83,7 +83,7 @@ def has_extra_info(extra, name):
     
     Parameters
     ----------
-    extra : `None`, `dict` of (`str`, `Any`) items
+    extra : `None`, `dict` of (`str`, `object`) items
         Optional transform information.
     name : `str`
         The extra info's name.
@@ -115,14 +115,14 @@ def get_has_extra_info(extra, name):
     
     Parameters
     ----------
-    extra : `None`, `dict` of (`str`, `Any`) items
+    extra : `None`, `dict` of (`str`, `object`) items
         Optional transform information.
     name : `str`
         The extra information's name to get.
     
     Returns
     -------
-    info : `default`, `Any`
+    info : `default`, `object`
         Optional transport information.
     present : `bool`
         Whether the field is present.

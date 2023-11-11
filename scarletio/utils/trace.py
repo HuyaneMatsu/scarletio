@@ -696,9 +696,9 @@ def format_callback(func, args = None, kwargs = None):
     ----------
     func : `callable`
         The callback to format.
-    args : `None`, `iterable` of `Any` = `None`, Optional
+    args : `None`, `iterable` of `object` = `None`, Optional
         Additional parameters to call the `func` with.
-    kwargs : `None`, `dict` of (`str`, `Any`) items = `None`, Optional
+    kwargs : `None`, `dict` of (`str`, `object`) items = `None`, Optional
         Additional keyword parameters to call the `func` with.
     
     Returns
@@ -1782,7 +1782,7 @@ class FrameProxyType:
         
         Returns
         -------
-        builtins : `dict` of (`str`, `Any`) items
+        builtins : `dict` of (`str`, `object`) items
         """
         raise NotImplementedError
     
@@ -1794,7 +1794,7 @@ class FrameProxyType:
         
         Returns
         -------
-        globals : `dict` of (`str`, `Any`)
+        globals : `dict` of (`str`, `object`)
         """
         raise NotImplementedError
     
@@ -1806,7 +1806,7 @@ class FrameProxyType:
         
         Returns
         -------
-        locals : `dict` of (`str`, `Any`) items
+        locals : `dict` of (`str`, `object`) items
         """
         raise NotImplementedError
     
@@ -2029,7 +2029,7 @@ def _convert_frames(frames):
     
     Parameters
     ----------
-    frames : `list` of `Any`
+    frames : `list` of `object`
         The frames to convert.
     
     Returns
@@ -2296,3 +2296,20 @@ def _add_typed_part_into(type_, part, into, highlighter):
         into.extend(highlighter.generate_highlighted(Token(type_, part)))
     
     return into
+
+
+# ---- Ignore frames ----
+
+from . import rich_attribute_error as module_rich_attribute_error
+
+ignore_frame(
+    module_rich_attribute_error.__spec__.origin, '__getattr__', 'raise AttributeError(attribute_name)'
+)
+ignore_frame(
+    module_rich_attribute_error.__spec__.origin, '__getattr__', 'raise AttributeError(exception_message)'
+)
+ignore_frame(
+    module_rich_attribute_error.__spec__.origin, '__getattr__', 'return object.__getattribute__(self, attribute_name)'
+)
+
+del module_rich_attribute_error

@@ -5,6 +5,7 @@ from .compressors import ZLIB_COMPRESSOR, ZLIB_MAX_WBITS
 
 WRITE_CHUNK_LIMIT = 65536
 
+
 class HTTPStreamWriter:
     """
     Http writer used by ``ClientRequest``.
@@ -19,9 +20,9 @@ class HTTPStreamWriter:
         Whether the http message's content is chunked.
     compressor : `None`, `ZLIB_COMPRESSOR`, `BROTLI_COMPRESSOR`
         Decompressor used to compress the sent data. Defaults to `None` if no compression is given.
-    protocol : `ProtocolBase`
+    protocol : `AbstractProtocolBase`
         Asynchronous transport implementation.
-    transport : `None`, `AbstractTransportLayerBase`
+    transport : `None`, ``AbstractTransportLayerBase``
         Asynchronous transport implementation. Set as `None` if at eof.
     """
     __slots__ = ('_at_eof', 'size', 'chunked', 'compressor', 'protocol', 'transport', )
@@ -32,8 +33,8 @@ class HTTPStreamWriter:
         
         Parameters
         ----------
-        protocol : `Any`
-            Asynchronous transport implementation.
+        protocol : ``AbstractProtocolBase``
+            Asynchronous protocol implementation.
         compression : `None`, `str`
             The compression's type to encode the written content with.
         chunked : `bool`
@@ -110,15 +111,14 @@ class HTTPStreamWriter:
             return
         
         if self.chunked:
-            chunk = b''.join([len(chunk).__format__('x').encode('ascii'), b'\r\n', chunk, b'\r\n'])
+            chunk = b''.join([format(len(chunk), 'x').encode('ascii'), b'\r\n', chunk, b'\r\n'])
         
         self._write(chunk)
         
         if self.size > WRITE_CHUNK_LIMIT:
             self.size = 0
-            protocol = self.protocol
-            if protocol.get_transport() is not None:
-                await protocol._drain_helper()
+            
+            await self.drain()
     
     
     async def write_eof(self, chunk = b''):
@@ -141,7 +141,7 @@ class HTTPStreamWriter:
         if compressor is None:
             if self.chunked:
                 if chunk:
-                    chunk = b''.join([len(chunk).__format__('x').encode('ascii'), b'\r\n', chunk, b'\r\n0\r\n\r\n'])
+                    chunk = b''.join([format(len(chunk), 'x').encode('ascii'), b'\r\n', chunk, b'\r\n0\r\n\r\n'])
                 else:
                     chunk = b'0\r\n\r\n'
         else:
@@ -152,14 +152,12 @@ class HTTPStreamWriter:
                 chunk = compressor.flush()
             
             if chunk and self.chunked:
-                chunk = b''.join([len(chunk).__format__('x').encode('ascii'), b'\r\n', chunk, b'\r\n0\r\n\r\n'])
+                chunk = b''.join([format(len(chunk), 'x').encode('ascii'), b'\r\n', chunk, b'\r\n0\r\n\r\n'])
         
         if chunk:
             self._write(chunk)
         
-        protocol = self.protocol
-        if protocol.get_transport() is not None:
-            await protocol._drain_helper()
+        await self.drain()
         
         self._at_eof = True
         self.transport = None
@@ -170,5 +168,5 @@ class HTTPStreamWriter:
         Flushes the write buffer.
         """
         protocol = self.protocol
-        if (protocol._transport is not None):
+        if (protocol.get_transport() is not None):
             await protocol._drain_helper()

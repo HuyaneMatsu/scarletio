@@ -15,12 +15,12 @@ class AbstractTransportLayerBase:
         ----------
         name : `str`
             The extra information's name to get.
-        default : `Any`, `None`, Optional
+        default : `object`, `None`, Optional
             Default value to return if `name` could not be matched. Defaults to `None`.
         
         Returns
         -------
-        info : `default`, `Any`
+        info : `default`, `object`
         """
         return default
     
@@ -260,7 +260,7 @@ class AbstractProtocolBase:
         
         Parameters
         ----------
-        transport : `Any`
+        transport : `object`
             Asynchronous transport implementation, what calls the protocol's ``.data_received`` when data is
             received.
         """
@@ -325,12 +325,12 @@ class AbstractProtocolBase:
         ----------
         name : `str`
             The extra information's name to get.
-        default : `Any` = `None`, Optional
+        default : `object` = `None`, Optional
             Default value to return if `name` could not be matched. Defaults to `None`.
         
         Returns
         -------
-        info : `default`, `Any`
+        info : `default`, `object`
         """
         return default
     

@@ -16,12 +16,12 @@ def call(function):
     
     Parameters
     ----------
-    function : `Any`
+    function : `object`
         The function to call
     
     Returns
     -------
-    function : `Any`
+    function : `object`
         The function itself.
     """
     function()
@@ -37,11 +37,11 @@ class alchemy_incendiary:
     
     Attributes
     ----------
-    args : `tuple` of `Any`
+    args : `tuple` of `object`
         Parameters to call `func` with.
     func : `callable`
         The function to call.
-    kwargs : `None` of `dict` of (`str`, `Any`) items
+    kwargs : `None` of `dict` of (`str`, `object`) items
         Keyword parameters to call func with if applicable.
     """
     __slots__ = ('args', 'func', 'kwargs',)
@@ -55,9 +55,9 @@ class alchemy_incendiary:
         ----------
         func : `callable`
             The function to call.
-        args : `tuple` of `Any`
+        args : `tuple` of `object`
             Parameters to call `func` with.
-        kwargs : `None` of `dict` of (`str`, `Any`) items = `None`, Optional
+        kwargs : `None` of `dict` of (`str`, `object`) items = `None`, Optional
             Keyword parameters to call func with if applicable.
         """
         self.func = func
@@ -71,7 +71,7 @@ class alchemy_incendiary:
         
         Returns
         -------
-        result : `Any`
+        result : `object`
             The returned value by ``.func``.
         
         Raises

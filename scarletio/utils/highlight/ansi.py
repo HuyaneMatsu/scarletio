@@ -1,5 +1,7 @@
 __all__ = ('AnsiTextDecoration', 'create_ansi_format_code',)
 
+from ..rich_attribute_error import RichAttributeErrorBaseType
+
 
 def create_ansi_format_code(text_decoration = None, background_color = None, foreground_color = None):
     """
@@ -67,7 +69,7 @@ def create_ansi_format_code(text_decoration = None, background_color = None, for
     return ''.join(format_code_parst)
 
 
-class AnsiTextDecoration:
+class AnsiTextDecoration(RichAttributeErrorBaseType):
     """
     Contains the possible text decoration values as type attributes.
     """

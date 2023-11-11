@@ -2721,6 +2721,7 @@ class _gatherer_done_callback_return_exceptions:
         
         future.set_result(results)
 
+
 class _gatherer_done_callback_raise:
     __slots__ = ('task_group', 'future', )
     
@@ -2741,11 +2742,21 @@ class _gatherer_done_callback_raise:
             return
         
         results = []
-        for done_future in self.task_group.done:
+        
+        iterator = iter(self.task_group.done)
+        for done_future in iterator:
             try:
                 result = done_future.get_result()
             except BaseException as err:
                 exception = err
+                
+                # Silence the rest of the futures, so we do not get not retrieved warning.
+                for future_to_silence in iterator:
+                    future_to_silence.silence()
+                
+                for future_to_silence in self.task_group.pending:
+                    future_to_silence.silence()
+                    
                 break
             else:
                 results.append(result)

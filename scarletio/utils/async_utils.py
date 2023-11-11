@@ -20,7 +20,7 @@ def is_coroutine_function(func):
     
     Parameters
     ----------
-    func : `Any`
+    func : `object`
     
     Returns
     -------
@@ -40,7 +40,7 @@ def is_coroutine_generator_function(func):
     
     Parameters
     ----------
-    func : `Any`
+    func : `object`
     
     Returns
     -------
@@ -59,7 +59,7 @@ def is_generator_function(func):
     
     Parameters
     ----------
-    func : `Any`
+    func : `object`
     
     Returns
     -------
@@ -78,7 +78,7 @@ def is_coroutine(obj):
     
     Parameters
     ----------
-    obj : `Any`
+    obj : `object`
     
     Returns
     -------
@@ -103,7 +103,7 @@ def is_awaitable(obj):
     
     Parameters
     ----------
-    obj : `Any`
+    obj : `object`
     
     Returns
     -------
@@ -126,7 +126,7 @@ def is_coroutine_generator(obj):
     
     Parameters
     ----------
-    obj : `Any`
+    obj : `object`
     
     Returns
     -------
@@ -155,7 +155,7 @@ def is_generator(obj):
     
     Parameters
     ----------
-    obj : `Any`
+    obj : `object`
     
     Returns
     -------

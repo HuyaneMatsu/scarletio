@@ -77,9 +77,9 @@ class HTTPClient:
             The url to request.
         headers : (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items
             Request headers.
-        data : `None`, `Any` = `None`, Optional
+        data : `None`, `object` = `None`, Optional
             Data to send a the body of the request.
-        params : `None`, `Any` = `None`, Optional
+        params : `None`, `object` = `None`, Optional
             Query string parameters
         redirects : `int` = `3`, Optional
             The maximal amount of allowed redirects.
@@ -223,9 +223,9 @@ class HTTPClient:
             The url to request.
         headers : (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items
             Request headers.
-        data : `None`, `Any` = `None`, Optional
+        data : `None`, `object` = `None`, Optional
             Data to send a the body of the request.
-        params : `None`, `Any` = `None`, Optional
+        params : `None`, `object` = `None`, Optional
             Query string parameters.
         redirects : `int` = `3`, Optional
             The maximal amount of allowed redirects.
@@ -433,9 +433,9 @@ class HTTPClient:
         
         Other Parameters
         ----------------
-        data : `None`, `Any`, Optional (Keyword only)
+        data : `None`, `object`, Optional (Keyword only)
             Data to send a the body of the request.
-        params : `None`, `Any`, Optional (Keyword only)
+        params : `None`, `object`, Optional (Keyword only)
             Query string parameters.
         redirects : `int`, Optional (Keyword only)
             The maximal amount of allowed redirects.
@@ -477,9 +477,9 @@ class HTTPClient:
         
         Other Parameters
         ----------------
-        data : `None`, `Any`, Optional (Keyword only)
+        data : `None`, `object`, Optional (Keyword only)
             Data to send a the body of the request.
-        params : `None`, `Any`, Optional (Keyword only)
+        params : `None`, `object`, Optional (Keyword only)
             Query string parameters.
         redirects : `int`, Optional (Keyword only)
             The maximal amount of allowed redirects.
@@ -529,9 +529,9 @@ class HTTPClient:
         
         Other Parameters
         ----------------
-        data : `None`, `Any`, Optional (Keyword only)
+        data : `None`, `object`, Optional (Keyword only)
             Data to send a the body of the request.
-        params : `None`, `Any`, Optional (Keyword only)
+        params : `None`, `object`, Optional (Keyword only)
             Query string parameters.
         redirects : `int`, Optional (Keyword only)
             The maximal amount of allowed redirects.
@@ -572,9 +572,9 @@ class HTTPClient:
         
         Other Parameters
         ----------------
-        data : `None`, `Any`, Optional (Keyword only)
+        data : `None`, `object`, Optional (Keyword only)
             Data to send a the body of the request.
-        params : `None`, `Any`, Optional (Keyword only)
+        params : `None`, `object`, Optional (Keyword only)
             Query string parameters.
         redirects : `int`, Optional (Keyword only)
             The maximal amount of allowed redirects.
@@ -615,9 +615,9 @@ class HTTPClient:
         
         Other Parameters
         ----------------
-        data : `None`, `Any`, Optional (Keyword only)
+        data : `None`, `object`, Optional (Keyword only)
             Data to send a the body of the request.
-        params : `None`, `Any`, Optional (Keyword only)
+        params : `None`, `object`, Optional (Keyword only)
             Query string parameters.
         redirects : `int`, Optional (Keyword only)
             The maximal amount of allowed redirects.
@@ -658,9 +658,9 @@ class HTTPClient:
         
         Other Parameters
         ----------------
-        data : `None`, `Any`, Optional (Keyword only)
+        data : `None`, `object`, Optional (Keyword only)
             Data to send a the body of the request.
-        params : `None`, `Any`, Optional (Keyword only)
+        params : `None`, `object`, Optional (Keyword only)
             Query string parameters.
         redirects : `int`, Optional (Keyword only)
             The maximal amount of allowed redirects.
@@ -701,9 +701,9 @@ class HTTPClient:
         
         Other Parameters
         ----------------
-        data : `None`, `Any`, Optional (Keyword only)
+        data : `None`, `object`, Optional (Keyword only)
             Data to send a the body of the request.
-        params : `None`, `Any`, Optional (Keyword only)
+        params : `None`, `object`, Optional (Keyword only)
             Query string parameters.
         redirects : `int`, Optional (Keyword only)
             The maximal amount of allowed redirects.
@@ -744,9 +744,9 @@ class HTTPClient:
         
         Other Parameters
         ----------------
-        data : `None`, `Any`, Optional (Keyword only)
+        data : `None`, `object`, Optional (Keyword only)
             Data to send a the body of the request.
-        params : `None`, `Any`, Optional (Keyword only)
+        params : `None`, `object`, Optional (Keyword only)
             Query string parameters.
         redirects : `int`, Optional (Keyword only)
             The maximal amount of allowed redirects.
@@ -787,9 +787,9 @@ class HTTPClient:
         
         Other Parameters
         ----------------
-        data : `None`, `Any`, Optional (Keyword only)
+        data : `None`, `object`, Optional (Keyword only)
             Data to send a the body of the request.
-        params : `None`, `Any`, Optional (Keyword only)
+        params : `None`, `object`, Optional (Keyword only)
             Query string parameters.
         redirects : `int`, Optional (Keyword only)
             The maximal amount of allowed redirects.
@@ -830,7 +830,7 @@ class HTTPClient:
         ----------------
         origin : `None`, `str`, Optional (Keyword only)
             Value of the Origin header.
-        available_extensions : `None` or (`list` of `Any`), Optional (Keyword only)
+        available_extensions : `None` or (`list` of `object`), Optional (Keyword only)
             Available websocket extensions.
             
             Each websocket extension should have the following `4` attributes / methods:

@@ -11,7 +11,7 @@ class FormatterDetail:
     
     Attributes
     ----------
-    details : `Any`
+    details : `object`
         Additional details to pass to the ``.formatter_generator_function``.
     formatter_generator_function : ``GeneratorFunction``
         Generator function which
@@ -26,7 +26,7 @@ class FormatterDetail:
         ----------
         formatter_generator_function : ``GeneratorFunction``
             Generator function which
-        details : `Any`
+        details : `object`
             Additional details to pass to the ``.formatter_generator_function``.
         """
         self = object.__new__(cls)

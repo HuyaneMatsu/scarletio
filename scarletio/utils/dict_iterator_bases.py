@@ -37,7 +37,7 @@ class DictionaryKeyIteratorBase:
         
         Yields
         ------
-        key : `Any`
+        key : `object`
         """
         return
         yield
@@ -104,7 +104,7 @@ class DictionaryValueIteratorBase:
         
         Yields
         ------
-        value : `Any`
+        value : `object`
         """
         return
         yield
@@ -202,7 +202,7 @@ class DictionaryItemIteratorBase:
         
         Yields
         ------
-        item : `tuple` (`Any`, `str`)
+        item : `tuple` (`object`, `str`)
         """
         return
         yield

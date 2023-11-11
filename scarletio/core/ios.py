@@ -1075,7 +1075,7 @@ class ReuAsyncIO(AsyncIO):
         
         Returns
         -------
-        result : `Any`
+        result : `object`
             The returned value by the given `func`.
         """
         io = self._io

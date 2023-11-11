@@ -89,7 +89,7 @@ class AsyncQueue:
         
         Parameters
         ----------
-        element : `Any`
+        element : `object`
             The object to put on the queue.
         
         Returns
@@ -123,7 +123,7 @@ class AsyncQueue:
         
         Parameters
         ----------
-        element : `Any`
+        element : `object`
             The object to put on the queue.
         
         Returns
@@ -226,7 +226,7 @@ class AsyncQueue:
         
         Returns
         -------
-        result : `Any`
+        result : `object`
             The next element on the queue.
         
         Raises
@@ -284,7 +284,7 @@ class AsyncQueue:
         
         Returns
         -------
-        result : `Any`
+        result : `object`
             The next element on the queue.
         
         Raises
@@ -372,7 +372,7 @@ class AsyncQueue:
         
         Returns
         -------
-        result : `Any`
+        result : `object`
             The next element on the queue.
         
         Raises

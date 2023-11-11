@@ -145,7 +145,7 @@ def collect_module_variables(module):
     
     Returns
     -------
-    interactive_console_locals : `dict` of (`str`, `Any`) items
+    interactive_console_locals : `dict` of (`str`, `object`) items
     """
     interactive_console_locals = {}
     

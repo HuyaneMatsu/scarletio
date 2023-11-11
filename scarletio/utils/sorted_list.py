@@ -99,7 +99,7 @@ class SortedList(list):
         
         Parameters
         ----------
-        value : `Any`
+        value : `object`
             The value to insert to the SortedList.
         """
         index = self.relative_index(value)
@@ -128,7 +128,7 @@ class SortedList(list):
         
         Parameters
         ----------
-        value : `Any`
+        value : `object`
             The value to remove.
         """
         index = self.relative_index(value)
@@ -232,7 +232,7 @@ class SortedList(list):
         
         Parameters
         ----------
-        value : `Any`
+        value : `object`
             The object's what's relative index is returned.
         
         Returns
@@ -273,7 +273,7 @@ class SortedList(list):
         
         Parameters
         ----------
-        value : `Any`
+        value : `object`
             The object's what's relative index is returned.
         key : `callable`
             A function that serves as a key for the sort comparison.
@@ -338,16 +338,16 @@ class SortedList(list):
         
         Parameters
         ----------
-        value : `Any`
+        value : `object`
             The value to search in the SortedList.
         key : `callable`
             A function that serves as a key for the sort comparison.
-        default : `Any` = `None`, Optional
+        default : `object` = `None`, Optional
             Default value to returns if no matching element was present.
         
         Returns
         -------
-        element : `Any`, `default`
+        element : `object`, `default`
             The matched element or the `default` value if not found.
         """
         index = self.keyed_relative_index(value, key)
@@ -368,16 +368,16 @@ class SortedList(list):
         
         Parameters
         ----------
-        value : `Any`
+        value : `object`
             The value to search in the SortedList.
         key : `callable`
             A function that serves as a key for the sort comparison.
-        default : `Any` = `None`, Optional
+        default : `object` = `None`, Optional
             Default value to returns if no matching element was present.
         
         Returns
         -------
-        element : `Any`, `default`
+        element : `object`, `default`
             The matched element or the `default` value if not found.
         """
         index = self.keyed_relative_index(value, key)

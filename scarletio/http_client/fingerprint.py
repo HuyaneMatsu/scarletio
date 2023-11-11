@@ -70,7 +70,7 @@ class Fingerprint:
         
         Parameters
         ----------
-        protocol : `Any`
+        protocol : `object`
             Asynchronous protocol implementation.
         
         Raises

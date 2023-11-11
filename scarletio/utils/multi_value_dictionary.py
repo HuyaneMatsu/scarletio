@@ -207,7 +207,7 @@ class MultiValueDictionary(dict):
         
         Parameters
         ----------
-        mapping : `Any`
+        mapping : `object`
             Any mapping type, what has `.items` attribute.
         """
         getitem = dict.__getitem__
@@ -230,14 +230,14 @@ class MultiValueDictionary(dict):
         
         Parameters
         ----------
-        key : `Any`
+        key : `object`
             The `key` to match.
-        default : `Any` = `None`, Optional
+        default : `object` = `None`, Optional
             Default value to return if `key` is not present in the dictionary.
         
         Returns
         -------
-        values : `default or `list` of `Any`
+        values : `default or `list` of `object`
             The values for the given `key` if present.
         """
         try:
@@ -253,14 +253,14 @@ class MultiValueDictionary(dict):
         
         Parameters
         ----------
-        key : `Any`
+        key : `object`
             The key to match.
-        default : `Any` = `None`, Optional
+        default : `object` = `None`, Optional
             Default value to return if `key` is not present in the dictionary.
         
         Returns
         -------
-        value : `default`, `Any`
+        value : `default`, `object`
             The value for the given key if present.
         """
         try:
@@ -281,14 +281,14 @@ class MultiValueDictionary(dict):
         
         Parameters
         ----------
-        key : `Any`
+        key : `object`
             The key to match.
-        default : `Any` = `None`, Optional
+        default : `object` = `None`, Optional
             Default value to set and return if `key` is not present in the dictionary.
         
         Returns
         -------
-        value : `default`, `Any`
+        value : `default`, `object`
             The first value for which `key` matched, or `default` if none.
         """
         try:
@@ -309,14 +309,14 @@ class MultiValueDictionary(dict):
         
         Parameters
         ----------
-        key : `Any`
+        key : `object`
             The key to match.
-        default : `Any`, Optional
+        default : `object`, Optional
             Default value to return if `key` is not present in the dictionary.
         
         Returns
         -------
-        values : `default`, `list` of `Any`
+        values : `default`, `list` of `object`
             The matched values. If `key` is not present, but `default` value is given, then returns that.
         
         Raises
@@ -339,14 +339,14 @@ class MultiValueDictionary(dict):
         
         Parameters
         ----------
-        key : `Any`
+        key : `object`
             The key to match.
-        default : `Any`, Optional
+        default : `object`, Optional
             Default value to return if `key` is not present in the dictionary.
         
         Returns
         -------
-        value : `default`, `list` of `Any`
+        value : `default`, `list` of `object`
             The 0th matched value. If `key` is not present, but `default` value is given, then returns that.
         
         Raises
@@ -377,7 +377,7 @@ class MultiValueDictionary(dict):
         
         Returns
         -------
-        item : `tuple` (`Any`, `Any`)
+        item : `tuple` (`object`, `object`)
         
         Raises
         ------
@@ -467,7 +467,7 @@ class MultiValueDictionary(dict):
         
         Returns
         -------
-        result : `dict` of (`Any`, `Any`) items
+        result : `dict` of (`object`, `object`) items
         """
         result = {}
         for key, values in dict.items(self):
