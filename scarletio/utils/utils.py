@@ -313,7 +313,7 @@ class un_map_pack:
         
         Returns
         -------
-        self: ``un_map_pack``
+        self: `instance<cls>`
         """
         return self
     

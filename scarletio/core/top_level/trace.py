@@ -13,7 +13,7 @@ from ...utils import (
     DEFAULT_ANSI_HIGHLIGHTER, HIGHLIGHT_TOKEN_TYPES, HighlightFormatterContext, alchemy_incendiary, call, export,
     include, render_exception_into, render_frames_into
 )
-from ...utils.trace import _add_typed_part_into
+from ...utils.trace.rendering import _add_typed_part_into
 
 from .event_loop import get_event_loop
 
@@ -41,20 +41,6 @@ async def render_frames_into_async(frames, extend = None, *, filter = None, high
     
     filter : `None`, `callable` = `None`, Optional (Keyword only)
         Additional filter to check whether a frame should be shown.
-        
-        Called with 4 parameters:
-        
-        +---------------+-----------+---------------------------------------------------------------+
-        | Name          | Type      | Description                                                   |
-        +===============+===========+===============================================================+
-        | file_name     | `str`     | The frame's file's name.                                      |
-        +---------------+-----------+---------------------------------------------------------------+
-        | name          | `str`     | The name of the function.                                     |
-        +---------------+-----------+---------------------------------------------------------------+
-        | line_number   | `int`     | The line's index of the file where the exception occurred.    |
-        +---------------+-----------+---------------------------------------------------------------+
-        | line          | `str`     | The line of the file.                                         |
-        +---------------+-----------+---------------------------------------------------------------+
     
     highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
         Formatter storing highlighting details.
@@ -104,20 +90,6 @@ async def render_exception_into_async(exception, extend = None, *, filter = None
     
     filter : `None`, `callable` = `None`, Optional (Keyword only)
         Additional filter to check whether a frame should be shown.
-        
-        Called with 4 parameters:
-        
-        +---------------+-----------+---------------------------------------------------------------+
-        | Name          | Type      | Description                                                   |
-        +===============+===========+===============================================================+
-        | file_name     | `str`     | The frame's file's name.                                      |
-        +---------------+-----------+---------------------------------------------------------------+
-        | name          | `str`     | The name of the function.                                     |
-        +---------------+-----------+---------------------------------------------------------------+
-        | line_number   | `int`     | The line's index of the file where the exception occurred.    |
-        +---------------+-----------+---------------------------------------------------------------+
-        | line          | `str`     | The line of the file.                                         |
-        +---------------+-----------+---------------------------------------------------------------+
     
     highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
         Formatter storing highlighting details.
@@ -263,25 +235,10 @@ def write_exception_sync(exception, before = None, after = None, file = None, *,
     
     filter : `None`, `callable` = `None`, Optional (Keyword only)
         Additional filter to check whether a frame should be shown.
-        
-        Called with 4 parameters:
-        
-        +---------------+-----------+---------------------------------------------------------------+
-        | Name          | Type      | Description                                                   |
-        +===============+===========+===============================================================+
-        | file_name     | `str`     | The frame's file's name.                                      |
-        +---------------+-----------+---------------------------------------------------------------+
-        | name          | `str`     | The name of the function.                                     |
-        +---------------+-----------+---------------------------------------------------------------+
-        | line_number   | `int`     | The line's index of the file where the exception occurred.    |
-        +---------------+-----------+---------------------------------------------------------------+
-        | line          | `str`     | The line of the file.                                         |
-        +---------------+-----------+---------------------------------------------------------------+
     
     highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
         Formatter storing highlighting details.
     """
-    
     before = _build_additional_title(before)
     after = _build_additional_title(after)
     
@@ -347,20 +304,6 @@ def write_exception_async(
     
     filter : `None`, `callable` = `None`, Optional (Keyword only)
         Additional filter to check whether a frame should be shown.
-        
-        Called with 4 parameters:
-        
-        +---------------+-----------+---------------------------------------------------------------+
-        | Name          | Type      | Description                                                   |
-        +===============+===========+===============================================================+
-        | file_name     | `str`     | The frame's file's name.                                      |
-        +---------------+-----------+---------------------------------------------------------------+
-        | name          | `str`     | The name of the function.                                     |
-        +---------------+-----------+---------------------------------------------------------------+
-        | line_number   | `int`     | The line's index of the file where the exception occurred.    |
-        +---------------+-----------+---------------------------------------------------------------+
-        | line          | `str`     | The line of the file.                                         |
-        +---------------+-----------+---------------------------------------------------------------+
     
     highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
         Formatter storing highlighting details.
@@ -383,7 +326,7 @@ def write_exception_async(
             {'filter': filter, 'highlighter': highlighter},
         )
     )
-    assert future.__silence__() is None
+    future.silence()
     return future
 
 
@@ -415,20 +358,6 @@ def write_exception_maybe_async(
     
     filter : `None`, `callable` = `None`, Optional (Keyword only)
         Additional filter to check whether a frame should be shown.
-        
-        Called with 4 parameters:
-        
-        +---------------+-----------+---------------------------------------------------------------+
-        | Name          | Type      | Description                                                   |
-        +===============+===========+===============================================================+
-        | file_name     | `str`     | The frame's file's name.                                      |
-        +---------------+-----------+---------------------------------------------------------------+
-        | name          | `str`     | The name of the function.                                     |
-        +---------------+-----------+---------------------------------------------------------------+
-        | line_number   | `int`     | The line's index of the file where the exception occurred.    |
-        +---------------+-----------+---------------------------------------------------------------+
-        | line          | `str`     | The line of the file.                                         |
-        +---------------+-----------+---------------------------------------------------------------+
     
     highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
         Formatter storing highlighting details.
@@ -531,20 +460,6 @@ class ExceptionWriterContextManager:
         
     filter : `None`, `callable`
         Additional filter to check whether a frame should be shown.
-        
-        Called with 4 parameters:
-        
-        +---------------+-----------+---------------------------------------------------------------+
-        | Name          | Type      | Description                                                   |
-        +===============+===========+===============================================================+
-        | file_name     | `str`     | The frame's file's name.                                      |
-        +---------------+-----------+---------------------------------------------------------------+
-        | name          | `str`     | The name of the function.                                     |
-        +---------------+-----------+---------------------------------------------------------------+
-        | line_number   | `int`     | The line's index of the file where the exception occurred.    |
-        +---------------+-----------+---------------------------------------------------------------+
-        | line          | `str`     | The line of the file.                                         |
-        +---------------+-----------+---------------------------------------------------------------+
     
     highlighter : `None`, ``HighlightFormatterContext``
         Formatter storing highlighting details.
@@ -581,20 +496,6 @@ class ExceptionWriterContextManager:
             
         filter : `None`, `callable` = `None`, Optional (Keyword only)
             Additional filter to check whether a frame should be shown.
-            
-            Called with 4 parameters:
-            
-            +---------------+-----------+---------------------------------------------------------------+
-            | Name          | Type      | Description                                                   |
-            +===============+===========+===============================================================+
-            | file_name     | `str`     | The frame's file's name.                                      |
-            +---------------+-----------+---------------------------------------------------------------+
-            | name          | `str`     | The name of the function.                                     |
-            +---------------+-----------+---------------------------------------------------------------+
-            | line_number   | `int`     | The line's index of the file where the exception occurred.    |
-            +---------------+-----------+---------------------------------------------------------------+
-            | line          | `str`     | The line of the file.                                         |
-            +---------------+-----------+---------------------------------------------------------------+
         
         highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
             Formatter storing highlighting details.

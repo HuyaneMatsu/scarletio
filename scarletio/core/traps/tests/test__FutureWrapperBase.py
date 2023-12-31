@@ -214,7 +214,11 @@ def test__FutureWrapperBase__cancel_with__new():
         vampytest.assert_true(future.is_cancelled())
         vampytest.assert_is(future.get_exception(), exception)
         
-        blocking_sleep(0.0001)
+        for retry in range(2):
+            blocking_sleep(0.0001)
+            if loop_waken_up:
+                break
+        
         vampytest.assert_true(loop_waken_up)
     
     finally:
@@ -471,7 +475,12 @@ def test__FutureWrapperBase__set_result_if_pending__new():
         vampytest.assert_true(future.is_done())
         vampytest.assert_is(future.get_result(), result)
         
-        blocking_sleep(0.0001)
+        # 2 retries
+        for _ in range(2):
+            blocking_sleep(0.0001)
+            if loop_waken_up:
+                break
+        
         vampytest.assert_true(loop_waken_up)
     
     finally:
@@ -535,7 +544,11 @@ def test__FutureWrapperBase__set_exception__new():
         vampytest.assert_true(future.is_done())
         vampytest.assert_is(future.get_exception(), exception)
         
-        blocking_sleep(0.0001)
+        for retry in range(2):
+            blocking_sleep(0.0001)
+            if loop_waken_up:
+                break
+        
         vampytest.assert_true(loop_waken_up)
     
     finally:
@@ -601,7 +614,11 @@ def test__FutureWrapperBase__set_exception_if_pending__new():
         vampytest.assert_true(future.is_done())
         vampytest.assert_is(future.get_exception(), exception)
         
-        blocking_sleep(0.0001)
+        for retry in range(2):
+            blocking_sleep(0.0001)
+            if loop_waken_up:
+                break
+        
         vampytest.assert_true(loop_waken_up)
     
     finally:

@@ -1,3 +1,15 @@
+# 1.0.64 *\[2023-12-31\]*
+
+#### Improvements
+
+- Expressions are now also parsed backwards to better include where the exception occurred.
+- If exception occurred in a multi-line expression add `around` word into the location.
+- Frame filters now receive `1` parameter the frame or a virtual frame instead of 4 as before. Warning is dropped if
+    `4` is given.
+- Add tests to `utils.trace` and rewrite its internals. Top level imports are still the same, but internal imports
+    changed. Wanted to also add new features but took too long.
+- Yeet `linecache` import, implement smart line and file caching ourself instead.
+
 # 1.0.63 *\[2023-11-11\]*
 
 #### Improvements

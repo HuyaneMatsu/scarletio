@@ -1,6 +1,6 @@
 import vampytest
 
-from ..trace import format_coroutine
+from ..formatters import format_coroutine
 
 
 def _example_generator_function():
@@ -15,7 +15,7 @@ async def _example_coroutine_generator_function():
     yield
 
 
-def test__format_coroutine__0():
+def test__format_coroutine__generator():
     """
     Tests whether `format_coroutine` acts correctly for generators.
     """
@@ -32,7 +32,7 @@ def test__format_coroutine__0():
         generator.close()
 
 
-def test__format_coroutine__1():
+def test__format_coroutine__coroutine():
     """
     Tests whether `format_coroutine` acts correctly for coroutines.
     """
@@ -49,7 +49,7 @@ def test__format_coroutine__1():
         coroutine.close()
 
 
-def test__format_coroutine__2():
+def test__format_coroutine__coroutine_generator():
     """
     Tests whether `format_coroutine` acts correctly for coroutine generators.
     """
@@ -66,7 +66,7 @@ def test__format_coroutine__2():
         coroutine_generator.aclose()
 
 
-def test__format_coroutine__3():
+def test__format_coroutine__object():
     """
     Tests whether `format_coroutine` acts correctly for random objects.
     """
@@ -78,7 +78,7 @@ def test__format_coroutine__3():
     vampytest.assert_in('unknown location', result)
 
 
-def test__format_coroutine__4():
+def test__format_coroutine__finished_coroutine():
     """
     Tests whether `format_coroutine` shows that the coroutine is stopped.
     """
@@ -103,7 +103,7 @@ def _check_state_in_generator_itself():
         self = None
 
 
-def test__format_coroutine__5():
+def test__format_coroutine__running_coroutine():
     """
     Tests whether `format_coroutine` shows that the coroutine is running.
     """

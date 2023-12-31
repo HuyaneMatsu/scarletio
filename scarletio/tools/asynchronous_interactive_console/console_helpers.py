@@ -1,11 +1,11 @@
 __all__ = ('collect_module_variables', 'create_banner', 'create_exit_message')
 
 
-import sys, warnings
+import sys
 
 from ... import __package__ as PACKAGE_NAME
 from ...utils import HIGHLIGHT_TOKEN_TYPES
-from ...utils.trace import _iter_highlight_producer
+from ...utils.trace.rendering import _add_typed_parts_into
 
 from .editors.compilation import PYTHON_COMPILE_FLAG_ALLOW_TOP_LEVEL_AWAIT
 
@@ -47,10 +47,10 @@ def _produce_banner(package, logo):
     
     
     if (logo is not None):
-        yield logo, HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_BANNER_LOGO
+        yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_BANNER_LOGO, logo
         
         if (package is not None):
-            yield '\n', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE
+            yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE, '\n'
             
             
             logo_length = max((len(line) for line in logo.splitlines()), default = 0)
@@ -59,12 +59,12 @@ def _produce_banner(package, logo):
             
             adjust = logo_length - package_version_length
             if adjust > 0:
-                yield ' ' * adjust, HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE
+                yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE, ' ' * adjust
             
-            yield package_version, HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_BANNER_LOGO_VERSION
-            yield '\n', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE
+            yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_BANNER_LOGO_VERSION, package_version
+            yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE, '\n'
             
-        yield '\n\n', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE
+        yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE, '\n\n'
     
     # At cpython it has a ` \n` in it, but in pypy we have just a `\n`.
     system_version = ' '.join(sys.version.split())
@@ -75,20 +75,20 @@ def _produce_banner(package, logo):
         package_name = package_name[0].upper() + package_name[1:]
     
     console_description = f'{package_name} interactive console {system_version} on {sys.platform}.'
-    yield console_description, HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_BANNER_DESCRIPTION
-    yield '\n', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE
+    yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_BANNER_DESCRIPTION, console_description
+    yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE, '\n'
     
     if PYTHON_COMPILE_FLAG_ALLOW_TOP_LEVEL_AWAIT:
         await_token_type = HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_BANNER_DESCRIPTION_AWAIT
     else:
         await_token_type = HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_BANNER_DESCRIPTION_AWAIT_UNAVAILABLE
     
-    yield AWAIT_NOTE, await_token_type
+    yield await_token_type, AWAIT_NOTE
     
-    yield '\n', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE
+    yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE, '\n'
     console_help = 'Type "help", "copyright", "credits" or "license" for more information.'
-    yield console_help, HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_BANNER_DESCRIPTION
-    yield '\n', HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE
+    yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_BANNER_DESCRIPTION, console_help
+    yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE, '\n'
 
 
 def create_banner(package = None, logo = None, *, highlighter = None):
@@ -111,7 +111,7 @@ def create_banner(package = None, logo = None, *, highlighter = None):
     banner : `str`
         Console banner.
     """
-    return ''.join([*_iter_highlight_producer(_produce_banner(package, logo), highlighter)])
+    return ''.join(_add_typed_parts_into(_produce_banner(package, logo), [], highlighter))
 
 
 def create_exit_message(package = None):

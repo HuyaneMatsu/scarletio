@@ -9,9 +9,11 @@ from ...core import (
     Future, get_default_trace_writer_highlighter, get_event_loop, get_or_create_event_loop, write_exception_sync
 )
 from ...utils import HIGHLIGHT_TOKEN_TYPES, is_awaitable, render_exception_into
-from ...utils.trace import (
-    _render_syntax_error_representation_into, fixup_syntax_error_line_from_buffer, is_syntax_error
+from ...utils.trace.exception_representation import ExceptionRepresentationSyntaxError
+from ...utils.trace.exception_representation.syntax_error_helpers import (
+    fixup_syntax_error_line_from_buffer, is_syntax_error
 )
+from ...utils.trace.rendering import _render_exception_representation_syntax_error_into
 
 from .auto_completer import AutoCompleter
 from .console_helpers import create_banner, create_exit_message
@@ -19,20 +21,14 @@ from .editors import EditorAdvanced, EditorBase, EditorSimple, can_use_advanced_
 from .history import History
 
 
-def _ignore_console_frames(file_name, name, line_number, line):
+def _ignore_console_frames(frame):
     """
     Ignores the frames of the asynchronous console.
     
     Parameters
     ----------
-    file_name : `str`
-        The frame's respective file's name.
-    name : `str`
-        The frame's respective function's name.
-    line_number : `int`
-        The line's index where the exception occurred.
-    line : `str`
-        The frame's respective stripped line.
+    frame : ``FrameProxyBase``
+        The frame to check.
     
     Returns
     -------
@@ -40,6 +36,10 @@ def _ignore_console_frames(file_name, name, line_number, line):
         Whether the frame should be shown.
     """
     should_show_frame = True
+    
+    file_name = frame.file_name
+    name = frame.name
+    line = frame.line
     
     if file_name == __file__:
         if name == 'run_code_callback':
@@ -522,8 +522,9 @@ class AsynchronousInteractiveConsole:
             if (editor is not None):
                 fixup_syntax_error_line_from_buffer(syntax_error, editor.get_buffer())
             
-            _render_syntax_error_representation_into(syntax_error, into, self.highlighter)
-            into.append('\n')
+            _render_exception_representation_syntax_error_into(
+                ExceptionRepresentationSyntaxError(syntax_error), into, self.highlighter
+            )
         else:
             render_exception_into(syntax_error, into, filter = _ignore_console_frames, highlighter = self.highlighter)
         

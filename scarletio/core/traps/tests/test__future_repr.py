@@ -88,7 +88,7 @@ def _iter_options__render_callbacks_into():
         False,
         [_callback_0, _callback_1],
         (
-            ' callbacks = [_callback_0, _callback_1]',
+            ' callbacks = [_callback_0(), _callback_1()]',
             True,
         )
     )
@@ -97,7 +97,7 @@ def _iter_options__render_callbacks_into():
         True,
         [_callback_0, _callback_1],
         (
-            ', callbacks = [_callback_0, _callback_1]',
+            ', callbacks = [_callback_0(), _callback_1()]',
             True,
         )
     )

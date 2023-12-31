@@ -3,7 +3,7 @@ __all__ = ()
 from reprlib import repr as short_repr
 
 from ...utils import include
-from ...utils.trace import format_callback, format_coroutine
+from ...utils.trace.formatters import format_callback, format_coroutine
 
 from ..exceptions import CancelledError
 

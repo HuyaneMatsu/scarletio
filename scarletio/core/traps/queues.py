@@ -470,7 +470,7 @@ class AsyncQueue:
             """
             waiter = self._waiter
             if waiter is not None:
-                waiter.__silence__()
+                waiter.silence()
 
 
 class AsyncLifoQueue(AsyncQueue):

@@ -108,9 +108,9 @@ The token types for coloring are the following:
 +-----------------------------------------------------------+-------+-----------------------------------------------+
 | TOKEN_TYPE_TRACE_LOCATION_NAME                            | 1203  | TOKEN_TYPE_TRACE_LOCATION                     |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
-| TOKEN_TYPE_TRACE_DETAIL                                   | 1300  | TOKEN_TYPE_TRACE                              |
+| TOKEN_TYPE_TRACE_FRAME                                    | 1300  | TOKEN_TYPE_TRACE                              |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
-| TOKEN_TYPE_TRACE_DETAIL_FRAME_REPEAT                      | 1301  | TOKEN_TYPE_TRACE_DETAIL                       |
+| TOKEN_TYPE_TRACE_FRAME_REPEAT                             | 1301  | TOKEN_TYPE_TRACE_FRAME                        |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
 | TOKEN_TYPE_CONSOLE                                        | 2000  | TOKEN_TYPE_ALL                                |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
@@ -205,8 +205,8 @@ TOKEN_TYPE_TRACE_LOCATION_PATH = 1201
 TOKEN_TYPE_TRACE_LOCATION_LINE_NUMBER = 1202
 TOKEN_TYPE_TRACE_LOCATION_NAME = 1203
 
-TOKEN_TYPE_TRACE_DETAIL = 1300
-TOKEN_TYPE_TRACE_DETAIL_FRAME_REPEAT = 1301
+TOKEN_TYPE_TRACE_FRAME = 1300
+TOKEN_TYPE_TRACE_FRAME_REPEAT = 1301
 
 # CONSOLE
 
@@ -300,8 +300,8 @@ TOKEN_STRUCTURE = {
             TOKEN_TYPE_TRACE_LOCATION_LINE_NUMBER : None,
             TOKEN_TYPE_TRACE_LOCATION_NAME : None,
         },
-        TOKEN_TYPE_TRACE_DETAIL : {
-            TOKEN_TYPE_TRACE_DETAIL_FRAME_REPEAT : None,
+        TOKEN_TYPE_TRACE_FRAME : {
+            TOKEN_TYPE_TRACE_FRAME_REPEAT : None,
         },
     },
     TOKEN_TYPE_CONSOLE : {

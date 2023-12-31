@@ -1252,7 +1252,8 @@ async def test__Future__set_exception__result_set():
     This function is a coroutine.
     """
     future = Future(get_event_loop())
-    future.set_exception(None)
+    future.set_exception(LookupError())
+    future.silence()
     
     with vampytest.assert_raises(InvalidStateError(future, 'set_exception')):
         future.set_exception(ValueError())
@@ -1675,10 +1676,11 @@ async def test__Future__del__un_retrieved_exception():
     capture = vampytest.capture_output()
     with capture:
         future.__del__()
-        await sleep(0.001)
+        await sleep(0.1)
     
     future.silence()
-    vampytest.assert_true(capture.get_value())
+    value = capture.get_value()
+    vampytest.assert_true(value)
 
 
 async def test__Future__del__exception_silenced():

@@ -60,6 +60,7 @@ class TransportLayerBase(AbstractTransportLayerBase):
         self._loop = loop
         return self
     
+    
     @copy_docs(AbstractTransportLayerBase.get_extra_info)
     def get_extra_info(self, name, default = None):
         return get_extra_info(self._extra, name, default)
@@ -501,7 +502,6 @@ class SocketTransportLayer(SocketTransportLayerBase):
         """
         self = SocketTransportLayerBase.__new__(cls, loop, extra, socket, protocol, waiter)
         
-        self._buffer = bytearray()
         self._server = server
         self._at_eof = False
         
@@ -605,7 +605,6 @@ class SocketTransportLayer(SocketTransportLayerBase):
             self._loop.add_reader(self._socket_file_descriptor, self._read_ready)
         
         return True
-    
     
     
     @copy_docs(SocketTransportLayerBase._fatal_error)

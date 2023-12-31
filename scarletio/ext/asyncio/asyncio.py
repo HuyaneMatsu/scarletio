@@ -26,13 +26,16 @@ from subprocess import DEVNULL, PIPE, STDOUT
 from threading import current_thread
 
 from ...core import (
-    AbstractProtocolBase, AsyncLifoQueue, AsyncProcess, AsyncQueue, DatagramSocketTransportLayer, Event as HataEvent,
-    EventThread, Executor, Future as HataFuture,  Lock as HataLock, ReadProtocolBase, Task as HataTask, TaskGroup,
-    future_or_timeout, shield as scarletio_shield, skip_ready_cycle, sleep as scarletio_sleep
+    AbstractProtocolBase, AsyncLifoQueue, AsyncProcess, AsyncQueue, CancelledError, DatagramSocketTransportLayer,
+    Event as HataEvent, EventThread, Executor, Future as HataFuture, Handle, InvalidStateError, Lock as HataLock,
+    ReadProtocolBase, Server, Task as HataTask, TaskGroup, TimerHandle, shield as scarletio_shield, skip_ready_cycle,
+    sleep as scarletio_sleep
 )
 from ...core.event_loop.event_loop_functionality_helpers import _is_stream_socket, _set_reuse_port
 from ...core.top_level import get_event_loop as scarletio_get_event_loop, write_exception_async
-from ...utils import IS_UNIX, KeepType, WeakValueDictionary, WeakReferer, alchemy_incendiary, is_coroutine
+from ...utils import (
+    IS_UNIX, KeepType, WeakReferer, WeakValueDictionary, alchemy_incendiary, is_coroutine, is_coroutine_function
+)
 
 
 __path__ = os.path.dirname(__file__)
@@ -833,7 +836,7 @@ def _run_until_complete_cb(future): # needed by anyio
 # async-io.coroutines
 # include: coroutine, iscoroutinefunction, iscoroutine
 from types import coroutine
-from scarletio import is_coroutine_function as iscoroutinefunction
+iscoroutinefunction = is_coroutine_function
 iscoroutine = is_coroutine
 # asyncio.events
 # include: AbstractEventLoopPolicy, AbstractEventLoop, AbstractServer, Handle, TimerHandle, get_event_loop_policy,
@@ -845,7 +848,7 @@ class AbstractEventLoopPolicy:
         raise NotImplementedError
 
 AbstractEventLoop = EventThread
-from scarletio import Server as AbstractServer, Handle, TimerHandle
+AbstractServer = Server
 
 def get_event_loop_policy():
     raise NotImplementedError
@@ -921,7 +924,6 @@ class SendfileNotAvailableError(RuntimeError):
 # asyncio.exceptions
 # include: CancelledError, InvalidStateError, TimeoutError, IncompleteReadError, LimitOverrunError,
 #    SendfileNotAvailableError
-from scarletio import CancelledError, InvalidStateError
 TimeoutError = TimeoutError
 
 class IncompleteReadError(EOFError):

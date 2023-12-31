@@ -3,11 +3,7 @@ __all__ = ('alchemy_incendiary', 'call', 'copy_func',)
 from types import FunctionType
 
 from .docs import has_docs
-from .trace import ignore_frame
 
-
-ignore_frame(__spec__.origin, '__call__', 'return self.func(*self.args)', )
-ignore_frame(__spec__.origin, '__call__', 'return self.func(*self.args, **kwargs)', )
 
 @has_docs
 def call(function):
@@ -37,32 +33,34 @@ class alchemy_incendiary:
     
     Attributes
     ----------
-    args : `tuple` of `object`
+    positional_parameters : `tuple` of `object`
         Parameters to call `func` with.
-    func : `callable`
+    function : `callable`
         The function to call.
-    kwargs : `None` of `dict` of (`str`, `object`) items
+    keyword_parameters : `None` of `dict` of (`str`, `object`) items
         Keyword parameters to call func with if applicable.
     """
-    __slots__ = ('args', 'func', 'kwargs',)
+    __slots__ = ('positional_parameters', 'function', 'keyword_parameters',)
+    
     
     @has_docs
-    def __init__(self, func, args, kwargs = None):
+    def __init__(self, function, positional_parameters, keyword_parameters = None):
         """
         Creates a new `alchemy_incendiary` with the given parameters.
         
         Parameters
         ----------
-        func : `callable`
+        function : `callable`
             The function to call.
-        args : `tuple` of `object`
+        positional_parameters : `tuple<object>`
             Parameters to call `func` with.
-        kwargs : `None` of `dict` of (`str`, `object`) items = `None`, Optional
+        keyword_parameters : `None | dict<str, object>` = `None`, Optional
             Keyword parameters to call func with if applicable.
         """
-        self.func = func
-        self.args = args
-        self.kwargs = kwargs
+        self.function = function
+        self.positional_parameters = positional_parameters
+        self.keyword_parameters = keyword_parameters
+    
     
     @has_docs
     def __call__(self):
@@ -79,11 +77,11 @@ class alchemy_incendiary:
         BaseException
             The raised exception by ``.func``.
         """
-        kwargs = self.kwargs
-        if kwargs is None:
-            return self.func(*self.args)
+        keyword_parameters = self.keyword_parameters
+        if keyword_parameters is None:
+            return self.function(*self.positional_parameters)
         
-        return self.func(*self.args, **kwargs)
+        return self.function(*self.positional_parameters, **keyword_parameters)
 
 
 @has_docs
