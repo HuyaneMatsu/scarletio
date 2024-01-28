@@ -37,6 +37,7 @@ setup(
         'scarletio.utils.highlight',
         'scarletio.utils.trace',
         'scarletio.utils.trace.exception_representation',
+        'scarletio.utils.trace.exception_representation.suggestions',
         'scarletio.utils.trace.expression_parsing',
         'scarletio.utils.trace.frame_proxy',
         'scarletio.utils.type_proxies',

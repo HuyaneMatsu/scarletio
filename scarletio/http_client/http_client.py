@@ -62,7 +62,8 @@ class HTTPClient:
         
         self.connector = connector
         self.cookie_jar = CookieJar()
-        
+    
+    
     async def _request(self, method, url, headers, data = None, params = None, redirects = 3):
         """
         Internal method for executing an http request.
@@ -195,7 +196,8 @@ class HTTPClient:
         
         response.history = tuple(history)
         return response
-        
+    
+    
     async def _request2(
         self,
         method,
@@ -367,6 +369,7 @@ class HTTPClient:
         response.history = tuple(history)
         return response
     
+    
     @property
     def closed(self):
         """
@@ -385,6 +388,7 @@ class HTTPClient:
         
         return False
     
+    
     async def __aenter__(self):
         """
         Enters the ``HTTPClient`` as an asynchronous context manager.
@@ -393,13 +397,15 @@ class HTTPClient:
         """
         return self
     
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    
+    async def __aexit__(self, exception_type, exception_value, exception_traceback):
         """
         Exits the ``HTTPClient`` with closing it.
         
         This method is a coroutine.
         """
         self.close()
+    
     
     def __del__(self):
         """
@@ -414,7 +420,9 @@ class HTTPClient:
         if not connector.closed:
             connector.close()
     
+    
     close = __del__
+    
     
     def request(self, method, url, headers = None, **kwargs):
         """
@@ -459,6 +467,7 @@ class HTTPClient:
             headers = IgnoreCaseMultiValueDictionary()
         
         return RequestContextManager(self._request(method, url, headers, **kwargs))
+    
     
     def request2(self, method, url, headers = None, **kwargs):
         """
@@ -513,6 +522,7 @@ class HTTPClient:
             headers = IgnoreCaseMultiValueDictionary()
         
         return RequestContextManager(self._request2(method, url, headers, **kwargs))
+    
     
     def get(self, url, headers = None, **kwargs):
         """

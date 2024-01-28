@@ -22,7 +22,7 @@ def test__ExceptionRepresentationGeneric__new():
     """
     exception = Exception()
     
-    exception_representation = ExceptionRepresentationGeneric(exception)
+    exception_representation = ExceptionRepresentationGeneric(exception, None)
     _assert_fields_set(exception_representation)
     
     vampytest.assert_eq(exception_representation.representation, 'Exception')

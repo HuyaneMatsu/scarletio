@@ -1,7 +1,9 @@
 __all__ = ('HttpReadProtocol', 'HttpReadWriteProtocol',)
 
-import base64, binascii, re
+from base64 import b64decode as base64_decode
+from binascii import a2b_qp as qp_decode
 from random import getrandbits
+from re import compile as re_compile
 from struct import Struct
 
 from ..core import ReadProtocolBase, ReadWriteProtocolBase
@@ -17,11 +19,11 @@ from .mime_type import MimeType
 from .websocket_frame import WebSocketFrame, apply_websocket_mask
 
 
-HTTP_STATUS_RP = re.compile(b'HTTP/(\d)\.(\d) (\d\d\d)(?: (.*?))?\r\n')
-HTTP_REQUEST_RP = re.compile(b'([^ ]+) ([^ ]+) HTTP/(\d)\.(\d)\r\n')
+HTTP_STATUS_RP = re_compile(b'HTTP/(\d)\.(\d) (\d\d\d)(?: (.*?))?\r\n')
+HTTP_REQUEST_RP = re_compile(b'([^ ]+) ([^ ]+) HTTP/(\d)\.(\d)\r\n')
 
-HTTP_STATUS_LINE_RP = re.compile(b'HTTP/(\d)\.(\d) (\d\d\d)(?: (.*?))?')
-HTTP_REQUEST_LINE_RP = re.compile(b'([^ ]+) ([^ ]+) HTTP/(\d)\.(\d)')
+HTTP_STATUS_LINE_RP = re_compile(b'HTTP/(\d)\.(\d) (\d\d\d)(?: (.*?))?')
+HTTP_REQUEST_LINE_RP = re_compile(b'([^ ]+) ([^ ]+) HTTP/(\d)\.(\d)')
 
 MAX_LINE_LENGTH = 8190
 
@@ -380,11 +382,11 @@ class HttpReadProtocol(ReadProtocolBase):
                 except KeyError:
                     pass
                 else:
-                    transfer_encoding = transfer_encoding.lower()
+                    transfer_encoding = transfer_encoding.casefold()
                     if transfer_encoding == 'base64':
-                        data = base64.b64decode(data)
+                        data = base64_decode(data)
                     elif transfer_encoding == 'quoted-printable':
-                        data = binascii.a2b_qp(data)
+                        data = qp_decode(data)
                     elif transfer_encoding in ('binary', '8bit', '7bit'):
                         pass
                     else:
@@ -395,7 +397,7 @@ class HttpReadProtocol(ReadProtocolBase):
                 except KeyError:
                     pass
                 else:
-                    content_encoding = content_encoding.lower()
+                    content_encoding = content_encoding.casefold()
                     decompressor = get_decompressor_for(content_encoding)
                     if (decompressor is not None):
                         try:

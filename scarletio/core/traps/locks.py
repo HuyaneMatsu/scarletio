@@ -77,7 +77,7 @@ class Lock:
                 raise
     
     
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exception_type, exception_value, exception_traceback):
         """
         Releases the lock.
         

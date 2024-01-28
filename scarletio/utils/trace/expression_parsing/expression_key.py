@@ -14,7 +14,7 @@ class ExpressionKey:
     line_index : `int`
         The line's identifier where the expression is at.
     name : `str`
-        The function's name teh expression is at.
+        The function's name the expression is at.
     """
     __slots__ = ('file_name', 'instruction_index', 'line_index', 'name')
     
@@ -29,7 +29,7 @@ class ExpressionKey:
         line_index : `int`
             The line's identifier where the expression is at.
         name : `str`
-            The function's name teh expression is at.
+            The function's name the expression is at.
         instruction_index : `int`
             The instruction's index used for identification.
         """

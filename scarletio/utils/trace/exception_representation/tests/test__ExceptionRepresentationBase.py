@@ -21,7 +21,7 @@ def test__ExceptionRepresentationBase__new():
     """
     exception = Exception()
     
-    exception_representation = ExceptionRepresentationBase(exception)
+    exception_representation = ExceptionRepresentationBase(exception, None)
     _assert_fields_set(exception_representation)
 
 

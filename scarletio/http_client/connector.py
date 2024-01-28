@@ -22,13 +22,14 @@ DNS_CACHE_TIMEOUT = 10.0
 
 SSL_ALLOWED_TYPES = (module_ssl.SSLContext, bool, Fingerprint, type(None))
 
-ssl_errors = (module_ssl.SSLError, module_ssl.CertificateError)
+SSL_EXCEPTION_TYPES = (module_ssl.SSLError, module_ssl.CertificateError)
 
 SSL_CONTEXT_VERIFIED = module_ssl.create_default_context()
 
 SSL_CONTEXT_UNVERIFIED = module_ssl.SSLContext(module_ssl.PROTOCOL_SSLv23)
 SSL_CONTEXT_UNVERIFIED.options |= module_ssl.OP_NO_SSLv2 | module_ssl.OP_NO_SSLv3 | module_ssl.OP_NO_COMPRESSION
 SSL_CONTEXT_UNVERIFIED.set_default_verify_paths()
+
 
 class ConnectorBase:
     """
@@ -522,6 +523,7 @@ class HostInfoCont:
         return f'<{self.__class__.__name__} host_infos={self.host_infos!r}, index={self.index!r}, ' \
             f'timestamp={self.timestamp!r}>'
     
+    
 class TCPConnector(ConnectorBase):
     """
     Base connector class.
@@ -594,6 +596,7 @@ class TCPConnector(ConnectorBase):
         
         return self
     
+    
     def close(self):
         """
         Closes the connector, it's dns lookup events and it's connections.
@@ -602,6 +605,7 @@ class TCPConnector(ConnectorBase):
             event.cancel()
         
         ConnectorBase.close(self)
+    
     
     async def resolve(self, host, port):
         """
@@ -801,6 +805,7 @@ class TCPConnector(ConnectorBase):
         
         return SSL_CONTEXT_UNVERIFIED
     
+    
     def get_fingerprint(self, request):
         """
         Gets fingerprint for the respective request.
@@ -862,7 +867,7 @@ class TCPConnector(ConnectorBase):
                     local_address = self.local_address,
                     server_host_name = (host_info.hostname if ssl_context else None),
                 )
-            except ssl_errors as err:
+            except SSL_EXCEPTION_TYPES as err:
                 err.key = request.connection_key
                 raise
             
@@ -957,7 +962,7 @@ class TCPConnector(ConnectorBase):
                         socket = raw_socket,
                         server_host_name = request.host,
                     )
-                except ssl_errors as err:
+                except SSL_EXCEPTION_TYPES as err:
                     err.key = request.connection_key
                     raise
                 

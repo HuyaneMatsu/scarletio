@@ -8,9 +8,9 @@ from .multi_value_dictionary import MultiValueDictionary
 @has_docs
 class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
     """
-    ``MultiValueDictionary`` subclass, what can be used to hold http headers.
+    ``MultiValueDictionary`` sub-type that can be used to hold http headers.
     
-    It's keys ignore casing.
+    Its keys ignore casing.
     """
     __slots__ = ()
     
@@ -21,29 +21,29 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
         if (iterable is None) or (not iterable):
             return
         
-        getitem = dict.__getitem__
-        setitem = dict.__setitem__
+        get_item = dict.__getitem__
+        set_item = dict.__setitem__
         
         if type(iterable) is type(self):
             for key, values in dict.items(iterable):
-                setitem(self, key, values.copy())
+                set_item(self, key, values.copy())
         
         elif isinstance(iterable, MultiValueDictionary):
             for key, values in dict.items(iterable):
-                setitem(self, IgnoreCaseString(key), values.copy())
+                set_item(self, IgnoreCaseString(key), values.copy())
         
         elif isinstance(iterable, dict):
             for key, value in iterable.items():
                 key = IgnoreCaseString(key)
-                setitem(self, key, [value])
+                set_item(self, key, [value])
         
         else:
             for key, value in iterable:
                 key = IgnoreCaseString(key)
                 try:
-                    values = getitem(self, key)
+                    values = get_item(self, key)
                 except KeyError:
-                    setitem(self, key, [value])
+                    set_item(self, key, [value])
                 else:
                     if value not in values:
                         values.append(value)
@@ -94,6 +94,7 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
         key = IgnoreCaseString(key)
         return MultiValueDictionary.get_one(self, key, default)
     
+    
     get = get_one
     
     
@@ -113,5 +114,6 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
     def pop_one(self, key, default = ...):
         key = IgnoreCaseString(key)
         return MultiValueDictionary.pop_one(self, key, default)
+    
     
     pop = pop_one

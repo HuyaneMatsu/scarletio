@@ -131,7 +131,7 @@ def render_exception_into(exception, extend = None, *, filter = None, highlighte
                 highlighter = highlighter,
             )
             
-            exception_representation = get_exception_representation(exception)
+            exception_representation = get_exception_representation(exception, None)
             extend = render_exception_representation_into(exception_representation, extend, highlighter)
             
             if reason_type == REASON_TYPE_NONE:

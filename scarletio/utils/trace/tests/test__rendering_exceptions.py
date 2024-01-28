@@ -1,10 +1,14 @@
 import vampytest
 
-from ...highlight import DEFAULT_ANSI_HIGHLIGHTER, HIGHLIGHT_TOKEN_TYPES
+from ...highlight import DEFAULT_ANSI_HIGHLIGHTER
 
-from ..exception_representation import ExceptionRepresentationGeneric, ExceptionRepresentationSyntaxError
-from ..rendering import _render_exception_representation_generic_into, \
+from ..exception_representation import (
+    ExceptionRepresentationAttributeError, ExceptionRepresentationGeneric, ExceptionRepresentationSyntaxError
+)
+from ..rendering import (
+    _render_exception_representation_attribute_error_into, _render_exception_representation_generic_into,
     _render_exception_representation_syntax_error_into, render_exception_representation_into
+)
 
 
 def test__render_exception_representation_generic_into__no_highlight():
@@ -44,6 +48,74 @@ def test__render_exception_representation_generic_into__with_highlight():
     )
     
     output = _render_exception_representation_generic_into(exception_representation, [], DEFAULT_ANSI_HIGHLIGHTER)
+    vampytest.assert_instance(output, list)
+    
+    for element in output:
+        vampytest.assert_instance(element, str)
+    
+    vampytest.assert_true(any('\x1b' in part for part in output))
+    
+    output_string = ''.join(filter(lambda part: '\x1b' not in part, output))
+    vampytest.assert_eq(output_string, expected_output)
+
+
+def test__render_exception_representation_attribute_error_into__no_highlight():
+    """
+    Tests whether ``_render_exception_representation_attribute_error_into`` works as intended.
+    
+    Case: No highlight.
+    """
+    type_name = AttributeError.__name__
+    instance_type_name = 'Handler'
+    attribute_name = 'cuddle'
+    suggestion_familiar_attribute_names = ['hug', 'pat']
+    
+    expected_output = (
+        'AttributeError: `Handler` has no attribute `.cuddle`.\n'
+        'Did you mean any of: `.hug`, `.pat`?\n'
+    )
+    
+    exception_representation = ExceptionRepresentationAttributeError.from_fields(
+        type_name = type_name,
+        instance_type_name = instance_type_name,
+        attribute_name = attribute_name,
+        suggestion_familiar_attribute_names = suggestion_familiar_attribute_names,
+    )
+    
+    output = _render_exception_representation_attribute_error_into(exception_representation, [], None)
+    vampytest.assert_instance(output, list)
+    
+    for element in output:
+        vampytest.assert_instance(element, str)
+    
+    output_string = ''.join(output)
+    vampytest.assert_eq(output_string, expected_output)
+
+
+def test__render_exception_representation_attribute_error_into__with_highlight():
+    """
+    Tests whether ``_render_exception_representation_attribute_error_into`` works as intended.
+    
+    Case: With highlight.
+    """
+    type_name = AttributeError.__name__
+    instance_type_name = 'Handler'
+    attribute_name = 'cuddle'
+    suggestion_familiar_attribute_names = ['hug', 'pat']
+    
+    expected_output = (
+        'AttributeError: `Handler` has no attribute `.cuddle`.\n'
+        'Did you mean any of: `.hug`, `.pat`?\n'
+    )
+    
+    exception_representation = ExceptionRepresentationAttributeError.from_fields(
+        type_name = type_name,
+        instance_type_name = instance_type_name,
+        attribute_name = attribute_name,
+        suggestion_familiar_attribute_names = suggestion_familiar_attribute_names,
+    )
+    
+    output = _render_exception_representation_attribute_error_into(exception_representation, [], DEFAULT_ANSI_HIGHLIGHTER)
     vampytest.assert_instance(output, list)
     
     for element in output:

@@ -100,6 +100,12 @@ The token types for coloring are the following:
 +-----------------------------------------------------------+-------+-----------------------------------------------+
 | TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR                     | 1122  | TOKEN_TYPE_TRACE_TITLE_EXCEPTION              |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_TRACE_EXCEPTION_REPR_GRAVE                     | 1123  | TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR         |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_TRACE_EXCEPTION_REPR_GRAVE_AFFIX               | 1124  | TOKEN_TYPE_TRACE_EXCEPTION_REPR_GRAVE         |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_TRACE_EXCEPTION_REPR_GRAVE_FILLING             | 1124  | TOKEN_TYPE_TRACE_EXCEPTION_REPR_GRAVE         |
++-----------------------------------------------------------+-------+-----------------------------------------------+
 | TOKEN_TYPE_TRACE_LOCATION                                 | 1200  | TOKEN_TYPE_TRACE                              |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
 | TOKEN_TYPE_TRACE_LOCATION_PATH                            | 1201  | TOKEN_TYPE_TRACE_LOCATION                     |
@@ -200,6 +206,10 @@ TOKEN_TYPE_TRACE_TITLE_EXCEPTION = 1120
 TOKEN_TYPE_TRACE_TITLE_EXCEPTION_START = 1121
 TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR = 1122
 
+TOKEN_TYPE_TRACE_EXCEPTION_REPR_GRAVE = 1123
+TOKEN_TYPE_TRACE_EXCEPTION_REPR_GRAVE_AFFIX = 1124
+TOKEN_TYPE_TRACE_EXCEPTION_REPR_GRAVE_FILLING = 1125
+
 TOKEN_TYPE_TRACE_LOCATION = 1200
 TOKEN_TYPE_TRACE_LOCATION_PATH = 1201
 TOKEN_TYPE_TRACE_LOCATION_LINE_NUMBER = 1202
@@ -292,7 +302,12 @@ TOKEN_STRUCTURE = {
             },
             TOKEN_TYPE_TRACE_TITLE_EXCEPTION : {
                 TOKEN_TYPE_TRACE_TITLE_EXCEPTION_START : None,
-                TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR : None,
+                TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR : {            
+                    TOKEN_TYPE_TRACE_EXCEPTION_REPR_GRAVE : {
+                        TOKEN_TYPE_TRACE_EXCEPTION_REPR_GRAVE_AFFIX : None,
+                        TOKEN_TYPE_TRACE_EXCEPTION_REPR_GRAVE_FILLING : None,
+                    },
+                }
             },
         },
         TOKEN_TYPE_TRACE_LOCATION : {

@@ -14,7 +14,7 @@ def test__get_exception_representation__syntax_error():
     exception = SyntaxError()
     exception.args = ('invalid syntax', ('<string>', 1, 1, 'for n in range(10):\n', 1, 4))
     
-    output = get_exception_representation(exception)
+    output = get_exception_representation(exception, None)
     
     vampytest.assert_instance(output, ExceptionRepresentationSyntaxError)
 
@@ -27,7 +27,7 @@ def test__get_exception_representation__generic():
     """
     exception = ValueError()
     
-    output = get_exception_representation(exception)
+    output = get_exception_representation(exception, None)
     
     vampytest.assert_instance(output, ExceptionRepresentationGeneric)
 
@@ -40,6 +40,6 @@ def test__get_exception_representation__invalid():
     """
     exception = object()
     
-    output = get_exception_representation(exception)
+    output = get_exception_representation(exception, None)
     
     vampytest.assert_instance(output, type(None))

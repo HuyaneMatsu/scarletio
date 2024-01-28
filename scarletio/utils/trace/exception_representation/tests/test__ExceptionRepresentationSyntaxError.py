@@ -48,7 +48,7 @@ def test__ExceptionRepresentationSyntaxError__new():
         ),
     )
     
-    exception_representation = ExceptionRepresentationSyntaxError(exception)
+    exception_representation = ExceptionRepresentationSyntaxError(exception, None)
     _assert_fields_set(exception_representation)
     
     vampytest.assert_eq(exception_representation.file_name, file_name)
@@ -130,16 +130,16 @@ def test__ExceptionRepresentationSyntaxError__repr():
     vampytest.assert_instance(output, str)
     
     vampytest.assert_in('file_name', output)
-    vampytest.assert_in(file_name, output)
+    vampytest.assert_in(repr(file_name), output)
     
     vampytest.assert_in('line', output)
-    vampytest.assert_in(line, output)
+    vampytest.assert_in(repr(line), output)
     
     vampytest.assert_in('line_index', output)
     vampytest.assert_in(repr(line_index), output)
     
     vampytest.assert_in('message', output)
-    vampytest.assert_in(message, output)
+    vampytest.assert_in(repr(message), output)
     
     vampytest.assert_in('pointer_length', output)
     vampytest.assert_in(repr(pointer_length), output)
@@ -148,7 +148,7 @@ def test__ExceptionRepresentationSyntaxError__repr():
     vampytest.assert_in(repr(pointer_start_offset), output)
     
     vampytest.assert_in('type_name', output)
-    vampytest.assert_in(type_name, output)
+    vampytest.assert_in(repr(type_name), output)
 
 
 def test__ExceptionRepresentationSyntaxError__eq():

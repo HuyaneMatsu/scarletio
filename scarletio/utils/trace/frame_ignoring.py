@@ -112,14 +112,9 @@ def should_ignore_frame(frame_proxy, *, filter = None):
 from .. import rich_attribute_error as module_rich_attribute_error
 
 ignore_frame(
-    module_rich_attribute_error.__spec__.origin, '__getattr__', 'raise AttributeError(attribute_name)'
+    module_rich_attribute_error.__spec__.origin, '__getattr__', 'raise AttributeError(self, attribute_name)'
 )
-ignore_frame(
-    module_rich_attribute_error.__spec__.origin, '__getattr__', 'raise AttributeError(exception_message)'
-)
-ignore_frame(
-    module_rich_attribute_error.__spec__.origin, '__getattr__', 'return object.__getattribute__(self, attribute_name)'
-)
+
 
 del module_rich_attribute_error
 
@@ -129,10 +124,14 @@ del module_rich_attribute_error
 from .. import function_tools as module_function_tools
 
 ignore_frame(
-    module_function_tools.__spec__.origin, '__call__', 'return self.func(*self.positional_parameters)'
+    module_function_tools.__spec__.origin,
+    '__call__',
+    'return self.function(*self.positional_parameters)',
 )
 ignore_frame(
-    module_function_tools.__spec__.origin, '__call__', 'return self.func(*self.positional_parameters, **keyword_parameters)'
+    module_function_tools.__spec__.origin,
+    '__call__',
+    'return self.function(*self.positional_parameters, **keyword_parameters)',
 )
 
 del module_function_tools

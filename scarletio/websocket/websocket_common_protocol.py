@@ -269,7 +269,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         if transfer_data_task is None:
             return False
         
-        if self.transfer_data_task.is_done():
+        if transfer_data_task.is_done():
             return False
         
         return True
@@ -301,6 +301,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         """
         return self.messages.get_result()
     
+    
     def receive_no_wait(self):
         """
         Returns a future, what can be awaited to receive the next message of the websocket.
@@ -318,6 +319,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             WebSocket closed.
         """
         return self.messages.result_no_wait()
+    
     
     async def send(self, data):
         """
@@ -378,24 +380,25 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         """
         # if no close frame is received within the close_timeout we cancel the connection
         close_message = self._serialize_close(code, reason)
+        write_close_frame_task = Task(self._loop, self.write_close_frame(close_message))
+        write_close_frame_task.apply_timeout(self.close_timeout)
         try:
-            task = Task(self._loop, self.write_close_frame(close_message))
-            task.apply_timeout(self.close_timeout)
-            await task
+            await write_close_frame_task
         except TimeoutError:
             self.fail_connection()
         
+        # if close() is cancelled during the wait, self.transfer_data_task is cancelled before the close_timeout
+        # elapses
+        transfer_data_task = self.transfer_data_task
+        transfer_data_task.apply_timeout(self.close_timeout)
         try:
-            # if close() is cancelled during the wait, self.transfer_data_task is cancelled before the close_timeout
-            # elapses
-            task = self.transfer_data_task
-            task.apply_timeout(self.close_timeout)
-            await task
-        except (TimeoutError, CancelledError):
+            await transfer_data_task
+        except TimeoutError:
             pass
         
         # quit for the close connection task to close the TCP connection.
         await shield(self.close_connection_task, self._loop)
+    
     
     @staticmethod
     def _serialize_close(code, reason):
@@ -753,6 +756,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             
             return
     
+    
     async def _process_CONTROL_frame(self, frame):
         """
         Processes a control websocket frame.
@@ -809,6 +813,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
                 pong_waiter.set_resultd_if_pending(None)
         
         return True
+    
     
     async def write_frame(self, operation_code, data, _expected_state = WEBSOCKET_STATE_OPEN):
         """
@@ -948,7 +953,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             if (transfer_data_task is not None):
                 try:
                     await transfer_data_task
-                except (CancelledError, TimeoutError):
+                except TimeoutError:
                     pass
             
             # Cancel all pending pings because they'll never receive a pong.
@@ -994,17 +999,20 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         is_connection_lost : `bool`
             Returns `True` if the connection is lost.
         """
-        if self.connection_lost_waiter.is_pending():
-            try:
-                task = shield(self.connection_lost_waiter, self._loop)
-                task.apply_timeout(self.close_timeout)
-                await task
-            except TimeoutError:
-                pass
+        connection_lost_waiter = self.connection_lost_waiter
+        if not connection_lost_waiter.is_done():
+            return True
+        
+        waiter = shield(connection_lost_waiter, self._loop)
+        waiter.apply_timeout(self.close_timeout)
+        try:
+            await waiter
+        except TimeoutError:
+            pass
         
         # re-check self.connection_lost_waiter.is_done() synchronously because connection_lost() could run between the
         # moment the timeout occurs and the moment this coroutine resumes running.
-        return self.connection_lost_waiter.is_done()
+        return connection_lost_waiter.is_done()
     
     
     def fail_connection(self, code = 1006, reason = ''):
@@ -1036,7 +1044,8 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         # cancel transfer_data_task if the opening handshake succeeded
         transfer_data_task = self.transfer_data_task
         if transfer_data_task is not None:
-            transfer_data_task.cancel()
+            # Do not cancel with `CancelledError` because then we to silence it elsewhere.
+            transfer_data_task.cancel_with(TimeoutError)
         
         # send a close frame when the state == WEBSOCKET_STATE_OPEN and the connection is not broken
         if code != 1006 and self.state == WEBSOCKET_STATE_OPEN:
@@ -1064,6 +1073,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         
         return close_connection_task
     
+    
     # compatibility method (overwrite)
     def connection_lost(self, exception):
         """
@@ -1085,6 +1095,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         self.connection_lost_waiter.set_result_if_pending(None)
         
         HttpReadWriteProtocol.connection_lost(self, exception)
+    
     
     # compatibility method (overwrite)
     def eof_received(self):

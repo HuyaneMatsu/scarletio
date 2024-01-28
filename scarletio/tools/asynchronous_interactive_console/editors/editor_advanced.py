@@ -5,6 +5,7 @@ from os import get_blocking, get_terminal_size, set_blocking
 from select import poll as Poller, POLLOUT as EVENT_POLL_WRITE
 from selectors import DefaultSelector, EVENT_READ
 from socket import socketpair as create_socket_pair
+from time import monotonic
 
 from ....utils import DEFAULT_ANSI_HIGHLIGHTER, copy_docs, create_ansi_format_code, iter_highlight_code_lines
 
@@ -1637,8 +1638,19 @@ def write_to_io(io, content):
     if not get_blocking(file_descriptor):
         poller = Poller()
         poller.register(file_descriptor, EVENT_POLL_WRITE)
-        events = poller.poll(STDOUT_WRITE_TIMEOUT)
-        if not events:
+        
+        now = monotonic()
+        poll_end = now +  STDOUT_WRITE_TIMEOUT
+        
+        while True:
+            events = poller.poll(poll_end - now)
+            if events:
+                break
+            
+            now = monotonic()
+            if now < poll_end:
+                continue
+            
             raise RuntimeError(
                 f'The io did not became writable within timeout ({STDOUT_WRITE_TIMEOUT}).'
             )

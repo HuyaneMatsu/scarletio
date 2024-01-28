@@ -342,7 +342,7 @@ class AsyncProcess:
                 except ProcessLookupError:
                     pass
         
-        Task(self._process_exited(), self._loop)
+        Task(self._loop, self._process_exited())
     
     __del__ = close
     

@@ -1063,7 +1063,7 @@ class DatagramAddressedReadProtocol(AbstractProtocolBase):
                     continue
         
         else:
-            waiter = Task(self.wait_for_receive(address), self._loop)
+            waiter = Task(self._loop, self.wait_for_receive(address))
             waiter.apply_timeout(timeout)
             
             try:

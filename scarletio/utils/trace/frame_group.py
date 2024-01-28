@@ -1,5 +1,7 @@
 __all__ = ()
 
+from ..rich_attribute_error import RichAttributeErrorBaseType
+
 from .frame_proxy import FrameProxyVirtual
 from .repeat_strategies import get_repeat_with_strategy_bot
 
@@ -9,7 +11,7 @@ FRAME_GROUP_TYPE_SINGLES = 1
 FRAME_GROUP_TYPE_REPEAT = 2
 
 
-class FrameGroup:
+class FrameGroup(RichAttributeErrorBaseType):
     """
     Represents grouped frames.
     
@@ -380,3 +382,16 @@ class FrameGroup:
         end_shift = start_shift + chunk_size * repeat
         if frames_length > end_shift:
             yield False, self._create_repeated(frames[end_shift : frames_length], 1)
+    
+    
+    def get_last_frame(self):
+        """
+        Returns the last frame of the frame group.
+        
+        Returns
+        -------
+        frame : `None | FrameProxyBase`
+        """
+        frames = self.frames
+        if frames is not None:
+            return frames[-1]

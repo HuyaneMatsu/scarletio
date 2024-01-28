@@ -20,6 +20,7 @@ from .websocket_common_protocol import WEBSOCKET_KEY, WebSocketCommonProtocol
 
 HTTPClient = include('HTTPClient')
 
+
 class WebSocketClient(WebSocketCommonProtocol):
     """
     Asynchronous websocket client implementation.
@@ -129,7 +130,7 @@ class WebSocketClient(WebSocketCommonProtocol):
         available_subprotocols = None,
         headers = None,
         http_client = None,
-        **websocket_kwargs,
+        **websocket_keyword_parameters,
     ):
         """
         Connects the websocket client to the given `url`.
@@ -162,7 +163,7 @@ class WebSocketClient(WebSocketCommonProtocol):
             Extra request headers.
         http_client : `None`, ``HTTPClient`` = `None`, Optional (Keyword only)
             Http client to use to connect the websocket.
-        **websocket_kwargs : Keyword parameters
+        **websocket_keyword_parameters : Keyword parameters
             Additional keyword parameters to create the websocket with.
         
         Other Parameters
@@ -373,7 +374,7 @@ class WebSocketClient(WebSocketCommonProtocol):
             connection.detach()
             
             self = protocol.isekai_into(cls)
-            self._set_common_websocket_attributes(url.host, url.port, is_ssl = is_ssl, **websocket_kwargs)
+            self._set_common_websocket_attributes(url.host, url.port, is_ssl = is_ssl, **websocket_keyword_parameters)
             self.extensions = accepted_extensions
             self.subprotocol = subprotocol
             self._transport.set_protocol(self)

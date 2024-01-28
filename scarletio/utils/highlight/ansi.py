@@ -11,62 +11,62 @@ def create_ansi_format_code(text_decoration = None, background_color = None, for
     
     Parameters
     ----------
-    text_decoration : `None`, `int` = `None`, Optional
+    text_decoration : `None | int` = `None`, Optional
         Text decoration.
-    background_color : `None`, `tuple` (`int`, `int`, `int`) = `None`, Optional
+    background_color : `None | (int, int, int) = `None`, Optional
         background color.
-    foreground_color : `None`, `tuple` (`int`, `int`, `int`) = `None`, Optional
+    foreground_color : `None | (int, int, int) = `None`, Optional
         Foreground color.
     
     Returns
     -------
     format_code : `str`
     """
-    format_code_parst = ['\033[']
+    format_code_parts = ['\033[']
     
     field_added = False
     
     if (text_decoration is not None):
         field_added = True
         
-        format_code_parst.append(str(text_decoration))
+        format_code_parts.append(str(text_decoration))
     
     if (background_color is not None):
         if field_added:
-            format_code_parst.append(';')
+            format_code_parts.append(';')
         else:
             field_added = True
         
         red, green, blue = background_color
         
-        format_code_parst.append('48;2;')
-        format_code_parst.append(str(red))
-        format_code_parst.append(';')
-        format_code_parst.append(str(green))
-        format_code_parst.append(';')
-        format_code_parst.append(str(blue))
+        format_code_parts.append('48;2;')
+        format_code_parts.append(str(red))
+        format_code_parts.append(';')
+        format_code_parts.append(str(green))
+        format_code_parts.append(';')
+        format_code_parts.append(str(blue))
     
     if (foreground_color is not None):
         if field_added:
-            format_code_parst.append(';')
+            format_code_parts.append(';')
         else:
             field_added = True
         
         red, green, blue = foreground_color
         
-        format_code_parst.append('38;2;')
-        format_code_parst.append(str(red))
-        format_code_parst.append(';')
-        format_code_parst.append(str(green))
-        format_code_parst.append(';')
-        format_code_parst.append(str(blue))
+        format_code_parts.append('38;2;')
+        format_code_parts.append(str(red))
+        format_code_parts.append(';')
+        format_code_parts.append(str(green))
+        format_code_parts.append(';')
+        format_code_parts.append(str(blue))
     
     if not field_added:
-        format_code_parst.append(str(AnsiTextDecoration.reset_all))
+        format_code_parts.append(str(AnsiTextDecoration.reset_all))
     
-    format_code_parst.append('m')
+    format_code_parts.append('m')
     
-    return ''.join(format_code_parst)
+    return ''.join(format_code_parts)
 
 
 class AnsiTextDecoration(RichAttributeErrorBaseType):

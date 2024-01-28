@@ -166,9 +166,11 @@ async def test__FutureWrapperAsync__wait__propagate_cancellation__task():
         with vampytest.assert_raises(TimeoutError):
             await wrapper.wait(timeout = 0.0, propagate_cancellation = True)
         
-        # Callbacks should be removed.
-        vampytest.assert_false([*future.iter_callbacks()])
+        # Wait some
+        await skip_poll_cycle()
+        
         vampytest.assert_true(future.is_cancelled())
+        vampytest.assert_false([*future.iter_callbacks()])
         
     finally:
         loop.stop()

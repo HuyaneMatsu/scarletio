@@ -2,7 +2,7 @@ import vampytest
 
 from ..expression_parsing import ExpressionInfo
 from ..frame_group import FRAME_GROUP_TYPE_NONE, FRAME_GROUP_TYPE_REPEAT, FRAME_GROUP_TYPE_SINGLES, FrameGroup
-from ..frame_proxy import FrameProxyVirtual
+from ..frame_proxy import FrameProxyBase, FrameProxyVirtual
 
 
 def _assert_fields_set(frame_group):
@@ -826,4 +826,41 @@ def test__FrameGroup__has_variables(frame_group):
     """
     output = frame_group.has_variables()
     vampytest.assert_instance(output, bool)
+    return output
+
+
+def _iter_options__get_last_frame():
+    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py', locals = {'hey': 'mister'})
+    frame_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    
+    frame_group = FrameGroup()
+    yield frame_group, None
+    
+    frame_group = FrameGroup()
+    frame_group.try_add_frame(frame_0)
+    yield frame_group, frame_0
+    
+    
+    frame_group = FrameGroup()
+    frame_group.try_add_frame(frame_0)
+    frame_group.try_add_frame(frame_1)
+    yield frame_group, frame_1
+    
+
+@vampytest._(vampytest.call_from(_iter_options__get_last_frame()).returning_last())
+def test__FrameGroup__get_last_frame(frame_group):
+    """
+    Tests whether ``FrameGroup.get_last_frame`` works as intended.
+    
+    Parameters
+    ----------
+    frame_group : ``FrameGroup``
+        The frame group to test.
+    
+    Returns
+    -------
+    output : `None | FrameProxyBase`
+    """
+    output = frame_group.get_last_frame()
+    vampytest.assert_instance(output, FrameProxyBase, nullable = True)
     return output

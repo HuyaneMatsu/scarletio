@@ -14,10 +14,10 @@ def is_syntax_error(exception):
     -------
     is_syntax_error : `bool`
     """
-    if not isinstance(exception, SyntaxError):
+    if not issubclass(type(exception), SyntaxError):
         return False
     
-    exception_parameters = exception.args
+    exception_parameters = type(exception).args.__get__(exception, type(exception))
     if (not isinstance(exception_parameters, tuple)) or (len(exception_parameters) != 2):
         return False
     

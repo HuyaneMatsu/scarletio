@@ -79,6 +79,8 @@ class CauseGroup(BaseException):
         return self
     
     
+    __init__ = object.__init__
+    
     # What the hell is wrong with `str()` ?
     __str__ = BaseException.__repr__
     

@@ -10,7 +10,26 @@ class PayloadError(Exception):
     pass
 
 
-class InvalidHandshake(Exception):
+class HttpErrorBase(Exception):
+    """
+    Base type for http exceptions.
+    
+    Attributes
+    ----------
+    message : `str`
+        Error message.
+    """
+    __slots__ = ('message',)
+    
+    def __new__(cls, message = ''):
+        self = Exception.__new__(cls, message)
+        self.message = message
+        return self
+    
+    __init__ = object.__init__
+
+
+class InvalidHandshake(HttpErrorBase):
     """
     Raised when websocket handshake fails.
     
@@ -23,14 +42,17 @@ class InvalidHandshake(Exception):
     request : ``RawRequestMessage``
         Received raw http request.
     """
-    def __init__(self, message, *, response = None, request = None):
+    __slots__ = ('response', 'request')
+    
+    def __new__(cls, message, *, response = None, request = None):
+        self = Exception.__new__(cls, message, response, request)
         self.response = response
         self.message = message
         self.request = request
-        Exception.__init__(self, message)
+        return self
 
 
-class HttpProcessingError(Exception):
+class HttpProcessingError(HttpErrorBase):
     """
     Base class for http content specific errors.
     
@@ -43,15 +65,22 @@ class HttpProcessingError(Exception):
     headers : `None`, ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Respective headers.
     """
-    def __init__(self, message = '', code = 0, headers = None):
+    __slots__ = ('code', 'headers')
+    
+    def __new__(cls, message = '', code = 0, headers = None):
+        self = Exception.__new__(cls, message, code, headers)
         self.code = code
         self.headers = headers
         self.message = message
-        
-        Exception.__init__(self, f'HTTP {code}, message = {message!r}, headers = {headers!r}')
+        return self
+    
+    
+    def __repr__(self):
+        """Returns the exception's representation."""
+        return f'<{type(self).__name__} code = {self.code}, headers = {self.headers!r}, message = {self.message!r}>'
 
 
-class AbortHandshake(HttpProcessingError, InvalidHandshake):
+class AbortHandshake(HttpProcessingError):
     """
     Raised when websocket handshake is aborted on server side.
     
@@ -68,14 +97,16 @@ class AbortHandshake(HttpProcessingError, InvalidHandshake):
     request : ``RawRequestMessage``
         Received raw http request.
     """
-    def __init__(self, message = '', code = 0, headers = None, *, response = None, request = None):
+    __slots__ = InvalidHandshake.__slots__
+    
+    def __new__(cls, message = '', code = 0, headers = None, *, response = None, request = None):
+        self = Exception.__new__(cls, message, code, headers, response, request)
         self.response = response
         self.message = message
         self.request = request
         self.code = code
         self.headers = headers
-        
-        Exception.__init__(self, f'HTTP {code}, message = {message!r}, headers = {headers!r}')
+        return self
 
 
 class ProxyError(HttpProcessingError):
@@ -91,21 +122,21 @@ class ProxyError(HttpProcessingError):
     headers : `None`, ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Respective headers.
     """
-    pass
+    __slots__ = ()
 
 
 class InvalidOrigin(InvalidHandshake):
     """
     Raised when a websocket handshake received invalid origin header.
     """
-    pass
+    __slots__ = ()
 
 
 class InvalidUpgrade(InvalidHandshake):
     """
     Raised when a websocket was not correctly upgraded.
     """
-    pass
+    __slots__ = ()
 
 
 class ContentEncodingError(HttpProcessingError, PayloadError):
@@ -121,8 +152,10 @@ class ContentEncodingError(HttpProcessingError, PayloadError):
     headers : `None`, ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
         Respective headers.
     """
-    def __init__(self, message = 'Bad Request', headers = None):
-        HttpProcessingError.__init__(self, message, 400, headers)
+    __slots__ = ()
+    
+    def __new__(cls, message = 'Bad Request', headers = None):
+        return HttpProcessingError.__new__(cls, message, 400, headers)
 
 
 CLOSE_REASONS = {
@@ -131,8 +164,8 @@ CLOSE_REASONS = {
     1002: 'protocol error',
     1003: 'unsupported type',
     1004: '`reserved`',
-    1005: 'no status code [internal]',
-    1006: 'connection closed abnormally [internal]',
+    1005: 'no status code (internal)',
+    1006: 'connection closed abnormally (internal)',
     1007: 'invalid data',
     1008: 'policy violation',
     1009: 'message too big',
@@ -140,7 +173,7 @@ CLOSE_REASONS = {
     1011: 'unexpected error',
     1013: 'Try again later',
     1014: 'Bad gateway',
-    1015: 'TLS failure [internal]',
+    1015: 'TLS failure (internal)',
 }
 
 def get_close_reason(code):
@@ -174,6 +207,7 @@ def get_close_reason(code):
     
     return close_reason
 
+
 class ConnectionClosed(Exception):
     """
     Connection closed exception raised when a websocket is closed.
@@ -187,8 +221,9 @@ class ConnectionClosed(Exception):
     reason : `None or `str`
         Web socket close reason if any.
     """
+    __slots__ = ('_reason', 'code', 'exception')
     
-    def __init__(self, code, exception, reason = None):
+    def __new__(cls, code, exception, reason = None):
         """
         Creates a new ``ConnectionClosed`` exception from the given parameters.
         
@@ -201,10 +236,15 @@ class ConnectionClosed(Exception):
         reason : `None`, `str` = `None`, Optional
             Web socket close reason if any.
         """
+        self = Exception.__new__(cls, code, exception, reason)
         self.code = code
         self.exception = exception
         self._reason = reason
-        Exception.__init__(self)
+        return self
+    
+    
+    __init__ = object.__init__
+    
     
     @property
     def reason(self):
@@ -218,12 +258,15 @@ class ConnectionClosed(Exception):
         reason = self._reason
         if (reason is None):
             reason = get_close_reason(self.code)
+            self._reason = reason
         
         return reason
     
+    
     def __repr__(self):
         """Returns the exception's representation."""
-        return f'<{self.__class__.__name__}, code={self.code!r}, reason = {self.reason!r}, exception={self.exception!r}>'
+        return f'<{type(self).__name__}, code = {self.code!r}, reason = {self.reason!r}, exception = {self.exception!r}>'
+    
     
     __str__ = __repr__
 
@@ -232,4 +275,5 @@ class WebSocketProtocolError(Exception):
     """
     Exception raised by websocket when receiving invalid payload.
     """
-    pass
+    __slots__ = ()
+    __init__ = object.__init__

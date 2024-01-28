@@ -232,16 +232,17 @@ def _try_match_identifier(context):
         token_type = TOKEN_TYPE_IDENTIFIER_BUILTIN_CONSTANT
     elif content in KEYWORDS:
         token_type = TOKEN_TYPE_IDENTIFIER_KEYWORD
-    elif content in MAGIC_FUNCTIONS:
-        token_type = TOKEN_TYPE_IDENTIFIER_MAGIC_FUNCTION
-    elif content in MAGIC_VARIABLES:
-        token_type = TOKEN_TYPE_IDENTIFIER_MAGIC_VARIABLE
     elif content in OPERATOR_WORDS:
         token_type = TOKEN_TYPE_SPECIAL_OPERATOR_WORD
     else:
         last_token = context.get_last_related_token()
         if (last_token is not None) and (last_token.type == TOKEN_TYPE_SPECIAL_OPERATOR_ATTRIBUTE):
-            token_type = TOKEN_TYPE_IDENTIFIER_ATTRIBUTE
+            if content in MAGIC_FUNCTIONS:
+                token_type = TOKEN_TYPE_IDENTIFIER_MAGIC_FUNCTION
+            elif content in MAGIC_VARIABLES:
+                token_type = TOKEN_TYPE_IDENTIFIER_MAGIC_VARIABLE
+            else:
+                token_type = TOKEN_TYPE_IDENTIFIER_ATTRIBUTE
         else:
             if content in BUILTIN_VARIABLES:
                 token_type = TOKEN_TYPE_IDENTIFIER_BUILTIN_VARIABLE

@@ -1,3 +1,14 @@
+# 1.0.65 *\[2024-01-??\]*
+
+#### Improvements
+
+- `WebSocketCommonProtocol` no longer swallows `CancelledError` at a few cases.
+- `EditorAdvanced` now repeats write io polling if poll returns prematurely.
+- Add new highlight tokens for trace rendering.
+- Move `AttributeError` content generation from raise time to render time.
+- Highlight `AttributeError` representation in rendering.
+- Rich redner rich builtin `AttributeError`-s too.
+
 # 1.0.64 *\[2023-12-31\]*
 
 #### Improvements
