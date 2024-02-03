@@ -1,4 +1,4 @@
-# 1.0.65 *\[2024-01-??\]*
+# 1.0.65 *\[2024-01-03\]*
 
 #### Improvements
 
@@ -7,7 +7,7 @@
 - Add new highlight tokens for trace rendering.
 - Move `AttributeError` content generation from raise time to render time.
 - Highlight `AttributeError` representation in rendering.
-- Rich redner rich builtin `AttributeError`-s too.
+- Rich render rich builtin `AttributeError`-s too.
 
 # 1.0.64 *\[2023-12-31\]*
 
