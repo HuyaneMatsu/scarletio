@@ -1,4 +1,10 @@
-# 1.0.65 *\[2024-01-03\]*
+# 1.0.66 *\[2024-02.28\]*
+
+#### Bug fixes
+
+- Fix some syntax errors failing to render (From 1.0.65).
+
+# 1.0.65 *\[2024-02-03\]*
 
 #### Improvements
 
