@@ -4,7 +4,7 @@ from http.cookies import Morsel, SimpleCookie
 
 from ..core import CancelledError, Task
 from ..utils import IgnoreCaseMultiValueDictionary
-from ..web_common.formdata import Formdata
+from ..web_common.form_data import FormData
 from ..web_common.headers import (
     ACCEPT, ACCEPT_ENCODING, AUTHORIZATION, CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TYPE, COOKIE, HOST,
     METHOD_CONNECT, METHOD_POST_ALL, TRANSFER_ENCODING
@@ -77,7 +77,7 @@ class ClientRequest:
             The url to request.
         headers : `None`, `dict`, ``IgnoreCaseMultiValueDictionary``
             Headers of the request.
-        data : `None`, `bytes-like`, `io-like`, ``Formdata`
+        data : `None`, `bytes-like`, `io-like`, ``FormData`
             Data to send as the request's body.
         params : `dict` of (`str`, (`str`, `int`, `float`, `bool`)) items
             Query string parameters.
@@ -180,12 +180,14 @@ class ClientRequest:
                 )
         
         # Needed for transfer data checks
-        chunked = True
+        chunked = False
         compression = headers.get(CONTENT_ENCODING, None)
         
         # Get request content encoding.
         if (data is not None):
-            if data:
+            if not data:
+                data = None
+            else:
                 if (compression is not None):
                     if headers.get(CONTENT_ENCODING, ''):
                         raise ValueError(
@@ -194,14 +196,14 @@ class ClientRequest:
                     
                     chunked = True
                 
-                # formdata
-                if isinstance(data, Formdata):
-                    data = data()
+                # form_data
+                if isinstance(data, FormData):
+                    data = data.generate_form()
                 else:
                     try:
                         data = create_payload(data, {'disposition': None})
                     except LookupError:
-                        data = Formdata.from_fields(data)()
+                        data = FormData.from_fields(data).generate_form()
                 
                 if not chunked:
                     if CONTENT_LENGTH not in headers:
@@ -219,33 +221,31 @@ class ClientRequest:
                 if data_headers:
                     for key, value in data_headers.items():
                         headers.setdefault(key, value)
-            else:
-                data = None
-        
-        # Analyze transfer-encoding header.
-        transfer_encoding = headers.get(TRANSFER_ENCODING, '').lower()
-        
-        if 'chunked' in transfer_encoding:
-            if chunked:
-                raise ValueError(
-                    f'Chunked can not be set if `Transfer-Encoding: chunked` header is already set.'
-                )
-        
-        elif chunked:
-            if CONTENT_LENGTH in headers:
-                raise ValueError(
-                    'Chunked can not be set if `Content-Length` header is set.'
-                )
-            headers[TRANSFER_ENCODING] = 'chunked'
-        
-        else:
-            if CONTENT_LENGTH not in headers:
-                headers[CONTENT_LENGTH] = '0' if data is None else str(len(data))
-        
-        # Set default content-type.
-        if (method in METHOD_POST_ALL) and (CONTENT_TYPE not in headers):
-            headers[CONTENT_TYPE] = 'application/octet-stream'
-        
+                
+                # Analyze transfer-encoding header.
+                transfer_encoding = headers.get(TRANSFER_ENCODING, '').lower()
+                
+                if 'chunked' in transfer_encoding:
+                    if chunked:
+                        raise ValueError(
+                            f'Chunked can not be set if `Transfer-Encoding: chunked` header is already set.'
+                        )
+                
+                elif chunked:
+                    if CONTENT_LENGTH in headers:
+                        raise ValueError(
+                            'Chunked can not be set if `Content-Length` header is set.'
+                        )
+                    headers[TRANSFER_ENCODING] = 'chunked'
+                
+                else:
+                    if CONTENT_LENGTH not in headers:
+                        headers[CONTENT_LENGTH] = '0' if data is None else str(len(data))
+                
+                # Set default content-type.
+                if (method in METHOD_POST_ALL) and (CONTENT_TYPE not in headers):
+                    headers[CONTENT_TYPE] = 'application/octet-stream'
+                
         # Everything seems correct, create the object.
         self = object.__new__(cls)
         self.original_url = url

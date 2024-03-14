@@ -206,11 +206,11 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         self.is_alive() # easy way to get ._is_stopped set when appropriate
         
         if not self.started:
-            state = ' created'
+            state = 'created'
         elif self._is_stopped or (not self.running):
-            state = ' stopped'
+            state = 'stopped'
         else:
-            state = ' started'
+            state = 'started'
         repr_parts.append(', state = ')
         repr_parts.append(state)
         

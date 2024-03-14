@@ -5,28 +5,28 @@ from ..syntax_error_helpers import is_syntax_error
 
 def _iter_options():
     exception = SyntaxError()
-    exception.args = ('message', ('filename.py', 5, 6, 'pass'))
+    exception.args = ('message', ('file_name.py', 5, 6, 'pass'))
     yield exception, True
     
     exception = SyntaxError()
-    exception.args = ('message', ('filename.py', 5, 6, 'pass', 8, 9))
+    exception.args = ('message', ('file_name.py', 5, 6, 'pass', 8, 9))
     yield exception, True
     
     # message
     exception = SyntaxError()
-    exception.args = (None, ('filename.py', 5, 6, 'pass'))
+    exception.args = (None, ('file_name.py', 5, 6, 'pass'))
     yield exception, True
     
     exception = SyntaxError()
-    exception.args = (None, ('filename.py', 5, 6, 'pass', 8, 9))
+    exception.args = (None, ('file_name.py', 5, 6, 'pass', 8, 9))
     yield exception, True
     
     exception = SyntaxError()
-    exception.args = (12.6, ('filename.py', 5, 6, 'pass'))
+    exception.args = (12.6, ('file_name.py', 5, 6, 'pass'))
     yield exception, False
     
     exception = SyntaxError()
-    exception.args = (12.6, ('filename.py', 5, 6, 'pass', 8, 9))
+    exception.args = (12.6, ('file_name.py', 5, 6, 'pass', 8, 9))
     yield exception, False
     
     # file_name
@@ -48,57 +48,57 @@ def _iter_options():
     
     # line_number
     exception = SyntaxError()
-    exception.args = ('message', ('filename.py', 5.6, 6, 'pass'))
+    exception.args = ('message', ('file_name.py', 5.6, 6, 'pass'))
     yield exception, False
     
     exception = SyntaxError()
-    exception.args = ('message', ('filename.py', 5.6, 6, 'pass', 8, 9))
+    exception.args = ('message', ('file_name.py', 5.6, 6, 'pass', 8, 9))
     yield exception, False
     
     # offset
     exception = SyntaxError()
-    exception.args = ('message', ('filename.py', 5, 6.5, 'pass'))
+    exception.args = ('message', ('file_name.py', 5, 6.5, 'pass'))
     yield exception, False
     
     exception = SyntaxError()
-    exception.args = ('message', ('filename.py', 5, 6.5, 'pass', 8, 9))
+    exception.args = ('message', ('file_name.py', 5, 6.5, 'pass', 8, 9))
     yield exception, False
     
     # line
     
     exception = SyntaxError()
-    exception.args = ('message', ('filename.py', 5, 6, None))
+    exception.args = ('message', ('file_name.py', 5, 6, None))
     yield exception, True
     
     exception = SyntaxError()
-    exception.args = ('message', ('filename.py', 5, 6, None, 8, 9))
+    exception.args = ('message', ('file_name.py', 5, 6, None, 8, 9))
     yield exception, True
     
     exception = SyntaxError()
-    exception.args = ('message', ('filename.py', 5, 6, 12.6))
+    exception.args = ('message', ('file_name.py', 5, 6, 12.6))
     yield exception, False
     
     exception = SyntaxError()
-    exception.args = ('message', ('filename.py', 5, 6, 12.6, 8, 9))
+    exception.args = ('message', ('file_name.py', 5, 6, 12.6, 8, 9))
     yield exception, False
     
     # end_line_number
     exception = SyntaxError()
-    exception.args = ('message', ('filename.py', 5, 6, 'pass', 12.6, 9))
+    exception.args = ('message', ('file_name.py', 5, 6, 'pass', 12.6, 9))
     yield exception, False
     
     # end_offset
     exception = SyntaxError()
-    exception.args = ('message', ('filename.py', 5, 6, 'pass', 8, 12.6))
+    exception.args = ('message', ('file_name.py', 5, 6, 'pass', 8, 12.6))
     yield exception, False
     
     # more parameters
     exception = SyntaxError()
-    exception.args = ('message', ('filename.py', 5, 6, 'pass'), 'mister')
+    exception.args = ('message', ('file_name.py', 5, 6, 'pass'), 'mister')
     yield exception, False
     
     exception = SyntaxError()
-    exception.args = ('message', ('filename.py', 5, 6, 'pass', 8, 9), 'mister')
+    exception.args = ('message', ('file_name.py', 5, 6, 'pass', 8, 9), 'mister')
     yield exception, False
     
     # less parameters
@@ -107,8 +107,8 @@ def _iter_options():
     yield exception, False
     
     # bad errors
-    yield ValueError('message', ('filename.py', 5, 6, 'pass')), False
-    yield ValueError('message', ('filename.py', 5, 6, 'pass', 8, 9)), False
+    yield ValueError('message', ('file_name.py', 5, 6, 'pass')), False
+    yield ValueError('message', ('file_name.py', 5, 6, 'pass', 8, 9)), False
 
 
 @vampytest._(vampytest.call_from(_iter_options()).returning_last())

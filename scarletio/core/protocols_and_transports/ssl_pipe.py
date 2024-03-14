@@ -345,7 +345,7 @@ class SSLPipe:
                 except SSLError as err:
                     # It is not allowed to call `.write` after ``.unwrap`` until the close_notify is acknowledged. We
                     # return the condition to the caller as a short write.
-                    if err.reason == 'PROTOCOL_IS_SSL_PIPE_STATE_SHUTDOWN':
+                    if err.reason == 'PROTOCOL_IS_SHUTDOWN':
                         err.errno = SSL_ERROR_WANT_READ
                         need_ssl_data = True
                     else:

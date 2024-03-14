@@ -12,8 +12,9 @@ _PROTOCOL_RP = re.compile(r'[-!#$%&\'*+.^_`|~0-9a-zA-Z]+(?:/[-!#$%&\'*+.^_`|~0-9
 
 CHARS = frozenset((chr(i) for i in range(0, 128)))
 CONTROLS = frozenset((*(chr(i) for i in range(0, 32)), chr(127)))
-SEPARATORS = frozenset(('(', ')', '<', '>', '@', ', ', ';', ':', '\\', '"', '/', '[', ']', '?', '=', '{', '}', ' ',
-    chr(9)))
+SEPARATORS = frozenset(
+    ('(', ')', '<', '>', '@', ', ', ';', ':', '\\', '"', '/', '[', ']', '?', '=', '{', '}', ' ', chr(9)),
+)
 TOKENS = CHARS ^ CONTROLS ^ SEPARATORS
 
 def build_extensions(available_extensions):
@@ -462,6 +463,9 @@ def build_content_disposition_header(disposition_type, parameters, quote_fields)
     
     parameter_parts = [disposition_type]
     for key, value in parameters.items():
+        if key == 'file_name':
+            key = 'filename'
+        
         if (not key) or (not (TOKENS > {*key})):
             raise ValueError(
                 f'Bad content disposition parameter {key!r} = {value!r}.'

@@ -1,8 +1,13 @@
 __all__ = ('create_payload', )
 
-import base64, binascii, mimetypes as mime_types, os, re, uuid
+from base64 import b64encode as base_64_encode
+from binascii import b2a_qp as qp_encode
 from io import BufferedRandom, BufferedReader, BytesIO, IOBase, StringIO, TextIOBase
+from mimetypes import guess_type as guess_mime_type
+from os import SEEK_END, fstat as stat
+from re import compile as re_compile, escape as re_escape, sub as re_sub
 from urllib.parse import urlencode as url_encode
+from uuid import uuid4 as create_uuid_4
 
 from ..core import AsyncIO
 from ..utils import IgnoreCaseMultiValueDictionary, to_json
@@ -18,8 +23,9 @@ from .quoting import unquote
 BIG_CHUNK_LIMIT = 1 << 16
 DEFAULT_CONTENT_TYPE = 'application/octet-stream'
 
-VALID_TCHAR_RP = re.compile(br'\A[!#$%&\'*+\-.^_`|~\w]+\Z')
-INVALID_QDTEXT_CHAR_RP = re.compile(br'[\x00-\x08\x0A-\x1F\x7F]')
+VALID_TCHAR_RP = re_compile(br'\A[!#$%&\'*+\-.^_`|~\w]+\Z')
+INVALID_QDTEXT_CHAR_RP = re_compile(br'[\x00-\x08\x0A-\x1F\x7F]')
+
 
 def create_payload(data, keyword_parameters):
     """
@@ -42,7 +48,7 @@ def create_payload(data, keyword_parameters):
     LookupError
         `payload` is not serializable.
     """
-    data_type = data.__class__
+    data_type = type(data)
     #if issubclass(data_type, BodyPartReader):
     #    type_ = BodyPartReaderPayload
     if issubclass(data_type, (bytes, bytearray, memoryview)):
@@ -81,16 +87,16 @@ class PayloadBase:
             `BytesIO`, `StringIO`, `TextIOBase`, `BufferedReader`, `BufferedRandom`, `IOBase`, ``AsyncIO``, \
             `async-iterable`
         The payload itself.
-    filename : `None`, `str`
+    file_name : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
+    headers : `IgnoreCaseMultiValueDictionary<str, str>`
         Payload specific headers.
     size : `None`, `int`
         The payload's size if applicable.
     """
-    __slots__ = ('content_type', 'data', 'encoding', 'filename', 'headers', 'size', )
+    __slots__ = ('content_type', 'data', 'encoding', 'file_name', 'headers', 'size', )
     
     def __init__(self, data, keyword_parameters):
         """
@@ -107,17 +113,17 @@ class PayloadBase:
         """
         self.data = data
         self.encoding = keyword_parameters.get('encoding', None)
-        self.filename = filename = keyword_parameters.get('filename', None)
+        self.file_name = file_name = keyword_parameters.get('file_name', None)
         self.size = None
         
         headers = IgnoreCaseMultiValueDictionary()
         
         content_type = keyword_parameters.get('content_type', None)
         if content_type is None:
-            if filename is None:
+            if file_name is None:
                 content_type = DEFAULT_CONTENT_TYPE
             else:
-                mime = mime_types.guess_type(self.filename)[0]
+                mime = guess_mime_type(file_name)[0]
                 if mime is None:
                     content_type = DEFAULT_CONTENT_TYPE
                 else:
@@ -132,7 +138,8 @@ class PayloadBase:
         self.headers = headers
         self.content_type = content_type
     
-    def set_content_disposition(self, disposition_type, parameters, quote_fields):
+    
+    def set_content_disposition_header(self, disposition_type, parameters, quote_fields):
         """
         Sets content disposition header to the payload.
         
@@ -149,6 +156,7 @@ class PayloadBase:
         headers.pop_all(CONTENT_DISPOSITION, None)
         headers[CONTENT_DISPOSITION] = build_content_disposition_header(disposition_type, parameters, quote_fields)
     
+    
     async def write(self, writer):
         """
         Writes the payload to the given http writer.
@@ -162,6 +170,7 @@ class PayloadBase:
         """
         pass
 
+
 class BytesPayload(PayloadBase):
     """
     Payload class for `bytes-like` objects.
@@ -172,11 +181,11 @@ class BytesPayload(PayloadBase):
         The payload's content type.
     data : `bytes`, `bytearray`, `memoryview`
         The payload itself.
-    filename : `None`, `str`
+    file_name : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
+    headers : `IgnoreCaseMultiValueDictionary<str, str>`
         Payload specific headers.
     size : `None`, `int`
         The payload's size if applicable.
@@ -197,8 +206,8 @@ class BytesPayload(PayloadBase):
         keyword_parameters.setdefault('content_type', DEFAULT_CONTENT_TYPE)
         
         PayloadBase.__init__(self, data, keyword_parameters)
-        
         self.size = len(data)
+    
     
     async def write(self, writer):
         """
@@ -224,11 +233,11 @@ class StringPayload(BytesPayload):
         The payload's content type.
     data : `bytes`
         The payload itself.
-    filename : `None`, `str`
+    file_name : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
+    headers : `IgnoreCaseMultiValueDictionary<str, str>`
         Payload specific headers.
     size : `None`, `int`
         The payload's size if applicable.
@@ -280,11 +289,11 @@ class StringIOPayload(StringPayload):
         The payload's content type.
     data : `bytes`
         The payload itself.
-    filename : `None`, `str`
+    file_name : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
+    headers : `IgnoreCaseMultiValueDictionary<str, str>`
         Payload specific headers.
     size : `None`, `int`
         The payload's size if applicable.
@@ -316,11 +325,11 @@ class IOBasePayload(PayloadBase):
         The payload's content type.
     data : `IOBase`
         The payload itself.
-    filename : `None`, `str`
+    file_name : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
+    headers : `IgnoreCaseMultiValueDictionary<str, str>`
         Payload specific headers.
     size : `None`, `int`
         The payload's size if applicable.
@@ -337,8 +346,8 @@ class IOBasePayload(PayloadBase):
         keyword_parameters : `dict` of (`str`, `object`) items
             Additional keyword parameters.
         """
-        if 'filename' not in keyword_parameters:
-            keyword_parameters['filename'] = getattr(data, 'name', None)
+        if 'file_name' not in keyword_parameters:
+            keyword_parameters['file_name'] = getattr(data, 'name', None)
         
         PayloadBase.__init__(self, data, keyword_parameters)
         
@@ -348,9 +357,10 @@ class IOBasePayload(PayloadBase):
             disposition = 'attachment'
         
         if (disposition is not None):
-            filename = self.filename
-            if (filename is not None):
-                self.set_content_disposition(disposition, {'filename': filename}, True)
+            file_name = self.file_name
+            if (file_name is not None):
+                self.set_content_disposition_header(disposition, {'filename': file_name}, True)
+    
     
     async def write(self, writer):
         """
@@ -385,11 +395,11 @@ class TextIOPayload(IOBasePayload):
         The payload's content type.
     data : `TextIOBase`
         The payload itself.
-    filename : `None`, `str`
+    file_name : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
+    headers : `IgnoreCaseMultiValueDictionary<str, str>`
         Payload specific headers.
     size : `None`, `int`
         The payload's size if applicable.
@@ -428,12 +438,13 @@ class TextIOPayload(IOBasePayload):
         IOBasePayload.__init__(self, data, keyword_parameters)
         
         try:
-            size = os.fstat(data.fileno()).st_size - data.tell()
+            size = stat(data.fileno()).st_size - data.tell()
         except OSError:
             # `data.fileno()` is not supported. Example: `io.BufferedReader(io.BytesIO(b'data'))`
             size = None
         
         self.size = size
+    
     
     async def write(self, writer):
         """
@@ -468,11 +479,11 @@ class BytesIOPayload(IOBasePayload):
         The payload's content type.
     data : `BytesIO`
         The payload itself.
-    filename : `None`, `str`
+    file_name : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
+    headers : `IgnoreCaseMultiValueDictionary<str, str>`
         Payload specific headers.
     size : `None`, `int`
         The payload's size if applicable.
@@ -485,13 +496,13 @@ class BytesIOPayload(IOBasePayload):
         ----------
         data : `BytesIO`
             The payload's data.
-        keyword_parameters : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
+        keyword_parameters : `IgnoreCaseMultiValueDictionary<str, str>`
             Additional keyword parameters.
         """
         IOBasePayload.__init__(self, data, keyword_parameters)
         
         position = data.tell()
-        end = data.seek(0, os.SEEK_END)
+        end = data.seek(0, SEEK_END)
         data.seek(position)
         self.size = end - position
 
@@ -506,11 +517,11 @@ class BufferedReaderPayload(IOBasePayload):
         The payload's content type.
     data : `BufferedReader`, `BufferedRandom`
         The payload itself.
-    filename : `None`, `str`
+    file_name : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
+    headers : `IgnoreCaseMultiValueDictionary<str, str>`
         Payload specific headers.
     size : `None`, `int`
         The payload's size if applicable.
@@ -530,7 +541,7 @@ class BufferedReaderPayload(IOBasePayload):
         """
         IOBasePayload.__init__(self, data, keyword_parameters)
         try:
-            size = os.fstat(data.fileno()).st_size - data.tell()
+            size = stat(data.fileno()).st_size - data.tell()
         except OSError:
             # `data.fileno()` is not supported. Example: `io.BufferedReader(io.BytesIO(b'data'))`
             size = None
@@ -548,11 +559,11 @@ class JsonPayload(BytesPayload):
         The payload's content type.
     data :`bytes`
         The payload itself.
-    filename : `None`, `str`
+    file_name : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
+    headers : `IgnoreCaseMultiValueDictionary<str, str>`
         Payload specific headers.
     size : `None`, `int`
         The payload's size if applicable.
@@ -590,11 +601,11 @@ class AsyncIterablePayload(PayloadBase):
         The payload's content type.
     data :`async-iterable`
         The payload itself.
-    filename : `None`, `str`
+    file_name : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
+    headers : `IgnoreCaseMultiValueDictionary<str, str>`
         Payload specific headers.
     size : `None`, `int`
         The payload's size if applicable.
@@ -649,11 +660,11 @@ class AsyncIOPayload(IOBasePayload):
         The payload's content type.
     data :`async-iterable`
         The payload itself.
-    filename : `None`, `str`
+    file_name : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
+    headers : `IgnoreCaseMultiValueDictionary<str, str>`
         Payload specific headers.
     size : `None`, `int`
         The payload's size if applicable.
@@ -690,11 +701,11 @@ class BodyPartReaderPayload(PayloadBase):
         The payload's content type.
     data :``BodyPartReader``
         The payload itself.
-    filename : `None`, `str`
+    file_name : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
+    headers : `IgnoreCaseMultiValueDictionary<str, str>`
         Payload specific headers.
     size : `None`, `int`
         The payload's size if applicable.
@@ -717,12 +728,12 @@ class BodyPartReaderPayload(PayloadBase):
         if (name is not None):
             parameters['name'] = name
         
-        filename = data.filename
-        if (filename is not None):
-            parameters['filename'] = filename
+        file_name = data.file_name
+        if (file_name is not None):
+            parameters['filename'] = file_name
         
         if parameters:
-            self.set_content_disposition('attachment', parameters, True)
+            self.set_content_disposition_header('attachment', parameters, True)
     
     
     async def write(self, writer):
@@ -846,7 +857,7 @@ def _is_rfc5987(string):
     return _is_token(string) and string.count("'") == 2
 
 
-def _unescape(text, *, chars = ''.join(map(re.escape, CHARS))):
+def _unescape(text, *, chars = ''.join([re_escape(char) for char in CHARS])):
     """
     Unescapes the given part of a content disposition parameter.
     
@@ -855,13 +866,13 @@ def _unescape(text, *, chars = ''.join(map(re.escape, CHARS))):
     text : `str`
         The string to check.
     chars : `str, Optional (Keyword only)
-        Characters to match when unescaping.
+        Characters to match when un-escaping.
     
     Returns
     -------
     is_rfc5987 : `bool`
     """
-    return re.sub(f'\\\\([{chars}])', '\\1', text)
+    return re_sub(f'\\\\([{chars}])', '\\1', text)
 
 
 def parse_content_disposition(header):
@@ -945,7 +956,7 @@ def parse_content_disposition(header):
     return disposition_type.lower(), parameters
 
 
-def get_content_disposition_filename(parameters, name = 'filename'):
+def get_content_disposition_file_name(parameters, name = 'filename'):
     """
     Gets the file's name from content disposition parameters.
     
@@ -958,7 +969,7 @@ def get_content_disposition_filename(parameters, name = 'filename'):
 
     Returns
     -------
-    filename : `None`, `str`
+    file_name : `None`, `str`
         The file's name if any.
     """
     if not parameters:
@@ -1009,11 +1020,11 @@ class MultipartWriter(PayloadBase):
         The payload's content type.
     data : `list` of ``PayloadBase``
         The contained payloads.
-    filename : `None`, `str`
+    file_name : `None`, `str`
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items
+    headers : `IgnoreCaseMultiValueDictionary<str, str>`
         Payload specific headers.
     size : `None`, `int`
         The payload's size if applicable.
@@ -1041,7 +1052,7 @@ class MultipartWriter(PayloadBase):
             `boundary` contains invalid character.
         """
         if (boundary is None):
-            boundary = uuid.uuid4().hex.encode('ascii')
+            boundary = create_uuid_4().hex.encode('ascii')
         else:
             try:
                 boundary = boundary.encode('ascii')
@@ -1106,7 +1117,7 @@ class MultipartWriter(PayloadBase):
         ----------
         body_part : ``PayloadBase``, ``BodyPartReader``, `bytes`, `bytearray`, `memoryview`, `BytesIO`, `StringIO`, \
             `TextIOBase`, `BufferedReader`, `BufferedRandom`, `IOBase`, ``AsyncIO``, `async-iterable`
-        headers : `None`, ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items = `None`, Optional
+        headers : `None`, `IgnoreCaseMultiValueDictionary<str, str>` = `None`, Optional
             Optional headers for the field.
         
         Returns
@@ -1168,7 +1179,7 @@ class MultipartWriter(PayloadBase):
         
         # content-encoding or compression
         try:
-            content_encoding = payload_headers[CONTENT_ENCODING].lower()
+            content_encoding = payload_headers[CONTENT_ENCODING].casefold()
         except KeyError:
             content_encoding = None
         else:
@@ -1183,7 +1194,7 @@ class MultipartWriter(PayloadBase):
         
         # transfer-encoding
         try:
-            transfer_encoding = payload_headers[CONTENT_TRANSFER_ENCODING].lower()
+            transfer_encoding = payload_headers[CONTENT_TRANSFER_ENCODING].casefold()
         except KeyError:
             transfer_encoding = None
         else:
@@ -1242,7 +1253,7 @@ class MultipartWriter(PayloadBase):
         ----------
         obj : `None`, `str`, `int`, `float`, `list` of repeat, `dict` of (`str`, repeat) items
             The payload's data.
-        headers : `None`, ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items = `None`, Optional
+        headers : `None`, `IgnoreCaseMultiValueDictionary<str, str>` = `None`, Optional
             Optional headers for the json field.
 
         Returns
@@ -1273,7 +1284,7 @@ class MultipartWriter(PayloadBase):
         ----------
         obj : `mapping` of (`str`, `object`) items, `sequence` of `tuple` (`str`, `object`) items
             The object, what should be percent encoded for a post request.
-        headers : `None`, ``IgnoreCaseMultiValueDictionary`` of (`str`, `str`) items = `None`, Optional
+        headers : `None`, `IgnoreCaseMultiValueDictionary<str, str>` = `None`, Optional
             Optional headers for the url_encoded field.
         
         Returns
@@ -1287,12 +1298,12 @@ class MultipartWriter(PayloadBase):
             - The `payload`'s content has unknown content-encoding.
             - The `payload`'s content has unknown content-transfer-encoding.
         """
-        if hasattr(obj.__class__, 'items'): # mapping type
-            obj = list(obj.items())
+        if hasattr(type(obj), 'items'): # mapping type
+            obj = [*obj.items()]
         
         data = url_encode(obj, doseq = True)
         
-        keyword_parameters = {'content_type': 'application/x-www-form-url_encoded'}
+        keyword_parameters = {'content_type': 'application/x-www-form-urlencoded'}
         
         if (headers is not None):
             keyword_parameters['headers'] = headers
@@ -1487,7 +1498,7 @@ class MultipartPayloadWriter:
         if self.transfer_encoding == TRANSFER_ENCODING_BASE64:
             encoding_buffer = self.encoding_buffer
             if encoding_buffer:
-                await self.writer.write(base64.b64encode(encoding_buffer))
+                await self.writer.write(base_64_encode(encoding_buffer))
     
     
     async def write(self, chunk):
@@ -1523,10 +1534,10 @@ class MultipartPayloadWriter:
             
             chunk = encoding_buffer[:barrier]
             del encoding_buffer[:barrier]
-            chunk = base64.b64encode(chunk)
+            chunk = base_64_encode(chunk)
         
         elif transfer_encoding == TRANSFER_ENCODING_QUOTED_PRINTABLE:
-            chunk = binascii.b2a_qp(chunk)
+            chunk = qp_encode(chunk)
             
         else:
             pass

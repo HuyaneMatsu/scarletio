@@ -129,8 +129,9 @@ class HTTPClient:
                 if (proxy_url is not None):
                     proxy_url = URL(proxy_url)
                 
-                request = ClientRequest(self.loop, method, url, headers, data, params, cookies, None, proxy_url,
-                    self.proxy_auth, None)
+                request = ClientRequest(
+                    self.loop, method, url, headers, data, params, cookies, None, proxy_url, self.proxy_auth, None
+                )
                 
                 connection = await self.connector.connect(request)
                 

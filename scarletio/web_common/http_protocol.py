@@ -899,7 +899,7 @@ class HttpReadProtocol(ReadProtocolBase):
         if (max_size is not None) and length > max_size:
             raise PayloadError(f'Payload length exceeds size limit ({length} > {max_size} bytes).')
         
-        #Read the data.
+        # Read the data.
         if is_client:
             data = yield from self._read_exactly(length)
         else:
@@ -1288,7 +1288,7 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
         """
         transport = self._transport
         if transport is None:
-            raise RuntimeError(f'Protocol has no attached transport; self={self!r}.')
+            raise RuntimeError(f'Protocol has no attached transport; self = {self!r}.')
         
         # Prepare the header.
         head_1 = frame.head_1

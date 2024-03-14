@@ -1,4 +1,23 @@
-# 1.0.66 *\[2024-02.28\]*
+# 1.0.67 *\[2024-03-14\]*
+
+#### Improvements
+
+- Add `CauseGroup.__eq__`.
+- Add `CauseGroup.__new__`.
+- Add `FormData.__eq__`.
+- No `content length` / `tarnsfer encoding` headers are sent when we are not sending anything.
+    Having these headers caused Discord's websocket to never read want we send to it (since yesterday night).
+
+#### Bug fixes
+
+- `WebSocketCommonProtocol.close_connection` did not handle `GeneratorExit` correctly.
+
+#### Renames, Deprecation & Removals
+
+- Rename `FormData` to `Formdata`. Old version is still a valid import for now.
+- Deprecate `filename` parameter of `FormData.add_field` in favor of `file_name`.
+
+# 1.0.66 *\[2024-02-28\]*
 
 #### Bug fixes
 

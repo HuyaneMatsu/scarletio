@@ -28,7 +28,7 @@ WEBSOCKET_STATE_CLOSED = 4
 
 WEBSOCKET_KEY = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
 
-EXTERNAL_CLOSE_CODES = (1000, 1001, 1002, 1003, 1007, 1008, 1009, 1010, 1011,)
+EXTERNAL_CLOSE_CODES = (1000, 1001, 1002, 1003, 1007, 1008, 1009, 1010, 1011, 1013)
 
 HTTPClient = include('HTTPClient')
 
@@ -352,7 +352,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             raise TypeError(
                 f'Data must be `bytes-like`, `str`, got: {data.__class__.__name__}; {reprlib.repr(data)}.'
             )
-
+        
         await self.write_frame(operation_code, data)
     
     
@@ -751,13 +751,13 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             if frame.operation_code in WEBSOCKET_DATA_OPERATIONS:
                 return frame
 
-            if (await self._process_CONTROL_frame(frame)):
+            if (await self._process_control_frame(frame)):
                 continue
             
             return
     
     
-    async def _process_CONTROL_frame(self, frame):
+    async def _process_control_frame(self, frame):
         """
         Processes a control websocket frame.
         
@@ -875,16 +875,15 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             - If an extension modified the frame to be a fragmented one. (Might be supported if people request is.)
             - If an extension modified the frame's op code to not any of the expected ones.
         ConnectionClosed
-            WebSocket connection closed.
-        Exception
-            - WebSocket connection not yet established.
-            - Cannot write to websocket with it's current state.
+            WebSocket connection closed.ó
         RuntimeError
             Protocol has no attached transport.
+            - WebSocket connection not yet established.
+            - Cannot write to websocket with it's current state.
         """
         # Defensive assertion for protocol compliance.
         if self.state != _expected_state:
-            raise Exception(f'Cannot write to a WebSocket in the {self.state} state.')
+            raise RuntimeError(f'Cannot write to a WebSocket in the {self.state} state.')
 
         # we write only 1 frame at a time, so we 'queue' it
         async with self._drain_lock:
@@ -902,7 +901,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
                 await self.drain()
             except ConnectionError:
                 self.fail_connection()
-                #raise ConnectionClosed with the correct code and reason.
+                # raise ConnectionClosed with the correct code and reason.
                 await self.ensure_open()
     
     
@@ -947,6 +946,8 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         
         This method is a coroutine.
         """
+        generator_destroyed = False
+        
         try:
             # Wait for the data transfer phase to complete.
             transfer_data_task = self.transfer_data_task
@@ -969,6 +970,11 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
                 self.write_eof()
                 if (await self.wait_for_connection_lost()):
                     return
+        
+        except GeneratorExit:
+            generator_destroyed = True
+            raise
+        
         finally:
             # finally ensures that the transport never remains open
             if self.connection_lost_waiter.is_done() and not self.is_ssl:
@@ -978,14 +984,17 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             transport = self._transport
             if (transport is not None):
                 transport.close()
-                if (await self.wait_for_connection_lost()):
-                    return
+                
+                if not generator_destroyed:
+                    if (await self.wait_for_connection_lost()):
+                        return
+                
                 # Abort the TCP connection
                 transport.abort()
             
-            
-            # connection_lost() is called quickly after aborting.
-            await self.wait_for_connection_lost()
+            if not generator_destroyed:
+                # connection_lost() is called quickly after aborting.
+                await self.wait_for_connection_lost()
     
     
     async def wait_for_connection_lost(self):

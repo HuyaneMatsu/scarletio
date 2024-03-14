@@ -45,6 +45,8 @@ class CauseGroup(BaseException):
     causes : `tuple` of ``BaseException``
         Exception causes.
     """
+    __slots__ = ('causes',)
+    
     def __new__(cls, *causes):
         """
         Stops ``CauseGroup`` to be created if a cause is not `BaseException` instance.
@@ -81,9 +83,6 @@ class CauseGroup(BaseException):
     
     __init__ = object.__init__
     
-    # What the hell is wrong with `str()` ?
-    __str__ = BaseException.__repr__
-    
     
     def __iter__(self):
         """
@@ -107,3 +106,38 @@ class CauseGroup(BaseException):
         length : `int`
         """
         return len(self.causes)
+    
+    
+    def __eq__(self, other):
+        """Returns whether the two cause groups are equal."""
+        if type(self) is not type(other):
+            return NotImplemented
+        
+        return self.causes == other.causes
+    
+    
+    def __repr__(self):
+        """Returns the cause groups representation."""
+        repr_parts = [type(self).__name__, '(']
+        
+        causes = self.causes
+        limit = len(causes)
+        if limit:
+            index = 0
+            
+            while True:
+                cause = causes[index]
+                repr_parts.append(repr(cause))
+                
+                index += 1
+                if index == limit:
+                    break
+                
+                repr_parts.append(', ')
+                continue
+        
+        repr_parts.append(')')
+        return ''.join(repr_parts)
+    
+    
+    __str__ = __repr__

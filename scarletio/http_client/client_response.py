@@ -49,7 +49,7 @@ class ClientResponse:
         The event loop, trough what the request is executed.
     method : `str`
         Method of the respective request.
-    status : `None`, `int`
+    status : `int`
         Received status code. Set as `0` by default.
     url : ``URL``
         The requested url.
