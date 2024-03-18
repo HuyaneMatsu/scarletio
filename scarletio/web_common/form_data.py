@@ -4,10 +4,142 @@ from io import IOBase
 from urllib.parse import urlencode
 from warnings import warn
 
-from ..utils import IgnoreCaseMultiValueDictionary, MultiValueDictionary, RichAttributeErrorBaseType
+from ..utils import IgnoreCaseMultiValueDictionary, MultiValueDictionary, RichAttributeErrorBaseType, to_json
 
 from .headers import CONTENT_LENGTH, CONTENT_TRANSFER_ENCODING, CONTENT_TYPE
 from .multipart import BytesPayload, MultipartWriter, create_payload
+
+
+FORM_DATA_FIELD_TYPE_NONE = 0
+FORM_DATA_FIELD_TYPE_JSON = 1
+
+
+class FormDataField(RichAttributeErrorBaseType):
+    """
+    Attributes
+    ----------
+    headers : `IgnoreCaseMultiValueDictionary<str, str>`
+        The field specific headers.
+    type : `int`
+        The field's type.
+    type_options : `MultiValueDictionary<str, str>`
+        Additional information used by the created ``PayloadBase`` when the field is generated.
+    value : object
+        The field's value.
+    """
+    __slots__ = ('headers', 'type', 'type_options', 'value')
+    
+    def __new__(cls, field_type, type_options, headers, value):
+        """
+        Creates a new form data field.
+        
+        Parameters
+        ----------
+        field_type : `int`
+            The field's type.
+        type_options : `MultiValueDictionary<str, str>`
+            Additional information used by the created ``PayloadBase`` when the field is generated.
+        headers : `IgnoreCaseMultiValueDictionary<str, str>`
+            The field specific headers.
+        value : `object`
+            The field's value.
+        """
+        self = object.__new__(cls)
+        self.type = field_type
+        self.type_options = type_options
+        self.headers = headers
+        self.value = value
+        return self
+    
+    
+    def get_value(self):
+        """
+        Returns the value of the form data field after applying type specific conversion.
+        
+        Returns
+        -------
+        value : `object`
+        """
+        field_type = self.type
+        value = self.value
+        
+        # none
+        if field_type == FORM_DATA_FIELD_TYPE_NONE:
+            return value
+        
+        # json
+        if field_type == FORM_DATA_FIELD_TYPE_JSON:
+            return to_json(value)
+        
+        # unknown
+        return value
+    
+    
+    def __repr__(self):
+        """Returns the field's representation."""
+        repr_parts = ['<', type(self).__name__]
+        
+        # type
+        field_type = self.type
+        if field_type == FORM_DATA_FIELD_TYPE_NONE:
+            type_name = 'none'
+        elif field_type == FORM_DATA_FIELD_TYPE_JSON:
+            type_name = 'json'
+        else:
+            type_name = 'unknown'
+        
+        repr_parts.append(' type = ')
+        repr_parts.append(type_name)
+        
+        # type_options
+        type_options = self.type_options
+        if type_options:
+            repr_parts.append(', type_options = ')
+            repr_parts.append(repr(type_options))
+        
+        # headers
+        headers = self.headers
+        if headers:
+            repr_parts.append(', headers = ')
+            repr_parts.append(repr(headers))
+        
+        # value
+        repr_parts.append(', value = ')
+        value = self.value
+        if isinstance(value, (bytes, bytearray, memoryview)) and len(value) > 10000:
+            repr_parts.append('binary<length = ')
+            repr_parts.append(str(len(value)))
+            repr_parts.append('>')
+        
+        else:
+            repr_parts.append(repr(value))
+        
+        repr_parts.append('>')
+        return ''.join(repr_parts)
+    
+    
+    def __eq__(self, other):
+        """Returns whether the two fields are equal."""
+        if type(self) is not type(other):
+            return False
+        
+        # type
+        if self.type != other.type:
+            return False
+        
+        # type_options
+        if self.type_options != other.type_options:
+            return False
+        
+        # headers
+        if self.headers != other.headers:
+            return False
+        
+        # value
+        if self.value != other.value:
+            return False
+        
+        return True
 
 
 class FormData(RichAttributeErrorBaseType):
@@ -16,15 +148,8 @@ class FormData(RichAttributeErrorBaseType):
     
     Attributes
     ----------
-    fields : `list<(`MultiValueDictionary<str, str>, IgnoreCaseMultiValueDictionary<str, str>, object)>`
-        The fields of the form data. Each element is a tuple, which contains the following elements:
-        
-        - `type_options` : `MultiValueDictionary<str, str>`;
-            Additional information used by the created ``PayloadBase`` when the field is generated.
-        - `headers` : `MultiValueDictionary<str, str>`;
-            The field specific headers.
-        - value : `object`
-            The field's value.
+    fields : `list<FormDataField>`
+        The fields of the form data.
     
     multipart : `bool`
         Whether the form data is `multipart/form-data` and not `application/x-www-form-urlencoded` type.
@@ -97,6 +222,28 @@ class FormData(RichAttributeErrorBaseType):
                 )
         
         return self
+    
+    
+    def add_json(self, name, value):
+        """
+        Adds a json field to the form data.
+        
+        Parameters
+        ----------
+        name : `str`
+            The field's name.
+        value : `object`
+            The field's value.
+        """
+        self.multipart = True
+        
+        type_options = MultiValueDictionary()
+        type_options['name'] = name
+        
+        headers = IgnoreCaseMultiValueDictionary()
+        headers[CONTENT_TYPE] = 'application/json'
+        
+        self.fields.append(FormDataField(FORM_DATA_FIELD_TYPE_JSON, type_options, headers, value))
     
     
     def add_field(self, name, value, content_type = None, filename = ..., file_name = None, transfer_encoding = None):
@@ -176,7 +323,7 @@ class FormData(RichAttributeErrorBaseType):
             headers[CONTENT_TRANSFER_ENCODING] = transfer_encoding
             self.multipart = True
         
-        self.fields.append((type_options, headers, value))
+        self.fields.append(FormDataField(FORM_DATA_FIELD_TYPE_NONE, type_options, headers, value))
     
     
     def _generate_form_data(self, encoding):
@@ -202,8 +349,12 @@ class FormData(RichAttributeErrorBaseType):
             - If a field's content has unknown content-transfer-encoding.
         """
         writer = MultipartWriter('form-data')
-        for type_options, headers, value in self.fields:
+        for field in self.fields:    
             try:
+                type_options = field.type_options
+                headers = field.headers
+                value = field.get_value()
+            
                 payload_keyword_parameters = {
                     'headers': headers,
                     'encoding': encoding,
@@ -223,7 +374,7 @@ class FormData(RichAttributeErrorBaseType):
             
             except Exception as err:
                 raise TypeError(
-                    f'Can not serialize value type: {type(value).__name__}, headers: {headers!r}, value: {value!r}.'
+                    f'Can not serialize field: {field!r}.'
                 ) from err
             
             if type_options:
@@ -250,8 +401,8 @@ class FormData(RichAttributeErrorBaseType):
             The generated payload.
         """
         data = []
-        for type_options, header, value in self.fields:
-            data.append((type_options['name'], value))
+        for field in self.fields:
+            data.append((field.type_options['name'], field.get_value()))
         
         if encoding == 'utf-8':
             content_type = 'application/x-www-form-urlencoded'
@@ -259,8 +410,6 @@ class FormData(RichAttributeErrorBaseType):
             content_type = f'application/x-www-form-urlencoded; charset={encoding}'
         
         return BytesPayload(urlencode(data, doseq = True, encoding = encoding).encode(), {'content_type': content_type})
-    
-    
     
     
     def generate_form(self, encoding = 'utf-8'):
@@ -294,32 +443,13 @@ class FormData(RichAttributeErrorBaseType):
         
         # fields
         fields = self.fields
-        limit = len(fields)
-        if not limit:
+        if not fields:
             field_added = False
         else:
+            repr_parts.append(' fields = ')
+            repr_parts.append(repr(fields))
+            
             field_added = True
-            
-            repr_parts.append(' fields = [')
-            index = 0
-            while True:
-                type_options, headers, value = fields[index]
-                repr_parts.append('(')
-                repr_parts.append(repr(type_options))
-                repr_parts.append(', ')
-                repr_parts.append(repr(headers))
-                repr_parts.append(', ')
-                repr_parts.append(repr(value))
-                repr_parts.append(')')
-                
-                index += 1
-                if index == limit:
-                    break
-                    
-                repr_parts.append(', ')
-                continue
-            
-            repr_parts.append(']')
         
         # multipart
         multipart = self.multipart
@@ -345,10 +475,8 @@ class FormData(RichAttributeErrorBaseType):
         return ''.join(repr_parts)
     
     
-    __str__ = __repr__
-    
-    
     def __eq__(self, other):
+        """Returns whether the two form datas are equal."""
         if type(self) is not type(other):
             return NotImplemented
         
@@ -362,3 +490,8 @@ class FormData(RichAttributeErrorBaseType):
             return False
         
         return True
+    
+    
+    def __bool__(self):
+        """Returns whether the form data has any fields."""
+        return True if self.fields else False

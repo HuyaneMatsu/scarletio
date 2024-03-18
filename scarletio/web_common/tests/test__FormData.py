@@ -4,7 +4,7 @@ import vampytest
 
 from ...utils import IgnoreCaseMultiValueDictionary, MultiValueDictionary
 
-from ..form_data import FormData
+from ..form_data import FORM_DATA_FIELD_TYPE_JSON, FORM_DATA_FIELD_TYPE_NONE, FormData, FormDataField
 
 
 class TestType(IOBase):
@@ -51,7 +51,8 @@ def _iter_options__add_field__passing():
         {},
         (
             [
-                (
+                FormDataField(
+                    FORM_DATA_FIELD_TYPE_NONE,
                     MultiValueDictionary([('name', 'hey'), ('file_name', 'hey')]),
                     IgnoreCaseMultiValueDictionary(),
                     b'mister',
@@ -67,7 +68,8 @@ def _iter_options__add_field__passing():
         {},
         (
             [
-                (
+                FormDataField(
+                    FORM_DATA_FIELD_TYPE_NONE,
                     MultiValueDictionary([('name', 'hey'), ('file_name', 'koishi')]),
                     IgnoreCaseMultiValueDictionary(),
                     instance_0,
@@ -83,7 +85,8 @@ def _iter_options__add_field__passing():
         {'transfer_encoding': 'application/octet-stream'},
         (
             [
-                (
+                FormDataField(
+                    FORM_DATA_FIELD_TYPE_NONE,
                     MultiValueDictionary([('name', 'hey')]),
                     IgnoreCaseMultiValueDictionary([('Content-Transfer-Encoding', 'application/octet-stream')]),
                     b'mister',
@@ -99,7 +102,8 @@ def _iter_options__add_field__passing():
         {},
         (
             [
-                (
+                FormDataField(
+                    FORM_DATA_FIELD_TYPE_NONE,
                     MultiValueDictionary([('name', 'hey')]),
                     IgnoreCaseMultiValueDictionary(),
                     'mister',
@@ -115,7 +119,8 @@ def _iter_options__add_field__passing():
         {'content_type': 'text/plain', 'file_name': 'satori', 'transfer_encoding': 'application/octet-stream'},
         (
             [
-                (
+                FormDataField(
+                    FORM_DATA_FIELD_TYPE_NONE,
                     MultiValueDictionary([('name', 'hey'), ('file_name', 'satori')]),
                     IgnoreCaseMultiValueDictionary([
                         ('Content-Type', 'text/plain'),
@@ -139,7 +144,7 @@ def _iter_options__type_error__passing():
 @vampytest._(vampytest.call_from(_iter_options__type_error__passing()).raising(TypeError))
 def test__FormData__add_field(name, value, keyword_parameters):
     """
-    Tests whether ``FormData.add_fields`` work as intended.
+    Tests whether ``FormData.add_field`` work as intended.
     
     Parameters
     ----------
@@ -149,10 +154,40 @@ def test__FormData__add_field(name, value, keyword_parameters):
         The field's value.
     keyword_parameters : `dict<str, object>`
         Additional keyword parameters
+    
+    Returns
+    -------
+    fields : `list<FormDataField>`
+    multipart : `bool`
     """
     form_data = FormData()
     form_data.add_field(name, value, **keyword_parameters)
     return form_data.fields, form_data.multipart
+
+
+def test__FormData__add_json():
+    """
+    Tests whether ``FormData.add_json`` work as intended.
+    """
+    name = 'payload_json'
+    value = {'hey': 'mister'}
+    
+    form_data = FormData()
+    form_data.add_json(name, value)
+    
+    vampytest.assert_eq(
+        form_data.fields,
+        [
+            FormDataField(
+                FORM_DATA_FIELD_TYPE_JSON,
+                MultiValueDictionary([('name', 'payload_json')]),
+                IgnoreCaseMultiValueDictionary([
+                    ('Content-Type', 'application/json'),
+                ]),
+                {'hey': 'mister'},
+            ),
+        ]
+    )
 
 
 def test__FormData__eq__empty():
@@ -204,7 +239,7 @@ def test__FormData__eq__different():
 
 def test__FormData__repr():
     """
-    Tests whether ``FormData.__repr__`` works as intended
+    Tests whether ``FormData.__repr__`` works as intended.
     """
     form_data = FormData()
     form_data.add_field('hey', b'mister')
@@ -220,7 +255,7 @@ def test__FormData__repr():
 @vampytest.skip()
 def test__FormData__generate_form_data():
     """
-    Tests whether ``FormData._generate_form_data`` works as intended
+    Tests whether ``FormData._generate_form_data`` works as intended.
     """
     raise NotImplementedError('Payload writes must become testable first.')
 
@@ -228,7 +263,7 @@ def test__FormData__generate_form_data():
 @vampytest.skip()
 def test__FormData__generate_form_urlencoded():
     """
-    Tests whether ``FormData._generate_form_urlencoded`` works as intended
+    Tests whether ``FormData._generate_form_urlencoded`` works as intended.
     """
     raise NotImplementedError('Payload writes must become testable first.')
 
@@ -236,6 +271,33 @@ def test__FormData__generate_form_urlencoded():
 @vampytest.skip()
 def test__FormData__generate_form():
     """
-    Tests whether ``FormData.generate_form`` works as intended
+    Tests whether ``FormData.generate_form`` works as intended.
     """
     raise NotImplementedError('Payload writes must become testable first.')
+
+
+def test__FormData__bool_false():
+    """
+    Tests whether ``FormData.__bool__`` works as intended.
+    
+    Case: False,
+    """
+    form_data = FormData()
+    
+    output = bool(form_data)
+    
+    vampytest.assert_instance(output, bool)
+    vampytest.assert_eq(output, False)
+
+
+def test__FormData__bool():
+    """
+    Tests whether ``FormData.__bool__`` works as intended.
+    """
+    form_data = FormData()
+    form_data.add_field('hey', b'mister')
+    
+    output = bool(form_data)
+    
+    vampytest.assert_instance(output, bool)
+    vampytest.assert_eq(output, True)

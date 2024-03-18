@@ -1,3 +1,12 @@
+# 1.0.68 *\[2024-03-18\]*
+
+#### Improvements
+
+- Add `FormData.__bool__`.
+- `FormData.fields` is now a list of `FormDataField`.
+- Add `FormData.add_json`.
+- `FormData.__eq__` now has better support for `json` with the addition of `.add_json`.
+
 # 1.0.67 *\[2024-03-14\]*
 
 #### Improvements
