@@ -183,7 +183,7 @@ def _get_familiar_names(names, name):
     
     sequence_matcher = SequenceMatcher()
     
-    matches = []
+    matches = {}
     
     for name in name_aliases:
         required_match_level = 0.8 - (20 - min(len(name), 20)) * 0.01
@@ -201,11 +201,12 @@ def _get_familiar_names(names, name):
             if ratio < required_match_level:
                 continue
             
-            matches.append((ratio, name))
+            # If the same name shows up twice, use the highest available ratio.
+            matches[name] = max(ratio, matches.get(name, 0.0))
     
     # Pull suggestions
     suggestions = []
-    for match in get_n_largest(SUGGESTIONS_MAX, matches):
+    for match in get_n_largest(SUGGESTIONS_MAX, [(ratio, name) for name, ratio in matches.items()]):
         matches = names_map.get_all(match[1])
         matches.sort()
         suggestions.extend(matches)

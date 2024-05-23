@@ -153,14 +153,14 @@ def collect_module_variables(module):
     if (package_name is not None):
         interactive_console_locals[package_name] = module
     
-    for variable_name in {
+    for variable_name in (
         '__name__',
         '__package__',
         '__loader__',
         '__spec__',
         '__builtins__',
-        '__file__'
-    }:
+        '__file__',
+    ):
         try:
             variable_value = getattr(module, variable_name)
         except AttributeError:

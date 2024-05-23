@@ -875,7 +875,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             - If an extension modified the frame to be a fragmented one. (Might be supported if people request is.)
             - If an extension modified the frame's op code to not any of the expected ones.
         ConnectionClosed
-            WebSocket connection closed.ó
+            WebSocket connection closed.
         RuntimeError
             Protocol has no attached transport.
             - WebSocket connection not yet established.

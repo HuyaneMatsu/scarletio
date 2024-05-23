@@ -1,3 +1,10 @@
+# 1.0.69 *\[2024-05-23\]*
+
+#### Bug fixes
+
+- `populate_frame_proxies` failed if a frame changed meanwhile populating.
+- `_get_familiar_names` could return duplicate entries.
+
 # 1.0.68 *\[2024-03-18\]*
 
 #### Improvements

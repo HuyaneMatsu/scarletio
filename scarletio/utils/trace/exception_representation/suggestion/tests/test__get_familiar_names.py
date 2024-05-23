@@ -7,6 +7,9 @@ def _iter_options():
     yield {'hey_mister', 'hey_master', 'mister_hey'}, 'hey_mister', ['mister_hey', 'hey_mister', 'hey_master']
     yield {'Koishi', 'koishi', 'satori'}, 'Koishi', ['Koishi', 'koishi']
     yield {'koishi', 'orin', 'okuu'}, 'satori', []
+    
+    # Test for duplication
+    yield {'_A__ayaya'}, '_a__ayaya', ['_A__ayaya']
 
 
 @vampytest._(vampytest.call_from(_iter_options()).returning_last())

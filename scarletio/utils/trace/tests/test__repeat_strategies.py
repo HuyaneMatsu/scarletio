@@ -10,7 +10,7 @@ class R(str):
         return type(self)(str.__getitem__(self, index_or_slice))
 
 
-def iter_options():
+def _iter_options():
     # no input
     yield get_repeat_with_strategy_bot, None, None
     yield get_repeat_with_strategy_top, None, None
@@ -37,7 +37,7 @@ def iter_options():
     yield get_repeat_with_strategy_top, R('ayaya'), (0, 2, 2)
 
 
-@vampytest._(vampytest.call_from(iter_options()).returning_last())
+@vampytest._(vampytest.call_from(_iter_options()).returning_last())
 def test__get_repeat(strategy, input_value):
     """
     Tests whether ``get_repeat_with_strategy_bot`` works as intended.

@@ -716,14 +716,12 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
                             if reader.cancelled:
                                 self.remove_reader(file_descriptor)
                             else:
-                                if not reader.cancelled:
-                                    ready.append(reader)
+                                ready.append(reader)
                         if (writer is not None) and (mask & EVENT_WRITE):
                             if writer.cancelled:
                                 self.remove_writer(file_descriptor)
                             else:
-                                if not writer.cancelled:
-                                    ready.append(writer)
+                                ready.append(writer)
                     
                     key = None
                     file_descriptor = None

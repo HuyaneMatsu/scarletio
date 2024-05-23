@@ -131,7 +131,7 @@ half page of license and then an another half page of imports. They are looking 
 ```py
 # Wrong:
 import os
-import 
+import sys
 
 # Wronger:
 from subprocess import PIPE
@@ -274,7 +274,8 @@ Except when dealing with line continuations and the line ends with an operation 
 # Wrong:
 x = x*2 - 1
 hypot2 = x*x + y*y
-c = (a+b) * (a-b)i=i+1
+c = (a+b) * (a-b)
+i=i+1
 submitted +=1
 ```
 

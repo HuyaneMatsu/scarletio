@@ -2,7 +2,7 @@ __all__ = ('convert_frames_to_frame_proxies', 'get_exception_frames', 'populate_
 
 from types import FrameType, TracebackType
 
-from ..expression_parsing import LineCacheSession, get_expression_info
+from ..expression_parsing import ExpressionInfo, LineCacheSession, get_expression_info
 
 from .frame_proxy_base import FrameProxyBase
 from .frame_proxy_frame import FrameProxyFrame
@@ -103,6 +103,14 @@ def populate_frame_proxies(frames):
                 expressions[expression_key] = get_expression_info(expression_key)
     
     for frame in frames:
-        expression_info = expressions[frame.expression_key]
+        expression_key = frame.expression_key
+        
+        try:
+            expression_info = expressions[expression_key]
+        except KeyError:
+            # A frame changed while we were rendering, create a dummy 
+            expression_info = ExpressionInfo(expression_key, [], 0, True)
+            expressions.setdefault(expression_key, expression_info)
+        
         expression_info.do_mention()
         frame.expression_info = expression_info

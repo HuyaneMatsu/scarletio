@@ -48,7 +48,7 @@ class SubprocessWritePipeProtocol(AbstractProtocolBase):
     
     def __repr__(self):
         """Returns the subprocess write protocol's representation."""
-        return f'<{self.__class__.__name__} file_descriptor={self._file_descriptor} pipe={self._transport!r}>'
+        return f'<{self.__class__.__name__} file_descriptor = {self._file_descriptor} pipe = {self._transport!r}>'
     
     
     @copy_docs(AbstractProtocolBase.connection_lost)
