@@ -28,12 +28,15 @@ except ImportError:
     )
 
 
-PACKAGE = __import__(f'{PACKAGE_NAME}.tools.asynchronous_interactive_console')
+PACKAGE = __import__(PACKAGE_NAME)
+__import__(f'{PACKAGE_NAME}.tools')
+__import__(f'{PACKAGE_NAME}.main')
 
 collect_module_variables = PACKAGE.tools.collect_module_variables
 run_asynchronous_interactive_console = \
     PACKAGE.tools.asynchronous_interactive_console.run_asynchronous_interactive_console
-
+debug_key = PACKAGE.main.debug_key
+get_short_executable = PACKAGE.get_short_executable
 
 
 def __main__():
@@ -41,8 +44,31 @@ def __main__():
     Runs an asynchronous interactive console.
     
     > You need python3.8 or higher to use `await`!
+    
+    > If `debug-key` or `dk` is passed as a command, it pops up a key debugger instead.
     """
-    run_asynchronous_interactive_console(collect_module_variables(PACKAGE))
+    parameters = sys.argv.copy()
+    
+    if parameters and ((parameters[0] == __file__) or (parameters[0] != get_short_executable())):
+        del parameters[0]
+    
+    if parameters:
+        used_command_name = parameters[0].strip().casefold().replace('_', '-')
+    else:
+        used_command_name = 'interpreter'
+    
+    if used_command_name in ('debug-key', 'dk'):
+        debug_key()
+    
+    elif used_command_name in ('interpreter', 'i'):
+        run_asynchronous_interactive_console(collect_module_variables(PACKAGE))
+    
+    else:
+        sys.stdout.write(
+            'Available commands:\n'
+            '- interpreter\n'
+            '- debug-character\n'
+        )
 
 
 if __name__ == '__main__':

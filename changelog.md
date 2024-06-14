@@ -1,3 +1,9 @@
+# 1.0.70 *\[2024-06-14\]*
+
+#### Improvements
+
+- Add `debug-key` cli command.
+
 # 1.0.69 *\[2024-05-23\]*
 
 #### Bug fixes

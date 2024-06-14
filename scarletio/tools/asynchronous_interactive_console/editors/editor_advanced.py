@@ -9,26 +9,15 @@ from time import monotonic
 
 from ....utils import DEFAULT_ANSI_HIGHLIGHTER, copy_docs, create_ansi_format_code, iter_highlight_code_lines
 
+from ...keys import (
+    KEY_ARROW_DOWN, KEY_ARROW_END, KEY_ARROW_HOME, KEY_ARROW_LEFT, KEY_ARROW_RIGHT, KEY_ARROW_UP, KEY_BACK_TAB,
+    KEY_DELETE_LEFT, KEY_DELETE_RIGHT, KEY_DESTROY, KEY_KEYBOARD_INTERRUPT, KEY_NEW_LINE_ALL, KEY_TAB
+)
+
 from .compilation import maybe_compile
 from .editor_base import EditorBase, _validate_buffer
 from .prefix_trimming import trim_console_prefix
 
-
-KEY_KEYBOARD_INTERRUPT = '\x03'
-KEY_DESTROY = '\x04'
-KEY_TAB = '\x09'
-KEY_NEW_LINE_ALL = ('\x0a', '\x0d')
-KEY_ARROW_N_0 = '\x1b'
-KEY_ARROW_N_1 = '\x5b'
-KEY_ARROW_UP = KEY_ARROW_N_0 + KEY_ARROW_N_1 + '\x41'
-KEY_ARROW_DOWN = KEY_ARROW_N_0 + KEY_ARROW_N_1 + '\x42'
-KEY_ARROW_RIGHT = KEY_ARROW_N_0 + KEY_ARROW_N_1 + '\x43'
-KEY_ARROW_LEFT = KEY_ARROW_N_0 + KEY_ARROW_N_1 + '\x44'
-KEY_ARROW_END = KEY_ARROW_N_0 + KEY_ARROW_N_1 + '\x46'
-KEY_ARROW_HOME = KEY_ARROW_N_0 + KEY_ARROW_N_1 + '\x48'
-KEY_BACK_TAB = KEY_ARROW_N_0 + KEY_ARROW_N_1 + '\x5a'
-KEY_DELETE_RIGHT = KEY_ARROW_N_0 + KEY_ARROW_N_1 + '\x33' + '\x7e'
-KEY_DELETE_LEFT = '\x7f'
 
 COMMAND_NEXT_LINE = '\n'
 COMMAND_PREVIOUS_LINE = '\033[F'

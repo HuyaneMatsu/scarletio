@@ -30,6 +30,8 @@ setup(
         'scarletio.core.protocols_and_transports',
         'scarletio.core.traps',
         'scarletio.http_client',
+        'scarletio.main',
+        'scarletio.main.key_debug',
         'scarletio.tools',
         'scarletio.tools.asynchronous_interactive_console',
         'scarletio.tools.asynchronous_interactive_console.editors',
