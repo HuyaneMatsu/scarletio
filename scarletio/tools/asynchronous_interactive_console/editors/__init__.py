@@ -3,9 +3,12 @@ __all__ = ()
 # import sub-modules
 
 from .compilation import *
+from .display_state import *
 from .editor_base import *
 from .editor_simple import *
+from .line_render_intermediate import *
 from .prefix_trimming import *
+from .terminal_control_commands import *
 
 # only import advanced editor when it supposed to work
 

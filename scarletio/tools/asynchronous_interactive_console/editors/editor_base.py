@@ -1,5 +1,7 @@
 __all__ = ()
 
+from ....utils import RichAttributeErrorBaseType
+
 
 def _validate_buffer(buffer):
     """
@@ -28,7 +30,7 @@ def _validate_buffer(buffer):
     return buffer
 
 
-class EditorBase:
+class EditorBase(RichAttributeErrorBaseType):
     """
     Base editor implementation.
     

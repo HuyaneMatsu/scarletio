@@ -1,3 +1,17 @@
+# 1.0.71 *\[2024-06-24\]*
+
+#### Improvements
+
+- `EditorAdvanced` now writes big chunks at once instead many small.
+- `EditorAdvanced` now only writes the difference between 2 display states if applicable.
+
+#### Bug fixes
+
+- Fix `EditorAdvanced` calculated line length wrong on resize (decrease) for last line if its full.
+- Fix `EditorAdvanced` calculated line count of not rendered outputs incorrectly.
+- Fix `EditorAdvanced` wrote continuous prefixes twice. Was not visible due to it rewriting the same line after.
+- Fix `EditorAdvanced` cleared its lines when writing even tho it cleared the input before.
+
 # 1.0.70 *\[2024-06-14\]*
 
 #### Improvements

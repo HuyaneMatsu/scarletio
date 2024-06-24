@@ -1,13 +1,13 @@
 __all__ = ()
 
 import sys, re, termios, tty
-from os import get_blocking, get_terminal_size, set_blocking
+from os import get_blocking, set_blocking, write
 from select import poll as Poller, POLLOUT as EVENT_POLL_WRITE
 from selectors import DefaultSelector, EVENT_READ
 from socket import socketpair as create_socket_pair
 from time import monotonic
 
-from ....utils import DEFAULT_ANSI_HIGHLIGHTER, copy_docs, create_ansi_format_code, iter_highlight_code_lines
+from ....utils import copy_docs
 
 from ...keys import (
     KEY_ARROW_DOWN, KEY_ARROW_END, KEY_ARROW_HOME, KEY_ARROW_LEFT, KEY_ARROW_RIGHT, KEY_ARROW_UP, KEY_BACK_TAB,
@@ -15,18 +15,13 @@ from ...keys import (
 )
 
 from .compilation import maybe_compile
-from .editor_base import EditorBase, _validate_buffer
+from .display_state import DisplayState, get_new_content_width
+from .editor_base import EditorBase
 from .prefix_trimming import trim_console_prefix
+from .terminal_control_commands import (
+    COMMAND_FORMAT_RESET, COMMAND_DOWN, COMMAND_UP, COMMAND_START_LINE
+)
 
-
-COMMAND_NEXT_LINE = '\n'
-COMMAND_PREVIOUS_LINE = '\033[F'
-COMMAND_START_LINE = '\u001b[1000D'
-COMMAND_CLEAR_LINE = '\u001b[0K'
-COMMAND_FORMAT_RESET = create_ansi_format_code()
-
-EMPTY_LINE_PREFIX_CHARACTER = ' '
-CONTINUOUS_LINE_POSTFIX = '\\'
 
 DEDENT_WORDS = frozenset((
     'pass',
@@ -44,7 +39,8 @@ AUTO_COMPLETE_BREAK_CHARACTERS = frozenset((
 
 INDEXED_INPUT_RP = re.compile('\s*in\s*\[\s*(\d+)\s*\]\s*', re.I)
 
-STDOUT_WRITE_TIMEOUT = 30.0
+
+WRITE_TIMEOUT = 30.0
 
 
 class KeyNode:
@@ -318,24 +314,6 @@ def _read_from_node_map(node, input_stream):
     return output
 
 
-def create_command_move_cursor(position):
-    """
-    Creates a command which moves the cursor on the current line to the given position.
-    
-    Parameters
-    ----------
-    position : `str`
-        The position to move the cursor to
-    
-    Returns
-    -------
-    command : `str`
-    """
-    if position <= 0:
-        return ''
-    
-    return f'\u001b[{position + 1}C'
-
 
 def get_starting_space_count(line):
     """
@@ -360,39 +338,6 @@ def get_starting_space_count(line):
     
     return space_count
 
-
-def add_linebreaks_between(lines):
-    """
-    Adds linebreaks between the given lines and returns a new list.
-    
-    Parameters
-    ----------
-    lines : `list` of `str`
-        Lines to add spaces between.
-    
-    Returns
-    -------
-    new_lines : `list` of `str`
-    """
-    new_lines = []
-    
-    length = len(lines)
-    if length:
-        
-        index = 0
-        
-        while True:
-            line = lines[index]
-            new_lines.append(line)
-            
-            index += 1
-            if index >= length:
-                break
-            
-            new_lines.append('\n')
-            continue
-    
-    return new_lines
 
 
 def line_ends_with(line, target):
@@ -449,169 +394,6 @@ def line_starts_with_word_any(line, words):
                 return True
     
     return False
-
-
-def iter_highlighted_buffer_parts(buffer, highlighter):
-    """
-    Iterates over the buffer parts and highlights them.
-    
-    This method is an iterable generator.
-    
-    Parameters
-    ----------
-    buffer : `list` of `str`
-        Line buffer.
-    highlighter : `None`, ``HighlightFormatterContext``
-        The highlighter to use.
-    
-    Yields
-    ------
-    part : `str`
-    """
-    buffer = add_linebreaks_between(buffer)
-    
-    if highlighter is None:
-        yield from buffer
-    
-    else:
-        yield from iter_highlight_code_lines(buffer, highlighter)
-
-
-def is_command(part):
-    """
-    Returns whether the given part is an ansi command.
-    
-    Parameters
-    ----------
-    part : `str`
-        the part to check.
-    
-    Returns
-    -------
-    is_ansi_command : `bool`
-    """
-    return part.startswith('\u001b[')
-
-
-def get_new_content_width(display_state, editor):
-    """
-    Gets the new column with and whether it changes.
-    
-    Parameters
-    ----------
-    display_state : ``DisplayState``
-        The current display state.
-    editor : ``EditorAdvanced``
-        The respective editor.
-    
-    Returns
-    -------
-    new_column_with : `int`
-        Returns `-1` if there was no change.
-    """
-    new_column_with = get_terminal_size().columns - editor.prefix_length - len(CONTINUOUS_LINE_POSTFIX)
-    if display_state.content_width == new_column_with:
-        new_column_with = - 1
-    
-    return new_column_with
-
-
-def get_line_line_count(line_length, content_width, new_content_width, prefix_length):
-    """
-    Returns how much lines the given line is displayed as.
-    
-    Parameters
-    ----------
-    line_length : `int`
-        The line's length.
-    content_width : `int`
-        The content field's width.
-    new_content_width : `int`
-        The new column width to use.
-    prefix_length : `int`
-        Prefix length used for calculations when column width is changed.
-    
-    Returns
-    -------
-    line_line_count : `int`
-    """
-    if (new_content_width == -1) or (new_content_width > content_width):
-        return _get_line_line_count_unchanged(line_length, content_width)
-    
-    return _get_line_line_count_changed(line_length, content_width, new_content_width, prefix_length)
-
-
-def _get_line_line_count_unchanged(line_length, content_width):
-    """
-    Returns how much lines the given line is displayed as.
-    
-    This function handles the case when content width is not changed or is increased.
-    
-    Parameters
-    ----------
-    line_length : `int`
-        The line's length.
-    content_width : `int`
-        The content field's width.
-    
-    Returns
-    -------
-    line_line_count : `int`
-    """
-    if line_length == 0:
-        line_line_count = 1
-    else:
-        line_line_count = 1 + (line_length - 1) // content_width
-    
-    return line_line_count
-
-
-def _get_line_line_count_changed(line_length, content_width, new_content_width, prefix_length):
-    """
-    Returns how much lines the given line is displayed as.
-    
-    This function handles the case when the content width is reduced and further calculations are required.
-    
-    Parameters
-    ----------
-    line_length : `int`
-        The line's length.
-    content_width : `int`
-        The content field's width.
-    new_content_width : `int`
-        The new column width to use.
-    prefix_length : `int`
-        Prefix length used for calculations when column width is changed.
-    
-    Returns
-    -------
-    line_line_count : `int`
-    """
-    line_line_count = 0
-    
-    if line_length == 0:
-        line_line_count += 1
-    
-    else:
-        additional_length = prefix_length + len(CONTINUOUS_LINE_POSTFIX)
-        old_full_line_length = content_width + additional_length
-        new_full_line_length = new_content_width + additional_length
-        
-        full_line_count = line_length // content_width
-        if full_line_count > 0:
-            last_line_length = line_length - (full_line_count * content_width)
-            
-            line_line_count = full_line_count * _get_line_line_count_unchanged(
-                old_full_line_length, new_full_line_length
-            )
-            
-        else:
-            last_line_length = line_length
-        
-        if last_line_length > 0:
-            line_line_count += 1 + ((last_line_length + prefix_length - 1) // new_full_line_length)
-        
-    return line_line_count
 
 
 def _check_is_line_empty(line):
@@ -1036,350 +818,6 @@ def _get_identifier_to_autocomplete(line, index):
     return last_word
 
 
-class DisplayState:
-    """
-    A current display state of ``EditorAdvanced``.
-    
-    Attributes
-    ----------
-    buffer : `list` of `str`
-        Line buffer.
-    content_width : `int`
-        The screen's with.
-    cursor_index : `int`
-        The cursors index on the current line.
-    cursor_line_index : `int`
-        The cursor's line's index in the buffer.
-    """
-    __slots__ = ('buffer', 'content_width', 'cursor_index', 'cursor_line_index')
-    
-    def __new__(cls, buffer):
-        """
-        Creates a new display state.
-        
-        Parameters
-        ----------
-        buffer : `None`, `list` of `str`
-            Line buffer.
-        
-        Raises
-        ------
-        TypeError
-            - If a parameter's type is incorrect.
-        """
-        buffer = _validate_buffer(buffer)
-        if not buffer:
-            buffer.append('')
-        
-        self = object.__new__(cls)
-        self.buffer = buffer
-        self.cursor_index = len(buffer[-1])
-        self.cursor_line_index = len(buffer) - 1
-        self.content_width = -1
-        return self
-    
-    
-    def __repr__(self):
-        """
-        Returns the representation of the display state.
-        """
-        repr_parts = ['<', self.__class__.__name__]
-        
-        repr_parts.append(' cursor_index = ')
-        repr_parts.append(repr(self.cursor_index))
-        
-        repr_parts.append(', cursor_line_index = ')
-        repr_parts.append(repr(self.cursor_line_index))
-        
-        repr_parts.append('>')
-        return ''.join(repr_parts)
-    
-    
-    def copy(self):
-        """
-        Copies the display state.
-        
-        Returns
-        -------
-        new : ``DisplayState``
-        """
-        new = object.__new__(type(self))
-        new.buffer = self.buffer.copy()
-        new.cursor_index = self.cursor_index
-        new.cursor_line_index = self.cursor_line_index
-        new.content_width = -1
-        return new
-    
-    
-    def get_cursor_till_end_display_line_count(self, new_content_width, prefix_length):
-        """
-        Counts how much lines are from the display position till the end of the display.
-        
-        Parameters
-        ----------
-        new_content_width : `int`
-            The new column width to use.
-        prefix_length : `int`
-            Prefix length used for calculations when column width is changed.
-        
-        Returns
-        -------
-        count : `int`
-        """
-        buffer = self.buffer
-        cursor_index = self.cursor_index
-        cursor_line_index = self.cursor_line_index
-        content_width = self.content_width
-        
-        line = buffer[cursor_line_index]
-        line_length = len(line)
-        
-        line_line_count = get_line_line_count(line_length, content_width, new_content_width, prefix_length)
-        line_cursor_index = get_line_line_count(cursor_index, content_width, new_content_width, prefix_length)
-        count = line_line_count - line_cursor_index
-        
-        index = cursor_line_index + 1
-        limit = len(buffer)
-        if index < limit:
-            while True:
-                count += get_line_line_count(len(buffer[index]), content_width, new_content_width, prefix_length)
-                
-                index += 1
-                if index == limit:
-                    break
-                
-                continue
-        
-        return count
-    
-    
-    def get_start_till_end_display_line_count(self, new_content_width, prefix_length):
-        """
-        Counts how much lines are displayed.
-        
-        Parameters
-        ----------
-        new_content_width : `int`
-            The new column width to use.
-        prefix_length : `int`
-            Prefix length used for calculations when column width is changed.
-        
-        Returns
-        -------
-        count : `int`
-        """
-        buffer = self.buffer
-        count = 0
-        content_width = self.content_width
-        
-        for line in buffer:
-            count += get_line_line_count(len(line), content_width, new_content_width, prefix_length)
-        
-        return count
-    
-    
-    def jump_to_end(self, editor):
-        """
-        Jumps to end of the displayed content.
-        
-        Parameters
-        ----------
-        editor : ``EditorAdvanced``
-            The editor to use.
-        """
-        if (self.content_width == -1):
-            # self was never rendered
-            return
-        
-        self._jump_to_end(editor, get_new_content_width(self, editor))
-    
-    
-    def _jump_to_end(self, editor, new_content_width):
-        """
-        Jumps to end of the displayed content.
-        
-        Called by ``.jump_to_end`` after checking pre-requirements.
-        
-        Parameters
-        ----------
-        editor : ``EditorAdvanced``
-            The editor
-        new_content_width : `int`
-            The new column width to use.
-        """
-        output_stream = editor.output_stream
-        
-        for _ in range(self.get_cursor_till_end_display_line_count(new_content_width, editor.prefix_length)):
-            write_to_io(output_stream, COMMAND_NEXT_LINE)
-    
-    
-    def clear(self, editor):
-        """
-        Clears self from the editor.
-        
-        Parameters
-        ----------
-        editor : ``EditorAdvanced``
-            The editor to use.
-        """
-        if (self.content_width == -1):
-            # self was never rendered
-            return
-        
-        new_content_width = get_new_content_width(self, editor)
-        
-        self._jump_to_end(editor, new_content_width)
-        self._clear_from_end(editor, new_content_width)
-    
-    
-    def _clear_from_end(self, editor, new_content_width):
-        """
-        Clears self from the editor. Should be called after ``._jump_to_end``.
-        
-        Parameters
-        ----------
-        editor : ``EditorAdvanced``
-            The editor to use.
-        new_content_width : `int`
-            The new column width to use.
-        """
-        output_stream = editor.output_stream
-        
-        write_to_io(output_stream, COMMAND_START_LINE)
-        write_to_io(output_stream, COMMAND_CLEAR_LINE)
-        
-        for _ in range(self.get_start_till_end_display_line_count(new_content_width, editor.prefix_length) - 1):
-            write_to_io(output_stream, COMMAND_PREVIOUS_LINE)
-            write_to_io(output_stream, COMMAND_START_LINE)
-            write_to_io(output_stream, COMMAND_CLEAR_LINE)
-    
-    
-    def write_cursor(self, editor):
-        """
-        Jumps the cursor to it's location.
-        
-        The output must be written out before.
-        
-        Parameters
-        ----------
-        editor : ``EditorAdvanced``
-            The editor to use.
-        """
-        # Jump back to cursor line
-        output_stream = editor.output_stream
-        
-        for _ in range(self.get_cursor_till_end_display_line_count(-1, editor.prefix_length)):
-            write_to_io(output_stream, COMMAND_PREVIOUS_LINE)
-        
-        write_to_io(output_stream, COMMAND_START_LINE)
-        
-        cursor_index = self.cursor_index
-        if cursor_index == 0:
-            line_cursor_index = -1
-        else:
-            line_cursor_index = ((cursor_index - 1) % self.content_width)
-        
-        line_cursor_index += editor.prefix_length
-        
-        write_to_io(output_stream, create_command_move_cursor(line_cursor_index))
-    
-    
-    def write(self, editor):
-        """
-        Writes out the buffer.
-        
-        Parameters
-        ----------
-        editor : ``EditorAdvanced``
-            The editor to use.
-        """
-        buffer = self.buffer
-        output_stream = editor.output_stream
-        
-        prefix_initial = editor.prefix_initial
-        prefix_continuous = editor.prefix_continuous
-        prefix_length = editor.prefix_length
-        
-        content_width = get_terminal_size().columns - prefix_length - len(CONTINUOUS_LINE_POSTFIX)
-        
-        if content_width < 1:
-            return
-        
-        self.content_width = content_width
-        
-        if len(buffer) == 1 and not buffer[0]:
-            write_to_io(output_stream, COMMAND_START_LINE)
-            write_to_io(output_stream, COMMAND_CLEAR_LINE)
-            write_to_io(output_stream, COMMAND_FORMAT_RESET)
-            write_to_io(output_stream, prefix_initial)
-            return
-        
-        line_index = 0
-        line_count = len(buffer)
-        is_new_line = True
-        leftover_line_length = content_width
-        
-        for part in iter_highlighted_buffer_parts(buffer, DEFAULT_ANSI_HIGHLIGHTER):
-            
-            if part.endswith('\n'):
-                is_line_break = True
-                part = part[:-2]
-            else:
-                is_line_break = False
-            
-            if is_new_line:
-                leftover_line_length = content_width
-                
-                write_to_io(output_stream, COMMAND_START_LINE)
-                write_to_io(output_stream, COMMAND_CLEAR_LINE)
-                write_to_io(output_stream, COMMAND_FORMAT_RESET)
-                
-                is_new_line = False
-                
-                if line_index == 0:
-                    prefix = prefix_initial
-                else:
-                    prefix = prefix_continuous
-                
-                write_to_io(output_stream, prefix)
-            
-            if part:
-                if is_command(part):
-                    write_to_io(output_stream, part)
-                
-                else:
-                    while True:
-                        part_length = len(part)
-                        leftover_line_length -= part_length
-                        if leftover_line_length >= 0:
-                            write_to_io(output_stream, part)
-                            break
-                        
-                        write_to_io(output_stream, part[:leftover_line_length])
-                        part = part[leftover_line_length:]
-                        
-                        write_to_io(output_stream, CONTINUOUS_LINE_POSTFIX)
-                        write_to_io(output_stream, COMMAND_NEXT_LINE)
-                        write_to_io(output_stream, COMMAND_START_LINE)
-                        write_to_io(output_stream, EMPTY_LINE_PREFIX_CHARACTER * prefix_length)
-                        leftover_line_length = content_width
-                        continue
-            
-            if is_line_break:
-                # At last line skip line break
-                line_index += 1
-                if line_index == line_count:
-                    break
-                
-                is_new_line = True
-                write_to_io(output_stream, COMMAND_NEXT_LINE)
-                write_to_io(output_stream, COMMAND_START_LINE)
-                write_to_io(output_stream, prefix_continuous)
-                continue
-            
-            continue
-
-
 class InputStream:
     """
     Helper class for processing a bigger chunk of input data at once.
@@ -1607,47 +1045,6 @@ class InputTokenizer:
         return outcome
 
 
-def write_to_io(io, content):
-    """
-    Writes to the given `io`
-    
-    Parameters
-    ----------
-    io : `file-like`
-        The io to write to.
-    content : `str`
-        The content to write.
-    
-    Raises
-    ------
-    RuntimeError
-        - If the `io` did not became writable within timeout.
-    """
-    file_descriptor = io.fileno()
-    if not get_blocking(file_descriptor):
-        poller = Poller()
-        poller.register(file_descriptor, EVENT_POLL_WRITE)
-        
-        now = monotonic()
-        poll_end = now +  STDOUT_WRITE_TIMEOUT
-        
-        while True:
-            events = poller.poll(poll_end - now)
-            if events:
-                break
-            
-            now = monotonic()
-            if now < poll_end:
-                continue
-            
-            raise RuntimeError(
-                f'The io did not became writable within timeout ({STDOUT_WRITE_TIMEOUT}).'
-            )
-    
-    io.write(content)
-
-
-
 def try_decode(data):
     """
     Tries to decode the given bytes data. On decode error changes decode error handling for that specific part.
@@ -1818,6 +1215,7 @@ class EditorAdvanced(EditorBase):
         tty.setraw(self.input_stream)
         self.selector.register(self.input_stream.fileno(), EVENT_READ)
         self.selector.register(self.output_proxy_read_socket.fileno(), EVENT_READ)
+        
         self.output_stream.flush()
         
         try:
@@ -1835,11 +1233,18 @@ class EditorAdvanced(EditorBase):
         finally:
             self.alive = False
             self._maybe_display_continuous_content()
-            self.display_state.jump_to_end(self)
-            write_to_io(self.output_stream, '\n')
-            write_to_io(self.output_stream, COMMAND_START_LINE)
-            write_to_io(self.output_stream, COMMAND_FORMAT_RESET)
-            self.output_stream.flush()
+            
+            write_buffer = []
+            self.display_state.jump_to_end(
+                write_buffer, self.prefix_length, get_new_content_width(self.prefix_length)
+            )
+            write_buffer.append(COMMAND_DOWN)
+            write_buffer.append(COMMAND_START_LINE)
+            write_buffer.append(COMMAND_FORMAT_RESET)
+            try:
+                self._write_write_buffer(write_buffer)
+            finally:
+                write_buffer = None
             
             termios.tcsetattr(self.input_stream, termios.TCSADRAIN, self.input_stream_settings_original)
             set_blocking(self.input_stream.fileno(), self.input_stream_blocking_original)
@@ -2554,9 +1959,15 @@ class EditorAdvanced(EditorBase):
         
         Called after the editor was started.
         """
-        self.display_state.write(self)
-        
-        self.output_stream.flush()
+        content_width = get_new_content_width(self.prefix_length)
+        write_buffer = []
+        self.display_state.write(
+            write_buffer, self.prefix_length, self.prefix_initial, self.prefix_continuous, content_width
+        )
+        try:
+            self._write_write_buffer(write_buffer)
+        finally:
+            write_buffer = None
     
     
     def update_display(self, new_display_state):
@@ -2573,11 +1984,26 @@ class EditorAdvanced(EditorBase):
         old_display_state = self.display_state
         self.display_state = new_display_state
         
-        old_display_state.clear(self)
-        new_display_state.write(self)
-        new_display_state.write_cursor(self)
+        prefix_length = self.prefix_length
+        content_width = get_new_content_width(prefix_length)
         
-        self.output_stream.flush()
+        write_buffer = []
+        
+        if old_display_state.content_width == content_width:
+            new_display_state.write_difference(
+                old_display_state, write_buffer, prefix_length, self.prefix_initial, self.prefix_continuous
+            )
+        else:
+            old_display_state.clear(write_buffer, prefix_length, content_width)
+            self.display_state.write(
+                write_buffer, prefix_length, self.prefix_initial, self.prefix_continuous, content_width
+            )
+            new_display_state.write_cursor(write_buffer, prefix_length)
+        
+        try:
+            self._write_write_buffer(write_buffer)
+        finally:
+            write_buffer = None
     
     
     def _process_async_content(self, data):
@@ -2586,7 +2012,7 @@ class EditorAdvanced(EditorBase):
         
         Parameters
         ----------
-        content : `bytes`
+        data : `bytes`
             Raw content to write.
         """
         async_output_data_continuous = self.async_output_data_continuous
@@ -2646,27 +2072,38 @@ class EditorAdvanced(EditorBase):
         content : `str`
             The content to write.
         """
-        self.display_state.clear(self)
+        self.output_stream.flush()
+        write_buffer = []
         
         async_output_written = self.async_output_written
+        prefix_length = self.prefix_length
+        
+        content_width = get_new_content_width(prefix_length)
+        
+        self.display_state.clear(write_buffer, prefix_length, content_width)
         
         if async_output_written:
-            write_to_io(self.output_stream, COMMAND_PREVIOUS_LINE)
+            write_buffer.append(COMMAND_UP)
         
         termios.tcsetattr(self.input_stream, termios.TCSADRAIN, self.input_stream_settings_original)
-        write_to_io(self.output_stream, content)
+        write_buffer.append(content)
         tty.setraw(self.input_stream)
         
-        write_to_io(self.output_stream, COMMAND_NEXT_LINE)
-        write_to_io(self.output_stream, COMMAND_START_LINE)
+        write_buffer.append(COMMAND_DOWN)
+        write_buffer.append(COMMAND_START_LINE)
         
         if not async_output_written:
             self.async_output_written = True
         
-        self.display_state.write(self)
-        self.display_state.write_cursor(self)
+        self.display_state.write(
+            write_buffer, prefix_length, self.prefix_initial, self.prefix_continuous, content_width
+        )
+        self.display_state.write_cursor(write_buffer, prefix_length)
         
-        self.output_stream.flush()
+        try:
+            self._write_write_buffer(write_buffer)
+        finally:
+            write_buffer = None
     
     
     def check_exit_conditions(self, old_display_state):
@@ -2806,3 +2243,48 @@ class EditorAdvanced(EditorBase):
         
         buffer = self.history.get_at(index)
         return DisplayState(buffer)
+    
+    
+    def _write_write_buffer(self, write_buffer):
+        if not write_buffer:
+            return
+        
+        try:
+            data = memoryview(''.join(write_buffer).encode())
+        finally:
+            write_buffer = None
+        
+        file_descriptor = self.output_stream.fileno()
+        if not get_blocking(file_descriptor):
+            set_blocking(file_descriptor, False)
+        
+        while True:
+            # Try to write now.
+            try:
+                n = write(file_descriptor, data)
+            except (BlockingIOError, InterruptedError):
+                pass
+            else:
+                data = data[n:]
+                if not data:
+                    return
+            
+            # Wait till io becomes writable again, or timeout.
+            poller = Poller()
+            poller.register(file_descriptor, EVENT_POLL_WRITE)
+            
+            now = monotonic()
+            poll_end = now + WRITE_TIMEOUT
+            
+            while True:
+                events = poller.poll(poll_end - now)
+                if events:
+                    break
+                
+                now = monotonic()
+                if now < poll_end:
+                    continue
+                
+                raise RuntimeError(
+                    f'The file descriptor did not became writable within timeout ({WRITE_TIMEOUT}).'
+                )

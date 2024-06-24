@@ -525,12 +525,12 @@ class SocketTransportLayer(SocketTransportLayerBase):
     def write(self, data):
         if not isinstance(data, (bytes, bytearray, memoryview)):
             raise TypeError(
-                f'`data` can be `bytes-like`, got {data.__class__.__name__}; {reprlib.repr(data)}.'
+                f'`data` can be `bytes-like`, got {type(data).__name__}; {reprlib.repr(data)}.'
             )
         
         if self._at_eof:
             raise RuntimeError(
-                f'Cannot call `.write` after `.write_eof`; self={self!r}.'
+                f'Cannot call `.write` after `.write_eof`; self = {self!r}.'
             )
         
         if not data:

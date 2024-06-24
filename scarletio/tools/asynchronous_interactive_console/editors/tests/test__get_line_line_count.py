@@ -1,83 +1,42 @@
 import vampytest
 
-from ..editor_advanced import get_line_line_count
+from ..display_state import _get_line_line_count
 
 
-def test__get_line_line_count__1():
+def _iter_options():
+    yield 0, 80, 80, 4, 1
+    yield 2, 80, 80, 4, 1
+    yield 100, 100, 50, 7, 2
+    yield 200, 100, 50, 7, 6
+    yield 180, 100, 70, 7, 4
+    yield 199, 100, 70, 7, 4
+    yield 198, 100, 70, 7, 4
+    yield 150, 100, 70, 7, 3
+    yield 170, 100, 70, 7, 3
+
+
+@vampytest._(vampytest.call_from(_iter_options()).returning_last())
+def test__get_line_line_count(line_length, content_width, new_content_width, prefix_length):
     """
-    Tests whether ``get_line_line_count`` returns correct value when lines are pushed in.
+    Tests whether ``_get_line_line_count`` works as intended.
     
-    Case: length: 100; old: 100, new: 50
-    """
-    count = get_line_line_count(100, 100, 50, 7)
-    vampytest.assert_eq(count, 2)
-
-
-def test__get_line_line_count__2():
-    """
-    Tests whether ``get_line_line_count`` returns correct value when lines are pushed in.
+    Parameters
+    ----------
+    line_length : `int`
+        The line's length.
+    content_width : `int`
+        The content field's width.
+    new_content_width : `int`
+        The new column width to use.
+    prefix_length : `int`
+        Prefix length used for calculations when column width is changed.
     
-    Case: length: 200; old: 10, new: 50
+    Returns
+    -------
+    output : `int`
     """
-    count = get_line_line_count(200, 100, 50, 7)
-    vampytest.assert_eq(count, 4)
-
-
-def test__get_line_line_count__3():
-    """
-    Tests whether ``get_line_line_count`` returns correct value when lines are pushed in.
+    output = _get_line_line_count(line_length, content_width, new_content_width, prefix_length)
     
-    Case: length: 190; old: 100, new: 70
-    """
-    count = get_line_line_count(180, 100, 70, 7)
-    vampytest.assert_eq(count, 4)
-
-
-def test__get_line_line_count__4():
-    """
-    Tests whether ``get_line_line_count`` returns correct value when lines are pushed in.
+    vampytest.assert_instance(output, int)
     
-    Case: length: 199; old: 100, new: 70
-    """
-    count = get_line_line_count(199, 100, 70, 7)
-    vampytest.assert_eq(count, 4)
-
-
-def test__get_line_line_count__5():
-    """
-    Tests whether ``get_line_line_count`` returns correct value when lines are pushed in.
-    
-    Case: length: 180; old: 100, new: 70
-    """
-    count = get_line_line_count(198, 100, 70, 7)
-    vampytest.assert_eq(count, 4)
-
-
-def test__get_line_line_count__6():
-    """
-    Tests whether ``get_line_line_count`` returns correct value when lines are pushed in.
-    
-    Case: length: 150; old: 100, new: 70
-    """
-    count = get_line_line_count(150, 100, 70, 7)
-    vampytest.assert_eq(count, 3)
-
-
-def test__get_line_line_count__7():
-    """
-    Tests whether ``get_line_line_count`` returns correct value when lines are pushed in.
-    
-    Case: length: 170; old: 100, new: 70
-    """
-    count = get_line_line_count(170, 100, 70, 7)
-    vampytest.assert_eq(count, 3)
-
-
-def test__get_line_line_count__8():
-    """
-    Tests whether ``get_line_line_count`` returns correct value when lines are pushed in.
-    
-    Case: length: 171; old: 100, new: 70
-    """
-    count = get_line_line_count(172, 100, 70, 7)
-    vampytest.assert_eq(count, 4)
+    return output

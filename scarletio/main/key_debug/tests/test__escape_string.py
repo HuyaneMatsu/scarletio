@@ -1,6 +1,6 @@
 import vampytest
 
-from ..command import escape_string
+from ..command import _escape_string
 
 
 def _iter_options():
@@ -24,6 +24,6 @@ def test__escape_string(input_value):
     -------
     output : `str`
     """
-    output = escape_string(input_value)
+    output = _escape_string(input_value)
     vampytest.assert_instance(output, str)
     return output
