@@ -1,3 +1,10 @@
+# 1.0.73 *\[2024-07-04\]*
+
+#### Bug fixes
+
+- Fix traceback rendering failed on invalid characters in files.
+- Fix traceback rendering let python decide file encoding (it decided to choose a wrong one obviously).
+
 # 1.0.72 *\[2024-07-04\]*
 
 #### Bug fixes
