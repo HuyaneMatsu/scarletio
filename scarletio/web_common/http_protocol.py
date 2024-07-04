@@ -19,11 +19,11 @@ from .mime_type import MimeType
 from .websocket_frame import WebSocketFrame, apply_websocket_mask
 
 
-HTTP_STATUS_RP = re_compile(b'HTTP/(\d)\.(\d) (\d\d\d)(?: (.*?))?\r\n')
-HTTP_REQUEST_RP = re_compile(b'([^ ]+) ([^ ]+) HTTP/(\d)\.(\d)\r\n')
+HTTP_STATUS_RP = re_compile(b'HTTP/(\\d+)\\.(\\d+) (\\d\\d\\d)(?: (.*?))?\r\n')
+HTTP_REQUEST_RP = re_compile(b'([^ ]+) ([^ ]+) HTTP/(\\d+)\\.(\\d+)\r\n')
 
-HTTP_STATUS_LINE_RP = re_compile(b'HTTP/(\d)\.(\d) (\d\d\d)(?: (.*?))?')
-HTTP_REQUEST_LINE_RP = re_compile(b'([^ ]+) ([^ ]+) HTTP/(\d)\.(\d)')
+HTTP_STATUS_LINE_RP = re_compile(b'HTTP/(\\d+)\\.(\\d+) (\\d\\d\\d)(?: (.*?))?')
+HTTP_REQUEST_LINE_RP = re_compile(b'([^ ]+) ([^ ]+) HTTP/(\\d+)\\.(\\d+)')
 
 MAX_LINE_LENGTH = 8190
 

@@ -5,10 +5,14 @@ from re import compile as re_compile
 from .word_pattern import create_word_pattern
 
 
-COMPLEX_RP = re_compile('((?:\d(?:_?\d)*\.\d(?:_?\d)*|\d(?:_?\d)*\.|\.\d(?:_?\d)*)(?:[eE][+-]?\d(?:_?\d)*)?[jJ])')
-FLOAT_RP = re_compile('((?:\d(?:_?\d)*\.\d(?:_?\d)*|\d(?:_?\d)*\.|\.\d(?:_?\d)*)(?:[eE][+-]?\d(?:_?\d)*)?)')
+COMPLEX_RP = re_compile(
+    '((?:\\d(?:_?\\d)*\\.\\d(?:_?\\d)*|\\d(?:_?\\d)*\\.|\\.\\d(?:_?\\d)*)(?:[eE][+-]?\\d(?:_?\\d)*)?[jJ])'
+)
+FLOAT_RP = re_compile(
+    '((?:\\d(?:_?\\d)*\\.\\d(?:_?\\d)*|\\d(?:_?\\d)*\\.|\\.\\d(?:_?\\d)*)(?:[eE][+-]?\\d(?:_?\\d)*)?)'
+)
 INTEGER_HEXADECIMAL_RP = re_compile('(0[xX](?:_?[0-9a-fA-F])+)')
-INTEGER_DECIMAL_RP = re_compile('(\d(?:_?\d)*)')
+INTEGER_DECIMAL_RP = re_compile('(\\d(?:_?\\d)*)')
 INTEGER_OCTAL_RP = re_compile('(0[oO](?:_?[0-7])+)')
 INTEGER_BINARY_RP = re_compile('(0[bB](?:_?[01])+)')
 IDENTIFIER_RP = re_compile('([a-zA-Z_][a-zA-Z_0-9]*)')
@@ -92,11 +96,11 @@ STRING_MULTI_LINE_END_DOUBLE_RP = re_compile('(.*?)(?<!\\\\)\"\"\"|\"\"\"')
 
 SPACE_MATCH_RP = re_compile('([ \t]+)')
 
-FORMAT_STRING_MATCH_STRING = re_compile('(.*?)(\{\{?|\}\}?|\n)')
+FORMAT_STRING_MATCH_STRING = re_compile('(.*?)(\\{\\{?|\\}\\}?|\n)')
 
-CONSOLE_PREFIX_RP = re_compile('(>>>>?|\.\.\.\.?| *\.\.\.\:|In \[\d+\]\:)( [ \t]*)')
+CONSOLE_PREFIX_RP = re_compile('(>>>>?|\\.\\.\\.\\.?| *\\.\\.\\.\\:|In \\[\\d+\\]\\:)( [ \t]*)')
 
-FORMAT_STRING_POSTFIX_RP = re_compile('(![sraSRA])\}')
+FORMAT_STRING_POSTFIX_RP = re_compile('(![sraSRA])\\}')
 
 PUNCTUATION_WP = create_word_pattern(PUNCTUATIONS)
 OPERATOR_WP = create_word_pattern(OPERATORS)

@@ -294,9 +294,9 @@ class PrefixTrimmer:
 
 
 PREFIX_TRIMMERS = (
-    PrefixTrimmer('In \[\d+\]\: ', ' +\.\.\.\: ', ' +\.\.\.\: ?', None), # scarletio
-    PrefixTrimmer('\>\>\> ', '\.\.\. ', '\.\.\. ?', ['...']), # cpython
-    PrefixTrimmer('\>\>\>\> ', '\.\.\.\. ', '\.\.\.\. ?', None), # pypy
+    PrefixTrimmer('In \\[\\d+\\]\\: ', ' +\\.\\.\\.\\: ', ' +\\.\\.\\.\\: ?', None), # scarletio
+    PrefixTrimmer('\\>\\>\\> ', '\\.\\.\\. ', '\\.\\.\\. ?', ['...']), # cpython
+    PrefixTrimmer('\\>\\>\\>\\> ', '\\.\\.\\.\\. ', '\\.\\.\\.\\. ?', None), # pypy
 )
 
 

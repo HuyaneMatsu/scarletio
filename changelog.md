@@ -1,3 +1,11 @@
+# 1.0.72 *\[2024-07-04\]*
+
+#### Bug fixes
+
+- Fix `EditorAdvanced` showing async content incorrectly. (Since 1.0.71)
+- Allow multi-digit http versions.
+- Fix `SyntaxWarning`-s on python 3.12.
+
 # 1.0.71 *\[2024-06-24\]*
 
 #### Improvements

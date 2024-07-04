@@ -37,7 +37,7 @@ AUTO_COMPLETE_BREAK_CHARACTERS = frozenset((
 ))
 
 
-INDEXED_INPUT_RP = re.compile('\s*in\s*\[\s*(\d+)\s*\]\s*', re.I)
+INDEXED_INPUT_RP = re.compile('\\s*in\\s*\\[\\s*(\\d+)\\s*\\]\\s*', re.I)
 
 
 WRITE_TIMEOUT = 30.0
@@ -71,7 +71,7 @@ class KeyNode:
     
     def __repr__(self):
         """Returns the key node's representation."""
-        repr_parts = ['<', self.__class__.__name__]
+        repr_parts = ['<', type(self).__name__]
         
         field_added = False
         
@@ -2073,6 +2073,8 @@ class EditorAdvanced(EditorBase):
             The content to write.
         """
         self.output_stream.flush()
+        
+        # Clear display state
         write_buffer = []
         
         async_output_written = self.async_output_written
@@ -2085,10 +2087,25 @@ class EditorAdvanced(EditorBase):
         if async_output_written:
             write_buffer.append(COMMAND_UP)
         
+        try:
+            self._write_write_buffer(write_buffer)
+        finally:
+            write_buffer = None
+        write_buffer = []
+        
+        # Write async content
         termios.tcsetattr(self.input_stream, termios.TCSADRAIN, self.input_stream_settings_original)
         write_buffer.append(content)
+        
+        try:
+            self._write_write_buffer(write_buffer)
+        finally:
+            write_buffer = None
+        write_buffer = []
+        
         tty.setraw(self.input_stream)
         
+        # Rewrite display state
         write_buffer.append(COMMAND_DOWN)
         write_buffer.append(COMMAND_START_LINE)
         
