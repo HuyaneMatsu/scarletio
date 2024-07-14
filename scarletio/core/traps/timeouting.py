@@ -1,7 +1,5 @@
-__all__ = ('future_or_timeout', 'repeat_timeout',)
+__all__ = ('repeat_timeout',)
 
-import warnings
-from datetime import datetime as DateTime
 from threading import current_thread
 
 from ...utils import include
@@ -9,59 +7,10 @@ from ...utils import include
 from ..exceptions import CancelledError
 from ..time import LOOP_TIME
 
-from .handle_cancellers import _TimeoutHandleCanceller
 from .task import Task
 
 
 EventThread = include('EventThread')
-
-DEPRECATED = DateTime.utcnow() > DateTime(2023, 7, 18)
-
-
-def future_or_timeout(future, timeout):
-    """
-    If the given ``Future`` is not done till the given `timeout` occurs, sett `TimeoutError` as it's exception.
-    If the `future` is a task, cancels the task and propagates `TimeoutError` outside instead of `CancelledError`.
-    
-    Deprecated and will be removed in 2024.
-    
-    Parameters
-    ----------
-    future : ``Future``
-        The future to set the timeout to.
-    timeout : `float`
-        The time after the given `future`'s exception is set as `TimeoutError`.
-    
-    Returns
-    -------
-    future : ``Future``
-    
-    Raises
-    ------
-    RuntimeError
-        The future's event loop is already stopped.
-    """
-    if DEPRECATED:
-        warnings.warn(
-            (
-                f'{future_or_timeout.__name__} is deprecated and will be removed in 2024 february.'
-                f'Please use `TaskGroup` instead accordingly.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-    
-    loop = future._loop
-    callback = _TimeoutHandleCanceller()
-    handle = loop.call_after(timeout, callback, future)
-    if handle is None:
-        raise RuntimeError(
-            f'`future_or_timeout` was called on future with a stopped loop; loop = {loop!r}.'
-        )
-    
-    callback._handle = handle
-    future.add_done_callback(callback)
-    return future
 
 
 class repeat_timeout:

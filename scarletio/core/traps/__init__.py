@@ -17,8 +17,6 @@ from .timeouting import *
 
 
 __all__ = (
-    'FutureSyncWrapper',
-    'FutureAsyncWrapper',
     *async_executing.__all__,
     *event.__all__,
     *future.__all__,
@@ -36,43 +34,3 @@ __all__ = (
     *task_thread_switcher.__all__,
     *timeouting.__all__,
 )
-
-# Deprecations
-
-from warnings import warn
-
-
-class FutureSyncWrapper(FutureWrapperSync):
-    """
-    Deprecated and will be removed in 2024 february. Please use ``FutureWrapperSync`` instead.
-    """
-    __slots__ = ()
-        
-    def __new__(cls, future, loop):
-        warn(
-            (
-                f'`{cls.__name__}` is deprecated and will be removed in 2024. '
-                f'Please use {FutureWrapperSync.__name__} instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return FutureWrapperSync.__new__(cls, future, loop)
-
-
-class FutureAsyncWrapper(FutureWrapperAsync):
-    """
-    Deprecated and will be removed in 2024 february. Please use ``FutureWrapperAsync`` instead.
-    """
-    __slots__ = ()
-    
-    def __new__(cls, future, loop):
-        warn(
-            (
-                f'`{cls.__name__}` is deprecated and will be removed in 2024. '
-                f'Please use {FutureWrapperAsync.__name__} instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return FutureWrapperAsync.__new__(cls, future, loop)

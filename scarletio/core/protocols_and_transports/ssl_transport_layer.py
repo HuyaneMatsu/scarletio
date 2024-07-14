@@ -62,10 +62,18 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
         '_write_backlog'
     )
     
-    def __new__(cls, loop, protocol, ssl_context, connection_made_waiter, server_side, server_host_name,
-            call_connection_made):
+    def __new__(
+        cls,
+        loop,
+        protocol,
+        ssl_context,
+        connection_made_waiter,
+        server_side,
+        server_host_name,
+        call_connection_made,
+    ):
         """
-        Creates a new ``SSLProtocol``.
+        Creates a new ssl protocol layer.
         
         Parameters
         ----------
@@ -265,7 +273,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
     
     def _write_application_data(self, data):
         """
-        Writes data to the ``SSLProtocol`` to be sent.
+        Writes data to be sent.
         
         Parameters
         ----------
@@ -383,7 +391,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
     
     def _finalize(self):
         """
-        Closes the ``SSLProtocol``'s transport.
+        Closes the ssl protocol's transport.
         
         Called after shutdown or abortion.
         """

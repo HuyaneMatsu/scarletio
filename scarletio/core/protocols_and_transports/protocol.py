@@ -5,7 +5,7 @@ from collections import deque
 from ...utils import copy_docs
 
 from ..exceptions import CancelledError
-from ..traps import Future, Task, future_or_timeout, skip_ready_cycle
+from ..traps import Future, Task, skip_ready_cycle
 
 from .abstract import AbstractProtocolBase
 

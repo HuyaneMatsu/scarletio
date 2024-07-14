@@ -826,7 +826,7 @@ class HTTPClient:
         return RequestContextManager(self._request(METHOD_DELETE, url, headers, **kwargs))
     
     
-    def connect_websocket(self, url, **kwargs):
+    def connect_websocket(self, url, **keyword_parameters):
         """
         Connect a websocket client to the given url.
         
@@ -834,7 +834,7 @@ class HTTPClient:
         ----------
         url : `str`, ``URL``
             The url to connect to.
-        **kwargs : Keyword Parameters
+        **keyword_parameters : Keyword Parameters
             Additional keyword parameters.
         
         Other Parameters
@@ -866,5 +866,9 @@ class HTTPClient:
         max_queue : `None`, `int`, Optional (Keyword only)
             Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of it is
             removed.
+        
+        Returns
+        -------
+        websocket_context_manager : ``WebSocketContextManager``
         """
-        return WebSocketContextManager(WebSocketClient(self.loop, url, **kwargs, http_client = self))
+        return WebSocketContextManager(WebSocketClient(self.loop, url, **keyword_parameters, http_client = self))

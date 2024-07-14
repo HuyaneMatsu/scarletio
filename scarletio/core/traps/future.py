@@ -1,9 +1,7 @@
 __all__ = ('Future',)
 
 import sys
-from datetime import datetime as DateTime
 from types import MethodType
-from warnings import warn
 
 from ...utils import ignore_frame, include, to_coroutine
 
@@ -26,8 +24,6 @@ ignore_frame(__spec__.origin, 'get_result', 'raise CancelledError')
 ignore_frame(__spec__.origin, '__iter__', 'yield self',)
 ignore_frame(__spec__.origin, '__iter__', 'return self.get_result()',)
 
-
-SILENCE_DEPRECATED =  DateTime.utcnow() > DateTime(2023, 11, 12)
 
 
 def _set_timeout_if_pending(future):
@@ -644,107 +640,3 @@ class Future:
         callbacks = self._callbacks
         if (callbacks is not None):
             yield from callbacks
-    
-    
-    # Deprecations
-    
-    
-    def cancelled(self):
-        warn(
-            (
-                f'`{self.__class__.__name__}.cancelled` is deprecated and will be removed in 2023 November. '
-                f'Please use `.is_cancelled()` instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return self.is_cancelled()
-    
-    
-    def pending(self):
-        warn(
-            (
-                f'`{self.__class__.__name__}.pending` is deprecated and will be removed in 2023 November. '
-                f'Please use `.is_pending()` instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return self.is_pending()
-    
-    
-    def done(self):
-        warn(
-            (
-                f'`{self.__class__.__name__}.done` is deprecated and will be removed in 2023 November. '
-                f'Please use `.is_done()` instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return self.is_done()
-    
-    
-    @property
-    def result(self):
-        warn(
-            (
-                f'`{self.__class__.__name__}.result` is deprecated and will be removed in 2023 November. '
-                f'Use `.get_result()` instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return self.get_result
-    
-    
-    @property
-    def exception(self):
-        warn(
-            (
-                f'`{self.__class__.__name__}.exception` is deprecated and will be removed in 2023 November. '
-                f'Use `.get_exception()` instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return self.get_exception
-    
-    
-    if __debug__:
-        def __silence__(self):
-            """
-            Silences the future's `__del__`, so it will not notify if it would.
-            
-            Deprecated and will be removed in 2024 February.
-            
-            Notes
-            -----
-            This method is present only if `__debug__` is set as `True`.
-            """
-            if SILENCE_DEPRECATED:
-                warn(
-                    (
-                        f'`{self.__class__.__name__}.__silence__` is deprecated and will be removed in 2024 february.'
-                        f'Please use `.silence()` instead.'
-                    ),
-                    FutureWarning,
-                    stacklevel = 2,
-                )
-            
-            self.silence()
-    
-    
-    @property
-    def _exception(self):
-        """
-        Deprecated and will be removed in 2024 february.
-        """
-        warn(
-            f'`{self.__class__.__name__}._exception` is deprecated and will be removed in 2024 february.',
-            FutureWarning,
-            stacklevel = 2,
-        )
-        
-        if self._state & FUTURE_STATE_RESULT_RAISE:
-            return self._result

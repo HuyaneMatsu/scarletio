@@ -9,6 +9,52 @@ from .exception_representation import (
 )
 
 
+def render_exception_proxy_into(exception, into, highlighter):
+    """
+    Renders the given frame groups.
+    
+    Parameters
+    ----------
+    exception : ``ExceptionProxyBase``
+        The frame groups to render.
+    into : `list<str>`
+        The list of strings to render the representation into.
+    highlighter : `None`, ``HighlightFormatterContext``
+        Stores how the output should be highlighted.
+    
+    Returns
+    -------
+    into : `list<str>`
+    """
+    into = render_frame_groups_into(exception.frame_groups, into, highlighter)
+    into = render_exception_representation_into(exception.exception_representation, into, highlighter)
+    return into
+
+
+def render_frame_groups_into(frame_groups, into, highlighter):
+    """
+    Renders the given frame groups.
+    
+    Parameters
+    ----------
+    frame_groups : `None | list<FrameGroup>`
+        The frame groups to render.
+    into : `list<str>`
+        The list of strings to render the representation into.
+    highlighter : `None`, ``HighlightFormatterContext``
+        Stores how the output should be highlighted.
+    
+    Returns
+    -------
+    into : `list<str>`
+    """
+    if (frame_groups is not None):
+        for frame_group in frame_groups:
+            into = render_frame_group_into(frame_group, into, highlighter)
+    
+    return into
+
+
 def _build_frames_repeated_line(frame_count, repeat_count):
     """
     Builds the `frames repeated` line.
@@ -56,7 +102,7 @@ def render_frame_group_into(frame_group, into, highlighter):
     frames = frame_group.frames
     if frames is None:
         # Empty frame group, should not happen.
-        return
+        return into
     
     repeat_count = frame_group.repeat_count
     if (repeat_count > 1):
@@ -69,7 +115,7 @@ def render_frame_group_into(frame_group, into, highlighter):
         into.append('\n')
     
     for frame in frames:
-        into = render_frame_into(frame, into, highlighter)
+        into = render_frame_proxy_into(frame, into, highlighter)
     
     if (repeat_count > 1):
         into = _add_typed_part_into(
@@ -83,7 +129,7 @@ def render_frame_group_into(frame_group, into, highlighter):
     return into
 
 
-def render_frame_into(frame, into, highlighter):
+def render_frame_proxy_into(frame, into, highlighter):
     """
     Produces each part of the frame to render.
     

@@ -1,6 +1,5 @@
 __all__ = ()
 
-from datetime import datetime as DateTime
 from warnings import warn
 
 from ...utils import copy_docs
@@ -9,7 +8,6 @@ from .future import Future
 from .future_repr import render_callbacks_into, render_future_into, render_result_into, render_state_into
 
 
-SILENCE_DEPRECATED =  DateTime.utcnow() > DateTime(2023, 11, 12)
 
 CANCELLATION_TIMEOUT = 0.0004
 
@@ -201,30 +199,6 @@ class FutureWrapperBase:
     
     # Deprecations
     
-    if __debug__:
-        def __silence__(self):
-            """
-            Silences the future's `__del__`, so it will not notify if it would.
-            
-            Deprecated and will be removed in 2024 February.
-            
-            Notes
-            -----
-            This method is present only if `__debug__` is set as `True`.
-            """
-            if SILENCE_DEPRECATED:
-                warn(
-                    (
-                        f'`{self.__class__.__name__}.__silence__` is deprecated and will be removed in 2024 february.'
-                        f'Please use `.silence()` instead.'
-                    ),
-                    FutureWarning,
-                    stacklevel = 2,
-                )
-            
-            self.silence()
-    
-
     def cancelled(self):
         warn(
             f'`{self.__class__.__name__}.cancelled` is deprecated.',
@@ -250,29 +224,3 @@ class FutureWrapperBase:
             stacklevel = 2,
         )
         return self.is_pending()
-    
-    
-    @property
-    def result(self):
-        warn(
-            (
-                f'`{self.__class__.__name__}.result` is deprecated and will be removed in 2023 November. '
-                f'Use `.get_result()` instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return self.get_result
-    
-    
-    @property
-    def exception(self):
-        warn(
-            (
-                f'`{self.__class__.__name__}.result` is deprecated and will be removed in 2023 November. '
-                f'Use `.get_result()` instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return self.get_exception

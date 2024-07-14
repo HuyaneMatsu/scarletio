@@ -864,3 +864,134 @@ def test__FrameGroup__get_last_frame(frame_group):
     output = frame_group.get_last_frame()
     vampytest.assert_instance(output, FrameProxyBase, nullable = True)
     return output
+
+
+def test__FrameGroup__copy_without_variables():
+    """
+    Tests whether ``FrameGroup.copy_without_variables`` works as intended.
+    """
+    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py', locals = {'hey': 'mister'})
+    frame_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_2 = FrameProxyVirtual.from_fields(file_name = 'koishi.py', locals = {'hey': 'mister'})
+    frame_3 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    
+    frame_group = FrameGroup()
+    frame_group.try_add_frame(frame_0)
+    frame_group.try_add_frame(frame_2)
+    
+    frame_group_expected = FrameGroup()
+    frame_group_expected.try_add_frame(frame_1)
+    frame_group_expected.try_add_frame(frame_3)
+    
+    copy = frame_group.copy_without_variables()
+    _assert_fields_set(copy)
+    vampytest.assert_is_not(copy, frame_group)
+    
+    vampytest.assert_eq(copy, frame_group_expected)
+
+
+def test__FrameGroup__drop_ignored_frames():
+    """
+    Tests whether ``FrameGroup.drop_ignored_frames`` works as intended.
+    
+    Case: No frames.
+    """
+    frame_group = FrameGroup()
+    frame_group_expected = FrameGroup()
+    
+    frame_group.drop_ignored_frames()
+    vampytest.assert_eq(frame_group, frame_group_expected)
+
+
+def test__FrameGroup__drop_ignored_frames__with_frames():
+    """
+    Tests whether ``FrameGroup.drop_ignored_frames`` works as intended.
+    
+    Case: has frames.
+    """
+    def filter(frame):
+        return frame.file_name == 'satori.py'
+    
+    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    
+    frame_group = FrameGroup()
+    frame_group.try_add_frame(frame_0)
+    frame_group.try_add_frame(frame_1)
+    
+    frame_group_expected = FrameGroup()
+    frame_group_expected.try_add_frame(frame_0)
+    
+    frame_group.drop_ignored_frames(filter = filter)
+    vampytest.assert_eq(frame_group, frame_group_expected)
+
+
+def test__FrameGroup__drop_ignored_frames__with_frames_to_no_frames():
+    """
+    Tests whether ``FrameGroup.drop_ignored_frames`` works as intended.
+    
+    Case: has frames to has no frames.
+    """
+    def filter(frame):
+        return False
+    
+    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    
+    frame_group = FrameGroup()
+    frame_group.try_add_frame(frame_0)
+    frame_group.try_add_frame(frame_1)
+    
+    frame_group_expected = FrameGroup()
+    
+    frame_group.drop_ignored_frames(filter = filter)
+    vampytest.assert_eq(frame_group, frame_group_expected)
+
+
+def test__FrameGroup__iter_frames_no_repeat__empty():
+    """
+    Tests whether ``FrameGroup.iter_frames_no_repeat`` works as intended.
+    
+    Case: Empty.
+    """
+    frame_group = FrameGroup()
+    
+    output = [*frame_group.iter_frames_no_repeat()]
+    vampytest.assert_eq(output, [])
+    vampytest.assert_is(frame_group.frames, None)
+
+
+def test__FrameGroup__iter_frames_no_repeat__non_repeated():
+    """
+    Tests whether ``FrameGroup.iter_frames_no_repeat`` works as intended.
+    
+    Case: Non-repeated.
+    """
+    frame_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_group = FrameGroup()
+    frame_group.try_add_frame(frame_0)
+    frame_group.try_add_frame(frame_1)
+    
+    output = [*frame_group.iter_frames_no_repeat()]
+    vampytest.assert_eq(output, [frame_0, frame_1])
+    vampytest.assert_eq(frame_group.frames, [frame_0, frame_1])
+
+
+def test__FrameGroup__iter_frames_no_repeat__repeated():
+    """
+    Tests whether ``FrameGroup.iter_frames_no_repeat`` works as intended.
+    
+    Case: Repeated.
+    """
+    frame_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    
+    repeat_count = 2
+    frames = [frame_0, frame_1]
+    
+    frame_group = FrameGroup._create_repeated(frames, repeat_count)
+    
+    output = [*frame_group.iter_frames_no_repeat()]
+    vampytest.assert_eq(output, [frame_0, frame_1])
+    vampytest.assert_eq(frame_group.frames, [frame_0, frame_1])

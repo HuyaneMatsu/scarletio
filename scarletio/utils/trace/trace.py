@@ -1,12 +1,11 @@
 __all__ = ('render_exception_into', 'render_frames_into',)
 
 from ..cause_group import CauseGroup
-
-from .exception_representation import get_exception_representation
-from .frame_ignoring import should_ignore_frame
+from .exception_proxy import ExceptionProxyRich
 from .frame_grouping import group_frames
-from .frame_proxy import convert_frames_to_frame_proxies, populate_frame_proxies, get_exception_frames
-from .rendering import render_frame_group_into, add_trace_title_into, render_exception_representation_into
+from .frame_ignoring import should_ignore_frame
+from .frame_proxy import convert_frames_to_frame_proxies, populate_frame_proxies
+from .rendering import render_frame_groups_into, add_trace_title_into, render_exception_proxy_into
 
 
 def render_frames_into(frames, extend = None, *, filter = None, highlighter = None):
@@ -41,8 +40,7 @@ def render_frames_into(frames, extend = None, *, filter = None, highlighter = No
     frames = [frame for frame in frames if not should_ignore_frame(frame, filter = filter)]
     frame_groups = group_frames(frames)
     
-    for frame_group in frame_groups:
-        extend = render_frame_group_into(frame_group, extend, highlighter)
+    render_frame_groups_into(frame_groups, extend, highlighter)
     
     return extend
 
@@ -124,15 +122,10 @@ def render_exception_into(exception, extend = None, *, filter = None, highlighte
             extend = add_trace_title_into('Traceback (most recent call last):', extend, highlighter)
             extend.append('\n')
             
-            extend = render_frames_into(
-                get_exception_frames(exception),
-                extend,
-                filter = filter,
-                highlighter = highlighter,
-            )
-            
-            exception_representation = get_exception_representation(exception, None)
-            extend = render_exception_representation_into(exception_representation, extend, highlighter)
+            exception_proxy = ExceptionProxyRich(exception)
+            populate_frame_proxies([*exception_proxy.iter_frames_no_repeat()])
+            exception_proxy.drop_ignored_frames(filter = filter)
+            extend = render_exception_proxy_into(exception_proxy, extend, highlighter)
             
             if reason_type == REASON_TYPE_NONE:
                 break

@@ -36,7 +36,7 @@ def test__get_file_line__in_cache():
 
 
 class OpenMock:
-    def __new__(cls, file_name, mode):
+    def __new__(cls, file_name, mode, *, encoding = None, errors = None):
         self = object.__new__(cls)
         self.file_name = file_name
         self.mode = mode

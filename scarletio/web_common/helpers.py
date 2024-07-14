@@ -297,6 +297,7 @@ class Timeout:
         
         self._task = None
     
+    
     def __enter__(self):
         """
         Enters the timeouter as a context manager.
@@ -315,7 +316,7 @@ class Timeout:
         task = self._loop.current_task
         if (task is None):
             raise RuntimeError(
-                f'`{self.__class__.__name__}` entered outside of a `{Task.__name__}`!'
+                f'`{type(self).__name__}` entered outside of a `{Task.__name__}`!'
             )
         
         state = self._state
@@ -327,10 +328,11 @@ class Timeout:
             pass
         else:
             raise RuntimeError(
-                f'`{self.__class__.__name__}` already used.'
+                f'`{type(self).__name__}` already used.'
             )
         
         return self
+    
     
     def _timeout(self):
         """
@@ -349,7 +351,8 @@ class Timeout:
         if (task is not None):
             task.cancel()
     
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    
+    def __exit__(self, exception_type, exception_value, exception_traceback):
         """
         Exits from the timeouter. If the timeout occurs, then raises ``TimeoutError`` from the received cancellation.
         """
@@ -362,14 +365,15 @@ class Timeout:
         
         state = self._state
         self._state = TIMEOUT_STATE_EXITED
-        if (state == TIMEOUT_STATE_TIMED_OUT) and (exc_type is CancelledError):
+        if (state == TIMEOUT_STATE_TIMED_OUT) and isinstance(exception_type, CancelledError):
             raise TimeoutError from None
         
         return False
     
+    
     def __repr__(self):
         """Returns the timeout's representation."""
-        return f'<{self.__class__.__name__}>'
+        return f'<{type(self).__name__}>'
 
 
 def tcp_nodelay(transport, value):

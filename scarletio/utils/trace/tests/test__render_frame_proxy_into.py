@@ -4,7 +4,7 @@ from ...highlight import DEFAULT_ANSI_HIGHLIGHTER
 
 from ..expression_parsing import ExpressionInfo
 from ..frame_proxy import FrameProxyVirtual
-from ..rendering import render_frame_into
+from ..rendering import render_frame_proxy_into
 
 
 def _get_input_frame():
@@ -23,14 +23,14 @@ def _get_expected_output_string():
     )
 
 
-def test__render_frame_into__no_highlighter():
+def test__render_frame_proxy_into__no_highlighter():
     """
-    Tests whether ``render_frame_into`` works as intended.
+    Tests whether ``render_frame_proxy_into`` works as intended.
     
     Case: No highlighter.
     """
     frame_proxy = _get_input_frame()
-    output = render_frame_into(frame_proxy, [], None)
+    output = render_frame_proxy_into(frame_proxy, [], None)
     
     vampytest.assert_instance(output, list)
     
@@ -41,14 +41,14 @@ def test__render_frame_into__no_highlighter():
     vampytest.assert_eq(output_string, _get_expected_output_string())
 
 
-def test__render_frame_into__with_highlighter():
+def test__render_frame_proxy_into__with_highlighter():
     """
-    Tests whether ``render_frame_into`` works as intended.
+    Tests whether ``render_frame_proxy_into`` works as intended.
     
     Case: With highlighter.
     """
     frame_proxy = _get_input_frame()
-    output = render_frame_into(frame_proxy, [], DEFAULT_ANSI_HIGHLIGHTER)
+    output = render_frame_proxy_into(frame_proxy, [], DEFAULT_ANSI_HIGHLIGHTER)
     
     vampytest.assert_instance(output, list)
     

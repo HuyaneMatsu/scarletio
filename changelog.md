@@ -1,3 +1,18 @@
+# 1.0.74 *\[2024-07-14\]*
+
+#### Improvements
+
+- Add `FrameGroup.copy_without_variables`.
+- Add `FrameGroup.drop_ignored_frames`.
+- Add `FrameGroup.iter_frames_no_repeat`.
+
+##### ext.asyncio
+- Add every missing python 3.11 and python 3.12 asyncio features.
+
+#### Bug fixes
+
+- Fix `Deprecationwarning`-s on python 3.12.
+
 # 1.0.73 *\[2024-07-04\]*
 
 #### Bug fixes

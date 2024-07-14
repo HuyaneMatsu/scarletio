@@ -3,7 +3,6 @@ __all__ = ('EventThread', )
 import errno, os, subprocess, sys
 import socket as module_socket
 from collections import deque
-from datetime import datetime as DateTime
 from functools import partial as partial_func
 from heapq import heappop, heappush
 from itertools import chain
@@ -11,7 +10,6 @@ from selectors import DefaultSelector, EVENT_READ, EVENT_WRITE
 from ssl import SSLContext, create_default_context
 from stat import S_ISSOCK
 from threading import Thread, current_thread
-from warnings import warn
 
 from ...utils import IS_UNIX, Reference, WeakSet, alchemy_incendiary, copy_docs, export, include, is_coroutine
 
@@ -36,9 +34,6 @@ from .server import Server
 
 write_exception_async = include('write_exception_async')
 write_exception_maybe_async = include('write_exception_maybe_async')
-
-
-CALL_LATER_DEPRECATED = DateTime.utcnow() > DateTime(2024, 1, 1)
 
 
 @export
@@ -233,23 +228,6 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         return ''.join(repr_parts)
     
     
-    def call_later(self, delay, callback, *args):
-        """
-        Deprecated and will be removed in 2024 August. Please use ``.call_after`` instead.
-        """
-        if CALL_LATER_DEPRECATED:
-            warn(
-                (
-                    f'`{self.__class__.__name__}.call_later` is deprecated and will be removed in 2024 August. '
-                    f'Please use `.call_after` instead.'
-                ),
-                FutureWarning,
-                stacklevel = 2,
-            )
-        
-        return self.call_after(delay, callback, *args)
-    
-    
     def call_after(self, delay, callback, *args):
         """
         Schedule callback to be called after the given delay.
@@ -302,23 +280,6 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         handle = TimerHandle(when, callback, args)
         heappush(self._scheduled, handle)
         return handle
-    
-    
-    def call_later_weak(self, delay, callback, *args):
-        """
-        Deprecated and will be removed in 2024 August. Please use ``.call_after_weak`` instead.
-        """
-        if CALL_LATER_DEPRECATED:
-            warn(
-                (
-                    f'`{self.__class__.__name__}.call_later_weak` is deprecated and will be removed in 2024 August. '
-                    f'Please use `.call_after_weak` instead.'
-                ),
-                FutureWarning,
-                stacklevel = 2,
-            )
-        
-        return self.call_after_weak(delay, callback, *args)
     
     
     def call_after_weak(self, delay, callback, *args):

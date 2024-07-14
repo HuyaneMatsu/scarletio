@@ -1,7 +1,6 @@
 __all__ = ('Task',)
 
 import sys
-from datetime import datetime as DateTime
 from threading import current_thread
 from types import AsyncGeneratorType as CoroutineGeneratorType, CoroutineType, GeneratorType
 from warnings import warn
@@ -30,8 +29,6 @@ ignore_frame(__spec__.origin, '_step', 'result = self._coroutine.throw(Cancelled
 ignore_frame(__spec__.origin, '_step', 'result = self._coroutine.send(None)')
 
 EventThread = include('EventThread')
-
-CONSTRUCTOR_CHANGE_DEPRECATED = DateTime.utcnow() > DateTime(2023, 12, 12)
 
 
 @export
@@ -84,19 +81,6 @@ class Task(Future):
         coroutine : `CoroutineType`, `GeneratorType`
             The coroutine, what the task will on the respective event loop.
         """
-        if isinstance(coroutine, EventThread):
-            loop, coroutine = coroutine, loop
-            
-            if CONSTRUCTOR_CHANGE_DEPRECATED:
-                warn(
-                    (
-                        f'`{cls.__name__}(coroutine, loop)` is deprecated and will be removed in 2024 Jun.'
-                        f'Please use `{cls.__name__}(loop, coroutine)` instead accordingly.'
-                    ),
-                    FutureWarning,
-                    stacklevel = 2,
-                )
-        
         self = object.__new__(cls)
         self._blocking = False
         self._callbacks = []

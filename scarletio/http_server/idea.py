@@ -565,7 +565,7 @@ PARAMETER_NAME_TYPE_RELATION = {
     'float' : PARAMETER_TYPE_FLOAT  ,
     'path'  : PARAMETER_TYPE_PATH   ,
     'uuid'  : PARAMETER_TYPE_UUID   ,
-        }
+}
 
 def maybe_typed_rule_part(part):
     """
@@ -1243,6 +1243,7 @@ class PathRouter:
         if (route_end_path_all is not None):
             rule, parameter_name = route_end_path_all
             rule.validate_parameters()
+
 
 class AbortRequest(BaseException):
     """

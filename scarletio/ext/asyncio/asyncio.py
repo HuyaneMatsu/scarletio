@@ -1,35 +1,43 @@
 __all__ = (
     'ALL_COMPLETED', 'AbstractChildWatcher', 'AbstractEventLoop', 'AbstractEventLoopPolicy', 'AbstractServer',
-    'BaseEventLoop', 'BaseProactorEventLoop', 'BaseProtocol', 'BaseSelectorEventLoop', 'BaseTransport',
-    'BoundedSemaphore', 'BufferedProtocol', 'CancelledError', 'Condition', 'DatagramProtocol', 'DatagramTransport',
-    'DefaultEventLoopPolicy', 'Event', 'FIRST_COMPLETED', 'FIRST_EXCEPTION', 'FastChildWatcher', 'Future', 'Handle',
-    'IncompleteReadError', 'InvalidStateError', 'IocpProactor', 'LifoQueue', 'LimitOverrunError', 'Lock',
-    'MultiLoopChildWatcher', 'PIPE', 'PidfdChildWatcher', 'PipeHandle', 'Popen', 'PriorityQueue', 'ProactorEventLoop',
-    'Protocol', 'Queue', 'QueueEmpty', 'QueueFull', 'ReadTransport', 'SafeChildWatcher', 'SelectorEventLoop',
-    'Semaphore', 'SendfileNotAvailableError', 'StreamReader', 'StreamReaderProtocol', 'StreamWriter',
-    'SubprocessProtocol', 'SubprocessTransport', 'Task', 'ThreadedChildWatcher', 'TimeoutError', 'TimerHandle',
-    'Transport', 'WindowsProactorEventLoopPolicy', 'WindowsSelectorEventLoopPolicy', 'WriteTransport', '_enter_task',
-    '_get_running_loop', '_leave_task', '_register_task', '_set_running_loop', '_unregister_task', 'all_tasks',
-    'as_completed', 'coroutine', 'create_subprocess_exec', 'create_subprocess_shell', 'create_task', 'current_task',
-    'ensure_future', 'gather', 'get_child_watcher', 'get_event_loop', 'get_event_loop_policy', 'get_running_loop',
-    'iscoroutine', 'iscoroutinefunction', 'isfuture', 'new_event_loop', 'open_connection', 'pipe', 'run',
-    'run_coroutine_threadsafe', 'set_child_watcher', 'set_event_loop', 'set_event_loop_policy', 'shield', 'sleep',
-    'staggered_race', 'start_server', 'start_unix_server', 'to_thread', 'wait', 'wait_for', 'wrap_future'
+    'Barrier', 'BrokenBarrierError', 'BaseEventLoop', 'BaseProactorEventLoop', 'BaseProtocol', 'BaseSelectorEventLoop',
+    'BaseTransport', 'BoundedSemaphore', 'BufferedProtocol', 'CancelledError', 'Condition', 'DatagramProtocol',
+    'DatagramTransport', 'DefaultEventLoopPolicy', 'Event', 'FIRST_COMPLETED', 'FIRST_EXCEPTION', 'FastChildWatcher',
+    'Future', 'Handle', 'IncompleteReadError', 'InvalidStateError', 'IocpProactor', 'LifoQueue', 'LimitOverrunError',
+    'Lock', 'MultiLoopChildWatcher', 'PIPE', 'PidfdChildWatcher', 'PipeHandle', 'Popen', 'PriorityQueue',
+    'ProactorEventLoop', 'Protocol', 'Queue', 'QueueEmpty', 'QueueFull', 'ReadTransport', 'Runner', 'SafeChildWatcher',
+    'SelectorEventLoop', 'Semaphore', 'SendfileNotAvailableError', 'StreamReader', 'StreamReaderProtocol',
+    'StreamWriter', 'SubprocessProtocol', 'SubprocessTransport', 'Task', 'ThreadedChildWatcher', 'Timeout',
+    'TimeoutError', 'TimerHandle', 'Transport', 'WindowsProactorEventLoopPolicy', 'WindowsSelectorEventLoopPolicy',
+    'WriteTransport', '_enter_task', '_get_running_loop', '_leave_task', '_register_task', '_set_running_loop',
+    '_unregister_task', 'all_tasks', 'as_completed', 'coroutine', 'create_subprocess_exec', 'create_subprocess_shell',
+    'create_eager_task_factory', 'create_task', 'current_task', 'create_eager_task_factory', 'ensure_future', 'gather',
+    'get_child_watcher', 'get_event_loop', 'get_event_loop_policy', 'get_running_loop', 'iscoroutine',
+    'iscoroutinefunction', 'isfuture', 'new_event_loop', 'open_connection', 'pipe', 'run', 'run_coroutine_threadsafe',
+    'set_child_watcher', 'set_event_loop', 'set_event_loop_policy', 'shield', 'sleep', 'staggered_race',
+    'start_server', 'start_unix_server', 'timeout', 'timeout_at', 'to_thread', 'wait', 'wait_for', 'wrap_future'
 )
 
-import os, sys, warnings
+import os, signal, sys, warnings
 import socket as module_socket
 from collections import deque
 from functools import partial, partial as partial_func
+from enum import Enum
 from stat import S_ISSOCK
 from subprocess import DEVNULL, PIPE, STDOUT
-from threading import current_thread
+from threading import current_thread, main_thread
+from types import GeneratorType
+
+try:
+    import ssl
+except ImportError:
+    ssl = None
 
 from ...core import (
     AbstractProtocolBase, AsyncLifoQueue, AsyncProcess, AsyncQueue, CancelledError, DatagramSocketTransportLayer,
     Event as HataEvent, EventThread, Executor, Future as HataFuture, Handle, InvalidStateError, Lock as HataLock,
-    ReadProtocolBase, Server, Task as HataTask, TaskGroup, TimerHandle, shield as scarletio_shield, skip_ready_cycle,
-    sleep as scarletio_sleep
+    LOOP_TIME, ReadProtocolBase, Server, SSLBidirectionalTransportLayer, Task as HataTask, TaskGroup, TimerHandle,
+    shield as scarletio_shield, skip_ready_cycle, sleep as scarletio_sleep
 )
 from ...core.event_loop.event_loop_functionality_helpers import _is_stream_socket, _set_reuse_port
 from ...core.top_level import get_event_loop as scarletio_get_event_loop, write_exception_async
@@ -167,6 +175,7 @@ class EventThread:
         ssl_handshake_timeout = None,
         happy_eyeballs_delay = None,
         interleave = None,
+        all_errors = False,
     ):
         if sock is None:
             return await self._asyncio_create_connection_to(
@@ -666,6 +675,210 @@ class EventThread:
     call_later = EventThread.call_after
 
 
+    async def sock_sendto(self, sock, data, address):
+        """
+        Send data to the socket.
+
+        The socket must be connected to a remote socket. This method continues
+        to send data from data until either all data has been sent or an
+        error occurs. None is returned on success. On error, an exception is
+        raised, and there is no way to determine how much data, if any, was
+        successfully processed by the receiving end of the connection.
+        """
+        if ssl is not None and isinstance(sock, ssl.SSLSocket):
+            raise TypeError("Socket cannot be of type SSLSocket")
+        
+        try:
+            return sock.sendto(data, address)
+        except (BlockingIOError, InterruptedError):
+            pass
+
+        future = HataFuture(self)
+        file_descriptor = sock.fileno()
+        handle = self.add_writer(file_descriptor, self._sock_sendto, future, sock, data, address)
+        future.add_done_callback(partial_func(self._sock_write_done, file_descriptor, handle = handle))
+        return await future
+    
+    
+    def _sock_sendto(self, future, sock, data, address):
+        if future.done():
+            return
+        
+        try:
+            n = sock.sendto(data, 0, address)
+        except (BlockingIOError, InterruptedError):
+            return
+        except (SystemExit, KeyboardInterrupt):
+            raise
+        except BaseException as exc:
+            future.set_exception(exc)
+        else:
+            future.set_result(n)
+    
+    
+    def _sock_write_done(self, file_descriptor, future, handle = None):
+        if handle is None or not handle.cancelled():
+            self.remove_writer(file_descriptor)
+
+
+    def _sock_read_done(self, file_descriptor, future, handle = None):
+        if handle is None or not handle.cancelled():
+            self.remove_reader(file_descriptor)
+    
+    
+    async def sock_recvfrom(self, sock, bufsize):
+        """
+        Receive a datagram from a datagram socket.
+
+        The return value is a tuple of (bytes, address) representing the
+        datagram received and the address it came from.
+        The maximum amount of data to be received at once is specified by
+        nbytes.
+        """
+        if ssl is not None and isinstance(sock, ssl.SSLSocket):
+            raise TypeError("Socket cannot be of type SSLSocket")
+
+        try:
+            return sock.recvfrom(bufsize)
+        except (BlockingIOError, InterruptedError):
+            pass
+        
+        future = HataFuture(self)
+        file_descriptor = sock.fileno()
+        self._ensure_fd_no_transport(file_descriptor)
+        handle = self._add_reader(file_descriptor, self._sock_recvfrom, future, sock, bufsize)
+        future.add_done_callback(partial_func(self._sock_read_done, file_descriptor, handle = handle))
+        return await future
+
+
+    def _sock_recvfrom(self, future, sock, bufsize):
+        if future.done():
+            return
+        
+        try:
+            result = sock.recvfrom(bufsize)
+        except (BlockingIOError, InterruptedError):
+            return  # try again next time
+        except (SystemExit, KeyboardInterrupt):
+            raise
+        except BaseException as exc:
+            future.set_exception(exc)
+        else:
+            future.set_result(result)
+
+
+    async def sock_recvfrom_into(self, sock, buf, nbytes = 0):
+        """
+        Receive data from the socket.
+
+        The received data is written into *buf* (a writable buffer).
+        The return value is a tuple of (number of bytes written, address).
+        """
+        if ssl is not None and isinstance(sock, ssl.SSLSocket):
+            raise TypeError("Socket cannot be of type SSLSocket")
+    
+        if not nbytes:
+            nbytes = len(buf)
+
+        try:
+            return sock.recvfrom_into(buf, nbytes)
+        except (BlockingIOError, InterruptedError):
+            pass
+        
+        future = HataFuture(self)
+        file_descriptor = sock.fileno()
+        handle = self.add_reader(file_descriptor, self._sock_recvfrom_into, future, sock, buf, nbytes)
+        future.add_done_callback(partial_func(self._sock_read_done, file_descriptor, handle = handle))
+        return await future
+
+
+    def _sock_recvfrom_into(self, fut, sock, buf, bufsize):
+        if fut.done():
+            return
+        try:
+            result = sock.recvfrom_into(buf, bufsize)
+        except (BlockingIOError, InterruptedError):
+            return  # try again next time
+        except (SystemExit, KeyboardInterrupt):
+            raise
+        except BaseException as exc:
+            fut.set_exception(exc)
+        else:
+            fut.set_result(result)
+
+
+    async def start_tls(
+        self,
+        transport,
+        protocol,
+        sslcontext,
+        *,
+        server_side = False,
+        server_hostname = None,
+        ssl_handshake_timeout = None,
+        ssl_shutdown_timeout = None,
+    ):
+        """
+        Upgrade transport to TLS.
+
+        Return a new transport that *protocol* should start using
+        immediately.
+        """
+        if ssl is None:
+            raise RuntimeError('Python ssl module is not available')
+
+        if not isinstance(sslcontext, ssl.SSLContext):
+            raise TypeError(
+                f'sslcontext is expected to be an instance of ssl.SSLContext, got {sslcontext!r}'
+            )
+
+        if not getattr(transport, '_start_tls_compatible', False):
+            raise TypeError(
+                f'transport {transport!r} is not supported by start_tls()'
+            )
+
+        waiter = HataFuture(self)
+        ssl_protocol = SSLBidirectionalTransportLayer(
+            self,
+            protocol,
+            sslcontext,
+            waiter,
+            server_side,
+            server_hostname,
+            False,
+        )
+
+        transport.pause_reading()
+
+        transport.set_protocol(ssl_protocol)
+        connection_made_callback = self.call_soon(ssl_protocol.connection_made, transport)
+        resume_callback = self.call_soon(transport.resume_reading)
+
+        try:
+            await waiter
+        except BaseException:
+            transport.close()
+            connection_made_callback.cancel()
+            resume_callback.cancel()
+            raise
+
+        return ssl_protocol._app_transport
+    
+    
+    _scarletio_connect_accepted_socket = EventThread.connect_accepted_socket
+    
+    async def connect_accepted_socket(
+        self,
+        protocol_factory,
+        sock,
+        *,
+        ssl = None,
+        ssl_handshake_timeout = None,
+        ssl_shutdown_timeout = None,
+    ):
+        return await self._scarletio_connect_accepted_socket(protocol_factory, sock, ssl = ssl)
+
+
 async def in_coro(future):
     return await future
 
@@ -837,7 +1050,17 @@ def _run_until_complete_cb(future): # needed by anyio
 # include: coroutine, iscoroutinefunction, iscoroutine
 from types import coroutine
 iscoroutinefunction = is_coroutine_function
-iscoroutine = is_coroutine
+
+
+if sys.version_info >= (3, 12, 0):
+    def iscoroutine(coroutine):
+        if isinstance(coroutine, GeneratorType):
+            return False
+        
+        return is_coroutine(coroutine)
+else:
+    iscoroutine = is_coroutine
+
 # asyncio.events
 # include: AbstractEventLoopPolicy, AbstractEventLoop, AbstractServer, Handle, TimerHandle, get_event_loop_policy,
 #    set_event_loop_policy, get_event_loop, set_event_loop, new_event_loop, get_child_watcher, set_child_watcher,
@@ -923,7 +1146,7 @@ class SendfileNotAvailableError(RuntimeError):
 
 # asyncio.exceptions
 # include: CancelledError, InvalidStateError, TimeoutError, IncompleteReadError, LimitOverrunError,
-#    SendfileNotAvailableError
+#    SendfileNotAvailableError, BrokenBarrierError
 TimeoutError = TimeoutError
 
 class IncompleteReadError(EOFError):
@@ -955,6 +1178,11 @@ class LimitOverrunError(Exception):
 
     def __reduce__(self):
         return type(self), (self.args[0], self.consumed)
+
+
+class BrokenBarrierError(RuntimeError):
+    """Barrier is broken by barrier.abort() call."""
+
 
 # asyncio.format_helpers
 # *none*
@@ -1015,7 +1243,7 @@ def isfuture(obj):
     return isinstance(obj, HataFuture)
 
 # asyncio.locks
-# Include: Lock, Event, Condition, Semaphore, BoundedSemaphore
+# Include: Lock, Event, Condition, Semaphore, BoundedSemaphore, Barrier
 
 class Lock(HataLock):
     """
@@ -1395,6 +1623,158 @@ class BoundedSemaphore(Semaphore):
         return Semaphore.release(self)
 
 
+class _BarrierState(Enum):
+    FILLING = 'filling'
+    DRAINING = 'draining'
+    RESETTING = 'resetting'
+    BROKEN = 'broken'
+
+
+class Barrier:
+    """
+    Asyncio equivalent to threading.Barrier
+
+    Implements a Barrier primitive.
+    Useful for synchronizing a fixed number of tasks at known synchronization
+    points. Tasks block on 'wait()' and are simultaneously awoken once they
+    have all made their call.
+    """
+    def __init__(self, parties):
+        """Create a barrier, initialised to 'parties' tasks."""
+        if parties < 1:
+            raise ValueError('Parties must be > 0.')
+
+        self._cond = Condition()
+
+        self._parties = parties
+        self._state = _BarrierState.FILLING
+        self._count = 0
+
+
+    def __repr__(self):
+        repr_parts = ['<', type(self).__name__]
+        
+        repr_parts.append('[')
+        repr_parts.append(self._state.value)
+        
+        repr_parts.append(', waiters: ')
+        repr_parts.append(repr(self.n_waiting))
+        repr_parts.append('/')
+        repr_parts.append(repr(self.parties))
+        repr_parts.append(']>')
+        
+        return ''.join(repr_parts)
+
+
+    async def __aenter__(self):
+        return await self.wait()
+
+
+    async def __aexit__(self, *args):
+        pass
+
+
+    async def wait(self):
+        """
+        Wait for the barrier.
+
+        When the specified number of tasks have started waiting, they are all
+        simultaneously awoken.
+        Returns an unique and individual index number from 0 to 'parties-1'.
+        """
+        async with self._cond:
+            await self._block()
+            try:
+                index = self._count
+                self._count += 1
+                if index + 1 == self._parties:
+                    await self._release()
+                else:
+                    await self._wait()
+                return index
+            finally:
+                self._count -= 1
+                self._exit()
+
+
+    async def _block(self):
+        await self._cond.wait_for(
+            lambda: self._state not in (
+                _BarrierState.DRAINING, _BarrierState.RESETTING
+            )
+        )
+
+        if self._state is _BarrierState.BROKEN:
+            raise BrokenBarrierError("Barrier aborted")
+
+
+    async def _release(self):
+        self._state = _BarrierState.DRAINING
+        self._cond.notify_all()
+
+
+    async def _wait(self):
+        await self._cond.wait_for(lambda: self._state is not _BarrierState.FILLING)
+
+        if self._state in (_BarrierState.BROKEN, _BarrierState.RESETTING):
+            raise BrokenBarrierError("Abort or reset of barrier")
+
+
+    def _exit(self):
+        if self._count == 0:
+            if self._state in (_BarrierState.RESETTING, _BarrierState.DRAINING):
+                self._state = _BarrierState.FILLING
+            self._cond.notify_all()
+
+
+    async def reset(self):
+        """
+        Reset the barrier to the initial state.
+
+        Any tasks currently waiting will get the BrokenBarrier exception
+        raised.
+        """
+        async with self._cond:
+            if self._count > 0:
+                if self._state is not _BarrierState.RESETTING:
+                    self._state = _BarrierState.RESETTING
+            else:
+                self._state = _BarrierState.FILLING
+            self._cond.notify_all()
+
+
+    async def abort(self):
+        """
+        Place the barrier into a 'broken' state.
+
+        Useful in case of error.  Any currently waiting tasks and tasks
+        attempting to 'wait()' will have BrokenBarrierError raised.
+        """
+        async with self._cond:
+            self._state = _BarrierState.BROKEN
+            self._cond.notify_all()
+
+
+    @property
+    def parties(self):
+        """Return the number of tasks required to trip the barrier."""
+        return self._parties
+
+
+    @property
+    def n_waiting(self):
+        """Return the number of tasks currently waiting at the barrier."""
+        if self._state is _BarrierState.FILLING:
+            return self._count
+        return 0
+
+
+    @property
+    def broken(self):
+        """Return True if the barrier is in a broken state."""
+        return self._state is _BarrierState.BROKEN
+
+
 # asyncio.proactor_events
 # Include: BaseProactorEventLoop
 
@@ -1608,9 +1988,9 @@ class LifoQueue(AsyncLifoQueue):
 
 
 # asyncio.runners
-# Include: run
+# Include: run, Runner
 
-def run(main, *, debug = None):
+def run(main, *, debug = None, loop_factory = None):
     """
     Execute the coroutine and return the result.
     
@@ -1636,21 +2016,25 @@ def run(main, *, debug = None):
     """
     local_loop = current_thread()
     if isinstance(local_loop, EventThread):
-        raise RuntimeError('asyncio.run() cannot be called from a running event loop')
+        raise RuntimeError('asyncio.run() cannot be called from a running event loop.')
     
     if not iscoroutine(main):
-        raise ValueError(f'a coroutine was expected, got {main!r}')
+        raise ValueError(f'A coroutine was expected, got {main!r}.')
     
-    try:
-        loop = scarletio_get_event_loop()
-    except RuntimeError:
-        pass
+    if (loop_factory is not None):
+        loop = loop_factory()
+    
     else:
-        # Required by anyio
-        main = Task(in_coro(main), loop = loop)
-        
-        loop.run(main)
-        return
+        try:
+            loop = scarletio_get_event_loop()
+        except RuntimeError:
+            pass
+        else:
+            # Required by anyio
+            main = Task(in_coro(main), loop = loop)
+            
+            loop.run(main)
+            return
     
     loop = EventThread()
     
@@ -1661,6 +2045,149 @@ def run(main, *, debug = None):
         loop.run(main)
     finally:
         loop.stop()
+
+
+class _RunnerState(Enum):
+    CREATED = "created"
+    INITIALIZED = "initialized"
+    CLOSED = "closed"
+
+
+class Runner:
+    """
+    A context manager that controls event loop life cycle.
+
+    The context manager always creates a new event loop,
+    allows to run async functions inside it,
+    and properly finalizes the loop at the context manager exit.
+
+    If debug is True, the event loop will be run in debug mode.
+    If loop_factory is passed, it is used for new event loop creation.
+
+    asyncio.run(main(), debug=True)
+
+    is a shortcut for
+
+    with asyncio.Runner(debug=True) as runner:
+        runner.run(main())
+
+    The run() method can be called multiple times within the runner's context.
+
+    This can be useful for interactive console (e.g. IPython),
+    unittest runners, console tools, -- everywhere when async code
+    is called from existing sync framework and where the preferred single
+    asyncio.run() call doesn't work.
+    """
+    def __init__(self, *, debug = None, loop_factory = None):
+        self._state = _RunnerState.CREATED
+        self._loop_factory = loop_factory
+        self._loop = None
+        self._interrupt_count = 0
+        self._set_event_loop = False
+    
+    
+    def __enter__(self):
+        self._lazy_init()
+        return self
+    
+    
+    def __exit__(self, exception_type, exception_value, exception_traceback):
+        self.close()
+    
+    
+    def close(self):
+        """Shutdown and close event loop."""
+        if self._state is not _RunnerState.INITIALIZED:
+            return
+        
+        loop = self._loop
+        try:
+            try:
+                for task in loop.get_tasks():
+                    task.cancel()
+            finally:
+                task = None
+            
+            loop.run_until_complete(loop.shutdown_asyncgens())
+        finally:
+            if self._set_event_loop:
+                set_event_loop(None)
+            
+            loop.close()
+            self._loop = None
+            self._state = _RunnerState.CLOSED
+    
+    
+    def get_loop(self):
+        """Return embedded event loop."""
+        self._lazy_init()
+        return self._loop
+    
+    
+    def run(self, coro, *, context = None):
+        """Run a coroutine inside the embedded event loop."""
+        if not iscoroutine(coro):
+            raise ValueError(f"A coroutine was expected, got {coro!r}.")
+
+        if _get_running_loop() is not None:
+            # fail fast with short traceback
+            raise RuntimeError(f"{type(self).__name__}.run() cannot be called from a running event loop.")
+
+        self._lazy_init()
+
+        task = self._loop.create_task(coro)
+
+        if (current_thread() is main_thread()) and signal.getsignal(signal.SIGINT) is signal.default_int_handler:
+            sigint_handler = partial_func(self._on_sigint, main_task = task)
+            try:
+                signal.signal(signal.SIGINT, sigint_handler)
+            except ValueError:
+                sigint_handler = None
+        else:
+            sigint_handler = None
+
+        self._interrupt_count = 0
+        try:
+            return self._loop.run_until_complete(task)
+        except CancelledError as err:
+            if self._interrupt_count > 0:
+                raise KeyboardInterrupt from err
+            
+            raise
+        
+        finally:
+            if (sigint_handler is not None) and signal.getsignal(signal.SIGINT) is sigint_handler:
+                signal.signal(signal.SIGINT, signal.default_int_handler)
+    
+    
+    def _lazy_init(self):
+        if self._state is _RunnerState.CLOSED:
+            raise RuntimeError(f"{type(self).__name__} is closed")
+        
+        if self._state is _RunnerState.INITIALIZED:
+            return
+        
+        loop_factory = self._loop_factory
+        if loop_factory is not None:
+            loop = loop_factory()
+        else:
+            loop = new_event_loop()
+            if not self._set_event_loop:
+                set_event_loop(self._loop)
+                self._set_event_loop = True
+        
+        self._loop = loop
+        self._state = _RunnerState.INITIALIZED
+    
+    
+    def _on_sigint(self, signum, frame, main_task):
+        self._interrupt_count += 1
+        if self._interrupt_count == 1 and not main_task.is_done():
+            main_task.cancel()
+            self._loop.wake_up()
+            return
+        
+        raise KeyboardInterrupt
 
 
 # asyncio.selector_events
@@ -2044,6 +2571,34 @@ class StreamWriter:
         await self._protocol._drain_helper()
 
 
+    async def start_tls(
+        self,
+        sslcontext,
+        *,
+        server_hostname = None,
+        ssl_handshake_timeout = None,
+        ssl_shutdown_timeout = None
+    ):
+        """Upgrade an existing stream-based connection to TLS."""
+        protocol = self._protocol
+        server_side = protocol._client_connected_cb is not None
+        
+        await self.drain()
+        
+        new_transport = await self._loop.start_tls(
+            self._transport,
+            protocol,
+            sslcontext,
+            server_side = server_side,
+            server_hostname = server_hostname,
+            ssl_handshake_timeout = ssl_handshake_timeout,
+            ssl_shutdown_timeout = ssl_shutdown_timeout,
+        )
+        
+        self._transport = new_transport
+        protocol._replace_transport(new_transport)
+
+
 class StreamReader:
     def __init__(self, limit = _DEFAULT_LIMIT, loop = None):
         if limit <= 0:
@@ -2383,7 +2938,7 @@ Process = AsyncProcess
 # asyncio.tasks
 # Include: Task, create_task, FIRST_COMPLETED, FIRST_EXCEPTION, ALL_COMPLETED, wait, wait_for, as_completed, sleep,
 #    gather, shield, ensure_future, run_coroutine_threadsafe, current_task, all_tasks, _register_task,
-#    _unregister_task, _enter_task, _leave_task,
+#    _unregister_task, _enter_task, _leave_task, create_eager_task_factory, eager_task_factory
 
 class TaskMeta(type):
     def __new__(cls, class_name, class_parents, class_attributes, ignore = False):
@@ -2410,7 +2965,7 @@ class Task(HataTask, metaclass = TaskMeta, ignore = True):
         '__weakref__', # Required by anyio
     )
     
-    def __new__(cls, coroutine, loop = None, name = None):
+    def __new__(cls, coroutine, loop = None, name = None, eager_start = False):
         """A coroutine wrapped in a Future."""
         if not iscoroutine(coroutine):
             raise TypeError(f'a coroutine was expected, got {coroutine!r}')
@@ -2439,6 +2994,28 @@ class Task(HataTask, metaclass = TaskMeta, ignore = True):
     # Required by anyio
     def get_coro(self):
         return self._coroutine
+    
+    
+    def cancelling(self):
+        """
+        Return the count of the task's cancellation requests.
+
+        This count is incremented when .cancel() is called
+        and may be decremented using .uncancel().
+        """
+        return 1 if self.is_cancelling() else 0
+    
+    
+    def uncancel(self):
+        """
+        Decrement the task's count of cancellation requests.
+
+        This should be called by the party that called `cancel()` on the task
+        beforehand.
+
+        Returns the remaining number of cancellation requests.
+        """
+        return 0
 
 
 def create_task(coroutine, *, name = None):
@@ -3057,6 +3634,33 @@ class TaskWrapper:
         return self._task == other_task
 
 
+def create_eager_task_factory(custom_task_constructor):
+    """
+    Create a function suitable for use as a task factory on an event-loop.
+    
+    Example usage:
+
+        loop.set_task_factory(
+            asyncio.create_eager_task_factory(my_task_constructor))
+    
+    Now, tasks created will be started immediately (rather than being first
+    scheduled to an event loop). The constructor argument can be any callable
+    that returns a Task-compatible object and has a signature compatible
+    with `Task.__init__`; it must have the `eager_start` keyword argument.
+
+    Most applications will use `Task` for `custom_task_constructor` and in
+    this case there's no need to call `create_eager_task_factory()`
+    directly. Instead the  global `eager_task_factory` instance can be
+    used. E.g. `loop.set_task_factory(asyncio.eager_task_factory)`.
+    """
+    def factory(loop, coro, *, name = None, context = None):
+        return custom_task_constructor(coro, loop = loop, name = name, context = context, eager_start = True)
+    return factory
+
+
+eager_task_factory = create_eager_task_factory(Task)
+
+
 # asyncio.threads
 # Include: to_thread
 
@@ -3405,3 +4009,168 @@ class Popen:
     """
     def __new__(cls, args, stdin = None, stdout = None, stderr = None, **kwds):
         raise NotImplementedError
+
+# asyncio.timeouts
+# Includes: Timeout, timeout, timeout_at
+
+
+class _TimeoutState(Enum):
+    CREATED = "created"
+    ENTERED = "active"
+    EXPIRING = "expiring"
+    EXPIRED = "expired"
+    EXITED = "finished"
+
+
+class Timeout:
+    """
+    Asynchronous context manager for cancelling overdue coroutines.
+
+    Use `timeout()` or `timeout_at()` rather than instantiating this class directly.
+    """
+
+    def __init__(self, when):
+        """
+        Schedule a timeout that will trigger at a given loop time.
+
+        - If `when` is `None`, the timeout will never trigger.
+        - If `when < loop.time()`, the timeout will trigger on the next
+          iteration of the event loop.
+        """
+        self._state = _TimeoutState.CREATED
+        self._timeout_handler = None
+        self._task = None
+        self._when = when
+
+
+    def when(self):
+        """Return the current deadline."""
+        return self._when
+
+
+    def reschedule(self, when):
+        """Reschedule the timeout."""
+        if self._state is not _TimeoutState.ENTERED:
+            if self._state is _TimeoutState.CREATED:
+                raise RuntimeError("Timeout has not been entered.")
+            raise RuntimeError(f"Cannot change state of {self._state.value} {type(self).__name__}.")
+
+        self._when = when
+
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+
+        if when is None:
+            self._timeout_handler = None
+        else:
+            loop = get_event_loop()
+            if when <= LOOP_TIME():
+                self._timeout_handler = loop.call_soon(self._on_timeout)
+            else:
+                self._timeout_handler = loop.call_at(when, self._on_timeout)
+
+
+    def expired(self):
+        """Is timeout expired during execution?"""
+        return self._state in (_TimeoutState.EXPIRING, _TimeoutState.EXPIRED)
+
+
+    def __repr__(self):
+        repr_parts = ['<', type(self).__name__]
+        
+        repr_parts.append(' [')
+        repr_parts.append(self._state.value)
+        repr_parts.append(']')
+        
+        if self._state is _TimeoutState.ENTERED:
+            when = round(self._when, 3) if self._when is not None else None
+            repr_parts.append(' when = ')
+            repr_parts.append(repr(when))
+        
+        repr_parts.append('>')
+        return ''.join(repr_parts)
+
+
+    async def __aenter__(self):
+        if self._state is not _TimeoutState.CREATED:
+            raise RuntimeError("Timeout has already been entered.")
+        
+        loop = get_event_loop()
+        task = loop.current_task
+        if task is None:
+            raise RuntimeError("Timeout should be used inside a task.")
+        
+        self._state = _TimeoutState.ENTERED
+        self._task = task
+        self.reschedule(self._when)
+        return self
+
+
+    async def __aexit__(self, exception_type, exception_value, exception_traceback):
+        assert self._state in (_TimeoutState.ENTERED, _TimeoutState.EXPIRING)
+
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+
+        if self._state is _TimeoutState.EXPIRING:
+            self._state = _TimeoutState.EXPIRED
+            
+            if isinstance(exception_type, CancelledError):
+                # Since there are no new cancel requests, we're handling this.
+                raise TimeoutError from exception_value
+        
+        elif self._state is _TimeoutState.ENTERED:
+            self._state = _TimeoutState.EXITED
+
+        return False
+
+    def _on_timeout(self):
+        assert self._state is _TimeoutState.ENTERED
+        self._task.cancel()
+        self._state = _TimeoutState.EXPIRING
+        # drop the reference early
+        self._timeout_handler = None
+
+
+def timeout(delay):
+    """
+    Timeout async context manager.
+
+    Useful in cases when you want to apply timeout logic around block
+    of code or in cases when asyncio.wait_for is not suitable. For example:
+
+    >>> async with asyncio.timeout(10):  # 10 seconds timeout
+    ...     await long_running_task()
+
+
+    delay - value in seconds or None to disable timeout logic
+
+    long_running_task() is interrupted by raising asyncio.CancelledError,
+    the top-most affected timeout() context manager converts CancelledError
+    into TimeoutError.
+    """
+    return Timeout(LOOP_TIME() + delay if delay is not None else None)
+
+
+def timeout_at(when):
+    """
+    Schedule the timeout at absolute time.
+
+    Like timeout() but argument gives absolute time in the same clock system
+    as loop.time().
+
+    Please note: it is not POSIX time but a time with
+    undefined starting base, e.g. the time of the system power on.
+
+    >>> async with asyncio.timeout_at(loop.time() + 10):
+    ...     await long_running_task()
+
+
+    when - a deadline when timeout occurs or None to disable timeout logic
+
+    long_running_task() is interrupted by raising asyncio.CancelledError,
+    the top-most affected timeout() context manager converts CancelledError
+    into TimeoutError.
+    """
+    return Timeout(when)

@@ -2,7 +2,7 @@ __all__ = ('CookieJar', )
 
 import re
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime as DateTime, timezone as TimeZone
 from http.cookies import Morsel, SimpleCookie
 from math import ceil
 
@@ -99,7 +99,7 @@ def parse_cookie_date(date_str):
             or (day > 31) or (hour > 23) or (minute > 59) or (second > 59):
         return None
     
-    return datetime(year, month, day, hour, minute, second, tzinfo = timezone.utc)
+    return DateTime(year, month, day, hour, minute, second, tzinfo = TimeZone.utc)
 
 
 def do_domains_match(domain, hostname):

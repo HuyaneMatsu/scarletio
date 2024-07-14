@@ -2,6 +2,7 @@ __all__ = ()
 
 from ..rich_attribute_error import RichAttributeErrorBaseType
 
+from .frame_ignoring import should_ignore_frame
 from .frame_proxy import FrameProxyVirtual
 from .repeat_strategies import get_repeat_with_strategy_bot
 
@@ -100,7 +101,7 @@ class FrameGroup(RichAttributeErrorBaseType):
     
     
     def __rmod__(self, other):
-        """Returns whether the two frame proxies are alike."""
+        """Returns whether the two frame groups are alike."""
         if type(self) is not type(other):
             return NotImplemented
         
@@ -200,6 +201,22 @@ class FrameGroup(RichAttributeErrorBaseType):
             self.clear()
     
     
+    def iter_frames_no_repeat(self):
+        """
+        Iterates over the frames of the frame group without repeating repeated blocks.
+        It may still happen that non-unique frames are yielded.
+        
+        This method is an iterable generator.
+        
+        Yields
+        ------
+        frame : ``FrameProxyBase``
+        """
+        frames = self.frames
+        if (frames is not None):
+            yield from frames
+    
+    
     def clear(self):
         """
         Clears the frame group.
@@ -236,6 +253,24 @@ class FrameGroup(RichAttributeErrorBaseType):
             self.frames = [FrameProxyVirtual(frame, with_variables = False) for frame in frames]
     
     
+    def copy_without_variables(self):
+        """
+        Copies the frame group without variables.
+        
+        Returns
+        -------
+        new : `instance<type<self>>`
+        """
+        new = object.__new__(type(self))
+        frames = self.frames
+        if (frames is not None):
+            frames = [FrameProxyVirtual(frame, with_variables = False) for frame in frames]
+        new.frames = frames
+        new.repeat_count = self.repeat_count
+        new.type = self.type
+        return new
+    
+    
     def has_variables(self):
         """
         Returns whether any frames inherited variables on creation.
@@ -251,6 +286,29 @@ class FrameGroup(RichAttributeErrorBaseType):
                     return True
         
         return False
+    
+    
+    def drop_ignored_frames(self, *, filter = None):
+        """
+        Drops the frames that should be ignored.
+        
+        Parameters
+        ----------
+        filter : `None | callable` = `None`, Optional (Keyword only)
+            Additional filter to check whether a frame should be shown.
+        """
+        frames = self.frames
+        if (frames is None):
+            return
+        
+        frames = [frame for frame in frames if not should_ignore_frame(frame, filter = filter)]
+        if frames:
+            self.frames = frames
+            return
+        
+        self.type = FRAME_GROUP_TYPE_NONE
+        self.repeat_count = 0
+        self.frames = None
     
     
     def try_add_frame(self, frame):

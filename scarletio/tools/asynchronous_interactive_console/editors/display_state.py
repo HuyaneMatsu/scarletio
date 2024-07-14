@@ -1,9 +1,7 @@
 __all__ = ()
 
 from itertools import islice, zip_longest
-from os import get_blocking, get_terminal_size, write
-from select import poll as Poller, POLLOUT as EVENT_POLL_WRITE
-from time import monotonic
+from os import get_terminal_size
 
 from ....utils import DEFAULT_ANSI_HIGHLIGHTER, RichAttributeErrorBaseType, iter_highlight_code_lines
 

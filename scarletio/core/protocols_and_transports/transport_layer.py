@@ -110,7 +110,7 @@ class SocketTransportLayerBase(TransportLayerBase):
         The ``.protocol`` is resumed writing when the buffer size goes under the low water mark. Defaults to `16384`.
     _paused : `bool`
         Whether the transport's reading is paused by the protocol.
-    _protocol : `None`, ``SSLProtocol, ``ReadProtocolBase``, `object`
+    _protocol : `None`, ``SSLBidirectionalTransportLayer, ``ReadProtocolBase``, `object`
         Asynchronous protocol implementation used by the transport.
         
         After closing the transport is set to `None`.
@@ -462,7 +462,7 @@ class SocketTransportLayer(SocketTransportLayerBase):
         The ``.protocol`` is resumed writing when the buffer size goes under the low water mark. Defaults to `16384`.
     _paused : `bool`
         Whether the transport's reading is paused by the protocol.
-    _protocol : `None`, ``SSLProtocol, ``ReadProtocolBase``, `object`
+    _protocol : `None`, ``SSLBidirectionalTransportLayer, ``ReadProtocolBase``, `object`
         Asynchronous protocol implementation used by the transport.
         
         After closing the transport is set to `None`.
@@ -702,7 +702,7 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
         The ``.protocol`` is resumed writing when the buffer size goes under the low water mark. Defaults to `16384`.
     _paused : `bool`
         Whether the transport's reading is paused by the protocol.
-    _protocol : `None`, ``SSLProtocol, ``ReadProtocolBase``, `object`
+    _protocol : `None`, ``SSLBidirectionalTransportLayer, ``ReadProtocolBase``, `object`
         Asynchronous protocol implementation used by the transport.
         
         After closing the transport is set to `None`.

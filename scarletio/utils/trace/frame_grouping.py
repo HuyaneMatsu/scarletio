@@ -14,12 +14,12 @@ def group_frames(frames):
     
     Returns
     -------
-    frame_groups : `list<FrameGroup>`
+    frame_groups : `None | list<FrameGroup>`
         The created frame groups.
     """
     # note: frames may be an empty list.
     if not frames:
-        return []
+        return None
     
     frame_groups = _group_frames_to_frame_groups(frames)
     frame_groups = _merge_frame_groups(frame_groups)
@@ -102,7 +102,6 @@ def _separate_repeats_in_frame_groups(frame_groups):
     -------
     frame_groups : `list<FrameGroup>`
     """
-    
     frame_groups_to_do = [(False, frame_group) for frame_group in reversed(frame_groups)]
     frame_groups = []
     
@@ -115,3 +114,33 @@ def _separate_repeats_in_frame_groups(frame_groups):
             frame_groups_to_do.extend(reversed([*frame_group.iter_separate_repeated()]))
     
     return frame_groups
+
+
+def normalize_frame_groups(frame_groups):
+    """
+    Normalises the given frame groups removing the empty ones.
+    
+    Parameters
+    ----------
+    frame_groups : `None | list<frameGroup>`
+        The frame groups to merge.
+    
+    Returns
+    -------
+    frame_groups : `None | list<FrameGroup>`
+    """
+    if frame_groups is None:
+        return None
+    
+    outcome = None
+    
+    for frame_group in frame_groups:
+        if not frame_group:
+            continue
+        
+        if outcome is None:
+            outcome = []
+        
+        outcome.append(frame_group)
+    
+    return outcome
