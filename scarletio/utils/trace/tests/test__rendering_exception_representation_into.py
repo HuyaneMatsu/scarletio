@@ -127,6 +127,113 @@ def test__render_exception_representation_attribute_error_into__with_highlight()
     vampytest.assert_eq(output_string, expected_output)
 
 
+def test__render_exception_representation_attribute_error_into__frame_with_same_variable():
+    """
+    Tests whether ``_render_exception_representation_attribute_error_into`` works as intended.
+    
+    Case: Frame with same variable.
+    """
+    type_name = AttributeError.__name__
+    instance_type_name = 'Handler'
+    attribute_name = 'cuddle'
+    suggestion_familiar_attribute_names = ['hug', 'pat']
+    suggestion_matching_variable_exists = True
+    
+    expected_output = (
+        'AttributeError: `Handler` has no attribute `.cuddle`.\n'
+        'Did you mean to use the `cuddle` variable?\n'
+        'Or perhaps any of the following attributes: `.hug`, `.pat`?\n'
+    )
+    
+    exception_representation = ExceptionRepresentationAttributeError.from_fields(
+        type_name = type_name,
+        instance_type_name = instance_type_name,
+        attribute_name = attribute_name,
+        suggestion_familiar_attribute_names = suggestion_familiar_attribute_names,
+        suggestion_matching_variable_exists = suggestion_matching_variable_exists,
+    )
+    
+    output = _render_exception_representation_attribute_error_into(exception_representation, [], None)
+    vampytest.assert_instance(output, list)
+    
+    for element in output:
+        vampytest.assert_instance(element, str)
+    
+    output_string = ''.join(output)
+    vampytest.assert_eq(output_string, expected_output)
+
+
+
+def test__render_exception_representation_attribute_error_into__unset_attribute():
+    """
+    Tests whether ``_render_exception_representation_attribute_error_into`` works as intended.
+    
+    Case: Unset variable.
+    """
+    type_name = AttributeError.__name__
+    instance_type_name = 'Handler'
+    attribute_name = 'cuddle'
+    suggestion_familiar_attribute_names = ['hug', 'pat']
+    suggestion_attribute_unset = True
+    
+    expected_output = (
+        'AttributeError: `Handler` does not have its attribute `.cuddle` set.\n'
+        'Please review its constructors whether they are omitting setting it.\n'
+    )
+    
+    exception_representation = ExceptionRepresentationAttributeError.from_fields(
+        type_name = type_name,
+        instance_type_name = instance_type_name,
+        attribute_name = attribute_name,
+        suggestion_familiar_attribute_names = suggestion_familiar_attribute_names,
+        suggestion_attribute_unset = suggestion_attribute_unset,
+    )
+    
+    output = _render_exception_representation_attribute_error_into(exception_representation, [], None)
+    vampytest.assert_instance(output, list)
+    
+    for element in output:
+        vampytest.assert_instance(element, str)
+    
+    output_string = ''.join(output)
+    vampytest.assert_eq(output_string, expected_output)
+
+
+def test__render_exception_representation_attribute_error_into__other_variable_with_attribute():
+    """
+    Tests whether ``_render_exception_representation_attribute_error_into`` works as intended.
+    
+    Case: Other variable has the same attribute.
+    """
+    type_name = AttributeError.__name__
+    instance_type_name = 'Handler'
+    attribute_name = 'cuddle'
+    suggestion_familiar_attribute_names = None
+    suggestion_variable_names_with_attribute = ['hug', 'kiss']
+    
+    expected_output = (
+        'AttributeError: `Handler` has no attribute `.cuddle`.\n'
+        'Did you mean to do any of: `hug.cuddle`, `kiss.cuddle`?\n'
+    )
+    
+    exception_representation = ExceptionRepresentationAttributeError.from_fields(
+        type_name = type_name,
+        instance_type_name = instance_type_name,
+        attribute_name = attribute_name,
+        suggestion_familiar_attribute_names = suggestion_familiar_attribute_names,
+        suggestion_variable_names_with_attribute = suggestion_variable_names_with_attribute,
+    )
+    
+    output = _render_exception_representation_attribute_error_into(exception_representation, [], None)
+    vampytest.assert_instance(output, list)
+    
+    for element in output:
+        vampytest.assert_instance(element, str)
+    
+    output_string = ''.join(output)
+    vampytest.assert_eq(output_string, expected_output)
+
+
 def test__render_exception_representation_syntax_error_into__no_highlight():
     """
     Tests whether ``_render_exception_representation_syntax_error_into`` works as intended.

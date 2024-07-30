@@ -4,7 +4,6 @@ from builtins import AttributeError as PlainAttributeError
 
 from ...rich_attribute_error import ATTRIBUTE_ERROR_HAS_RICH_SLOTS, AttributeError as RichAttributeError
 
-
 INSTANCE_SLOT = RichAttributeError.instance
 ATTRIBUTE_NAME_SLOT = RichAttributeError.attribute_name
 
@@ -62,3 +61,28 @@ def extract_attribute_error_fields(exception):
         attribute_name = str(attribute_name)
     
     return instance, attribute_name
+
+
+def extract_last_attribute_error_context_frame(exception, frames):
+    """
+    Exacts the last context frame of an attribute error. This excludes `__getattr__` if that is the last.
+    
+    Parameters
+    ----------
+    exception : `AttributeError`
+        The exception in context.
+    frames : `None | list<FrameProxyBase>`
+        The frames the exception is raised with.
+    
+    Returns
+    -------
+    frame : `None | FrameProxyBase`
+    """
+    if (frames is None) or (not frames):
+        return None
+    
+    frame = frames[-1]
+    if (len(frames) > 1) and issubclass(type(exception), RichAttributeError) and (frame.name == '__getattr__'):
+        frame = frames[-2]
+    
+    return frame

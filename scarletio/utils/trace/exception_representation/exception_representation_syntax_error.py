@@ -29,7 +29,7 @@ class ExceptionRepresentationSyntaxError(ExceptionRepresentationBase):
     """
     __slots__ = ('file_name', 'line', 'line_index', 'message', 'pointer_start_offset', 'pointer_length', 'type_name')
     
-    def __new__(cls, exception, frame):
+    def __new__(cls, exception, frames):
         """
         Creates a new exception representation.
         
@@ -37,8 +37,8 @@ class ExceptionRepresentationSyntaxError(ExceptionRepresentationBase):
         ----------
         exception : `SyntaxError`
             Exception to represent.
-        frame : `None | FrameProxyBase`
-            The frame the exception is raised from.
+        frames : `None | list<FrameProxyBase>`
+            The frames the exception is raised with.
         """
         message, frames = exception.args
         

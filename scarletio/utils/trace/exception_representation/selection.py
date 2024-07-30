@@ -16,7 +16,7 @@ SELECTORS = [
 ]
 
 
-def get_exception_representation(exception, frame):
+def get_exception_representation(exception, frames):
     """
     Gets the given exception's representation.
     
@@ -24,8 +24,8 @@ def get_exception_representation(exception, frame):
     ----------
     exception : `BaseException`
         The exception to get its representation of.
-    frame : `None | FrameProxyBase`
-        The frame the exception is raised from.
+    frame : `None | list<FrameProxyBase>`
+        The frames the exception is raised with.
     
     Returns
     -------
@@ -33,6 +33,6 @@ def get_exception_representation(exception, frame):
     """
     for checker, representation_type in SELECTORS:
         if checker(exception):
-            return representation_type(exception, frame)
+            return representation_type(exception, frames)
     
     return None

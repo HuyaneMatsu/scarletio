@@ -7,7 +7,7 @@ class ExceptionRepresentationBase:
     """
     __slots__ = ()
     
-    def __new__(cls, exception, frame):
+    def __new__(cls, exception, frames):
         """
         Creates a new exception representation.
         
@@ -15,8 +15,8 @@ class ExceptionRepresentationBase:
         ----------
         exception : `BaseException`
             Exception to represent.
-        frame : `None | FrameProxyBase`
-            The frame the exception is raised from.
+        frames : `None | list<FrameProxyBase>`
+            The frames the exception is raised with.
         """
         return object.__new__(cls)
     

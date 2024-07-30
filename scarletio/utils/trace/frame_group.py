@@ -2,7 +2,7 @@ __all__ = ()
 
 from ..rich_attribute_error import RichAttributeErrorBaseType
 
-from .frame_ignoring import should_ignore_frame
+from .frame_ignoring import should_keep_frame, should_keep_frame_from_filter
 from .frame_proxy import FrameProxyVirtual
 from .repeat_strategies import get_repeat_with_strategy_bot
 
@@ -301,7 +301,30 @@ class FrameGroup(RichAttributeErrorBaseType):
         if (frames is None):
             return
         
-        frames = [frame for frame in frames if not should_ignore_frame(frame, filter = filter)]
+        frames = [frame for frame in frames if should_keep_frame(frame, filter = filter)]
+        if frames:
+            self.frames = frames
+            return
+        
+        self.type = FRAME_GROUP_TYPE_NONE
+        self.repeat_count = 0
+        self.frames = None
+    
+    
+    def apply_frame_filter(self, filter):
+        """
+        Keeps the frames that pass the given `filter`.
+        
+        Parameters
+        ----------
+        filter : `callable`
+            Filter to check whether a frame should be kept.
+        """
+        frames = self.frames
+        if (frames is None):
+            return
+        
+        frames = [frame for frame in frames if should_keep_frame_from_filter(frame, filter)]
         if frames:
             self.frames = frames
             return

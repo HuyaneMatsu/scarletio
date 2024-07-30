@@ -265,7 +265,7 @@ class cached_property:
         """
         name = getattr(fget, '__name__', None)
         
-        name_type = name.__class__
+        name_type = type(name)
         if name_type is NoneType:
             name_type_correct = False
         elif name_type is str:

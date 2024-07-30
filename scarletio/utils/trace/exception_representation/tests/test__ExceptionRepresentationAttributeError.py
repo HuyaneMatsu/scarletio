@@ -27,7 +27,7 @@ def _assert_fields_set(exception_representation):
     vampytest.assert_instance(exception_representation, ExceptionRepresentationAttributeError)
     vampytest.assert_instance(exception_representation.attribute_name, str)
     vampytest.assert_instance(exception_representation.instance_type_name, str)
-    vampytest.assert_instance(exception_representation.suggestion_attribute_exists_just_was_not_set, bool)
+    vampytest.assert_instance(exception_representation.suggestion_attribute_unset, bool)
     vampytest.assert_instance(exception_representation.suggestion_familiar_attribute_names, list, nullable = True)
     vampytest.assert_instance(exception_representation.suggestion_matching_variable_exists, bool)
     vampytest.assert_instance(exception_representation.suggestion_variable_names_with_attribute, list, nullable = True)
@@ -41,25 +41,27 @@ def test__ExceptionRepresentationAttributeError__new():
     instance = TestType0()
     attribute_name = 'komeiji'
     
-    frame = FrameProxyVirtual.from_fields(
-        locals = {
-            '__slots__': None,
-            '__module__': None,
-            'hey': 'mister',
-            'komeiji': 'koishi',
-            'komachi': None,
-            **{name: None for name in dir(object)}
-        }
-    )
+    frames = [
+        FrameProxyVirtual.from_fields(
+            locals = {
+                '__slots__': None,
+                '__module__': None,
+                'hey': 'mister',
+                'komeiji': 'koishi',
+                'komachi': None,
+                **{name: None for name in dir(object)}
+            },
+        ),
+    ]
     
     exception = AttributeError(instance, attribute_name)
     
-    exception_representation = ExceptionRepresentationAttributeError(exception, frame)
+    exception_representation = ExceptionRepresentationAttributeError(exception, frames)
     _assert_fields_set(exception_representation)
     
     vampytest.assert_eq(exception_representation.attribute_name, attribute_name)
     vampytest.assert_eq(exception_representation.instance_type_name, TestType0.__name__)
-    vampytest.assert_eq(exception_representation.suggestion_attribute_exists_just_was_not_set, True)
+    vampytest.assert_eq(exception_representation.suggestion_attribute_unset, True)
     vampytest.assert_eq(exception_representation.suggestion_matching_variable_exists, True)
     vampytest.assert_eq(exception_representation.suggestion_familiar_attribute_names, None)
     vampytest.assert_eq(exception_representation.suggestion_variable_names_with_attribute, None)
@@ -84,7 +86,7 @@ def test__ExceptionRepresentationAttributeError__from_fields__all_fields():
     """
     attribute_name = 'komeiji'
     instance_type_name = 'object'
-    suggestion_attribute_exists_just_was_not_set = True
+    suggestion_attribute_unset = True
     suggestion_variable_names_with_attribute = ['hey', 'mister']
     suggestion_matching_variable_exists = False
     suggestion_familiar_attribute_names = ['koishi']
@@ -93,7 +95,7 @@ def test__ExceptionRepresentationAttributeError__from_fields__all_fields():
     exception_representation = ExceptionRepresentationAttributeError.from_fields(
         attribute_name = attribute_name,
         instance_type_name = instance_type_name,
-        suggestion_attribute_exists_just_was_not_set = suggestion_attribute_exists_just_was_not_set,
+        suggestion_attribute_unset = suggestion_attribute_unset,
         suggestion_variable_names_with_attribute = suggestion_variable_names_with_attribute,
         suggestion_matching_variable_exists = suggestion_matching_variable_exists,
         suggestion_familiar_attribute_names = suggestion_familiar_attribute_names,
@@ -103,7 +105,7 @@ def test__ExceptionRepresentationAttributeError__from_fields__all_fields():
     
     vampytest.assert_eq(exception_representation.attribute_name, attribute_name)
     vampytest.assert_eq(exception_representation.instance_type_name, instance_type_name)
-    vampytest.assert_eq(exception_representation.suggestion_attribute_exists_just_was_not_set, suggestion_attribute_exists_just_was_not_set)
+    vampytest.assert_eq(exception_representation.suggestion_attribute_unset, suggestion_attribute_unset)
     vampytest.assert_eq(exception_representation.suggestion_familiar_attribute_names, suggestion_familiar_attribute_names)
     vampytest.assert_eq(exception_representation.suggestion_matching_variable_exists, suggestion_matching_variable_exists)
     vampytest.assert_eq(exception_representation.suggestion_variable_names_with_attribute, suggestion_variable_names_with_attribute)
@@ -116,7 +118,7 @@ def test__ExceptionRepresentationAttributeError__repr():
     """
     attribute_name = 'komeiji'
     instance_type_name = 'object'
-    suggestion_attribute_exists_just_was_not_set = True
+    suggestion_attribute_unset = True
     suggestion_variable_names_with_attribute = ['hey', 'mister']
     suggestion_matching_variable_exists = True
     suggestion_familiar_attribute_names = ['koishi']
@@ -125,7 +127,7 @@ def test__ExceptionRepresentationAttributeError__repr():
     exception_representation = ExceptionRepresentationAttributeError.from_fields(
         attribute_name = attribute_name,
         instance_type_name = instance_type_name,
-        suggestion_attribute_exists_just_was_not_set = suggestion_attribute_exists_just_was_not_set,
+        suggestion_attribute_unset = suggestion_attribute_unset,
         suggestion_variable_names_with_attribute = suggestion_variable_names_with_attribute,
         suggestion_matching_variable_exists = suggestion_matching_variable_exists,
         suggestion_familiar_attribute_names = suggestion_familiar_attribute_names,
@@ -141,8 +143,8 @@ def test__ExceptionRepresentationAttributeError__repr():
     vampytest.assert_in('instance_type_name', output)
     vampytest.assert_in(repr(instance_type_name), output)
     
-    vampytest.assert_in('suggestion_attribute_exists_just_was_not_set', output)
-    vampytest.assert_in(repr(suggestion_attribute_exists_just_was_not_set), output)
+    vampytest.assert_in('suggestion_attribute_unset', output)
+    vampytest.assert_in(repr(suggestion_attribute_unset), output)
     
     vampytest.assert_in('suggestion_variable_names_with_attribute', output)
     vampytest.assert_in(repr(suggestion_variable_names_with_attribute), output)
@@ -163,7 +165,7 @@ def test__ExceptionRepresentationAttributeError__eq():
     """
     attribute_name = 'komeiji'
     instance_type_name = 'object'
-    suggestion_attribute_exists_just_was_not_set = True
+    suggestion_attribute_unset = True
     suggestion_variable_names_with_attribute = ['hey', 'mister']
     suggestion_matching_variable_exists = False
     suggestion_familiar_attribute_names = ['koishi']
@@ -172,7 +174,7 @@ def test__ExceptionRepresentationAttributeError__eq():
     keyword_parameters = {
         'attribute_name': attribute_name,
         'instance_type_name': instance_type_name,
-        'suggestion_attribute_exists_just_was_not_set': suggestion_attribute_exists_just_was_not_set,
+        'suggestion_attribute_unset': suggestion_attribute_unset,
         'suggestion_variable_names_with_attribute': suggestion_variable_names_with_attribute,
         'suggestion_matching_variable_exists': suggestion_matching_variable_exists,
         'suggestion_familiar_attribute_names': suggestion_familiar_attribute_names,
@@ -186,7 +188,7 @@ def test__ExceptionRepresentationAttributeError__eq():
     for field_name, field_value in (
         ('attribute_name', 'kaenbyou'),
         ('instance_type_name', 'int'),
-        ('suggestion_attribute_exists_just_was_not_set', False),
+        ('suggestion_attribute_unset', False),
         ('suggestion_variable_names_with_attribute', None),
         ('suggestion_matching_variable_exists', True),
         ('suggestion_familiar_attribute_names', None),

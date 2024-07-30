@@ -17,7 +17,7 @@ class ExceptionRepresentationGeneric(ExceptionRepresentationBase):
     """
     __slots__ = ('representation',)
     
-    def __new__(cls, exception, frame):
+    def __new__(cls, exception, frames):
         """
         Creates a new exception representation.
         
@@ -25,8 +25,8 @@ class ExceptionRepresentationGeneric(ExceptionRepresentationBase):
         ----------
         exception : `BaseException`
             Exception to represent.
-        frame : `None | FrameProxyBase`
-            The frame the exception is raised from.
+        frames : `None | list<FrameProxyBase>`
+            The frames the exception is raised with.
         """
         representation = get_exception_representation_generic(exception)
         

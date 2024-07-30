@@ -1,3 +1,17 @@
+# 1.0.75 *\[2024-07-??\]*
+
+#### Improvements
+
+- Improve `AttributeError` message: add suggestion for unset attribute.
+- Improve `AttributeError` message: add suggestion for variable called the same.
+- Improve `AttributeError` message: add suggestion for attributes of other variables.
+- Add `ExceptionProxyBase.apply_frame_filter`.
+- Add `FrameGroup.apply_frame_filter`.
+
+#### Renames, Deprecation & Removals
+
+- Rename `should_ignore_frame` to `should_keep_frame` and invert its output to match `filter` behavior.
+
 # 1.0.74 *\[2024-07-14\]*
 
 #### Improvements

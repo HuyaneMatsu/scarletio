@@ -55,7 +55,7 @@ def get_familiar_instance_attribute_names(instance, name):
         attribute_exists_just_was_not_set = False
     else:
         attribute_exists_just_was_not_set = True
-        
+    
     familiar_attribute_names = _get_familiar_names(names, name)
     if not familiar_attribute_names:
         familiar_attribute_names = None

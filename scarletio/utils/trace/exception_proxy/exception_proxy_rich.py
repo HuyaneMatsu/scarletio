@@ -32,7 +32,7 @@ class ExceptionProxyRich(ExceptionProxyBase):
         frames = get_exception_frames(exception)
         frame_groups = group_frames(frames)
         
-        exception_representation = get_exception_representation(exception, frames[-1] if frames else None)
+        exception_representation = get_exception_representation(exception, frames)
         
         self = object.__new__(cls)
         self.exception_representation = exception_representation

@@ -182,6 +182,21 @@ def test__ExceptionProxyRich__drop_ignored_frames():
     vampytest.assert_eq(len(exception_proxy), 1)
 
 
+def test__ExceptionProxyRich__apply_frame_filter():
+    """
+    Tests whether ``ExceptionProxyRich.apply_frame_filter`` works as intended.
+    """
+    def filter(frame):
+        return '0' in frame.name
+    
+    exception = _create_exception_1()
+    exception_proxy = ExceptionProxyRich(exception)
+    
+    exception_proxy.apply_frame_filter(filter)
+    
+    vampytest.assert_eq(len(exception_proxy), 1)
+
+
 def test__ExceptionProxyRich__iter_frames_no_repeat():
     """
     Tests whether ``ExceptionProxyRich.iter_frames_no_repeat`` works as intended.

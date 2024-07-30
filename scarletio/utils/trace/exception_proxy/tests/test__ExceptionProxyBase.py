@@ -169,6 +169,20 @@ def test__ExceptionProxyBase__drop_ignored_frames():
     vampytest.assert_eq(len(exception_proxy), 0)
 
 
+def test__ExceptionProxyBase__apply_frame_filter():
+    """
+    Tests whether ``ExceptionProxyBase.apply_frame_filter`` works as intended.
+    """
+    def filter(frame):
+        return True
+    
+    exception_proxy = ExceptionProxyBase()
+    
+    exception_proxy.apply_frame_filter(filter)
+    
+    vampytest.assert_eq(len(exception_proxy), 0)
+
+
 def test__ExceptionProxyBase__iter_frames_no_repeat():
     """
     Tests whether ``ExceptionProxyBase.iter_frames_no_repeat`` works as intended.
@@ -181,4 +195,3 @@ def test__ExceptionProxyBase__iter_frames_no_repeat():
         vampytest.assert_instance(element, FrameProxyBase)
         
     vampytest.assert_eq(len(output), 0)
-

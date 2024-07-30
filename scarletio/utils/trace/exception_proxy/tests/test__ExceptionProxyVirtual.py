@@ -333,6 +333,41 @@ def test__ExceptionProxyVirtual__drop_ignored_frames__all_in_group():
     vampytest.assert_is(exception_proxy.frame_groups, None)
 
 
+def test__ExceptionProxyVirtual__apply_frame_filter():
+    """
+    Tests whether ``ExceptionProxyVirtual.apply_frame_filter`` works as intended.
+    """
+    def filter(frame):
+        return '0' in frame.name
+    
+    exception = _create_exception_1()
+    source_exception_proxy = ExceptionProxyRich(exception)
+    exception_proxy = ExceptionProxyVirtual(source_exception_proxy)
+    
+    exception_proxy.apply_frame_filter(filter = filter)
+    
+    vampytest.assert_eq(len(exception_proxy), 1)
+
+
+def test__ExceptionProxyVirtual__apply_frame_filter__all_in_group():
+    """
+    Tests whether ``ExceptionProxyVirtual.apply_frame_filter`` works as intended.
+    
+    Case: All dropped in a group.
+    """
+    def filter(frame):
+        return False
+    
+    exception = _create_exception_0()
+    source_exception_proxy = ExceptionProxyRich(exception)
+    exception_proxy = ExceptionProxyVirtual(source_exception_proxy)
+    
+    exception_proxy.apply_frame_filter(filter)
+    
+    vampytest.assert_eq(len(exception_proxy), 0)
+    vampytest.assert_is(exception_proxy.frame_groups, None)
+
+
 def test__ExceptionProxyVirtual__iter_frames_no_repeat():
     """
     Tests whether ``ExceptionProxyVirtual.iter_frames_no_repeat`` works as intended.

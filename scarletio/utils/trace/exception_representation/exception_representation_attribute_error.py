@@ -2,7 +2,7 @@ __all__ = ('ExceptionRepresentationAttributeError',)
 
 from ...docs import copy_docs
 
-from .attribute_error_helpers import extract_attribute_error_fields
+from .attribute_error_helpers import extract_attribute_error_fields, extract_last_attribute_error_context_frame
 from .exception_representation_base import ExceptionRepresentationBase
 from .representation_helpers import _get_type_name
 from .suggestion import (
@@ -20,7 +20,7 @@ class ExceptionRepresentationAttributeError(ExceptionRepresentationBase):
         The attribute's name that was not present.
     instance_type_name : `str`
         The representation of the instance's type's name.
-    suggestion_attribute_exists_just_was_not_set : `bool`
+    suggestion_attribute_unset : `bool`
         Whether the instance should have an attribute with the given name.
     suggestion_familiar_attribute_names : `None | list<str>`
         Attributes of the same instance with familiar names.
@@ -32,12 +32,12 @@ class ExceptionRepresentationAttributeError(ExceptionRepresentationBase):
         The represented exception's type's name.
     """
     __slots__ = (
-        'attribute_name', 'instance_type_name', 'suggestion_attribute_exists_just_was_not_set',
+        'attribute_name', 'instance_type_name', 'suggestion_attribute_unset',
         'suggestion_familiar_attribute_names', 'suggestion_matching_variable_exists', 'suggestion_matching_variables',
         'suggestion_variable_names_with_attribute', 'type_name',
     )
     
-    def __new__(cls, exception, frame):
+    def __new__(cls, exception, frames):
         """
         Creates a new exception representation.
         
@@ -45,12 +45,13 @@ class ExceptionRepresentationAttributeError(ExceptionRepresentationBase):
         ----------
         exception : `AttributeError`
             Exception to represent.
-        frame : `None | FrameProxyBase`
-            The frame the exception is raised from.
+        frames : `None | list<FrameProxyBase>`
+            The frame the exception is raised with.
         """
         instance, attribute_name = extract_attribute_error_fields(exception)
+        frame = extract_last_attribute_error_context_frame(exception, frames)
         
-        suggestion_attribute_exists_just_was_not_set, suggestion_familiar_attribute_names = (
+        suggestion_attribute_unset, suggestion_familiar_attribute_names = (
             get_familiar_instance_attribute_names(instance, attribute_name)
         )
         suggestion_matching_variable_exists = exists_matching_variable_name(frame, attribute_name)
@@ -62,7 +63,7 @@ class ExceptionRepresentationAttributeError(ExceptionRepresentationBase):
         self = object.__new__(cls)
         self.attribute_name = attribute_name
         self.instance_type_name = instance_type_name
-        self.suggestion_attribute_exists_just_was_not_set = suggestion_attribute_exists_just_was_not_set
+        self.suggestion_attribute_unset = suggestion_attribute_unset
         self.suggestion_familiar_attribute_names = suggestion_familiar_attribute_names
         self.suggestion_matching_variable_exists = suggestion_matching_variable_exists
         self.suggestion_variable_names_with_attribute = suggestion_variable_names_with_attribute
@@ -76,7 +77,7 @@ class ExceptionRepresentationAttributeError(ExceptionRepresentationBase):
         *,
         attribute_name = ...,
         instance_type_name = ...,
-        suggestion_attribute_exists_just_was_not_set = ...,
+        suggestion_attribute_unset = ...,
         suggestion_familiar_attribute_names = ...,
         suggestion_matching_variable_exists = ...,
         suggestion_variable_names_with_attribute = ...,
@@ -91,7 +92,7 @@ class ExceptionRepresentationAttributeError(ExceptionRepresentationBase):
             The attribute's name that was not present.
         instance_type_name : `str`, Optional (Keyword only)
             The representation of the instance's type's name.
-        suggestion_attribute_exists_just_was_not_set : `bool`, Optional (Keyword only)
+        suggestion_attribute_unset : `bool`, Optional (Keyword only)
             Whether the instance should have an attribute with the given name.
         suggestion_familiar_attribute_names : `None | list<str>`, Optional (Keyword only)
             Attributes of the same instance with familiar names.
@@ -109,8 +110,8 @@ class ExceptionRepresentationAttributeError(ExceptionRepresentationBase):
         self = object.__new__(cls)
         self.attribute_name = '' if attribute_name is ... else attribute_name
         self.instance_type_name = '' if instance_type_name is ... else instance_type_name
-        self.suggestion_attribute_exists_just_was_not_set = (
-            False if suggestion_attribute_exists_just_was_not_set is ... else suggestion_attribute_exists_just_was_not_set
+        self.suggestion_attribute_unset = (
+            False if suggestion_attribute_unset is ... else suggestion_attribute_unset
         )
         self.suggestion_familiar_attribute_names = (
             None if suggestion_familiar_attribute_names is ... else suggestion_familiar_attribute_names
@@ -139,11 +140,11 @@ class ExceptionRepresentationAttributeError(ExceptionRepresentationBase):
         repr_parts.append(', attribute_name = ')
         repr_parts.append(repr(self.attribute_name))
         
-        # suggestion_attribute_exists_just_was_not_set
-        suggestion_attribute_exists_just_was_not_set = self.suggestion_attribute_exists_just_was_not_set
-        if suggestion_attribute_exists_just_was_not_set:
-            repr_parts.append(', suggestion_attribute_exists_just_was_not_set = ')
-            repr_parts.append(repr(suggestion_attribute_exists_just_was_not_set))
+        # suggestion_attribute_unset
+        suggestion_attribute_unset = self.suggestion_attribute_unset
+        if suggestion_attribute_unset:
+            repr_parts.append(', suggestion_attribute_unset = ')
+            repr_parts.append(repr(suggestion_attribute_unset))
         
         # suggestion_familiar_attribute_names
         suggestion_familiar_attribute_names = self.suggestion_familiar_attribute_names
@@ -175,7 +176,7 @@ class ExceptionRepresentationAttributeError(ExceptionRepresentationBase):
         if self.instance_type_name != other.instance_type_name:
             return False
         
-        if self.suggestion_attribute_exists_just_was_not_set != other.suggestion_attribute_exists_just_was_not_set:
+        if self.suggestion_attribute_unset != other.suggestion_attribute_unset:
             return False
         
         if self.suggestion_familiar_attribute_names != other.suggestion_familiar_attribute_names:

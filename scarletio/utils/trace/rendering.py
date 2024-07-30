@@ -541,6 +541,13 @@ def _render_exception_representation_attribute_error_into(exception_representati
     -------
     into : `list<str>`
     """
+    attribute_name = exception_representation.attribute_name
+    attribute_unset = exception_representation.suggestion_attribute_unset
+    familiar_attribute_names = exception_representation.suggestion_familiar_attribute_names
+    matching_variable_exists = exception_representation.suggestion_matching_variable_exists
+    variable_names_with_attribute = exception_representation.suggestion_variable_names_with_attribute
+    lines_rendered = 0
+    
     into = _add_typed_part_into(
         HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
         exception_representation.type_name,
@@ -567,34 +574,96 @@ def _render_exception_representation_attribute_error_into(exception_representati
     
     into = _add_typed_part_into(
         HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
-        ' has no attribute ',
+        (' does not have its attribute ' if attribute_unset else ' has no attribute '),
         into,
         highlighter,
     )
-    into = _add_typed_parts_into(_produce_attribute_name(exception_representation.attribute_name), into, highlighter)
+    into = _add_typed_parts_into(
+        _produce_attribute_name(attribute_name),
+        into,
+        highlighter,
+    )
     into = _add_typed_part_into(
         HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
-        '.',
+        ' set.' if attribute_unset else '.',
         into,
         highlighter,
     )
     
     into.append('\n')
+    lines_rendered += 1
     
-    suggestion_familiar_attribute_names = exception_representation.suggestion_familiar_attribute_names
-    if (suggestion_familiar_attribute_names is not None):
-        index = 0
-        length = len(suggestion_familiar_attribute_names)
-        
+    if attribute_unset and matching_variable_exists:
         into = _add_typed_part_into(
             HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
-            'Did you mean any of: ',
+            'Perhaps you meant to use the ',
             into,
             highlighter,
         )
         
+        into = _add_typed_parts_into(
+            _produce_variable_name(attribute_name),
+            into,
+            highlighter,
+        )
+    
+        into = _add_typed_part_into(
+            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
+            ' variable instead?',
+            into,
+            highlighter,
+        )
+    
+        into.append('\n')
+        lines_rendered += 1
+    
+    if attribute_unset and (not matching_variable_exists):
+        into = _add_typed_part_into(
+            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
+            'Please review its constructors whether they are omitting setting it.',
+            into,
+            highlighter,
+        )
+        
+        into.append('\n')
+        lines_rendered += 1
+    
+    if (not attribute_unset) and matching_variable_exists:
+        into = _add_typed_part_into(
+            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
+            'Did you mean to use the ',
+            into,
+            highlighter,
+        )
+        
+        into = _add_typed_parts_into(
+            _produce_variable_name(exception_representation.attribute_name),
+            into,
+            highlighter,
+        )
+    
+        into = _add_typed_part_into(
+            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
+            ' variable?',
+            into,
+            highlighter,
+        )
+        
+        into.append('\n')
+        lines_rendered += 1
+    
+    if (not attribute_unset) and (familiar_attribute_names is not None):
+        into = _add_typed_part_into(
+            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
+            ('Or perhaps any of the following attributes: ' if lines_rendered >= 2 else 'Did you mean any of: '),
+            into,
+            highlighter,
+        )
+        
+        index = 0
+        length = len(familiar_attribute_names)
         while True:
-            name = suggestion_familiar_attribute_names[index]
+            name = familiar_attribute_names[index]
             into = _add_typed_parts_into(_produce_attribute_name(name), into, highlighter)
             
             index += 1
@@ -617,6 +686,43 @@ def _render_exception_representation_attribute_error_into(exception_representati
         )
         
         into.append('\n')
+        lines_rendered += 1
+
+    if (familiar_attribute_names is None) and  (variable_names_with_attribute is not None):
+        into = _add_typed_part_into(
+            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
+            ('Or perhaps you meant to do any of: ' if lines_rendered >= 2 else 'Did you mean to do any of: '),
+            into,
+            highlighter,
+        )
+        
+        index = 0
+        length = len(variable_names_with_attribute)
+        while True:
+            name = variable_names_with_attribute[index]
+            into = _add_typed_parts_into(_produce_variable_attribute_access(name, attribute_name), into, highlighter)
+            
+            index += 1
+            if index == length:
+                break
+            
+            into = _add_typed_part_into(
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
+                ', ',
+                into,
+                highlighter,
+            )
+            continue
+        
+        into = _add_typed_part_into(
+            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
+            '?',
+            into,
+            highlighter,
+        )
+        
+        into.append('\n')
+        lines_rendered += 1
     
     return into
 

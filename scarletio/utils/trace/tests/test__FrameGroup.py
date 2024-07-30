@@ -948,6 +948,67 @@ def test__FrameGroup__drop_ignored_frames__with_frames_to_no_frames():
     vampytest.assert_eq(frame_group, frame_group_expected)
 
 
+def test__FrameGroup__apply_frame_filter():
+    """
+    Tests whether ``FrameGroup.apply_frame_filter`` works as intended.
+    
+    Case: No frames.
+    """
+    def filter(frame):
+        return True
+    
+    frame_group = FrameGroup()
+    frame_group_expected = FrameGroup()
+    
+    frame_group.apply_frame_filter(filter)
+    vampytest.assert_eq(frame_group, frame_group_expected)
+
+
+def test__FrameGroup__apply_frame_filter__with_frames():
+    """
+    Tests whether ``FrameGroup.apply_frame_filter`` works as intended.
+    
+    Case: has frames.
+    """
+    def filter(frame):
+        return frame.file_name == 'satori.py'
+    
+    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    
+    frame_group = FrameGroup()
+    frame_group.try_add_frame(frame_0)
+    frame_group.try_add_frame(frame_1)
+    
+    frame_group_expected = FrameGroup()
+    frame_group_expected.try_add_frame(frame_0)
+    
+    frame_group.apply_frame_filter(filter)
+    vampytest.assert_eq(frame_group, frame_group_expected)
+
+
+def test__FrameGroup__apply_frame_filter__with_frames_to_no_frames():
+    """
+    Tests whether ``FrameGroup.apply_frame_filter`` works as intended.
+    
+    Case: has frames to has no frames.
+    """
+    def filter(frame):
+        return False
+    
+    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    
+    frame_group = FrameGroup()
+    frame_group.try_add_frame(frame_0)
+    frame_group.try_add_frame(frame_1)
+    
+    frame_group_expected = FrameGroup()
+    
+    frame_group.apply_frame_filter(filter)
+    vampytest.assert_eq(frame_group, frame_group_expected)
+
+
 def test__FrameGroup__iter_frames_no_repeat__empty():
     """
     Tests whether ``FrameGroup.iter_frames_no_repeat`` works as intended.

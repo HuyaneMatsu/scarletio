@@ -1,9 +1,10 @@
 __all__ = ('render_exception_into', 'render_frames_into',)
 
 from ..cause_group import CauseGroup
+
 from .exception_proxy import ExceptionProxyRich
 from .frame_grouping import group_frames
-from .frame_ignoring import should_ignore_frame
+from .frame_ignoring import should_keep_frame
 from .frame_proxy import convert_frames_to_frame_proxies, populate_frame_proxies
 from .rendering import render_frame_groups_into, add_trace_title_into, render_exception_proxy_into
 
@@ -37,7 +38,7 @@ def render_frames_into(frames, extend = None, *, filter = None, highlighter = No
     if extend is None:
         extend = []
     
-    frames = [frame for frame in frames if not should_ignore_frame(frame, filter = filter)]
+    frames = [frame for frame in frames if should_keep_frame(frame, filter = filter)]
     frame_groups = group_frames(frames)
     
     render_frame_groups_into(frame_groups, extend, highlighter)

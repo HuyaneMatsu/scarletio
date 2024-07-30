@@ -38,11 +38,11 @@ def ignore_frame(file_name, name, line):
     lines.add(line)
 
 
-def _should_ignore_frame(frame_proxy):
+def should_keep_frame_from_defaults(frame_proxy):
     """
-    Returns whether the given frame should be ignored from rending.
+    Returns whether the given frame should be kept and rendered.
     
-    Called by ``should_ignore_frame`` before calling it's `filter`.
+    Called before before calling it's `should_keep_frame_from_filter`.
     
     Parameters
     ----------
@@ -51,29 +51,59 @@ def _should_ignore_frame(frame_proxy):
     
     Returns
     -------
-    should_ignore_frame : `bool`
+    should_keep_frame : `bool`
         Whether the frame should be ignored.
     """
     try:
         lines = IGNORED_FRAME_LINES[frame_proxy.file_name, frame_proxy.name]
     except KeyError:
-        return False
+        return True
     
     if frame_proxy.line not in lines:
-        return False
+        return True
     
-    return True
+    return False
 
 
 if not DEFAULT_IGNORED_FRAMES:
-    @copy_docs(_should_ignore_frame)
-    def _should_ignore_frame(file_name, name, line):
-        return False
+    @copy_docs(should_keep_frame_from_defaults)
+    def should_keep_frame_from_defaults(frame_proxy):
+        return True
 
 
-def should_ignore_frame(frame_proxy, *, filter = None):
+def should_keep_frame_from_filter(frame_proxy, filter):
     """
-    Returns whether the given frame should be ignored from rending.
+    Returns whether a frame should be kept based on the given filter.
+    
+    Parameters
+    ----------
+    frame_proxy : ``FrameProxyBase``
+        Frame proxy to check whether a frame should be ignored.
+    filter : `FunctionType`
+        Filter to check the frame.
+    
+    Returns
+    -------
+    should_keep_frame : `bool`
+        Whether the frame should be ignored.
+    """
+    if CallableAnalyzer(filter).get_non_reserved_positional_parameter_count() == 1:
+        return filter(frame_proxy)
+    
+    warn(
+        (
+            f'`should_keep_frame` now passes `1` parameter to `filter`, but a filter given with different '
+            f'amount. Please update your filter function to accept `1`. Got {format_builtin(filter)!s}. '
+            f'4 parameter version will be removed in 2025 January.'
+        ),
+        FutureWarning,
+    )
+    return filter(frame_proxy.file_name, frame_proxy.name, frame_proxy.line_index, frame_proxy.line)
+
+
+def should_keep_frame(frame_proxy, *, filter = None):
+    """
+    Returns whether the given frame should be kept and rendered.
     
     Parameters
     ----------
@@ -85,26 +115,15 @@ def should_ignore_frame(frame_proxy, *, filter = None):
     
     Returns
     -------
-    should_ignore : `bool`
+    should_keep_frame : `bool`
     """
-    if _should_ignore_frame(frame_proxy):
-        return True
+    if not should_keep_frame_from_defaults(frame_proxy):
+        return False
     
-    if (filter is not None):
-        if CallableAnalyzer(filter).get_non_reserved_positional_parameter_count() == 1:
-            if not filter(frame_proxy):
-                return True
-        
-        else:
-            warn(
-                f'`should_ignore_frame` now passes `1` parameter to `filter`, but a filter given with different '
-                f'amount. Please update your filter function to accept `1`. Got {format_builtin(filter)!s}.'
-            )
-            if not filter(frame_proxy.file_name, frame_proxy.name, frame_proxy.line_index, frame_proxy.line):
-                return True
+    if (filter is not None) and (not should_keep_frame_from_filter(frame_proxy, filter)):
+        return False
     
-    return False
-
+    return True
 
 
 # ---- Ignore frames / module_rich_attribute_error ----

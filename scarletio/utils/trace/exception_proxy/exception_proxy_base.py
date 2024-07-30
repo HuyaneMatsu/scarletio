@@ -205,6 +205,21 @@ class ExceptionProxyBase:
         self.frame_groups = normalize_frame_groups(self.frame_groups)
     
     
+    def apply_frame_filter(self, filter):
+        """
+        Keeps the frames that pass the given `filter`.
+        
+        Parameters
+        ----------
+        filter : `callable`
+            Filter to check whether a frame should be kept.
+        """
+        for frame_group in self.iter_frame_groups():
+            frame_group.apply_frame_filter(filter)
+        
+        self.frame_groups = normalize_frame_groups(self.frame_groups)
+    
+    
     def iter_frames_no_repeat(self):
         """
         Iterates over the frames of the exception proxy without repeating repeated blocks.
