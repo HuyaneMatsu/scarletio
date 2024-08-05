@@ -15,14 +15,12 @@ class ExpressionInfo:
         The joined lines of the expression.
     lines : `list<str>`
         The parsed lines.
-    mention_count : `int`
-        How much times the expression info is mentioned.
     shift : `int`
         How much the expression is shifted.
     syntax_valid : `bool`
         Whether the syntax is valid.
     """
-    __slots__ = ('key', 'line', 'lines', 'mention_count', 'shift', 'syntax_valid')
+    __slots__ = ('key', 'line', 'lines', 'shift', 'syntax_valid')
     
     def __new__(cls, key, lines, shift, syntax_valid):
         """
@@ -44,7 +42,6 @@ class ExpressionInfo:
         self.key = key
         self.line = line
         self.lines = lines
-        self.mention_count = 0
         self.shift = shift
         self.syntax_valid = syntax_valid
         return self
@@ -73,17 +70,9 @@ class ExpressionInfo:
         new.key = self.key
         new.line = self.line
         new.lines = self.lines.copy()
-        new.mention_count = 0
         new.shift = self.shift
         new.syntax_valid = self.syntax_valid
         return new
-    
-    
-    def do_mention(self):
-        """
-        Mentions the expression info.
-        """
-        self.mention_count += 1
 
 
 def get_expression_info(expression_key):

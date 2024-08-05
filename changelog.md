@@ -1,3 +1,10 @@
+# 1.0.76 *\[2024-08-05\]*
+
+#### Bug fixes
+
+- Fix recursion grouping. Did not work as intended since mention (or alikeness as its new name)
+    counting was moved after grouping. (from 1.0.74)
+
 # 1.0.75 *\[2024-07-30\]*
 
 #### Improvements

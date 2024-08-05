@@ -353,7 +353,7 @@ class FrameGroup(RichAttributeErrorBaseType):
             self.frames = [frame]
             self.repeat_count = 1
             
-            if frame.mention_count > 1:
+            if frame.alike_count > 1:
                 group_type = FRAME_GROUP_TYPE_REPEAT
             else:
                 group_type = FRAME_GROUP_TYPE_SINGLES
@@ -361,7 +361,7 @@ class FrameGroup(RichAttributeErrorBaseType):
             return True
         
         if group_type == FRAME_GROUP_TYPE_SINGLES:
-            if frame.mention_count > 1:
+            if frame.alike_count > 1:
                 return False
             
             self.frames.append(frame)
@@ -369,7 +369,7 @@ class FrameGroup(RichAttributeErrorBaseType):
         
         
         if group_type == FRAME_GROUP_TYPE_REPEAT:
-            if frame.mention_count <= 1:
+            if frame.alike_count <= 1:
                 return False
             
             self.frames.append(frame)

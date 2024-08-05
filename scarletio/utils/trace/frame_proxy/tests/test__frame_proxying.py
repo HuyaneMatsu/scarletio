@@ -90,8 +90,6 @@ def test__populate_frame_proxies():
     
     for frame_proxy in frame_proxies:
         vampytest.assert_instance(frame_proxy.expression_info, ExpressionInfo)
-    
-    vampytest.assert_eq(frame_proxy.mention_count, 2)
 
 
 def test__populate_frame_proxies__desync():

@@ -13,6 +13,8 @@ class FrameProxyFrame(FrameProxyBase):
     ----------
     _frame : ``FrameType``
         The wrapped frame.
+    alike_count : `int`
+        How much alike frames are in the same exception.
     expression_info : `None | ExpressionInfo`
         Additional expression information.
     """
@@ -29,6 +31,7 @@ class FrameProxyFrame(FrameProxyBase):
         """
         self = object.__new__(cls)
         self._frame = frame
+        self.alike_count = 0
         self.expression_info = None
         return self
     

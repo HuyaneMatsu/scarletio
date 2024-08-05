@@ -19,7 +19,6 @@ def _assert_fields_set(expression_info):
     vampytest.assert_instance(expression_info.lines, list)
     vampytest.assert_instance(expression_info.shift, int)
     vampytest.assert_instance(expression_info.syntax_valid, bool)
-    vampytest.assert_instance(expression_info.mention_count, int)
 
 
 def test__ExpressionInfo__new():
@@ -39,7 +38,6 @@ def test__ExpressionInfo__new():
     vampytest.assert_eq(expression_info.lines, lines)
     vampytest.assert_eq(expression_info.shift, shift)
     vampytest.assert_eq(expression_info.syntax_valid, syntax_valid)
-    vampytest.assert_eq(expression_info.mention_count, 0)
 
 
 def test__ExpressionInfo__repr():
@@ -76,22 +74,3 @@ def test__ExpressionInfo__copy():
     vampytest.assert_eq(copy.lines, lines)
     vampytest.assert_eq(copy.shift, shift)
     vampytest.assert_eq(copy.syntax_valid, syntax_valid)
-    vampytest.assert_eq(copy.mention_count, 0)
-
-
-def test__Expression_info__do_mention():
-    """
-    Tests whether ``ExpressionInfo.do_mention`` works as intended.
-    """
-    key = ExpressionKey('orin.py', 20, 'koishi', 10)
-    lines = ['aya', 'ya']
-    shift = 1
-    syntax_valid = True
-    
-    expression_info = ExpressionInfo(key, lines, shift, syntax_valid)
-    
-    expression_info.do_mention()
-    vampytest.assert_eq(expression_info.mention_count, 1)
-    
-    expression_info.do_mention()
-    vampytest.assert_eq(expression_info.mention_count, 2)

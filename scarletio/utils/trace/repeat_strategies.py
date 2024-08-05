@@ -64,7 +64,7 @@ def get_repeat_with_strategy_bot(items):
             repeat = 0
             for additional_element_index in range(start_shift - chunk_size, -1, -chunk_size):
                 for shift in range(0, chunk_size):
-                    if not (items[start_shift + shift] == items[additional_element_index + shift]):
+                    if not (items[start_shift + shift] % items[additional_element_index + shift]):
                         break
                 else:
                     repeat += 1

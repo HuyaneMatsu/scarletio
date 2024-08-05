@@ -11,6 +11,8 @@ class FrameProxyVirtual(FrameProxyBase):
     
     Attributes
     ----------
+    alike_count : `int`
+        How much alike frames are in the same exception.
     builtins : `None | dict<str, object>`
         The frame's builtins. Can be `None` if the variables were already omitted.
     code : `None | CodeType`
@@ -53,6 +55,7 @@ class FrameProxyVirtual(FrameProxyBase):
                 return frame_proxy
         
         self = object.__new__(cls)
+        self.alike_count = 0
         self.builtins = frame_proxy.builtins if with_variables else None
         self.code = frame_proxy.code
         self.expression_info = frame_proxy.expression_info
@@ -112,6 +115,7 @@ class FrameProxyVirtual(FrameProxyBase):
         self : `instance<cls>`
         """
         self = object.__new__(cls)
+        self.alike_count = 0
         self.builtins = None if builtins is ... else builtins
         self.code = None if code is ... else code
         self.expression_info = None if expression_info is ... else expression_info

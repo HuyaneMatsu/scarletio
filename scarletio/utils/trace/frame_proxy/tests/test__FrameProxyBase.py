@@ -13,6 +13,7 @@ def test__FrameProxyBase__new():
     """
     frame_proxy = FrameProxyBase()
     vampytest.assert_instance(frame_proxy, FrameProxyBase)
+    vampytest.assert_instance(frame_proxy.alike_count, int)
     vampytest.assert_instance(frame_proxy.expression_info, ExpressionInfo, nullable = True)
 
 
@@ -202,32 +203,33 @@ def test__FrameProxyBase__lines__with_expression():
     vampytest.assert_eq(output, ['hey', 'mister'])
 
 
-def test__FrameProxyBase__mention_count__no_expression():
+def test__FrameProxyBase__alike_count__no_expression():
     """
-    Tests whether ``FrameProxyBase.mention_count`` works as intended.
+    Tests whether ``FrameProxyBase.alike_count`` works as intended.
     
     Case: No expression set.
     """
     frame_proxy = FrameProxyBase()
     
-    output = frame_proxy.mention_count
+    output = frame_proxy.alike_count
     vampytest.assert_instance(output, int)
     vampytest.assert_eq(output, 0)
 
 
-def test__FrameProxyBase__mention_count__with_expression():
+def test__FrameProxyBase__alike_count__set():
     """
-    Tests whether ``FrameProxyBase.mention_count`` works as intended.
+    Tests whether ``FrameProxyBase.alike_count`` works as intended.
     
-    Case: expression set.
+    Case: `alike_count` set.
     """
+    alike_count = 5
+    
     frame_proxy = FrameProxyBase()
-    frame_proxy.expression_info = ExpressionInfo(frame_proxy.expression_key, ['hey', 'mister'], 0, True)
-    frame_proxy.expression_info.do_mention()
+    frame_proxy.alike_count = 5
     
-    output = frame_proxy.mention_count
+    output = frame_proxy.alike_count
     vampytest.assert_instance(output, int)
-    vampytest.assert_eq(output, 1)
+    vampytest.assert_eq(output, alike_count)
 
 
 def test__FrameProxyBase__line__no_expression():

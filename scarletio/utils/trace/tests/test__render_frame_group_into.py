@@ -114,13 +114,13 @@ def test__render_frame_group_into__with_repeat_no_highlight():
         file_name = 'koishi.py', line_index = 12, name = 'sit', instruction_index = 6
     )
     frame_proxy_0.expression_info = ExpressionInfo(frame_proxy_0.expression_key, ['hey', 'mister'], 0, True)
-    frame_proxy_0.expression_info.mention_count = 3
+    frame_proxy_0.alike_count = 3
 
     frame_proxy_1 = FrameProxyVirtual.from_fields(
         file_name = 'satori.py', line_index = 15, name = 'mind_read', instruction_index = 6
     )
     frame_proxy_1.expression_info = ExpressionInfo(frame_proxy_1.expression_key, ['i love you'], 0, True)
-    frame_proxy_1.expression_info.mention_count = 3
+    frame_proxy_1.alike_count = 3
     
     frame_group = FrameGroup()
     frame_group.try_add_frame(frame_proxy_0)

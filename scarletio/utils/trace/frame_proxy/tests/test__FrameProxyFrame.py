@@ -25,6 +25,7 @@ def test__FrameProxyFrame__new():
     vampytest.assert_instance(frame_proxy, FrameProxyFrame)
     vampytest.assert_instance(frame_proxy._frame, FrameType)
     vampytest.assert_is(frame_proxy._frame, frame)
+    vampytest.assert_instance(frame_proxy.alike_count, int)
     vampytest.assert_instance(frame_proxy.expression_info, ExpressionInfo, nullable = True)
 
 

@@ -1,5 +1,6 @@
 __all__ = ()
 
+from .expression_parsing import ExpressionInfo
 from .frame_group import FrameGroup
 
 
@@ -21,6 +22,7 @@ def group_frames(frames):
     if not frames:
         return None
     
+    _count_alikes(frames)
     frame_groups = _group_frames_to_frame_groups(frames)
     frame_groups = _merge_frame_groups(frame_groups)
     frame_groups = _separate_repeats_in_frame_groups(frame_groups)
@@ -114,6 +116,36 @@ def _separate_repeats_in_frame_groups(frame_groups):
             frame_groups_to_do.extend(reversed([*frame_group.iter_separate_repeated()]))
     
     return frame_groups
+
+
+def _count_alikes(frames):
+    """
+    Counts how much alike frames there are.
+    
+    Parameters
+    ----------
+    frames : `list<FrameProxyBase>`
+        A list of frame proxies to create expression info for.
+    """
+    # Collect
+    expressions = {}
+    
+    for frame in frames:
+        expression_key = frame.expression_key
+        
+        try:
+            alike_frames = expressions[expression_key]
+        except KeyError:
+            alike_frames = []
+            expressions[expression_key] = alike_frames
+        
+        alike_frames.append(frame)
+    
+    # count
+    for alike_frames in expressions.values():
+        alike_count = len(alike_frames)
+        for frame in alike_frames:
+            frame.alike_count = alike_count
 
 
 def normalize_frame_groups(frame_groups):

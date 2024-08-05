@@ -32,6 +32,7 @@ def _assert_fields_set(frame_proxy):
         The frame proxy to check.
     """
     vampytest.assert_instance(frame_proxy, FrameProxyVirtual)
+    vampytest.assert_instance(frame_proxy.alike_count, int)
     vampytest.assert_instance(frame_proxy.builtins, dict, nullable = True)
     vampytest.assert_instance(frame_proxy.code, CodeType, nullable = True)
     vampytest.assert_instance(frame_proxy.globals, dict, nullable = True)

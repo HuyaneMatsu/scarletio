@@ -357,7 +357,7 @@ def test__FrameGroup__try_add_frame__empty_repeat():
     
     frame = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
     frame.expression_info = ExpressionInfo(frame.expression_key, [], 0, True)
-    frame.expression_info.mention_count = 2
+    frame.alike_count = 2
     
     output = frame_group.try_add_frame(frame)
     vampytest.assert_instance(output, bool)
@@ -399,7 +399,7 @@ def test__FrameGroup__try_add_frame__singles_repeat():
 
     frame_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
     frame_1.expression_info = ExpressionInfo(frame_1.expression_key, [], 0, True)
-    frame_1.expression_info.mention_count = 2
+    frame_1.alike_count = 2
     
     output = frame_group.try_add_frame(frame_1)
     vampytest.assert_instance(output, bool)
@@ -417,7 +417,7 @@ def test__FrameGroup__try_add_frame__repeat_non_repeat():
     """
     frame_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
     frame_0.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_0.expression_info.mention_count = 2
+    frame_0.alike_count = 2
     
     frame_group = FrameGroup()
     frame_group.try_add_frame(frame_0)
@@ -440,14 +440,14 @@ def test__FrameGroup__try_add_frame__repeat_repeat():
     """
     frame_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
     frame_0.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_0.expression_info.mention_count = 2
+    frame_0.alike_count = 2
     
     frame_group = FrameGroup()
     frame_group.try_add_frame(frame_0)
 
     frame_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
     frame_1.expression_info = ExpressionInfo(frame_1.expression_key, [], 0, True)
-    frame_1.expression_info.mention_count = 2
+    frame_1.alike_count = 2
     
     output = frame_group.try_add_frame(frame_1)
     vampytest.assert_instance(output, bool)
@@ -467,7 +467,7 @@ def test__FrameGroup__try_merge__single_with_short_repeat():
     
     frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
     frame_1.expression_info = ExpressionInfo(frame_1.expression_key, [], 0, True)
-    frame_1.expression_info.mention_count = 2
+    frame_1.alike_count = 2
     
     frame_group_0 = FrameGroup()
     frame_group_0.try_add_frame(frame_0)
@@ -521,7 +521,7 @@ def test__FrameGroup__try_merge__short_repeat_with_singles():
     """
     frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
     frame_0.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_0.expression_info.mention_count = 2
+    frame_0.alike_count = 2
     
     frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
     
@@ -552,7 +552,7 @@ def test__FrameGroup__try_merge__single_with_long_repeat():
     
     frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
     frame_1.expression_info = ExpressionInfo(frame_1.expression_key, [], 0, True)
-    frame_1.expression_info.mention_count = 3
+    frame_1.alike_count = 3
     
     frame_group_0 = FrameGroup()
     frame_group_0.try_add_frame(frame_0)
@@ -581,7 +581,7 @@ def test__FrameGroup__try_merge__long_repeat_with_singles():
     """
     frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
     frame_0.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_0.expression_info.mention_count = 3
+    frame_0.alike_count = 3
     
     frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
     
@@ -610,7 +610,7 @@ def test__FrameGroup__copy():
     """
     frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
     frame_0.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_0.expression_info.mention_count = 3
+    frame_0.alike_count = 3
     
     frame_group = FrameGroup()
     frame_group.try_add_frame(frame_0)
@@ -652,10 +652,10 @@ def test__FrameGroup__iter_separate_repeated__repeat_no_pattern():
     """
     frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
     frame_0.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_0.expression_info.mention_count = 2
+    frame_0.alike_count = 2
     frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
     frame_1.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_1.expression_info.mention_count = 2
+    frame_1.alike_count = 2
 
     frame_group_0 = FrameGroup()
     frame_group_0.try_add_frame(frame_0)
@@ -677,10 +677,10 @@ def test__FrameGroup__iter_separate_repeated__repeat_with_pattern():
     """
     frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
     frame_0.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_0.expression_info.mention_count = 2
+    frame_0.alike_count = 2
     frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
     frame_1.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_1.expression_info.mention_count = 2
+    frame_1.alike_count = 2
 
     frame_group_0 = FrameGroup()
     frame_group_0.try_add_frame(frame_0)
@@ -704,16 +704,16 @@ def test__FrameGroup__iter_separate_repeated__repeat_with_pattern_between():
     """
     frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
     frame_0.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_0.expression_info.mention_count = 2
+    frame_0.alike_count = 2
     frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
     frame_1.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_1.expression_info.mention_count = 2
+    frame_1.alike_count = 2
     frame_2 = FrameProxyVirtual.from_fields(file_name = 'orin.py')
     frame_2.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_2.expression_info.mention_count = 2
+    frame_2.alike_count = 2
     frame_3 = FrameProxyVirtual.from_fields(file_name = 'okuu.py')
     frame_3.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_3.expression_info.mention_count = 2
+    frame_3.alike_count = 2
 
     frame_group_0 = FrameGroup()
     frame_group_0.try_add_frame(frame_2)

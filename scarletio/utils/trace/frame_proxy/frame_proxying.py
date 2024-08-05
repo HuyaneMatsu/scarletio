@@ -102,6 +102,7 @@ def populate_frame_proxies(frames):
             if expression_value is None:
                 expressions[expression_key] = get_expression_info(expression_key)
     
+    
     for frame in frames:
         expression_key = frame.expression_key
         
@@ -112,5 +113,4 @@ def populate_frame_proxies(frames):
             expression_info = ExpressionInfo(expression_key, [], 0, True)
             expressions.setdefault(expression_key, expression_info)
         
-        expression_info.do_mention()
         frame.expression_info = expression_info

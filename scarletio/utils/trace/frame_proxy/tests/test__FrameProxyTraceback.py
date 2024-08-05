@@ -30,6 +30,7 @@ def test__FrameProxyTraceback__new():
     vampytest.assert_instance(frame_proxy, FrameProxyTraceback)
     vampytest.assert_instance(frame_proxy._traceback, TracebackType)
     vampytest.assert_is(frame_proxy._traceback, traceback_frame)
+    vampytest.assert_instance(frame_proxy.alike_count, int)
     vampytest.assert_instance(frame_proxy.expression_info, ExpressionInfo, nullable = True)
 
 

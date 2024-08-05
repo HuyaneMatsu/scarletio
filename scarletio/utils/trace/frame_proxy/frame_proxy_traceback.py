@@ -13,6 +13,8 @@ class FrameProxyTraceback(FrameProxyBase):
     ----------
     _traceback : ``TracebackType``
         The wrapped traceback frame.
+    alike_count : `int`
+        How much alike frames are in the same exception.
     expression_info : `None | ExpressionInfo`
         Additional expression information.
     """
@@ -29,6 +31,7 @@ class FrameProxyTraceback(FrameProxyBase):
         """
         self = object.__new__(cls)
         self._traceback = traceback
+        self.alike_count = 0
         self.expression_info = None
         return self
     

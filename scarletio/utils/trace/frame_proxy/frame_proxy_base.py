@@ -12,16 +12,19 @@ class FrameProxyBase:
     
     Attributes
     ----------
+    alike_count : `int`
+        How much alike frames are in the same exception.
     expression_info : `None | ExpressionInfo`
         Additional expression information.
     """
-    __slots__ = ('expression_info',)
+    __slots__ = ('alike_count', 'expression_info')
     
     def __new__(cls):
         """
         Creates a new frame proxy.
         """
         self = object.__new__(cls)
+        self.alike_count = 0
         self.expression_info = None
         return self
     
@@ -295,21 +298,3 @@ class FrameProxyBase:
             lines = expression_info.lines
         
         return lines
-    
-    
-    @property
-    def mention_count(self):
-        """
-        Returns how much times the frame is mentioned. Can be `0`.
-        
-        Returns
-        -------
-        mention_count : `int`
-        """
-        expression_info = self.expression_info
-        if expression_info is None:
-            mention_count = 0
-        else:
-            mention_count = expression_info.mention_count
-        
-        return mention_count
