@@ -110,7 +110,15 @@ class MultiValueDictionary(dict):
                 setitem(self, key, [value])
         
         else:
-            for key, value in iterable:
+            for item in iterable:
+                if not isinstance(item, tuple) or len(item) != 2:
+                    raise ValueError(
+                        f'iterable items must be type `tuple` of `2` elements a `key` and a `value`; '
+                        f'got {type(item).__name__}; {item!r}.'
+                    )
+                
+                key, value = item
+                
                 try:
                     values = getitem(self, key)
                 except KeyError:
@@ -163,7 +171,7 @@ class MultiValueDictionary(dict):
         if is_iterable(other):
             try:
                 other = type(self)(other)
-            except TypeError:
+            except (ValueError, TypeError):
                 return NotImplemented
             
             return dict.__eq__(self, other)
@@ -180,7 +188,7 @@ class MultiValueDictionary(dict):
         if is_iterable(other):
             try:
                 other = type(self)(other)
-            except TypeError:
+            except (ValueError, TypeError):
                 return NotImplemented
             
             return dict.__ne__(self, other)
@@ -191,7 +199,7 @@ class MultiValueDictionary(dict):
     @has_docs
     def __reduce__(self):
         """Reduces the dictionary to a picklable object."""
-        return (type(self), list(self.items()))
+        return (type(self), [*self.items()])
     
     
     @has_docs
@@ -440,7 +448,7 @@ class MultiValueDictionary(dict):
     def __repr__(self):
         """Returns the dictionary's representation."""
         result = [
-            self.__class__.__name__,
+            type(self).__name__,
             '({',
         ]
         

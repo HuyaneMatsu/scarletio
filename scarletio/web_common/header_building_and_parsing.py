@@ -19,19 +19,19 @@ TOKENS = CHARS ^ CONTROLS ^ SEPARATORS
 
 def build_extensions(available_extensions):
     """
-    Builds websocket extensions header from the given extension values.
+    Builds web socket extensions header from the given extension values.
     
     Parameters
     ----------
     available_extensions : `list` of `object`
-        Each websocket extension should have the following `4` attributes / methods:
+        Each web socket extension should have the following `4` attributes / methods:
         - `name`: `str`. The extension's name.
         - `request_params` : `list` of `tuple` (`str`, `str`). Additional header parameters of the extension.
-        - `decode` : `callable`. Decoder method, what processes a received websocket frame. Should accept `2`
-            parameters: The respective websocket ``Frame``, and the ˙max_size` as `int`, what decides the
+        - `decode` : `callable`. Decoder method, what processes a received web socket frame. Should accept `2`
+            parameters: The respective ``WebSocketFrame``, and the ˙max_size` as `int`, what decides the
             maximal size of a received frame. If it is passed, ``PayloadError`` is raised.
-        - `encode` : `callable`. Encoder method, what processes the websocket frames to send. Should accept `1`
-            parameter, the respective websocket ``Frame``.
+        - `encode` : `callable`. Encoder method, what processes the web socket frames to send. Should accept `1`
+            parameter, the ``WebSocketFrame``.
     
     Returns
     -------
@@ -314,7 +314,7 @@ def parse_connections(header_value):
 
 def build_subprotocols(subprotocols):
     """
-    Builds websocket subprotocol headers from the given subprotocol values.
+    Builds web socket subprotocol headers from the given subprotocol values.
     
     Parameters
     ----------

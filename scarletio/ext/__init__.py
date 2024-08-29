@@ -1,6 +1,6 @@
 __all__ = ()
 
-import warnings
+from warnings import warn
 
 from ..core import write_exception_maybe_async
 
@@ -18,7 +18,7 @@ def register_library_extension(extension_name):
         The library extension's name.
     """
     if extension_name in LOADED_EXTENSIONS:
-        warnings.warn(
+        warn(
             f'A library extension with name {extension_name!r} is already loaded.',
             RuntimeWarning,
             stacklevel = 2,

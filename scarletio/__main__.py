@@ -67,7 +67,7 @@ def __main__():
         sys.stdout.write(
             'Available commands:\n'
             '- interpreter\n'
-            '- debug-character\n'
+            '- debug-key\n'
         )
 
 

@@ -233,7 +233,7 @@ class AsyncIO:
     """
     __slots__ = ('_executor', '_io',)
     
-    async def __new__(cls, *args, **kwargs):
+    async def __new__(cls, *positional_parameters, **keyword_parameters):
         """
         Creates a new ``AsyncIO`` with the given parameters.
         
@@ -241,9 +241,9 @@ class AsyncIO:
         
         Parameters
         ----------
-        *args : parameters
+        *positional_parameters : positional parameters
             Parameters to use when opening the respective file.
-        **kwargs : keyword parameters
+        **keyword_parameters : keyword parameters
             Keyword parameters to use when opening the respective file.
         
         Notes
@@ -252,7 +252,7 @@ class AsyncIO:
         """
         self = object.__new__(cls)
         self._executor = executor = get_executor()
-        self._io = await executor.execute(alchemy_incendiary(open, args, kwargs))
+        self._io = await executor.execute(alchemy_incendiary(open, positional_parameters, keyword_parameters))
         return self
     
     
@@ -507,7 +507,7 @@ class AsyncIO:
         return await executor.execute(alchemy_incendiary(self._io.read, (size,),))
     
     
-    def read1(self, *args):
+    def read1(self, *positional_parameters):
         """
         Reads from the underlying stream.
         
@@ -537,7 +537,7 @@ class AsyncIO:
         if executor is None:
             raise ValueError(IO_CLOSED_OR_DETACHED)
         
-        return executor.execute(alchemy_incendiary(self._io.read1, args,))
+        return executor.execute(alchemy_incendiary(self._io.read1, positional_parameters,))
     
     
     @property
@@ -883,7 +883,7 @@ class AsyncIO:
         return self
     
     
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exception_type, exception_value, exception_traceback):
         """Closes the asynchronous io."""
         self.__del__()
         return False
@@ -960,7 +960,7 @@ class ReuAsyncIO(AsyncIO):
     """
     __slots__ = ('_executor', '_io', '_should_seek',)
     
-    async def __new__(cls, path, mode = 'rb', *args, **kwargs):
+    async def __new__(cls, path, mode = 'rb', *positional_parameters, **keyword_parameters):
         """
         Creates a new ``AsyncIO`` with the given parameters.
         
@@ -972,9 +972,9 @@ class ReuAsyncIO(AsyncIO):
             The file's path to open.
         mode : `str`
             The mode to open with the file. Defaults to `'rb'`.
-        *args : parameters
+        *positional_parameters : parameters
             Parameters to use when opening the respective file.
-        **kwargs : keyword parameters
+        **keyword_parameters : keyword parameters
             Keyword parameters to use when opening the respective file.
         
         Raises
@@ -991,7 +991,7 @@ class ReuAsyncIO(AsyncIO):
         
         self = object.__new__(cls)
         self._executor = executor = get_executor()
-        self._io = await executor.execute(alchemy_incendiary(open, (path, mode, *args), kwargs))
+        self._io = await executor.execute(alchemy_incendiary(open, (path, mode, *positional_parameters), keyword_parameters))
         self._should_seek = False
         return self
     
@@ -1060,7 +1060,7 @@ class ReuAsyncIO(AsyncIO):
     
     
     @staticmethod
-    def _seek_and_call(self, func, *args):
+    def _seek_and_call(self, func, *positional_parameters):
         """
         Staticmethod to seek to the respective stream's  `0` start, then call the given `func`.
         
@@ -1070,7 +1070,7 @@ class ReuAsyncIO(AsyncIO):
             The respective asynchronous io instance.
         func : `callable`
             The callable to call after seeking.
-        *args : Parameters
+        *positional_parameters : Parameters
             Additional parameters to call the given `func` with.
         
         Returns
@@ -1081,7 +1081,7 @@ class ReuAsyncIO(AsyncIO):
         io = self._io
         io.seek(0)
         self._should_seek = False
-        return func(self._io, *args)
+        return func(self._io, *positional_parameters)
     
     
     async def read(self, size=-1):
@@ -1123,7 +1123,7 @@ class ReuAsyncIO(AsyncIO):
         return await executor.execute(task)
     
     
-    async def read1(self, *args):
+    async def read1(self, *positional_parameters):
         """
         Reads from the underlying stream.
         
@@ -1155,9 +1155,9 @@ class ReuAsyncIO(AsyncIO):
         
         func = self._io.__class__.read1
         if self._should_seek:
-            task = alchemy_incendiary(self._seek_and_call, (self, func, *args,),)
+            task = alchemy_incendiary(self._seek_and_call, (self, func, *positional_parameters,),)
         else:
-            task = alchemy_incendiary(func, (self._io, *args),)
+            task = alchemy_incendiary(func, (self._io, *positional_parameters),)
         
         return await executor.execute(task)
     

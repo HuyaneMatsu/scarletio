@@ -856,13 +856,13 @@ class EventThread:
 
         try:
             await waiter
-        except BaseException:
+        except:
             transport.close()
             connection_made_callback.cancel()
             resume_callback.cancel()
             raise
 
-        return ssl_protocol._app_transport
+        return ssl_protocol._transport
     
     
     _scarletio_connect_accepted_socket = EventThread.connect_accepted_socket
@@ -1598,7 +1598,7 @@ class Semaphore:
         await self.acquire()
         return None
     
-    async def __aexit__(self, exc_type, exc_value, exc_tb):
+    async def __aexit__(self, exception_type, exception_value, exception_traceback):
         self.release()
         return False
 
@@ -1670,7 +1670,7 @@ class Barrier:
         return await self.wait()
 
 
-    async def __aexit__(self, *args):
+    async def __aexit__(self, exception_type, exception_value, exception_traceback):
         pass
 
 

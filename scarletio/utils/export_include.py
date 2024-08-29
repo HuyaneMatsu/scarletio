@@ -1,9 +1,10 @@
 __all__ = ('check_satisfaction', 'export', 'include', 'include_with_callback')
 
-import sys, warnings
+import sys
 from functools import partial as partial_func
 from importlib.util import module_from_spec
 from types import ModuleType
+from warnings import warn
 
 
 CALLBACKS = {}
@@ -41,7 +42,7 @@ def include(obj_name):
         return value
     
     if (module is None):
-        warnings.warn(
+        warn(
             (
                 f'Cannot include `{obj_name!r}` into {frame.f_globals.get("__file__", None)}.\n'
                 f'The object is not yet resolved & The file is not a module.'

@@ -28,10 +28,10 @@ class MimeType:
                 key = item
                 value = ''
             
-            parameters[key.strip().lower()] = value.strip(' "')
+            parameters[key.strip().casefold()] = value.strip(' "')
         
         
-        full_type = parts[0].strip().lower()
+        full_type = parts[0].strip().casefold()
         if full_type == '*':
             full_type = '*/*'
         

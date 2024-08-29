@@ -123,7 +123,7 @@ class WeakReferer(WeakrefType):
     """
     __slots__ = ()
     if NEEDS_DUMMY_INIT:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *positional_parameters, **keyword_parameters):
             pass
     else:
         __init__ = object.__init__
@@ -187,15 +187,15 @@ class WeakCallable(WeakReferer):
     __slots__ = ()
     
     @has_docs
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *positional_parameters, **keyword_parameters):
         """
         Calls the weakreferenced object if not yet collected.
         
         Parameters
         ----------
-        *args : Parameters
+        *positional_parameters : Parameters
             Parameters to call the weakreferenced callable with.
-        **kwargs : Keyword parameters
+        **keyword_parameters : Keyword parameters
             Keyword parameters to call the weakreferenced callable with..
         
         Returns
@@ -212,7 +212,7 @@ class WeakCallable(WeakReferer):
         if self is None:
             return
         
-        return self(*args, **kwargs)
+        return self(*positional_parameters, **keyword_parameters)
     
     @has_docs
     def is_alive(self):
@@ -277,15 +277,15 @@ class weak_method(WeakReferer, MethodLike):
         return WeakReferer.__call__(self)
     
     @has_docs
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *positional_parameters, **keyword_parameters):
         """
         Calls the weak_method object's function with it's object if not yet collected.
         
         Parameters
         ----------
-        *args : Parameters
+        *positional_parameters : Positional parameters
             Parameters to call the function with.
-        **kwargs : Keyword parameters
+        **keyword_parameters : Keyword parameters
             Keyword parameters to call the function with.
         
         Returns
@@ -302,7 +302,7 @@ class weak_method(WeakReferer, MethodLike):
         if obj is None:
             return
         
-        return self.__func__(obj, *args, **kwargs)
+        return self.__func__(obj, *positional_parameters, **keyword_parameters)
     
     @has_docs
     def is_alive(self):

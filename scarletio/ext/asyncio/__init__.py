@@ -1,5 +1,6 @@
-import sys, warnings
+import sys
 from types import ModuleType
+from warnings import warn
 
 from . import asyncio
 
@@ -10,7 +11,10 @@ except KeyError:
     sys.modules['asyncio'] = asyncio
 
 else:
-    warnings.warn(f'asyncio is already loaded, replacing it.')
+    warn(
+        f'asyncio is already loaded, replacing it.',
+        RuntimeWarning,
+    )
     
     try:
         del sys.modules['_asyncio']

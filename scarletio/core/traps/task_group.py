@@ -401,7 +401,7 @@ class TaskGroup(RichAttributeErrorBaseType):
         The event loop used.
     pending : `set` pf ``Future``
         The pending tasks.
-    waiters : `dict` of (``Future``, ``Generator``)
+    waiters : `dict` of (``Future`` | ``Generator``)
         Contains the active waiters with their handlers.
     """
     __slots__ = ('done', 'loop', 'pending', 'waiters')
@@ -439,7 +439,7 @@ class TaskGroup(RichAttributeErrorBaseType):
     
     def __repr__(self):
         """Returns the task group's representation."""
-        return f'<{self.__class__.__name__} done = {self.done!r}, pending = {self.pending!r}>'
+        return f'<{type(self).__name__} done = {self.done!r}, pending = {self.pending!r}>'
     
     
     def _waited_done_callback(self, future):

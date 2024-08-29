@@ -1,7 +1,7 @@
 __all__ = ('URL', )
 
 import reprlib
-from datetime import datetime
+from datetime import datetime as DateTime
 from ipaddress import ip_address
 from math import isinf, isnan
 from urllib.parse import (
@@ -111,7 +111,7 @@ class URL:
         Parameters
         ----------
         value : `instance<cls>`, `str`, `urllib.parse.SplitResult` = `''`, Optional
-            The value to create utrl from. Defaults to empty string.
+            The value to create url from. Defaults to empty string.
         encoded : `bool` = `False`, Optional
             Whether the given `value` is already encoded. Defaults to `False`.
 
@@ -136,7 +136,7 @@ class URL:
         else:
             raise TypeError(
                 f'`value` can be `{cls.__name__}`, `str`, `{SplitResult.__name__}`, got '
-                f'{value.__class__.__name__}; {value!r}.'
+                f'{type(value).__name__}; {value!r}.'
             )
         
         if not encoded:
@@ -315,20 +315,21 @@ class URL:
     
     def is_default_port(self):
         """
-        Returns whether the url's port is default, like: 'http://python.org' or 'http://python.org:80'.
+        Returns whether the url's port is default, like: 'https://orindance.party/' or 'https://orindance.party:80/'.
         
         Returns
         -------
         is_default_port : `bool`
         """
-        if self.port is None:
+        port = self.port
+        if port is None:
             return False
         
         default = DEFAULT_PORTS.get(self.scheme, None)
         if default is None:
             return False
         
-        if self.port == default:
+        if port == default:
             return True
         
         return False
@@ -798,7 +799,7 @@ class URL:
         """
         if not isinstance(scheme, str):
             raise TypeError(
-                f'`scheme` can be `str`, got {scheme.__class__.__name__}; {scheme!r}.'
+                f'`scheme` can be `str`, got {type(scheme).__name__}; {scheme!r}.'
             )
         
         if not self.is_absolute():
@@ -806,7 +807,7 @@ class URL:
                 f'`scheme` replacement is not allowed for relative url-s; self = {self!r}; scheme = {scheme!r}.'
             )
         
-        return type(self)(self._value._replace(scheme = scheme.lower()), encoded = True)
+        return type(self)(self._value._replace(scheme = scheme.casefold()), encoded = True)
     
     
     def with_user(self, user):
@@ -842,7 +843,7 @@ class URL:
             user = quote(user)
             password = value.password
         else:
-            raise TypeError(f'`user` can be `None`, `str`, got {user.__class__.__name__}; {user!r}.')
+            raise TypeError(f'`user` can be `None`, `str`, got {type(user).__name__}; {user!r}.')
         
         if not self.is_absolute():
             raise ValueError(
@@ -887,7 +888,7 @@ class URL:
             password = quote(password)
         else:
             raise TypeError(
-                f'`password` can be `None`, `str`, got {password.__class__.__name__}; {password!r}.'
+                f'`password` can be `None`, `str`, got {type(password).__name__}; {password!r}.'
             )
         
         if not self.is_absolute():
@@ -929,7 +930,7 @@ class URL:
         """
         if not isinstance(host, str):
             raise TypeError(
-                f'`host` can be `str`, got {host.__class__.__name__}; {host!r}.'
+                f'`host` can be `str`, got {type(host).__name__}; {host!r}.'
             )
         
         if not host:
@@ -983,7 +984,7 @@ class URL:
         """
         if (port is not None) and (not isinstance(port, int)):
             raise TypeError(
-                f'`port` can be `None`, `int`, got {port.__class__.__name__}; {port!r}.'
+                f'`port` can be `None`, `int`, got {type(port).__name__}; {port!r}.'
             )
         
         if not self.is_absolute():
@@ -1039,11 +1040,11 @@ class URL:
         elif isinstance(query, (bytes, bytearray, memoryview)):
             raise TypeError(
                 f'Query type cannot be `bytes`, `bytearray` and `memoryview`, got '
-                f'{query.__class__.__name__}; {reprlib.repr(query)}.'
+                f'{type(query).__name__}; {reprlib.repr(query)}.'
             )
         else:
             raise TypeError(
-                f'Invalid query type: {query.__class__.__name__}; {reprlib.repr(query)}.'
+                f'Invalid query type: {type(query).__name__}; {reprlib.repr(query)}.'
             )
         
         value = self._value
@@ -1081,7 +1082,7 @@ class URL:
             fragment = ''
         elif not isinstance(fragment, str):
             raise TypeError(
-                f'`fragment` can be `None`, `str`, got {fragment.__class__.__name__}; {fragment!r}.'
+                f'`fragment` can be `None`, `str`, got {type(fragment).__name__}; {fragment!r}.'
             )
         
         return type(self)(self._value._replace(fragment = quote(fragment, safe = '?/:@')), encoded = True)
@@ -1113,7 +1114,7 @@ class URL:
         """
         if not isinstance(name, str):
             raise TypeError(
-                f'`name` can be `str`, got {name.__class__.__name__}; {name!r}.'
+                f'`name` can be `str`, got {type(name).__name__}; {name!r}.'
             )
         
         if '/' in name:
@@ -1163,7 +1164,7 @@ class URL:
         """
         if not isinstance(other, type(self)):
             raise TypeError(
-                f'`url` can be `{type(self).__name__}`, got {other.__class__.__name__}; {other!r}.'
+                f'`url` can be `{type(self).__name__}`, got {type(other).__name__}; {other!r}.'
             )
         
         return type(self)(url_join(str(self), str(other)), encoded = True)
@@ -1188,14 +1189,13 @@ class URL:
         )
     
     
-    def extend_query(self, params):
+    def extend_query(self, query_string_parameters):
         """
         Returns a new url with it's query parameters extended.
         
         Parameters
         ----------
-        params : `None`, `str`, (`dict`, `list`, `set`) of \
-                (`str`, (`str`, `int`, `bool`, `NoneType`, `float`, (`list`, `set`, `tuple`) of repeat value)) items
+        query_string_parameters : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`
             The query parameters to extend the actual.
         
         Returns
@@ -1217,18 +1217,16 @@ class URL:
         -----
         The returned url's `fragment` will be same as the source one's.
         """
-        if (params is None) or (not params):
-            new_url = self
-        else:
-            query = self.query.copy()
-            if isinstance(params, str):
-                params = parse_query_string_list(params, keep_blank_values = True)
-            
-            query.extend(params)
-            
-            new_url = self.with_query(query)
+        if (query_string_parameters is None) or (not query_string_parameters):
+            return self
         
-        return new_url
+        query = self.query.copy()
+        if isinstance(query_string_parameters, str):
+            query_string_parameters = parse_query_string_list(query_string_parameters, keep_blank_values = True)
+        
+        query.extend(query_string_parameters)
+        
+        return self.with_query(query)
 
 
 def build_query_from_dict(query):
@@ -1326,7 +1324,7 @@ def build_query_element_to(build_to, query_key, value):
         query_value = str(value)
     elif isinstance(value, NoneType):
         query_value = 'null'
-    elif isinstance(value, datetime):
+    elif isinstance(value, DateTime):
         query_value = value.isoformat()
     elif isinstance(value, float):
         if isinf(value):
@@ -1344,7 +1342,7 @@ def build_query_element_to(build_to, query_key, value):
     else:
         raise TypeError(
             f'Unexpected value type received when serializing query string, got '
-            f'{value.__class__.__name__}; {value!r}.'
+            f'{type(value).__name__}; {value!r}.'
         )
     
     query_value = quote(query_value, safe = "/?:@", query_string = True)

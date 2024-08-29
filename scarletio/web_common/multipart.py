@@ -169,6 +169,38 @@ class PayloadBase:
             Http writer to write the payload's data to.
         """
         pass
+    
+    
+    def __eq__(self, other):
+        """Returns whether the two payloads are equal."""
+        if type(self) is not type(other):
+            return NotImplemented
+        
+        # content_type
+        if self.content_type != other.content_type:
+            return False
+        
+        # data
+        if self.data != other.data:
+            return False
+        
+        # encoding
+        if self.encoding != other.encoding:
+            return False
+        
+        # file_name
+        if self.file_name != other.file_name:
+            return False
+        
+        # headers
+        if self.headers != other.headers:
+            return False
+        
+        # size
+        if self.size != other.size:
+            return False
+        
+        return True
 
 
 class BytesPayload(PayloadBase):
@@ -488,6 +520,8 @@ class BytesIOPayload(IOBasePayload):
     size : `None`, `int`
         The payload's size if applicable.
     """
+    __slots__ = ()
+    
     def __init__(self, data, keyword_parameters):
         """
         Creates a new ``BytesIOPayload``.
@@ -626,7 +660,7 @@ class AsyncIterablePayload(PayloadBase):
         keyword_parameters.setdefault('content_type', DEFAULT_CONTENT_TYPE)
         
         PayloadBase.__init__(self, data, keyword_parameters)
-        self._iterator = data.__class__.__aiter__(data)
+        self._iterator = type(data).__aiter__(data)
     
     
     async def write(self, writer):
@@ -649,6 +683,11 @@ class AsyncIterablePayload(PayloadBase):
         except StopAsyncIteration:
             self._iterator = None
 
+    
+    # __eq__
+    # Ignore `._iterator` being new attribute.
+    # We really only care about the object being equal.
+
 
 class AsyncIOPayload(IOBasePayload):
     """
@@ -669,6 +708,8 @@ class AsyncIOPayload(IOBasePayload):
     size : `None`, `int`
         The payload's size if applicable.
     """
+    __slots__ = ()
+    
     async def write(self, writer):
         """
         Writes the payload to the given http writer.
@@ -710,6 +751,8 @@ class BodyPartReaderPayload(PayloadBase):
     size : `None`, `int`
         The payload's size if applicable.
     """
+    __slots__ = ()
+    
     def __init__(self, data, keyword_parameters):
         """
         Creates a new ``BodyPartReaderPayload``.
@@ -843,7 +886,7 @@ def _is_extended_parameter(string):
 def _is_rfc5987(string):
     """
     Returns whether the given string is an extended notation based on `rfc5987` using `'` signs to capture the language
-        parameter.
+    parameter.
     
     Parameters
     ----------
@@ -854,6 +897,20 @@ def _is_rfc5987(string):
     -------
     is_rfc5987 : `bool`
     """
+    # Default format:
+    # foo: bar; title=Economy
+    
+    # Non extended:
+    # foo: bar; title="US-$ rates"
+    
+    # With language | This is matched.
+    # foo: bar; title*=iso-8859-1'en'%A3%20rates
+    
+    # Without language | This is matched.
+    # foo: bar; title*=UTF-8''%c2%a3%20and%20%e2%82%ac%20rates
+    
+    # I do not think `parse_content_disposition` handles all these cases correctly, so will have to be rewritten.
+    
     return _is_token(string) and string.count("'") == 2
 
 
@@ -922,12 +979,12 @@ def parse_content_disposition(header):
                 continue
         
         elif _is_extended_parameter(key):
-            if _is_rfc5987(value):
-                encoding, _, value = value.split("'", 2)
-                if not encoding:
-                    encoding = 'utf-8'
-            else:
+            if not _is_rfc5987(value):
                 continue
+            
+            encoding, _, value = value.split("'", 2)
+            if not encoding:
+                encoding = 'utf-8'
             
             try:
                 value = unquote(value, encoding, 'strict')
@@ -953,7 +1010,7 @@ def parse_content_disposition(header):
         
         parameters[key] = value
     
-    return disposition_type.lower(), parameters
+    return disposition_type.casefold(), parameters
 
 
 def get_content_disposition_file_name(parameters, name = 'filename'):

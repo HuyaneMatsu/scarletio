@@ -1,42 +1,50 @@
 __all__ = ('HTTPClient', )
 
-from ..utils import IgnoreCaseMultiValueDictionary, export
-from ..web_common import CookieJar, URL
+from ssl import SSLContext, create_default_context as create_default_ssl_context
+from warnings import warn
+
+from ..utils import IgnoreCaseMultiValueDictionary, RichAttributeErrorBaseType, export
+from ..web_common import BasicAuth, CookieJar, URL
 from ..web_common.headers import (
     AUTHORIZATION, CONTENT_LENGTH, LOCATION, METHOD_DELETE, METHOD_GET, METHOD_HEAD, METHOD_OPTIONS, METHOD_PATCH,
     METHOD_POST, METHOD_PUT, URI
 )
-from ..web_common.helpers import Timeout, tcp_nodelay
-from ..websocket import WebSocketClient
+from ..web_common.helpers import Timeout, set_tcp_nodelay
+from ..web_socket import WebSocketClient
 
 from .client_request import ClientRequest
-from .connector import SSL_ALLOWED_TYPES, TCPConnector
-from .request_context_managers import RequestContextManager, WebSocketContextManager
+from .connector_tcp import ConnectorTCP
+from .constants import REQUEST_TIMEOUT_DEFAULT
+from .request_context_manager import RequestContextManager
+from .ssl_fingerprint import SSLFingerprint
+from .web_socket_context_manager import WebSocketContextManager
 
-
-DEFAULT_TIMEOUT = 60.0
 
 @export
-class HTTPClient:
+class HTTPClient(RichAttributeErrorBaseType):
     """
     HTTP client implementation.
     
     Attributes
     ----------
-    loop : ``EventThread``
-        The event loop used by the http client.
     connector : ``ConnectorBase``
-        Connector of the http client. Defaults to ``TCPConnector``.
-    proxy_url : `None`, `str`, ``URL``
-        Proxy url to use with all of the requests of the http client.
-    proxy_auth : `None`, ``BasicAuth``
-        Proxy authorization to send with all the requests of the http client.
+        Connector of the http client. Defaults to ``ConnectorTCP``.
+    
     cookie_jar : ``CookieJar``
         Cookies stored by the http client.
-    """
-    __slots__ = ('loop', 'connector', 'proxy_url', 'proxy_auth', 'cookie_jar')
     
-    def __init__(self, loop, proxy_url = None, proxy_auth = None, *, connector = None):
+    loop : ``EventThread``
+        The event loop used by the http client.
+    
+    proxy_url : `None | URL`
+        Proxy url to use with all of the requests of the http client.
+    
+    proxy_auth : `None | BasicAuth`
+        Proxy authorization to send with all the requests of the http client.
+    """
+    __slots__ = ('connector', 'cookie_jar', 'loop', 'proxy_headers', 'proxy_auth', 'proxy_url')
+    
+    def __new__(cls, loop, *deprecated, connector = None, proxy_auth = None, proxy_headers = None, proxy_url = None):
         """
         Creates a new ``HTTPClient`` with the given parameters.
         
@@ -44,27 +52,74 @@ class HTTPClient:
         ----------
         loop : ``EventThread``
             The event loop used by the http client.
-        proxy_url : `None`, `str`, ``URL`` = `None`, Optional
-            Proxy url to use with all of the requests of the http client.
-        proxy_auth : `None`, ``BasicAuth`` = `None`, Optional
+        
+        connector : `None | ConnectorBase` = `None`, Optional (Keyword only)
+            Connector to be used by the client.
+            If not given or given as `None`, a new ``ConnectorTCP`` is created and used.
+        
+        proxy_auth : `None | BasicAuth` = `None`, Optional (Keyword only)
             Proxy authorization to send with all the requests of the http client.
-        connector : `None`, ``ConnectorBase`` = `None`, Optional (Keyword only)
-            Connector to be used by the ``HTTPClient``. If not given or given as `None`, a new ``TCPConnector`` is
-            created and used.
+        
+        proxy_headers : `None | dict<str, str> | IgnoreCaseMultiValueDictionary` = `None`, Optional (Keyword only)
+            Proxy headers to use with all of the requests of the http client.
+            
+        proxy_url : `None | str | URL` = `None`, Optional (Keyword only)
+            Proxy url to use with all of the requests of the http client.
+        
+        Raises
+        ------
+        TypeError
+            - If a parameter's type is incorrect.
         """
-        self.loop = loop
+        # deprecated
+        deprecated_length = len(deprecated)
+        if deprecated_length:
+            warn(
+                (
+                    f'The `proxy_url` and `proxy_headers` parameters in `{cls.__name__}.__new__` are moved to be '
+                    f'keyword only. Support for positional is deprecated and will be removed in 2025 August.'
+                ),
+                FutureWarning,
+                stacklevel = 2,
+            )
+            
+            proxy_url = deprecated[0]
+            
+            if deprecated_length > 1:
+                proxy_auth = deprecated[1]
         
-        self.proxy_url = proxy_url
-        self.proxy_auth = proxy_auth
         
-        if connector is None:
-            connector = TCPConnector(loop)
+        # connector
+        if (connector is None):
+            connector = ConnectorTCP(loop)
         
+        # proxy_auth
+        if (proxy_auth is not None) and (not isinstance(proxy_auth, BasicAuth)):
+            raise TypeError(
+                f'`proxy_auth` can be `None`, `{BasicAuth.__name__}`, got '
+                f'{type(proxy_auth).__name__}; {proxy_auth!r}.'
+            )
+        
+        # proxy_headers
+        if (proxy_headers is not None):
+            proxy_headers = IgnoreCaseMultiValueDictionary(proxy_headers)
+        
+        # proxy_url
+        if (proxy_url is not None):
+            proxy_url = URL(proxy_url)
+        
+        # Construct
+        self = object.__new__(cls)
         self.connector = connector
         self.cookie_jar = CookieJar()
+        self.loop = loop
+        self.proxy_auth = proxy_auth
+        self.proxy_headers = proxy_headers
+        self.proxy_url = proxy_url
+        return self
     
     
-    async def _request(self, method, url, headers, data = None, params = None, redirects = 3):
+    async def _request(self, method, url, headers, *, data = None, params = None, redirects = 3):
         """
         Internal method for executing an http request.
         
@@ -74,15 +129,21 @@ class HTTPClient:
         ----------
         method : `str`
             The method of the request.
-        url : `str`, ``URL``
+        
+        url : `str | URL`
             The url to request.
-        headers : (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items
+        
+        headers : `None | dict<str, str> | IgnoreCaseMultiValueDictionary`
             Request headers.
-        data : `None`, `object` = `None`, Optional
+        
+        data : `None | object` = `None`, Optional (Keyword only)
             Data to send a the body of the request.
-        params : `None`, `object` = `None`, Optional
+        
+        params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>` = `None`, \
+                Optional (Keyword only)
             Query string parameters
-        redirects : `int` = `3`, Optional
+        
+        redirects : `int` = `3`, Optional (Keyword only)
             The maximal amount of allowed redirects.
         
         Returns
@@ -93,11 +154,9 @@ class HTTPClient:
         ------
         ConnectionError
             - Too many redirects.
-            - Would be redirected to not `http`, `https`.
             - Connector closed.
         ValueError
             - Host could not be detected from `url`.
-            - The `proxy_url`'s scheme is not `http`.
             - `compression` and `Content-Encoding` would be set at the same time.
             - `chunked` cannot be set, because `Transfer-Encoding: chunked` is already set.
             - `chunked` cannot be set, because `Content-Length` header is already present.
@@ -118,26 +177,48 @@ class HTTPClient:
         - ``.request2`` : Executes an http request with extra parameters returning a request context manager.
         - ``._request2`` : Internal method for executing an http request with extra parameters.
         """
+        headers = IgnoreCaseMultiValueDictionary(headers)
+        
         history = []
         url = URL(url)
-        proxy_url = self.proxy_url
         
-        with Timeout(self.loop, DEFAULT_TIMEOUT):
+        with Timeout(self.loop, REQUEST_TIMEOUT_DEFAULT):
             while True:
                 cookies = self.cookie_jar.filter_cookies(url)
                 
-                if (proxy_url is not None):
-                    proxy_url = URL(proxy_url)
+                proxy_url = self.proxy_url
+                if proxy_url is None:
+                    proxy_auth = None
+                    proxy_headers = None
+                
+                else:
+                    proxy_auth = self.proxy_auth
+                    proxy_headers = self.proxy_headers
+                    if (proxy_headers is not None):
+                        proxy_headers = proxy_headers.copy()
                 
                 request = ClientRequest(
-                    self.loop, method, url, headers, data, params, cookies, None, proxy_url, self.proxy_auth, None
+                    self.loop,
+                    method,
+                    url,
+                    headers,
+                    data,
+                    params,
+                    cookies,
+                    None,
+                    proxy_url,
+                    proxy_headers,
+                    proxy_auth,
+                    None,
+                    None,
                 )
                 
                 connection = await self.connector.connect(request)
                 
-                tcp_nodelay(connection.transport, True)
+                set_tcp_nodelay(connection.transport, True)
                 
-                response = await request.send(connection)
+                response = request.begin(connection)
+                await response.start_processing()
                 
                 # we do nothing with os error
                 
@@ -151,8 +232,10 @@ class HTTPClient:
                         response.close()
                         raise ConnectionError('Too many redirects', history[0].request_info, tuple(history))
                     
-                    if (response.status == 303 and response.method != METHOD_HEAD) \
-                            or (response.status in (301, 302) and response.method == METHOD_POST):
+                    if (
+                        (response.status == 303 and response.method != METHOD_HEAD)
+                        or (response.status in (301, 302) and response.method == METHOD_POST)
+                    ):
                         method = METHOD_GET
                         data = None
                         try:
@@ -203,15 +286,19 @@ class HTTPClient:
         self,
         method,
         url,
-        headers = None,
+        headers,
+        *,
+        auth = None,
         data = None,
         params = None,
-        redirects = 3,
-        auth = None,
         proxy_url = ...,
         proxy_auth = ...,
-        timeout = DEFAULT_TIMEOUT,
-        ssl = None,
+        proxy_headers = ...,
+        redirects = 3,
+        timeout = REQUEST_TIMEOUT_DEFAULT,
+        ssl = ...,
+        ssl_context = None,
+        ssl_fingerprint = None,
     ):
         """
         Internal method for executing an http request with extra parameters
@@ -222,26 +309,42 @@ class HTTPClient:
         ----------
         method : `str`
             The method of the request.
+        
         url : `str`, ``URL``
             The url to request.
-        headers : (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items
+        
+        headers : `None | dict<str, str> | IgnoreCaseMultiValueDictionary`
             Request headers.
-        data : `None`, `object` = `None`, Optional
-            Data to send a the body of the request.
-        params : `None`, `object` = `None`, Optional
-            Query string parameters.
-        redirects : `int` = `3`, Optional
-            The maximal amount of allowed redirects.
-        auth : `None`, ``BasicAuth`` = `None`, Optional
+        
+        auth : `None`, ``BasicAuth`` = `None`, Optional (Keyword only)
             Authorization to use.
-        proxy_url : `None`, `str`, ``URL``, Optional
+        
+        data : `None`, `object` = `None`, Optional (Keyword only)
+            Data to send a the body of the request.
+        
+        params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>` = `None`, \
+                Optional (Keyword only)
+        
+        proxy_url : `None | str | URL`, Optional (Keyword only)
             Proxy url to use instead of the client's own.
-        proxy_auth : `None`, ``BasicAuth``, Optional
+        
+        proxy_auth : `None | BasicAuth`, Optional (Keyword only)
             Proxy authorization to use instead of the client's.
-        timeout : `float` = `DEFAULT_TIMEOUT`, Optional
+        
+        proxy_headers : `None | dict<str, str> | IgnoreCaseMultiValueDictionary`, Optional (Keyword only)
+            Proxy headers to use instead of the client's.
+        
+        redirects : `int` = `3`, Optional (Keyword only)
+            The maximal amount of allowed redirects.
+        
+        timeout : `float` = `REQUEST_TIMEOUT_DEFAULT`, Optional (Keyword only)
             The maximal duration to wait for server response. Defaults to `60.0` seconds.
-        ssl : `ssl.SSLContext`, `bool`, ``Fingerprint``, `NoneType` = `None`, Optional
-            Whether and what type of ssl should the connector use.
+        
+        ssl_context : `None | SSLContext`, Optional (Keyword only)
+            SSL context to be used by the connector.
+        
+        ssl_fingerprint : `None | SSLFingerprint`, Optional (Keyword only)
+            SSL finger print to use by the connector.
         
         Returns
         -------
@@ -251,15 +354,12 @@ class HTTPClient:
         ------
         ConnectionError
             - Too many redirects.
-            - Would be redirected to not `http`, `https`.
             - Connector closed.
         TypeError
             - `proxy_auth`'s type is incorrect.
             - ˙Cannot serialize a field of the given `data`.
-            - `ssl`'s type is unacceptable.
         ValueError
             - Host could not be detected from `url`.
-            - The `proxy_url`'s scheme is not `http`.
             - `compression` and `Content-Encoding` would be set at the same time.
             - `chunked` cannot be set, because `Transfer-Encoding: chunked` is already set.
             - `chunked` cannot be set, because `Content-Length` header is already present.
@@ -276,25 +376,76 @@ class HTTPClient:
         - ``.request2`` : Executes an http request with extra parameters returning a request context manager.
         - ``._request`` : Internal method for executing an http request without extra parameters.
         """
+        # Deprecations
+        if (ssl is not ...):
+            warn(
+                (
+                    f'`{type(self).__name__}._request2`\'s `ssl` parameter is deprecated '
+                    f'and scheduled for removal in 2025 August. '
+                    f'Please use either the `ssl_context` or the `ssl_fingerprint` parameters depending on your needs.'
+                ),
+                FutureWarning,
+                stacklevel = 3,
+            )
+            
+            if ssl is None:
+                ssl_context = None
+                ssl_fingerprint = None
+            
+            elif isinstance(ssl, SSLContext):
+                ssl_context = ssl
+                ssl_fingerprint = None
+            
+            elif isinstance(ssl, SSLFingerprint):
+                ssl_context = None
+                ssl_fingerprint = ssl
+            
+            elif isinstance(ssl, bool):
+                ssl_context = create_default_ssl_context()
+                ssl_fingerprint = None
+                
+            else:
+                raise TypeError(
+                    f'`ssl` can be `None`, `bool`, `{SSLContext.__name__}`, `{SSLFingerprint.__name__}`. '
+                    f'Got {type(ssl).__name__}; {ssl!r}.'
+                )
+        
         # Transform headers to IgnoreCaseMultiValueDictionary
         headers = IgnoreCaseMultiValueDictionary(headers)
         
         if (headers and (auth is not None) and AUTHORIZATION in headers):
             raise ValueError(
-                f'Can\'t combine \'Authorization\' header with \'auth\' parameter; '
-                f'auth={auth!r}; headers[{AUTHORIZATION!r}]={headers[AUTHORIZATION]!r}.'
+                f'Can\'t combine {AUTHORIZATION!r} header with the `auth` parameter. '
+                f'Got auth = {auth!r}; headers[{AUTHORIZATION!r}] = {headers[AUTHORIZATION]!r}.'
             )
         
+        # proxy_url
         if (proxy_url is ...):
             proxy_url = self.proxy_url
+        elif (proxy_url is not None):
+            proxy_url = URL(proxy_url)
         
-        if (proxy_auth is ...):
-            proxy_auth = self.proxy_auth
+        if (proxy_url is None):
+            proxy_auth = None
+            proxy_headers = None
         
-        if not isinstance(ssl, SSL_ALLOWED_TYPES):
-            raise TypeError(
-                f'`ssl` can be any of {SSL_ALLOWED_TYPES!r}, got {ssl.__class__.__name__}; {ssl!r}.'
-            )
+        else:
+            # proxy_auth
+            if (proxy_auth is ...):
+                proxy_auth = self.proxy_auth
+            elif (proxy_auth is not None) and (not isinstance(proxy_auth, BasicAuth)):
+                raise TypeError(
+                    f'`proxy_auth` can be `None`, `{BasicAuth.__name__}`, got '
+                    f'{type(proxy_auth).__name__}; {proxy_auth!r}.'
+                )
+            
+            # proxy_headers
+            if (proxy_headers is ...):
+                proxy_headers = self.proxy_headers
+                if (proxy_headers is not None):
+                    proxy_headers = proxy_headers.copy()
+            else:
+                proxy_headers = IgnoreCaseMultiValueDictionary(headers)
         
         history = []
         url = URL(url)
@@ -306,14 +457,28 @@ class HTTPClient:
                 if (proxy_url is not None):
                     proxy_url = URL(proxy_url)
 
-                request = ClientRequest(self.loop, method, url, headers, data, params, cookies, auth, proxy_url,
-                      proxy_auth, ssl)
+                request = ClientRequest(
+                    self.loop,
+                    method,
+                    url,
+                    headers,
+                    data,
+                    params,
+                    cookies,
+                    auth,
+                    proxy_url,
+                    proxy_headers,
+                    proxy_auth,
+                    ssl_context,
+                    ssl_fingerprint,
+                )
                 
                 connection = await self.connector.connect(request)
                 
-                tcp_nodelay(connection.transport, True)
+                set_tcp_nodelay(connection.transport, True)
                 
-                response = await request.send(connection)
+                response = request.begin(connection)
+                await response.start_processing()
                 
                 # we do nothing with os error
                 
@@ -328,10 +493,10 @@ class HTTPClient:
                         raise ConnectionError('Too many redirects', history[0].request_info, tuple(history))
                     
                     # For 301 and 302, mimic IE behaviour, now changed in RFC.
-                    # Details: https://github.com/kennethreitz/requests/pull/269
-                    if (response.status == 303 and response.method != METHOD_HEAD) \
-                            or (response.status in (301, 302) and response.method == METHOD_POST):
-                        
+                    if (
+                        (response.status == 303 and response.method != METHOD_HEAD)
+                        or (response.status in (301, 302) and response.method == METHOD_POST)
+                    ):
                         method = METHOD_GET
                         data = None
                         content_length = headers.get(CONTENT_LENGTH, None)
@@ -392,7 +557,7 @@ class HTTPClient:
     
     async def __aenter__(self):
         """
-        Enters the ``HTTPClient`` as an asynchronous context manager.
+        Enters the http client as an asynchronous context manager.
         
         This method is a coroutine.
         """
@@ -401,7 +566,7 @@ class HTTPClient:
     
     async def __aexit__(self, exception_type, exception_value, exception_traceback):
         """
-        Exits the ``HTTPClient`` with closing it.
+        Exits the http client with closing it.
         
         This method is a coroutine.
         """
@@ -410,7 +575,7 @@ class HTTPClient:
     
     def __del__(self):
         """
-        Closes the ``HTTPClient`` closed.
+        Closes the http client closed.
         """
         connector = self.connector
         if connector is None:
@@ -425,7 +590,7 @@ class HTTPClient:
     close = __del__
     
     
-    def request(self, method, url, headers = None, **kwargs):
+    def request(self, method, url, headers = None, **keyword_parameters):
         """
         Executes an http request.
         
@@ -433,19 +598,25 @@ class HTTPClient:
         ----------
         method : `str`
             The method of the request.
-        url : `str`, ``URL``
+        
+        url : `str | URL`
             The url to request.
-        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items = `None`, Optional
+        
+        headers : `None | dict<str, str> | IgnoreCaseMultiValueDictionary` = `None`, Optional
             Request headers.
-        **kwargs : Keyword Parameters
+        
+        **keyword_parameters : Keyword Parameters
             Additional keyword parameters.
         
         Other Parameters
         ----------------
-        data : `None`, `object`, Optional (Keyword only)
+        data : `None | object`, Optional (Keyword only)
             Data to send a the body of the request.
-        params : `None`, `object`, Optional (Keyword only)
+        
+        params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
+                Optional (Keyword only)
             Query string parameters.
+        
         redirects : `int`, Optional (Keyword only)
             The maximal amount of allowed redirects.
         
@@ -464,13 +635,10 @@ class HTTPClient:
         - ``.patch`` : Shortcut for executing a patch request.
         - ``.delete`` :  Shortcut for executing a delete request.
         """
-        if headers is None:
-            headers = IgnoreCaseMultiValueDictionary()
-        
-        return RequestContextManager(self._request(method, url, headers, **kwargs))
+        return RequestContextManager(self._request(method, url, headers, **keyword_parameters))
     
     
-    def request2(self, method, url, headers = None, **kwargs):
+    def request2(self, method, url, headers = None, **keyword_parameters):
         """
         Executes an http request with extra parameters.
         
@@ -478,31 +646,48 @@ class HTTPClient:
         ----------
         method : `str`
             The method of the request.
-        url : `str`, ``URL``
+        
+        url : `str | URL`
             The url to request.
-        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items = `None`, Optional
+        
+        headers : `None | dict<str, str> | IgnoreCaseMultiValueDictionary` = `None`, Optional
             Request headers.
-        **kwargs : Keyword Parameters
+        
+        **keyword_parameters : Keyword Parameters
             Additional keyword parameters.
         
         Other Parameters
         ----------------
-        data : `None`, `object`, Optional (Keyword only)
+        auth : `None | BasicAuth`, Optional (Keyword only)
+            Authorization to use.
+        
+        data : `None | object`, Optional (Keyword only)
             Data to send a the body of the request.
-        params : `None`, `object`, Optional (Keyword only)
+        
+        params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
+                Optional (Keyword only)
             Query string parameters.
+        
         redirects : `int`, Optional (Keyword only)
             The maximal amount of allowed redirects.
-        auth : `None`, ``BasicAuth``, Optional (Keyword only)
-            Authorization to use.
-        proxy_url : `None`, `str`, ``URL``, Optional  (Keyword only)
-            Proxy url to use instead of the client's own.
-        proxy_auth : `None`, ``BasicAuth``, Optional (Keyword only)
+        
+        proxy_auth : `None | BasicAuth`, Optional (Keyword only)
             Proxy authorization to use instead of the client's.
+        
+        proxy_headers : `None | dict<str, str> | IgnoreCaseMultiValueDictionary`, Optional (Keyword only)
+            Proxy headers to use instead of the client's.
+        
+        proxy_url : `None | str | URL`, Optional  (Keyword only)
+            Proxy url to use instead of the client's own.
+        
+        ssl_context : `None | SSLContext`, Optional (Keyword only)
+            SSL context to be used by the connector.
+        
+        ssl_fingerprint : `None | SSLFingerprint`, Optional (Keyword only)
+            SSL finger print to use by the connector.
+        
         timeout : `float`, Optional (Keyword only)
             The maximal duration to wait for server response.
-        ssl : `ssl.SSLContext`, `bool`, ``Fingerprint``, `NoneType`, Optional (Keyword only)
-            Whether and what type of ssl should the connector use.
         
         Returns
         -------
@@ -519,31 +704,33 @@ class HTTPClient:
         - ``.patch`` : Shortcut for executing a patch request.
         - ``.delete`` :  Shortcut for executing a delete request.
         """
-        if headers is None:
-            headers = IgnoreCaseMultiValueDictionary()
-        
-        return RequestContextManager(self._request2(method, url, headers, **kwargs))
+        return RequestContextManager(self._request2(method, url, headers, **keyword_parameters))
     
     
-    def get(self, url, headers = None, **kwargs):
+    def get(self, url, headers = None, **keyword_parameters):
         """
         Shortcut for executing a get request.
         
         Parameters
         ----------
-        url : `str`, ``URL``
+        url : `str | URL`
             The url to request.
-        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items, Optional
+        
+        headers : `None | dict<str, str> | IgnoreCaseMultiValueDictionary` = `None`, Optional
             Request headers.
-        **kwargs : Keyword Parameters
+        
+        **keyword_parameters : Keyword Parameters
             Additional keyword parameters.
         
         Other Parameters
         ----------------
-        data : `None`, `object`, Optional (Keyword only)
+        data : `None | object`, Optional (Keyword only)
             Data to send a the body of the request.
-        params : `None`, `object`, Optional (Keyword only)
+        
+        params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
+                Optional (Keyword only)
             Query string parameters.
+        
         redirects : `int`, Optional (Keyword only)
             The maximal amount of allowed redirects.
 
@@ -562,31 +749,33 @@ class HTTPClient:
         - ``.patch`` : Shortcut for executing a patch request.
         - ``.delete`` :  Shortcut for executing a delete request.
         """
-        if headers is None:
-            headers = IgnoreCaseMultiValueDictionary()
-        
-        return RequestContextManager(self._request(METHOD_GET, url, headers, **kwargs))
+        return RequestContextManager(self._request(METHOD_GET, url, headers, **keyword_parameters))
     
     
-    def options(self, url, headers = None, **kwargs):
+    def options(self, url, headers = None, **keyword_parameters):
         """
         Shortcut for executing a get request.
         
         Parameters
         ----------
-        url : `str`, ``URL``
+        url : `str | URL`
             The url to request.
-        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items = `None`, Optional
+        
+        headers : `None | dict<str, str> | IgnoreCaseMultiValueDictionary` = `None`, Optional
             Request headers.
-        **kwargs : Keyword Parameters
+        
+        **keyword_parameters : Keyword Parameters
             Additional keyword parameters.
         
         Other Parameters
         ----------------
-        data : `None`, `object`, Optional (Keyword only)
+        data : `None | object`, Optional (Keyword only)
             Data to send a the body of the request.
-        params : `None`, `object`, Optional (Keyword only)
+        
+        params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
+                Optional (Keyword only)
             Query string parameters.
+        
         redirects : `int`, Optional (Keyword only)
             The maximal amount of allowed redirects.
 
@@ -605,31 +794,33 @@ class HTTPClient:
         - ``.patch`` : Shortcut for executing a patch request.
         - ``.delete`` :  Shortcut for executing a delete request.
         """
-        if headers is None:
-            headers = IgnoreCaseMultiValueDictionary()
-        
-        return RequestContextManager(self._request(METHOD_OPTIONS, url, headers, **kwargs))
+        return RequestContextManager(self._request(METHOD_OPTIONS, url, headers, **keyword_parameters))
     
     
-    def head(self, url, headers = None, **kwargs):
+    def head(self, url, headers = None, **keyword_parameters):
         """
         Shortcut for executing a head request.
         
         Parameters
         ----------
-        url : `str`, ``URL``
+        url : `str | URL`
             The url to request.
-        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items = `None`, Optional
+        
+        headers : `None | dict<str, str> | IgnoreCaseMultiValueDictionary` = `None`, Optional
             Request headers.
-        **kwargs : Keyword Parameters
+        
+        **keyword_parameters : Keyword Parameters
             Additional keyword parameters.
         
         Other Parameters
         ----------------
-        data : `None`, `object`, Optional (Keyword only)
+        data : `None | object`, Optional (Keyword only)
             Data to send a the body of the request.
-        params : `None`, `object`, Optional (Keyword only)
+        
+        params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
+                Optional (Keyword only)
             Query string parameters.
+        
         redirects : `int`, Optional (Keyword only)
             The maximal amount of allowed redirects.
 
@@ -648,31 +839,33 @@ class HTTPClient:
         - ``.patch`` : Shortcut for executing a patch request.
         - ``.delete`` :  Shortcut for executing a delete request.
         """
-        if headers is None:
-            headers = IgnoreCaseMultiValueDictionary()
-        
-        return RequestContextManager(self._request(METHOD_HEAD, url, headers, **kwargs))
+        return RequestContextManager(self._request(METHOD_HEAD, url, headers, **keyword_parameters))
     
     
-    def post(self, url, headers = None, **kwargs):
+    def post(self, url, headers = None, **keyword_parameters):
         """
         Shortcut for executing a post request.
         
         Parameters
         ----------
-        url : `str`, ``URL``
+        url : `str | URL`
             The url to request.
-        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items = `None`, Optional
+        
+        headers : `None | dict<str, str> | IgnoreCaseMultiValueDictionary` = `None`, Optional
             Request headers.
-        **kwargs : Keyword Parameters
+        
+        **keyword_parameters : Keyword Parameters
             Additional keyword parameters.
         
         Other Parameters
         ----------------
-        data : `None`, `object`, Optional (Keyword only)
+        data : `None | object`, Optional (Keyword only)
             Data to send a the body of the request.
-        params : `None`, `object`, Optional (Keyword only)
+        
+        params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
+                Optional (Keyword only)
             Query string parameters.
+        
         redirects : `int`, Optional (Keyword only)
             The maximal amount of allowed redirects.
 
@@ -691,31 +884,33 @@ class HTTPClient:
         - ``.patch`` : Shortcut for executing a patch request.
         - ``.delete`` :  Shortcut for executing a delete request.
         """
-        if headers is None:
-            headers = IgnoreCaseMultiValueDictionary()
-        
-        return RequestContextManager(self._request(METHOD_POST, url, headers, **kwargs))
+        return RequestContextManager(self._request(METHOD_POST, url, headers, **keyword_parameters))
     
     
-    def put(self, url, headers = None, **kwargs):
+    def put(self, url, headers = None, **keyword_parameters):
         """
         Shortcut for executing a put request.
         
         Parameters
         ----------
-        url : `str`, ``URL``
+        url : `str | URL`
             The url to request.
-        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items = `None`, Optional
+        
+        headers : `None | dict<str, str> | IgnoreCaseMultiValueDictionary` = `None`, Optional
             Request headers.
-        **kwargs : Keyword Parameters
+        
+        **keyword_parameters : Keyword Parameters
             Additional keyword parameters.
         
         Other Parameters
         ----------------
-        data : `None`, `object`, Optional (Keyword only)
+        data : `None | object`, Optional (Keyword only)
             Data to send a the body of the request.
-        params : `None`, `object`, Optional (Keyword only)
+        
+        params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
+                Optional (Keyword only)
             Query string parameters.
+        
         redirects : `int`, Optional (Keyword only)
             The maximal amount of allowed redirects.
 
@@ -734,31 +929,33 @@ class HTTPClient:
         - ``.patch`` : Shortcut for executing a patch request.
         - ``.delete`` :  Shortcut for executing a delete request.
         """
-        if headers is None:
-            headers = IgnoreCaseMultiValueDictionary()
-        
-        return RequestContextManager(self._request(METHOD_PUT, url, headers, **kwargs))
+        return RequestContextManager(self._request(METHOD_PUT, url, headers, **keyword_parameters))
     
     
-    def patch(self, url, headers = None, **kwargs):
+    def patch(self, url, headers = None, **keyword_parameters):
         """
         Shortcut for executing a patch request.
         
         Parameters
         ----------
-        url : `str`, ``URL``
+        url : `str | URL`
             The url to request.
-        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items = `None`, Optional
+        
+        headers : `None | dict<str, str> | IgnoreCaseMultiValueDictionary` = `None`, Optional
             Request headers.
-        **kwargs : Keyword Parameters
+        
+        **keyword_parameters : Keyword Parameters
             Additional keyword parameters.
         
         Other Parameters
         ----------------
-        data : `None`, `object`, Optional (Keyword only)
+        data : `None | object`, Optional (Keyword only)
             Data to send a the body of the request.
-        params : `None`, `object`, Optional (Keyword only)
+        
+        params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
+                Optional (Keyword only)
             Query string parameters.
+        
         redirects : `int`, Optional (Keyword only)
             The maximal amount of allowed redirects.
 
@@ -777,31 +974,33 @@ class HTTPClient:
         - ``.put`` : Shortcut for executing a put request.
         - ``.delete`` :  Shortcut for executing a delete request.
         """
-        if headers is None:
-            headers = IgnoreCaseMultiValueDictionary()
-        
-        return RequestContextManager(self._request(METHOD_PATCH, url, headers, **kwargs))
+        return RequestContextManager(self._request(METHOD_PATCH, url, headers, **keyword_parameters))
     
     
-    def delete(self, url, headers = None, **kwargs):
+    def delete(self, url, headers = None, **keyword_parameters):
         """
         Shortcut for executing a delete request.
         
         Parameters
         ----------
-        url : `str`, ``URL``
+        url : `str | URL`
             The url to request.
-        headers : `None` or (`dict`, ``IgnoreCaseMultiValueDictionary``) of (`str`, `str`) items = `None`, Optional
+        
+        headers : `None | dict<str, str> | IgnoreCaseMultiValueDictionary` = `None`, Optional
             Request headers.
-        **kwargs : Keyword Parameters
+        
+        **keyword_parameters : Keyword Parameters
             Additional keyword parameters.
         
         Other Parameters
         ----------------
-        data : `None`, `object`, Optional (Keyword only)
+        data : `None | object`, Optional (Keyword only)
             Data to send a the body of the request.
-        params : `None`, `object`, Optional (Keyword only)
+        
+        params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
+                Optional (Keyword only)
             Query string parameters.
+        
         redirects : `int`, Optional (Keyword only)
             The maximal amount of allowed redirects.
 
@@ -820,20 +1019,33 @@ class HTTPClient:
         - ``.put`` : Shortcut for executing a put request.
         - ``.patch`` : Shortcut for executing a patch request.
         """
-        if headers is None:
-            headers = IgnoreCaseMultiValueDictionary()
-        
-        return RequestContextManager(self._request(METHOD_DELETE, url, headers, **kwargs))
+        return RequestContextManager(self._request(METHOD_DELETE, url, headers, **keyword_parameters))
     
     
     def connect_websocket(self, url, **keyword_parameters):
         """
-        Connect a websocket client to the given url.
+        Deprecated and will be removed in 2025 august. please use ``.connect_web_socket``.
+        """
+        warn(
+            (
+                f'`{type(self).__name__}.connect_websocket` is deprecated and will be removed in 2025 august. '
+                f'Please use `.connect_web_socket` instead.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
+        return self.connect_web_socket(url, **keyword_parameters)
+    
+    
+    def connect_web_socket(self, url, **keyword_parameters):
+        """
+        Connect a web socket client to the given url.
         
         Parameters
         ----------
-        url : `str`, ``URL``
+        url : `str | URL`
             The url to connect to.
+        
         **keyword_parameters : Keyword Parameters
             Additional keyword parameters.
         
@@ -841,34 +1053,42 @@ class HTTPClient:
         ----------------
         origin : `None`, `str`, Optional (Keyword only)
             Value of the Origin header.
+        
         available_extensions : `None` or (`list` of `object`), Optional (Keyword only)
-            Available websocket extensions.
+            Available web socket extensions.
             
-            Each websocket extension should have the following `4` attributes / methods:
+            Each web socket extension should have the following `4` attributes / methods:
             - `name`: `str`. The extension's name.
             - `request_params` : `list` of `tuple` (`str`, `str`). Additional header parameters of the extension.
-            - `decode` : `callable`. Decoder method, what processes a received websocket frame. Should accept `2`
-                parameters: The respective websocket ``Frame``, and the ˙max_size` as `int`, what describes the
+            - `decode` : `callable`. Decoder method, what processes a received web socket frame. Should accept `2`
+                parameters: The respective ``WebSocketFrame``, and the ˙max_size` as `int`, what describes the
                 maximal size of a received frame. If it is passed, ``PayloadError`` is raised.
-            - `encode` : `callable`. Encoder method, what processes the websocket frames to send. Should accept `1`
-                parameter, the respective websocket ``Frame``.
-        available_subprotocols : `None` or (`list` of `str`), Optional (Keyword only)
+            - `encode` : `callable`. Encoder method, what processes the web socket frames to send. Should accept `1`
+                parameter, the respective ``WebSocketFrame``.
+        
+        available_subprotocols : `None | list<str>`, Optional (Keyword only)
             A list of supported subprotocols in order of decreasing preference.
-        headers : ``IgnoreCaseMultiValueDictionary``, `dict-like` with (`str`, `str`) items, Optional (Keyword only)
-            Extra request headers.
-        http_client : `None`, ``HTTPClient``, Optional (Keyword only)
-            Http client to use to connect the websocket.
+        
+        headers : `None | dict<str, str> | IgnoreCaseMultiValueDictionary` = `None`, Optional
+            Request headers.
+        
+        http_client : `None | HTTPClient`, Optional (Keyword only)
+            Http client to use to connect the web socket.
+        
         close_timeout : `float`, Optional (Keyword only)
-            The maximal duration in seconds what is waited for response after close frame is sent. Defaults to `10.0`.
+            The maximal duration in seconds what is waited for response after close frame is sent.
+            Defaults to `10.0`.
+        
         max_size : `int`, Optional (Keyword only)
-            Max payload size to receive. If a payload exceeds it, ``PayloadError`` is raised. Defaults to `67108864`
-            bytes.
+            Max payload size to receive. If a payload exceeds it, ``PayloadError`` is raised.
+            Defaults to `67108864` bytes.
+        
         max_queue : `None`, `int`, Optional (Keyword only)
-            Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of it is
-            removed.
+            Max queue size of ``.messages``.
+            If a new payload is added to a full queue, the oldest element of it is removed.
         
         Returns
         -------
-        websocket_context_manager : ``WebSocketContextManager``
+        web_socket_context_manager : ``WebSocketContextManager``
         """
         return WebSocketContextManager(WebSocketClient(self.loop, url, **keyword_parameters, http_client = self))

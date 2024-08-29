@@ -26,24 +26,24 @@ class TaskLocal:
     
     Attributes
     ----------
-    _kwargs : `dict` of (`str`, `object`) items
+    _keyword_parameters : `dict` of (`str`, `object`) items
         `name` - `object` pairs to add as task local.
     _task : `None`, ``Task``
         The entered task.
     """
-    __slots__ = ('_kwargs', '_task', )
+    __slots__ = ('_keyword_parameters', '_task', )
     
-    def __new__(cls, **kwargs):
+    def __new__(cls, **keyword_parameters):
         """
         Creates a new ``TaskLocal``.
         
         Parameters
         ----------
-        **kwargs : `object`
+        **keyword_parameters : `object`
             `name` - `object` pairs to add as task local.
         """
         self = object.__new__(cls)
-        self._kwargs = kwargs
+        self._keyword_parameters = keyword_parameters
         self._task = None
         return self
     
@@ -78,15 +78,15 @@ class TaskLocal:
         
         self._task = task
         
-        kwargs = self._kwargs
+        keyword_parameters = self._keyword_parameters
         try:
             locals_ = TASK_LOCALS[task]
         except KeyError:
-            TASK_LOCALS[task] = kwargs.copy()
+            TASK_LOCALS[task] = keyword_parameters.copy()
         else:
-            locals_.update(kwargs)
+            locals_.update(keyword_parameters)
     
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exception_type, exception_value, exception_traceback):
         """
         Disables the task local on the current task.
         """
@@ -101,13 +101,13 @@ class TaskLocal:
         if task is self._task:
             self._task = None
         
-        kwargs = self._kwargs
+        keyword_parameters = self._keyword_parameters
         try:
             locals_ = TASK_LOCALS[task]
         except KeyError:
             return False
         
-        for key, value in kwargs.items():
+        for key, value in keyword_parameters.items():
             try:
                 local_value = locals_[key]
             except KeyError:
@@ -276,7 +276,7 @@ class HTTPServer:
     Attributes
     ----------
     close_connection_task : `None`, ``Task`` of ``_close``
-        Close connection task, what's result is set, when closing of the websocket is done.
+        Close connection task, what's result is set, when closing of the web socket is done.
         
         Should not be cancelled.
         
@@ -286,11 +286,11 @@ class HTTPServer:
     loop : ``EventThread``
         The event loop of the http server.
     server : `None`, ``Server``
-        Asynchronous server instance. Set meanwhile the websocket server is running.
+        Asynchronous server instance. Set meanwhile the web socket server is running.
     """
     __slots__ = ('close_connection_task', 'handlers', 'loop', 'server')
     
-    async def __new__(cls, loop, host, port, *, ssl = None, **server_kwargs):
+    async def __new__(cls, loop, host, port, *, ssl = None, **server_keyword_parameters):
         """
         Creates a new ``HTTPServer`` with the given parameters.
         
@@ -306,8 +306,8 @@ class HTTPServer:
             The port to use by the `host`(s).
         ssl : `None`, ``SSLContext`` = `None`, Optional (Keyword only)
             Whether and what ssl is enabled for the connections.
-        **server_kwargs : Keyword parameters
-            Additional keyword parameters to create the websocket server with.
+        **server_keyword_parameters : Keyword parameters
+            Additional keyword parameters to create the web socket server with.
         
         Other Parameters
         ----------------
@@ -332,7 +332,7 @@ class HTTPServer:
         self.server = None
         
         factory = functools.partial(HTTPRequestHandler, self,)
-        server = await loop.create_server(factory, host, port, ssl = ssl, **server_kwargs)
+        server = await loop.create_server(factory, host, port, ssl = ssl, **server_keyword_parameters)
         
         self.server = server
         await server.start()
@@ -381,7 +381,7 @@ class HTTPServer:
     
     def close(self):
         """
-        Closes the websocket server. Returns a closing task, what can be awaited.
+        Closes the web socket server. Returns a closing task, what can be awaited.
         
         Returns
         -------
@@ -399,7 +399,7 @@ class HTTPServer:
     
     async def _close(self):
         """
-        Closes the HTTP server. If the websocket task is already closed does nothing.
+        Closes the HTTP server. If the web socket task is already closed does nothing.
         
         This method is a coroutine.
         """
@@ -517,7 +517,7 @@ class Route:
             for parameter_name in positional_parameter_names:
                 positional_parameters.append(parameters.pop(parameter_name))
         
-        if rule.kwargs_parameter_supported:
+        if rule.keyword_parameters_parameter_supported:
             keyword_parameters = parameters
         else:
             keyword_parameter_names = rule.keyword_parameter_names
@@ -2039,8 +2039,8 @@ class RuleDirectory:
         The endpoint's internal name.
     keyword_parameter_names : `None`, `tuple` of `str`
         Keyword only parameter names accepted by `view_func`.
-    kwargs_parameter_supported : `bool`
-        Whether `view_func` accepts `**kwargs` parameter.
+    keyword_parameters_parameter_supported : `bool`
+        Whether `view_func` accepts `**keyword_parameters` parameter.
     positional_parameter_names : `None`, `tuple` of `str`
         Positional only parameter names accepted by `view_func`.
     rules : `list` of ``Rule``
@@ -2049,11 +2049,11 @@ class RuleDirectory:
         The function to call when serving a request to the provided endpoint.
     """
     __slots__ = (
-        'endpoint', 'keyword_parameter_names', 'kwargs_parameter_supported', 'positional_parameter_names', 'rules',
+        'endpoint', 'keyword_parameter_names', 'keyword_parameters_parameter_supported', 'positional_parameter_names', 'rules',
         'view_func'
     )
     
-    def __init__(self, view_func, positional_parameter_names, keyword_parameter_names, kwargs_parameter_supported,
+    def __init__(self, view_func, positional_parameter_names, keyword_parameter_names, keyword_parameters_parameter_supported,
             endpoint):
         """
         Creates a new ``RuleDirectory``.
@@ -2066,8 +2066,8 @@ class RuleDirectory:
             Positional only parameter names accepted by `view_func`.
         keyword_parameter_names : `None`, `tuple` of `str`
             Keyword only parameter names accepted by `view_func`.
-        kwargs_parameter_supported : `bool`
-            Whether `view_func` accepts `**kwargs` parameter.
+        keyword_parameters_parameter_supported : `bool`
+            Whether `view_func` accepts `**keyword_parameters` parameter.
         endpoint : `str`
             The endpoint's internal name.
         """
@@ -2076,7 +2076,7 @@ class RuleDirectory:
         self.rules = []
         self.positional_parameter_names = positional_parameter_names
         self.keyword_parameter_names = keyword_parameter_names
-        self.kwargs_parameter_supported = kwargs_parameter_supported
+        self.keyword_parameters_parameter_supported = keyword_parameters_parameter_supported
     
     @classmethod
     def from_rule(cls, rule):
@@ -2099,7 +2099,7 @@ class RuleDirectory:
         self.rules = [rule]
         self.positional_parameter_names = rule.positional_parameter_names
         self.keyword_parameter_names = rule.keyword_parameter_names
-        self.kwargs_parameter_supported = rule.kwargs_parameter_supported
+        self.keyword_parameters_parameter_supported = rule.keyword_parameters_parameter_supported
         
         return self
     
@@ -2119,7 +2119,7 @@ class RuleDirectory:
             Whether the route should match the specified subdomain.
         """
         self.rules.append(Rule(rule, self.view_func, self.positional_parameter_names, self.keyword_parameter_names,
-            self.kwargs_parameter_supported, self.endpoint, request_methods, parameters, subdomain))
+            self.keyword_parameters_parameter_supported, self.endpoint, request_methods, parameters, subdomain))
     
     def copy(self):
         """
@@ -2136,7 +2136,7 @@ class RuleDirectory:
         new.endpoint = self.endpoint
         new.positional_parameter_names = self.positional_parameter_names
         new.keyword_parameter_names = self.keyword_parameter_names
-        new.kwargs_parameter_supported = self.kwargs_parameter_supported
+        new.keyword_parameters_parameter_supported = self.keyword_parameters_parameter_supported
         
         return new
     
@@ -2233,8 +2233,8 @@ class Rule:
         The endpoint's internal name.
     keyword_parameter_names : `None`, `tuple` of `str`
         Keyword only parameter names accepted by `view_func`.
-    kwargs_parameter_supported : `bool`
-        Whether `view_func` accepts `**kwargs` parameter.
+    keyword_parameters_parameter_supported : `bool`
+        Whether `view_func` accepts `**keyword_parameters` parameter.
     parameters : `None`, `tuple` of `tuple` (`str`, `object`)
         Default parameters to pass to the `view_func`.
     positional_parameter_names : `None`, `tuple` of `str`
@@ -2249,12 +2249,12 @@ class Rule:
         The function to call when serving a request to the provided endpoint.
     """
     __slots__ = (
-        'application', 'blueprint_state_stack', 'endpoint', 'keyword_parameter_names', 'kwargs_parameter_supported',
+        'application', 'blueprint_state_stack', 'endpoint', 'keyword_parameter_names', 'keyword_parameters_parameter_supported',
         'parameters', 'positional_parameter_names', 'request_methods', 'rule', 'subdomain', 'view_func'
     )
     
     def __init__(self, rule, view_func, positional_parameter_names, keyword_parameter_names,
-            kwargs_parameter_supported, endpoint, request_methods, parameters, subdomain):
+            keyword_parameters_parameter_supported, endpoint, request_methods, parameters, subdomain):
         """
         Creates a new ``Rule``.
         
@@ -2268,8 +2268,8 @@ class Rule:
             Positional only parameter names accepted by `view_func`.
         keyword_parameter_names : `None`, `tuple` of `str`
             Keyword only parameter names accepted by `view_func`.
-        kwargs_parameter_supported : `bool`
-            Whether `view_func` accepts `**kwargs` parameter.
+        keyword_parameters_parameter_supported : `bool`
+            Whether `view_func` accepts `**keyword_parameters` parameter.
         endpoint : `str`
             The endpoint's internal name.
         request_methods : `None`, `set` of `str`
@@ -2289,7 +2289,7 @@ class Rule:
         self.blueprint_state_stack = None
         self.positional_parameter_names = positional_parameter_names
         self.keyword_parameter_names = keyword_parameter_names
-        self.kwargs_parameter_supported = kwargs_parameter_supported
+        self.keyword_parameters_parameter_supported = keyword_parameters_parameter_supported
     
     def copy(self):
         """
@@ -2309,7 +2309,7 @@ class Rule:
         new.view_func = self.view_func
         new.positional_parameter_names = self.positional_parameter_names
         new.keyword_parameter_names = self.keyword_parameter_names
-        new.kwargs_parameter_supported = self.kwargs_parameter_supported
+        new.keyword_parameters_parameter_supported = self.keyword_parameters_parameter_supported
         
         return new
     
@@ -2594,9 +2594,9 @@ def _analyze_handler(handler, handler_name, expected_parameter_count):
             f'`{handler_name}` should accept not expect args, meanwhile it does.'
         )
     
-    if analyzed.accepts_kwargs():
+    if analyzed.accepts_keyword_parameters():
         raise TypeError(
-            f'`{handler_name}` should accept not expect kwargs, meanwhile it does.'
+            f'`{handler_name}` should accept not expect keyword_parameters, meanwhile it does.'
         )
     
     non_default_keyword_only_parameter_count = analyzed.get_non_default_keyword_only_parameter_count()
@@ -2695,7 +2695,7 @@ class AppBase:
         +===================+===========================+=======================================================+
         | endpoint          | `None`, `str`           | The endpoint what matched the request url.            |
         +-------------------+---------------------------+-------------------------------------------------------+
-        | kwargs            | `dict` of (`str`, `object`)  | Additional keyword parameters passed to ``url_for``.  |
+        | keyword_parameters            | `dict` of (`str`, `object`)  | Additional keyword parameters passed to ``url_for``.  |
         +-------------------+---------------------------+-------------------------------------------------------+
     
     url_value_preprocessors : `None`, `list` of `async-callable`
@@ -2887,7 +2887,7 @@ class AppBase:
             
             view_func_positional_parameter_names = view_func.positional_parameter_names
             view_func_keyword_parameter_names = view_func.keyword_parameter_names
-            view_func_kwargs_parameter_supported = view_func.kwargs_parameter_supported
+            view_func_keyword_parameters_parameter_supported = view_func.keyword_parameters_parameter_supported
         else:
             real_func = view_func
             analyzed = CallableAnalyzer(view_func)
@@ -2904,13 +2904,13 @@ class AppBase:
             
             view_func_positional_parameter_names = None
             view_func_keyword_parameter_names = None
-            view_func_kwargs_parameter_supported = analyzed.accepts_kwargs()
+            view_func_keyword_parameters_parameter_supported = analyzed.accepts_keyword_parameters()
             
             for parameter in analyzed.parameters:
                 if parameter.reserved:
                     continue
                 
-                if parameter.is_kwargs():
+                if parameter.is_keyword_parameters():
                     continue
                 
                 if parameter.is_positional():
@@ -3011,7 +3011,7 @@ class AppBase:
         
         if actual_rule is None:
             rule = Rule(rule_processed, real_func, view_func_positional_parameter_names,
-                view_func_keyword_parameter_names, view_func_kwargs_parameter_supported, endpoint, request_methods,
+                view_func_keyword_parameter_names, view_func_keyword_parameters_parameter_supported, endpoint, request_methods,
                 parameters, subdomain)
             self.rules[endpoint] = rule
             return rule
@@ -3174,7 +3174,7 @@ class AppBase:
             +===================+===========================+=======================================================+
             | endpoint          | `None`, `str`           | The endpoint what matched the request url.            |
             +-------------------+---------------------------+-------------------------------------------------------+
-            | kwargs            | `dict` of (`str`, `object`)  | Additional keyword parameters passed to ``url_for``.  |
+            | keyword_parameters            | `dict` of (`str`, `object`)  | Additional keyword parameters passed to ``url_for``.  |
             +-------------------+---------------------------+-------------------------------------------------------+
         
         Returns
@@ -3439,7 +3439,7 @@ class Blueprint(AppBase):
         +===================+===========================+=======================================================+
         | endpoint          | `None`, `str`           | The endpoint what matched the request url.            |
         +-------------------+---------------------------+-------------------------------------------------------+
-        | kwargs            | `dict` of (`str`, `object`)  | Additional keyword parameters passed to ``url_for``.  |
+        | keyword_parameters            | `dict` of (`str`, `object`)  | Additional keyword parameters passed to ``url_for``.  |
         +-------------------+---------------------------+-------------------------------------------------------+
     
     url_value_preprocessors : `None`, `list` of `async-callable`
@@ -3621,7 +3621,7 @@ class WebApp(AppBase):
         +===================+===========================+=======================================================+
         | endpoint          | `None`, `str`           | The endpoint what matched the request url.            |
         +-------------------+---------------------------+-------------------------------------------------------+
-        | kwargs            | `dict` of (`str`, `object`)  | Additional keyword parameters passed to ``url_for``.  |
+        | keyword_parameters            | `dict` of (`str`, `object`)  | Additional keyword parameters passed to ``url_for``.  |
         +-------------------+---------------------------+-------------------------------------------------------+
     
     url_value_preprocessors : `None`, `list` of `async-callable`

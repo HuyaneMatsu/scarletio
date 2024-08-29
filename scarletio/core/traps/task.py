@@ -5,8 +5,11 @@ from threading import current_thread
 from types import AsyncGeneratorType as CoroutineGeneratorType, CoroutineType, GeneratorType
 from warnings import warn
 
-from ...utils import alchemy_incendiary, copy_docs, export, ignore_frame, include, render_frames_into
+from ...utils import (
+    DEFAULT_ANSI_HIGHLIGHTER, alchemy_incendiary, copy_docs, export, ignore_frame, include, render_frames_into
+)
 from ...utils.trace import render_exception_into
+from ...utils.trace.rendering import add_trace_title_into
 
 from ..exceptions import CancelledError, InvalidStateError
 
@@ -471,17 +474,21 @@ class Task(Future):
         return frames
     
     
-    def print_stack(self, limit = -1, file = None):
+    def print_stack(self, limit = -1, file = None, *, highlighter = None):
         """
         Prints the stack or traceback of the task.
         
         Parameters
         ----------
         limit : `int` = `-1`, Optional
-            The maximal amount of stacks to print. By giving it as negative integer, there will be no stack limit
-            to print out.
+            The maximal amount of stacks to print.
+            By giving it as negative integer, there will be no stack limit to print out.
+
         file : `None`, `I/O stream` = `None`, Optional
             The file to print the stack to. Defaults to `sys.stderr`.
+    
+        highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
+            Formatter storing highlighting details.
         
         Notes
         -----
@@ -489,23 +496,27 @@ class Task(Future):
         """
         local_thread = current_thread()
         if isinstance(local_thread, EventThread):
-            return local_thread.run_in_executor(alchemy_incendiary(self._print_stack, (self, limit, file),))
+            return local_thread.run_in_executor(alchemy_incendiary(self._print_stack, (self, limit, file, highlighter),))
         else:
-            self._print_stack(self, limit, file)
+            self._print_stack(self, limit, file, highlighter)
     
     
     @staticmethod
-    def _print_stack(self, limit, file):
+    def _print_stack(self, limit, file, highlighter):
         """
         Prints the stack or traceback of the task to the given `file`.
         
         Parameters
         ----------
         limit : `int`
-            The maximal amount of stacks to print. By giving it as negative integer, there will be no stack limit
-            to print out,
+            The maximal amount of stacks to print.
+            By giving it as negative integer, there will be no stack limit to print out.
+        
         file : `None`, `I/O stream`
             The file to print the stack to. Defaults to `sys.stderr`.
+        
+        highlighter : `None`, ``HighlightFormatterContext``
+            Formatter storing highlighting details.
         
         Notes
         -----
@@ -513,61 +524,51 @@ class Task(Future):
         
         If the task is finished with an exception, then `limit` is ignored when printing traceback.
         """
-        if file is None:
-            file = sys.stdout
+        if (file is None) and (highlighter is None):
+            highlighter = DEFAULT_ANSI_HIGHLIGHTER
         
         if self._state & FUTURE_STATE_RESULT_RAISE:
             exception = self._result
         else:
             exception = None
         
+        extend = []
+        
         if exception is None:
             frames = self.get_stack(limit)
-            if frames:
-                recursive = (frames[-1] is None)
-                if recursive:
-                    del frames[-1]
-                
-                extracted = ['Stack for ', repr(self), ' (most recent call last):\n']
-                extracted = render_frames_into(frames, extend = extracted)
-                if recursive:
-                    extracted.append(
-                        'Last frame is a repeat from a frame above. Rest of the recursive part is not rendered.'
-                    )
+            if not frames:
+                extend.append('No stack for ')
+                extend.append(repr(self))
+                extend.append('\n')
+            
             else:
-                extracted = ['No stack for ', repr(self), '\n']
+                if frames[-1] is None:
+                    del frames[-1]
+                    recursive = True
+                else:
+                    recursive = False
+                
+                extend.append('Stack for ')
+                extend.append(repr(self))
+                extend.append('\n')
+                extend = add_trace_title_into('(Most recent call last):', extend, highlighter)
+                extend.append('\n')
+                extend = render_frames_into(frames, extend = extend, highlighter = highlighter)
+                
+                if recursive:
+                    extend = add_trace_title_into(
+                        'Last frame is a repeat from a frame above. Rest of the recursive part is not rendered.',
+                        extend,
+                        highlighter,
+                    )
         else:
-            extracted = ['Traceback for ', repr(self), ' (most recent call last):\n']
-            extracted = render_exception_into(exception, extend = extracted)
+            extend.append('Traceback for ')
+            extend.append(repr(self))
+            extend.append('\n')
+            
+            extend = render_exception_into(exception, extend = extend, highlighter = highlighter)
         
-        file.write(''.join(extracted))
-    
-    # Deprecations
-    
-    @property
-    def _should_cancel(self):
-        """
-        Deprecated and will be removed in 2024 february.
-        """
-        warn(
-            f'`{self.__class__.__name__}._should_cancel` is deprecated and will be removed in 2024 february.',
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return True if self._state & FUTURE_STATE_CANCELLING_SELF else False
-    
-    
-    @_should_cancel.setter
-    def _should_cancel(self, value):
-        warn(
-            f'`{self.__class__.__name__}._should_cancel` is deprecated and will be removed in 2024 february.',
-            FutureWarning,
-            stacklevel = 2,
-        )
-        state = self._state
-        if value:
-            state |= FUTURE_STATE_CANCELLING_SELF
-        else:
-            state &= ~FUTURE_STATE_CANCELLING_SELF
+        if file is None:
+            file = sys.stderr
         
-        self._state = state
+        file.write(''.join(extend))

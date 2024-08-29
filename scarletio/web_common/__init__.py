@@ -1,3 +1,4 @@
+from .basic_auth import *
 from .compressors import *
 from .cookiejar import *
 from .exceptions import *
@@ -12,12 +13,13 @@ from .mime_type import *
 from .multipart import *
 from .quoting import *
 from .url import *
-from .websocket_frame import *
+from .web_socket_frame import *
 
 from . import headers
 
 __all__ = (
     'headers',
+    *basic_auth.__all__,
     *compressors.__all__,
     *cookiejar.__all__,
     *exceptions.__all__,
@@ -32,9 +34,24 @@ __all__ = (
     *multipart.__all__,
     *quoting.__all__,
     *url.__all__,
-    *websocket_frame.__all__,
+    *web_socket_frame.__all__,
 )
 
 
-# Keep reference for the old name for now.
-Formdata = FormData
+# Deprecations
+
+from warnings import warn
+
+def __getattr__(attribute_name):
+    if attribute_name == 'Formdata':
+        warn(
+            (
+                f'`Formdata` has been renamed to `FormData`.'
+                f'`Formdata` will be removed in 2025 August.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
+        return FormData
+    
+    raise AttributeError(attribute_name)

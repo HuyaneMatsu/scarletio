@@ -16,14 +16,15 @@ from .helpers import HttpVersion
 from .helpers import HttpVersion11
 from .http_message import RawRequestMessage, RawResponseMessage
 from .mime_type import MimeType
-from .websocket_frame import WebSocketFrame, apply_websocket_mask
+from .web_socket_frame import WebSocketFrame, apply_web_socket_mask
 
 
-HTTP_STATUS_RP = re_compile(b'HTTP/(\\d+)\\.(\\d+) (\\d\\d\\d)(?: (.*?))?\r\n')
-HTTP_REQUEST_RP = re_compile(b'([^ ]+) ([^ ]+) HTTP/(\\d+)\\.(\\d+)\r\n')
+HTTP_STATUS_LINE_RP = re_compile(b'[ \t]*HTTP/(\\d+)\\.(\\d+)[ \t]+(\\d\\d\\d)[ \t]+(.*?)[ \t]*')
+HTTP_REQUEST_LINE_RP = re_compile(b'[ \t]*([^ \t]+)[ \t]+([^ \t]+)[ \t]+HTTP/(\\d+)\\.(\\d+)[ \t]*')
 
-HTTP_STATUS_LINE_RP = re_compile(b'HTTP/(\\d+)\\.(\\d+) (\\d\\d\\d)(?: (.*?))?')
-HTTP_REQUEST_LINE_RP = re_compile(b'([^ ]+) ([^ ]+) HTTP/(\\d+)\\.(\\d+)')
+HTTP_STATUS_RP = re_compile(HTTP_STATUS_LINE_RP.pattern + b'\r\n')
+HTTP_REQUEST_RP = re_compile(HTTP_REQUEST_LINE_RP.pattern + b'\r\n')
+
 
 MAX_LINE_LENGTH = 8190
 
@@ -476,21 +477,27 @@ class HttpReadProtocol(ReadProtocolBase):
                 raise
             
             parsed = HTTP_STATUS_RP.match(chunk, offset)
-            if parsed is None:
-                # stupid fallback
+            if parsed is not None:
+                offset = parsed.end()
+            
+            else:
+                # Fallback if not the whole line is received.
                 line = yield from self._read_until_CRLF()
                 parsed = HTTP_STATUS_LINE_RP.fullmatch(line)
                 if parsed is None:
                     raise PayloadError(f'Invalid status line: {line!r}.')
                 
                 chunk, offset = yield from self._read_http_helper()
-            else:
-                offset = parsed.end()
-                
+            
             major, minor, status, reason = parsed.groups()
+            if not reason:
+                reason = None
+            else:
+                reason = reason.decode('utf-8', errors = 'surrogateescape')
             
             headers = yield from self._read_http_headers(chunk, offset)
             return RawResponseMessage(HttpVersion(int(major), int(minor)), int(status), reason, headers)
+        
         except EOFError as err:
             raise PayloadError(PAYLOAD_ERROR_EOF_AT_HTTP_HEADER) from err
     
@@ -524,7 +531,10 @@ class HttpReadProtocol(ReadProtocolBase):
                 raise
             
             parsed = HTTP_REQUEST_RP.match(chunk, offset)
-            if parsed is None:
+            if parsed is not None:
+                offset = parsed.end()
+            
+            else:
                 # stupid fallback
                 line = yield from self._read_until_CRLF()
                 parsed = HTTP_REQUEST_LINE_RP.fullmatch(line)
@@ -532,14 +542,13 @@ class HttpReadProtocol(ReadProtocolBase):
                     raise PayloadError(f'invalid request line: {line!r}.')
                 
                 chunk, offset = yield from self._read_http_helper()
-            else:
-                offset = parsed.end()
             
             method, path, major, minor = parsed.groups()
+            method = method.decode('utf-8', 'surrogateescape').upper()
+            path = path.decode('utf-8', 'surrogateescape')
             
             headers = yield from self._read_http_headers(chunk, offset)
-            path = path.decode('ascii', 'surrogateescape')
-            return RawRequestMessage(HttpVersion(int(major), int(minor)), method.upper().decode(), path, headers)
+            return RawRequestMessage(HttpVersion(int(major), int(minor)), method, path, headers)
         except EOFError as err:
             raise PayloadError(PAYLOAD_ERROR_EOF_AT_HTTP_HEADER) from err
     
@@ -578,10 +587,10 @@ class HttpReadProtocol(ReadProtocolBase):
         if end > offset:
             middle = chunk.find(b':', offset, end)
             if middle <= offset:
-                raise PayloadError(f'Invalid header line: {chunk[offset:end]!r}.')
+                raise PayloadError(f'Invalid header line: {chunk[offset : end]!r}.')
             
-            name = chunk[offset:middle].lstrip()
-            value = chunk[middle + 1:end].strip()
+            name = chunk[offset : middle].lstrip()
+            value = chunk[middle + 1 : end].strip()
             offset = end + 2
         
         # Found \r\n instantly, we done!
@@ -595,6 +604,7 @@ class HttpReadProtocol(ReadProtocolBase):
             
             self._offset = offset
             return headers
+        
         # End is -1, so the header line ends at the incoming chunk, maybe?
         else:
             # we are at the end?
@@ -617,7 +627,7 @@ class HttpReadProtocol(ReadProtocolBase):
                 raise PayloadError(f'Invalid header line: {line!r}.')
             
             name = line[:middle]
-            value = line[middle + 1:]
+            value = line[middle + 1 :]
             
             # Jump on this part at the end if not done, we will need this for checking continuous lines.
             if chunks:
@@ -640,7 +650,7 @@ class HttpReadProtocol(ReadProtocolBase):
                     end = chunk.find(b'\r\n', offset)
                     # most likely case if we find \r\n
                     if end > offset:
-                        value.append(chunk[offset:end].strip())
+                        value.append(chunk[offset : end].strip())
                         # add \r\n shift
                         offset = end + 2
                         
@@ -711,8 +721,8 @@ class HttpReadProtocol(ReadProtocolBase):
                 if middle <= offset:
                     raise PayloadError(f'Invalid header line: {chunk[offset:end]!r}.')
                 
-                name = chunk[offset:middle].lstrip().decode('utf-8', 'surrogateescape')
-                value = chunk[middle + 1:end].strip()
+                name = chunk[offset : middle].lstrip().decode('utf-8', 'surrogateescape')
+                value = chunk[middle + 1 : end].strip()
                 
                 # Add 2 to the offset, to apply \r\n
                 offset = end + 2
@@ -765,12 +775,12 @@ class HttpReadProtocol(ReadProtocolBase):
                     middle = chunk.find(b':', 0, end)
                     # middle must be found and cannot be first character either.
                     if middle <= 0:
-                        raise PayloadError(f'Invalid header line: {chunk[offset:end]!r}.')
+                        raise PayloadError(f'Invalid header line: {chunk[offset : end]!r}.')
                     
-                    name = chunk[:middle].lstrip().decode('utf-8', 'surrogateescape')
-                    value = chunk[middle + 1:end].strip()
+                    name = chunk[: middle].lstrip().decode('utf-8', 'surrogateescape')
+                    value = chunk[middle + 1 : end].strip()
                     
-                    #Apply offset and update chunk data if needed.
+                    # Apply offset and update chunk data if needed.
                     offset = end + 2
                     if offset == len(chunk):
                         del chunks[0]
@@ -829,6 +839,7 @@ class HttpReadProtocol(ReadProtocolBase):
                         offset = 0
                     
                     continue
+            
             # We are not at the end case
             else:
                 # Store offset and read a line
@@ -845,8 +856,8 @@ class HttpReadProtocol(ReadProtocolBase):
                 if middle <= 0:
                     raise PayloadError(f'Invalid header line: {line!r}.')
                 
-                name = line[:middle].lstrip().decode('utf-8', 'surrogateescape')
-                value = line[middle + 1:].strip()
+                name = line[: middle].lstrip().decode('utf-8', 'surrogateescape')
+                value = line[middle + 1 :].strip()
                 
                 # Update the current chunk and offset state
                 if chunks:
@@ -862,16 +873,17 @@ class HttpReadProtocol(ReadProtocolBase):
                 continue
             continue
     
-    def _read_websocket_frame(self, is_client, max_size):
+    
+    def _read_web_socket_frame(self, is_client, max_size):
         """
-        Payload reader task, which reads a websocket frame.
+        Payload reader task, which reads a web socket frame.
         
         This method is a generator.
         
         Returns
         -------
         frame : ``WebSocketFrame``
-            The read websocket frame.
+            The read web socket frame.
         
         Raises
         ------
@@ -905,7 +917,7 @@ class HttpReadProtocol(ReadProtocolBase):
         else:
             mask = yield from self._read_exactly(4)
             data = yield from self._read_exactly(length)
-            data = apply_websocket_mask(mask,data)
+            data = apply_web_socket_mask(mask,data)
         
         return WebSocketFrame._from_fields(data, head_1)
     
@@ -1270,16 +1282,16 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
             transport.write(body)
     
     
-    def write_websocket_frame(self, frame, is_client):
+    def write_web_socket_frame(self, frame, is_client):
         """
-        Writes a websocket frame to the protocol.
+        Writes a web socket frame to the protocol.
         
         Parameters
         ----------
         frame : ``WebSocketFrame``
-            The websocket frame to write.
+            The web socket frame to write.
         is_client : `bool`
-            Whether the respective websocket is client or server side.
+            Whether the respective web socket is client or server side.
         
         Raises
         ------
@@ -1307,7 +1319,7 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
         if is_client:
             mask = getrandbits(32).to_bytes(4, 'big')
             transport.write(mask)
-            data = apply_websocket_mask(mask, frame.data,)
+            data = apply_web_socket_mask(mask, frame.data,)
         else:
             data = frame.data
         

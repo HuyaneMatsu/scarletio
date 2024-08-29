@@ -11,11 +11,11 @@ from ..web_common.header_building_and_parsing import (
     build_extensions, build_subprotocols, parse_connections, parse_extensions, parse_subprotocols, parse_upgrades
 )
 from ..web_common.headers import (
-    AUTHORIZATION, CONNECTION, HOST, METHOD_GET, ORIGIN, SEC_WEBSOCKET_ACCEPT, SEC_WEBSOCKET_EXTENSIONS,
-    SEC_WEBSOCKET_KEY, SEC_WEBSOCKET_PROTOCOL, SEC_WEBSOCKET_VERSION, UPGRADE
+    AUTHORIZATION, CONNECTION, HOST, METHOD_GET, ORIGIN, SEC_WEB_SOCKET_ACCEPT, SEC_WEB_SOCKET_EXTENSIONS,
+    SEC_WEB_SOCKET_KEY, SEC_WEB_SOCKET_PROTOCOL, SEC_WEB_SOCKET_VERSION, UPGRADE
 )
 
-from .websocket_common_protocol import WEBSOCKET_KEY, WebSocketCommonProtocol
+from .web_socket_common_protocol import WEB_SOCKET_KEY, WebSocketCommonProtocol
 
 
 HTTPClient = include('HTTPClient')
@@ -23,9 +23,9 @@ HTTPClient = include('HTTPClient')
 
 class WebSocketClient(WebSocketCommonProtocol):
     """
-    Asynchronous websocket client implementation.
+    Asynchronous web socket client implementation.
     
-    Inherits common websocket features from the ``WebSocketCommonProtocol`` class.
+    Inherits common web socket features from the ``WebSocketCommonProtocol`` class.
     
     Attributes
     ----------
@@ -56,13 +56,13 @@ class WebSocketClient(WebSocketCommonProtocol):
     _drain_lock : ``Lock``
         Asynchronous lock to ensure, that only `1` frame is written in `1` time.
     close_code : `int`
-        The websocket's close code if applicable. Defaults to `0`.
+        The web socket's close code if applicable. Defaults to `0`.
     close_connection_task : `None`, ``Task`` of ``.close_connection``
-        A task, what is present meanwhile the websocket is closing to avoid race condition.
+        A task, what is present meanwhile the web socket is closing to avoid race condition.
     close_timeout : `float`
         The maximal duration in seconds what is waited for response after close frame is sent. Defaults to `10.0`.
     close_reason : `None`, `str`
-        The reason, why the websocket was closed. Set only after the websocket is closed. Close reason might not be
+        The reason, why the web socket was closed. Set only after the web socket is closed. Close reason might not be
         received tho.
     connection_lost_waiter : ``Future``
         A future, what's result is set as `None`, when the connection is closed. Used to wait for close frames.
@@ -86,20 +86,20 @@ class WebSocketClient(WebSocketCommonProtocol):
     port : `int`
         The respective server's port to connect to.
     state : `str`
-        The websocket's state.
+        The web socket's state.
         
         Can be set as one of the following values:
         
         +-------------------------------+-------------------+
         | Respective name               | Value             |
         +===============================+===================+
-        | WEBSOCKET_STATE_CONNECTING    | `1`               |
+        | WEB_SOCKET_STATE_CONNECTING    | `1`               |
         +-------------------------------+-------------------+
-        | WEBSOCKET_STATE_OPEN          | `2`               |
+        | WEB_SOCKET_STATE_OPEN          | `2`               |
         +-------------------------------+-------------------+
-        | WEBSOCKET_STATE_CLOSING       | `3`               |
+        | WEB_SOCKET_STATE_CLOSING       | `3`               |
         +-------------------------------+-------------------+
-        | WEBSOCKET_STATE_CLOSED        | `4`               |
+        | WEB_SOCKET_STATE_CLOSED        | `4`               |
         +-------------------------------+-------------------+
         
         Note, that state == compared by memory address and not by value.
@@ -114,7 +114,7 @@ class WebSocketClient(WebSocketCommonProtocol):
     Class Attributes
     ----------------
     is_client : `bool` = `True`
-        Whether the websocket protocol is client or server side.
+        Whether the web socket protocol is client or server side.
     """
     is_client = True
     
@@ -130,10 +130,10 @@ class WebSocketClient(WebSocketCommonProtocol):
         available_subprotocols = None,
         headers = None,
         http_client = None,
-        **websocket_keyword_parameters,
+        **web_socket_keyword_parameters,
     ):
         """
-        Connects the websocket client to the given `url`.
+        Connects the web socket client to the given `url`.
         
         This method is a coroutine.
         
@@ -146,25 +146,25 @@ class WebSocketClient(WebSocketCommonProtocol):
         origin : `None`, `str` = `None`, Optional (Keyword only)
             Value of the Origin header.
         available_extensions : `None`, `list` of `object` = `None`, Optional (Keyword only)
-            Available websocket extensions. Defaults to `None`.
+            Available web socket extensions. Defaults to `None`.
             
-            Each websocket extension should have the following `4` attributes / methods:
+            Each web socket extension should have the following `4` attributes / methods:
             - `name`: `str`. The extension's name.
             - `request_params` : `list` of `tuple` (`str`, `str`). Additional header parameters of the extension.
-            - `decode` : `callable`. Decoder method, what processes a received websocket frame. Should accept `2`
-                parameters: The respective websocket ``WebSocketFrame``, and the ˙max_size` as `int`, what describes the
+            - `decode` : `callable`. Decoder method, what processes a received web socket frame. Should accept `2`
+                parameters: The respective web socket ``WebSocketFrame``, and the ˙max_size` as `int`, what describes the
                 maximal size of a received frame. If it is passed, ``PayloadError`` is raised.
-            - `encode` : `callable`. Encoder method, what processes the websocket frames to send. Should accept `1`
-                parameter, the respective websocket ``WebSocketFrame``.
+            - `encode` : `callable`. Encoder method, what processes the web socket frames to send. Should accept `1`
+                parameter, the respective web socket ``WebSocketFrame``.
         available_subprotocols : `None`, `list` of `str` = `None`, Optional (Keyword only)
             A list of supported subprotocols in order of decreasing preference.
         headers : `None`, ``IgnoreCaseMultiValueDictionary``, `dict-like` with (`str`, `str`) items = `None`
                 , Optional (Keyword only)
             Extra request headers.
         http_client : `None`, ``HTTPClient`` = `None`, Optional (Keyword only)
-            Http client to use to connect the websocket.
-        **websocket_keyword_parameters : Keyword parameters
-            Additional keyword parameters to create the websocket with.
+            Http client to use to connect the web socket.
+        **web_socket_keyword_parameters : Keyword parameters
+            Additional keyword parameters to create the web socket with.
         
         Other Parameters
         ----------------
@@ -200,7 +200,7 @@ class WebSocketClient(WebSocketCommonProtocol):
             - The response's connection headers do not contain `'upgrade'`.
             - The response's headers contains 0 or more than 1 upgrade headers.
             - The response's upgrade header is not `'WebSocket'`.
-            - The response's headers contain sec websocket accept 0 or more than 1 times.
+            - The response's headers contain sec web socket accept 0 or more than 1 times.
             - The response's secret key not matches the send one.
             - No extensions are supported, but still received.
             - Unsupported extension received.
@@ -221,8 +221,8 @@ class WebSocketClient(WebSocketCommonProtocol):
         
         request_headers[UPGRADE] = 'websocket'
         request_headers[CONNECTION] = 'Upgrade'
-        request_headers[SEC_WEBSOCKET_KEY] = sec_key
-        request_headers[SEC_WEBSOCKET_VERSION] = '13'
+        request_headers[SEC_WEB_SOCKET_KEY] = sec_key
+        request_headers[SEC_WEB_SOCKET_VERSION] = '13'
         
         if url.port == (443 if is_ssl else 80):
             request_host = url.host
@@ -240,10 +240,10 @@ class WebSocketClient(WebSocketCommonProtocol):
             request_headers[ORIGIN] = origin
         
         if available_extensions is not None:
-            request_headers[SEC_WEBSOCKET_EXTENSIONS] = build_extensions(available_extensions)
+            request_headers[SEC_WEB_SOCKET_EXTENSIONS] = build_extensions(available_extensions)
         
         if available_subprotocols is not None:
-            request_headers[SEC_WEBSOCKET_PROTOCOL] = build_subprotocols(available_subprotocols)
+            request_headers[SEC_WEB_SOCKET_PROTOCOL] = build_subprotocols(available_subprotocols)
         
         if headers is not None:
             # we use especially items, so we check that
@@ -295,8 +295,8 @@ class WebSocketClient(WebSocketCommonProtocol):
                     response = response,
                 )
             
-            expected_key = b64encode(hashlib.sha1((sec_key + WEBSOCKET_KEY).encode()).digest()).decode()
-            received_keys = response_headers.get_all(SEC_WEBSOCKET_ACCEPT)
+            expected_key = b64encode(hashlib.sha1((sec_key + WEB_SOCKET_KEY).encode()).digest()).decode()
+            received_keys = response_headers.get_all(SEC_WEB_SOCKET_ACCEPT)
             if received_keys is None:
                 raise InvalidHandshake(
                     f'Expected 1 secret key {expected_key!r}, but received 0.',
@@ -317,7 +317,7 @@ class WebSocketClient(WebSocketCommonProtocol):
             
             #extensions
             accepted_extensions = []
-            received_extensions = response_headers.get_all(SEC_WEBSOCKET_EXTENSIONS)
+            received_extensions = response_headers.get_all(SEC_WEB_SOCKET_EXTENSIONS)
             if (received_extensions is not None):
                 if available_extensions is None:
                     raise InvalidHandshake(
@@ -343,7 +343,7 @@ class WebSocketClient(WebSocketCommonProtocol):
                         )
             
             subprotocol = None
-            received_subprotocols = response_headers.get_all(SEC_WEBSOCKET_PROTOCOL)
+            received_subprotocols = response_headers.get_all(SEC_WEB_SOCKET_PROTOCOL)
             if (received_subprotocols is not None):
                 if available_subprotocols is None:
                     raise InvalidHandshake(
@@ -374,7 +374,7 @@ class WebSocketClient(WebSocketCommonProtocol):
             connection.detach()
             
             self = protocol.isekai_into(cls)
-            self._set_common_websocket_attributes(url.host, url.port, is_ssl = is_ssl, **websocket_keyword_parameters)
+            self._set_common_web_socket_attributes(url.host, url.port, is_ssl = is_ssl, **web_socket_keyword_parameters)
             self.extensions = accepted_extensions
             self.subprotocol = subprotocol
             self._transport.set_protocol(self)

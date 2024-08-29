@@ -1,3 +1,84 @@
+# 1.0.77 *\[2024-08-??\]*
+
+#### Improvements
+
+- Add `highlighter` parameter to `Task.print_stack`. If no file is given it will default to the default highlighter.
+- Add `highlighter` parameter to `ExecutorThread.print_stack`.
+    If no file is given it will default to the default highlighter.
+- Improve highlighting in `Task.print_stack`.
+- Improve highlighting in `ExecutorThread.print_stack`.
+- Add `SSLFingerprint.__eq__`.
+- Add `SSLFingerprint.__repr__`.
+- Add `SSLFingerprint.__hash__`.
+- Improve error messages in `SSLFingerprint.__new__` and `.check`.
+- `SSLFingerprint` is now directly importable from `scarletio.http_client`.
+- Add `proxy_headers` parameter to `HTTPClient.__new__`. `proxy_auth` and `prrxy_url` are now keyword only.
+- Add `proxy_headers` parameter to `HTTPClient.request2`.
+- `ConnectorTCP.create_direct_connection` now uses `CauseGroup`.
+- Add `ConnectionKey.copy_proxyless`.
+- Add `RequestInfo.__eq__`.
+- Add `RequestInfo.__hash__`.
+- Add `RequestContextManager.__repr__`.
+- Add `WebSocketContextManager.__repr__`.
+- Add `HostInfo.__new__`.
+- Add `HostInfoBasket.resolve_host_iterator` now will not yield an element twice.
+- `encoding` parameters passed to `BasicAuth` are now keyword only.
+- Add `BasicAuth.__eq__`.
+- Add `BasicAuth.__hash__`.
+- Add `PayloadBase.__eq__`.
+- Add `ConnectorBase.__repr__`.
+- Move `HostInfoBasket.__new__` to `.from_address_infos` to add a new constructor.
+- Add `HostInfoBasket.__mod__`.
+- Add `HostInfoBasket.__contains__`.
+- Add `RawMessage.__eq__`.
+- `RawResponseMessage.reason` is now `None | str`. Cannot be empty string.
+- Add `RawMessage.keep_alive`.
+- Push up `.version` to `RawMessage` in inheritance.
+- `ClientResponse.text` and `.json` now uses keyword only attributes.
+
+#### Bug fixes
+
+- Fix `SocketTransportLayerBase.__repr__` output formatting.
+- Fix `cli` display that we have a `debug-character` command while it is called `debug-key` actually.
+- Fix `Task.print_stack` defaulted to `sys.stdout` instead of the documented `sys.stderr`.
+- Fix `ExecutorThread.print_stack` defaulted to `sys.stdout` instead of the documented `sys.stderr`.
+- Interactive console now should show correctly what `Task.print_stack` prints.
+- Remove duplicate `most recent call last` text in `Task.print_stack` when printing an exception.
+- Fix `TypeError` in `Fingerprint.check` if the protocol has no peer name.
+- Fix `AttributeError` caused by a premature `ClientResponse.release` call.
+- Fix `AttributeError` caused by a premature `WebSocketCommonProtocol.close` call.
+- Fix `ClientRequest` rejected `CONTENT_ENCODING` header to enable compression.
+- Fix bracket ipv6 addresses in HOST header.
+- Fix remove trailing dots in in HOST header.
+- Fix remove extra trailing dots from host & server names.
+- Fix request path when connecting to ipv6 address.
+- Fix request path when connecting without port.
+- Fix cancelled or destroyed host info lookups could reraise the same exception.
+     Now it raises `ConnectionError` instead.
+- Fix some formatting issues in `RawMessage.__repr__`.
+- Fix `ClientResponse` body is never set if body reading finishes before `.read()` is called.
+
+#### Renames, Deprecation & Removals
+
+- Rename `Fingerprint` to `SSLFingerprint`. Note that it was not a top level import anyways, for some reason.
+- Deprecate the `ssl` parameter in `HTTPClient.request2` use either `ssl_context` or `ssl_fingerprint` instead.
+- Rename `ClientRequest.is_ssl` to `.is_secure`, `.ssl` to `.ssl_context` & `.ssl_fingerprint`.
+- Rename `ConnectionKey.is_ssl` to `.secure`, `.ssl` to `.ssl_context` & `.ssl_fingerprint`.
+- Rename `RequestInfo.real_url` to `original_url`.
+- Rename `websocket` directory and files to `web_socket`.
+- Deprecate `websocket_kwargs` parameter in `WebSocketServer.__new__`. Use `web_socket_keyword_parameters` instead.
+- Rename `HostInfoContianer` to `HostInfoBasket`.
+- Rename `HostInfoBasket.net_addresses` to `.get_next_rotation`.
+- Rename `HostInfoBasket.expired` to `.is_expired`.
+- Deprecate the `ssl` parameter in `TCPConnector.__new__` use either `ssl_context` or `ssl_fingerprint` instead.
+- Deprecate the `ssl` parameter in `TCPConnector.__new__` use either `ssl_context` or `ssl_fingerprint` instead.
+- Rename `TCPConnector` to `ConnectorTCP`. `TCP` connector functionality had a major overhaul in both code & naming.
+- Rename `BasicAuth.decode` to `.from_header`.
+- Rename `BasicAuth.encode` to `.to_header`.
+- Remove unused `ClientRequest.terminate`.
+
+(And way more other renames...)
+
 # 1.0.76 *\[2024-08-05\]*
 
 #### Bug fixes

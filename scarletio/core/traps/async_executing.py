@@ -335,7 +335,7 @@ class ScarletExecutor:
             break
     
     
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exception_type, exception_value, exception_traceback):
         """
         Leaves from the scarlet execution, blocking till all the added tasks are finished.
         
@@ -344,7 +344,7 @@ class ScarletExecutor:
         
         This method is a coroutine.
         """
-        if exc_type is None:
+        if exception_type is None:
             active = self._active
             
             while active:
@@ -396,7 +396,7 @@ class ScarletExecutor:
         self._exception = None
         
         if exception is None:
-            if exc_type is CancelledError:
+            if exception_type is CancelledError:
                 return True
             else:
                 return False

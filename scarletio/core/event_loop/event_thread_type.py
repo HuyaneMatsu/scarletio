@@ -1,7 +1,7 @@
 __all__ = ()
 
-import socket as module_socket
 import threading
+from socket import socketpair as create_socket_pair
 from threading import Event as SyncEvent, Thread, current_thread
 
 from ...utils import ignore_frame
@@ -87,7 +87,7 @@ class EventThreadContextManager:
             
             thread.running = True
             
-            self_read_socket, self_write_socket = module_socket.socketpair()
+            self_read_socket, self_write_socket = create_socket_pair()
             self_read_socket.setblocking(False)
             self_write_socket.setblocking(False)
             thread._self_read_socket = self_read_socket
@@ -96,7 +96,7 @@ class EventThreadContextManager:
         finally:
             thread_waiter.set()
     
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exception_type, exception_value, exception_traceback):
         """
         When the event loop's runner stops, it's context closes it.
         """
@@ -139,7 +139,7 @@ class EventThreadType(type):
     """
     Type of even thread, which manages their instances creation.
     """
-    def __call__(cls, daemon = False, name = None, start_later = True, **kwargs):
+    def __call__(cls, daemon = False, name = None, start_later = True, **keyword_parameters):
         """
         Creates a new ``EventThread`` with the given parameters.
         
@@ -151,7 +151,7 @@ class EventThreadType(type):
             The created thread's name. Defaults to `None`
         start_later : `bool` = `True`, Optional
             Whether the event loop should be started only later. Defaults to `True`.
-        **kwargs : keyword parameters
+        **keyword_parameters : keyword parameters
             Additional event thread specific parameters.
         
         Returns
@@ -160,7 +160,7 @@ class EventThreadType(type):
             The created event loop.
         """
         obj = Thread.__new__(cls)
-        cls.__init__(obj, **kwargs)
+        cls.__init__(obj, **keyword_parameters)
         Thread.__init__(obj, daemon = daemon, name = name)
         
         obj.context = EventThreadContextManager(obj)

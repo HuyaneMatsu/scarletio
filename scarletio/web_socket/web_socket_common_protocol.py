@@ -8,9 +8,9 @@ from os import urandom
 from ..core import AsyncQueue, CancelledError, Future, Lock, Task, shield, write_exception_async
 from ..utils import include
 from ..web_common import ConnectionClosed, HttpReadWriteProtocol, PayloadError, WebSocketFrame, WebSocketProtocolError
-from ..web_common.websocket_frame import (
-    WEBSOCKET_DATA_OPERATIONS, WEBSOCKET_OPERATION_BINARY, WEBSOCKET_OPERATION_CLOSE, WEBSOCKET_OPERATION_CONTINUOUS,
-    WEBSOCKET_OPERATION_PING, WEBSOCKET_OPERATION_PONG, WEBSOCKET_OPERATION_TEXT
+from ..web_common.web_socket_frame import (
+    WEB_SOCKET_DATA_OPERATIONS, WEB_SOCKET_OPERATION_BINARY, WEB_SOCKET_OPERATION_CLOSE, WEB_SOCKET_OPERATION_CONTINUOUS,
+    WEB_SOCKET_OPERATION_PING, WEB_SOCKET_OPERATION_PONG, WEB_SOCKET_OPERATION_TEXT
 )
 
 
@@ -21,12 +21,12 @@ INTERNAL_SERVER_ERROR = module_http.HTTPStatus.INTERNAL_SERVER_ERROR
 SERVICE_UNAVAILABLE = module_http.HTTPStatus.SERVICE_UNAVAILABLE
 SWITCHING_PROTOCOLS = module_http.HTTPStatus.SWITCHING_PROTOCOLS
 
-WEBSOCKET_STATE_CONNECTING = 1
-WEBSOCKET_STATE_OPEN = 2
-WEBSOCKET_STATE_CLOSING = 3
-WEBSOCKET_STATE_CLOSED = 4
+WEB_SOCKET_STATE_CONNECTING = 1
+WEB_SOCKET_STATE_OPEN = 2
+WEB_SOCKET_STATE_CLOSING = 3
+WEB_SOCKET_STATE_CLOSED = 4
 
-WEBSOCKET_KEY = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
+WEB_SOCKET_KEY = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
 
 EXTERNAL_CLOSE_CODES = (1000, 1001, 1002, 1003, 1007, 1008, 1009, 1010, 1011, 1013)
 
@@ -68,13 +68,13 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
     _drain_lock : ``Lock``
         Asynchronous lock to ensure, that only `1` frame is written in `1` time.
     close_code : `int`
-        The websocket's close code if applicable. Defaults to `0`.
+        The web socket's close code if applicable. Defaults to `0`.
     close_connection_task : `None`, ``Task`` of ``.close_connection``
-        A task, what is present meanwhile the websocket is closing to avoid race condition.
+        A task, what is present meanwhile the web socket is closing to avoid race condition.
     close_timeout : `float`
         The maximal duration in seconds what is waited for response after close frame is sent. Defaults to `10.0`.
     close_reason : `None`, `str`
-        The reason, why the websocket was closed. Set only after the websocket is closed. Close reason might not be
+        The reason, why the web socket was closed. Set only after the web socket is closed. Close reason might not be
         received tho.
     connection_lost_waiter : ``Future``
         A future, what's result is set as `None`, when the connection is closed. Used to wait for close frames.
@@ -98,20 +98,20 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
     port : `int`
         The respective server's port to connect to.
     state : `str`
-        The websocket's state.
+        The web socket's state.
         
         Can be set as one of the following values:
         
         +-------------------------------+-------------------+
         | Respective name               | Value             |
         +===============================+===================+
-        | WEBSOCKET_STATE_CONNECTING    | `1`               |
+        | WEB_SOCKET_STATE_CONNECTING   | `1`               |
         +-------------------------------+-------------------+
-        | WEBSOCKET_STATE_OPEN          | `2`               |
+        | WEB_SOCKET_STATE_OPEN         | `2`               |
         +-------------------------------+-------------------+
-        | WEBSOCKET_STATE_CLOSING       | `3`               |
+        | WEB_SOCKET_STATE_CLOSING      | `3`               |
         +-------------------------------+-------------------+
-        | WEBSOCKET_STATE_CLOSED        | `4`               |
+        | WEB_SOCKET_STATE_CLOSED       | `4`               |
         +-------------------------------+-------------------+
         
         Note, that state == compared by memory address and not by value.
@@ -126,7 +126,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
     Class Attributes
     ----------------
     is_client : `bool` = `True`
-        Whether the websocket protocol is client or server side.
+        Whether the web socket protocol is client or server side.
     """
     __slots__ = (
         '_drain_lock', 'close_code', 'close_connection_task', 'close_timeout', 'close_reason',
@@ -159,15 +159,15 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             removed.
         """
         self = HttpReadWriteProtocol.__new__(cls, loop)
-        self._set_common_websocket_attributes(host, port, is_ssl, close_timeout, max_size, max_queue)
+        self._set_common_web_socket_attributes(host, port, is_ssl, close_timeout, max_size, max_queue)
         return self
     
     
-    def _set_common_websocket_attributes(
+    def _set_common_web_socket_attributes(
         self, host, port, is_ssl, close_timeout = 10.0, max_size = 1 << 26, max_queue = None
     ):
         """
-        Sets the common websocket specific attributes for the protocol.
+        Sets the common web socket specific attributes for the protocol.
         
         Parameters
         ----------
@@ -195,7 +195,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         
         self._drain_lock = Lock(self._loop)
         
-        self.state = WEBSOCKET_STATE_CONNECTING
+        self.state = WEB_SOCKET_STATE_CONNECTING
         
         self.extensions = None # set from outside
         self.subprotocol = None # set from outside
@@ -217,9 +217,9 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         """
         Method called when the connection is established at the end of the handshake.
         
-        Marks the websocket as open and start it's ``.transfer_data_task`` and ``.close_connection_task``.
+        Marks the web socket as open and start it's ``.transfer_data_task`` and ``.close_connection_task``.
         """
-        self.state = WEBSOCKET_STATE_OPEN
+        self.state = WEB_SOCKET_STATE_OPEN
         loop = self._loop
         self.transfer_data_task = Task(loop, self.transfer_data())
         self.close_connection_task = Task(loop, self.close_connection())
@@ -254,15 +254,15 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
     @property
     def open(self):
         """
-        Returns whether the websocket is open.
+        Returns whether the web socket is open.
         
-        If the websocket is closed, ``ConnectionClosed`` is raised when using it.
+        If the web socket is closed, ``ConnectionClosed`` is raised when using it.
         
         Returns
         -------
         open : `bool`
         """
-        if self.state != WEBSOCKET_STATE_OPEN:
+        if self.state != WEB_SOCKET_STATE_OPEN:
             return False
         
         transfer_data_task = self.transfer_data_task
@@ -278,7 +278,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
     @property
     def closed(self):
         """
-        Returns whether the websocket is closed.
+        Returns whether the web socket is closed.
         
         Note, meanwhile connection is establishing, ``.open`` and ``.close`` will return `False`.
         
@@ -286,25 +286,25 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         -------
         closed : `bool`
         """
-        return self.state == WEBSOCKET_STATE_CLOSED
+        return self.state == WEB_SOCKET_STATE_CLOSED
     
     
     def receive(self):
         """
-        Returns a future, what can be awaited to receive the next message of the websocket.
+        Returns a future, what can be awaited to receive the next message of the web socket.
         
         Returns
         -------
         future : ``Future``
-            The future returns `bytes`, `str` respective to the received payload's type. If the websocket
-            is closed, ``ConnectionClosed`` is raised.
+            The future returns `bytes`, `str` respective to the received payload's type.
+            If the web socket is closed, ``ConnectionClosed`` is raised.
         """
         return self.messages.get_result()
     
     
     def receive_no_wait(self):
         """
-        Returns a future, what can be awaited to receive the next message of the websocket.
+        Returns a future, what can be awaited to receive the next message of the web socket.
         
         Returns
         -------
@@ -323,14 +323,14 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
     
     async def send(self, data):
         """
-        Sends the given data with the websocket.
+        Sends the given data with the web socket.
         
         This method is a coroutine.
         
         Parameters
         ----------
         data : `bytes-like`, `str`
-            The data to send
+            The data to send.
         
         Raises
         ------
@@ -344,9 +344,9 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         await self.ensure_open()
         
         if isinstance(data, (bytes, bytearray, memoryview)):
-            operation_code = WEBSOCKET_OPERATION_BINARY
+            operation_code = WEB_SOCKET_OPERATION_BINARY
         elif isinstance(data, str):
-            operation_code = WEBSOCKET_OPERATION_TEXT
+            operation_code = WEB_SOCKET_OPERATION_TEXT
             data = data.encode('utf-8')
         else:
             raise TypeError(
@@ -358,7 +358,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
     
     async def close(self, code = 1000, reason = ''):
         """
-        Closes the websocket.
+        Closes the web socket.
         
         Writes close frame first and then if we don't receive close frame response in ``.close_timeout``, then we
         cancel the connection.
@@ -390,14 +390,22 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         # if close() is cancelled during the wait, self.transfer_data_task is cancelled before the close_timeout
         # elapses
         transfer_data_task = self.transfer_data_task
-        transfer_data_task.apply_timeout(self.close_timeout)
-        try:
-            await transfer_data_task
-        except TimeoutError:
-            pass
+        if (transfer_data_task is not None):
+            transfer_data_task.apply_timeout(self.close_timeout)
+            try:
+                await transfer_data_task
+            except TimeoutError:
+                pass
         
-        # quit for the close connection task to close the TCP connection.
-        await shield(self.close_connection_task, self._loop)
+        # Quit for the close connection task to close the TCP connection.
+        close_connection_task = self.close_connection_task
+        if (close_connection_task is not None):
+            await shield(close_connection_task, self._loop)
+        
+        else:
+            # If we are connecting manually call connection lost. This can happen on premature closing.
+            if self.state == WEB_SOCKET_STATE_CONNECTING:
+                self.connection_lost(None)
     
     
     @staticmethod
@@ -472,7 +480,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         waiter = Future(self._loop)
         pings[data] = waiter
         
-        await self.write_frame(WEBSOCKET_OPERATION_PING, data)
+        await self.write_frame(WEB_SOCKET_OPERATION_PING, data)
         
         await waiter
     
@@ -509,13 +517,13 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
                 f'Data must be `bytes-like`, `str`, got: {data.__class__.__name__}; {reprlib.repr(data)}.'
             )
         
-        await self.write_frame(WEBSOCKET_OPERATION_PONG, data)
+        await self.write_frame(WEB_SOCKET_OPERATION_PONG, data)
     
     # Private methods - no guarantees.
     
     async def ensure_open(self):
         """
-        Checks whether the websocket is still open.
+        Checks whether the web socket is still open.
         
         This method is a coroutine.
         
@@ -527,7 +535,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             WebSocket connection not yet established.
         """
         state = self.state
-        if state == WEBSOCKET_STATE_OPEN:
+        if state == WEB_SOCKET_STATE_OPEN:
             # if self.transfer_data_task exited without a closing handshake.
             if self.transfer_data_task.is_done():
                 await shield(self.close_connection_task, self._loop)
@@ -535,10 +543,10 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             
             return
         
-        if state == WEBSOCKET_STATE_CLOSED:
+        if state == WEB_SOCKET_STATE_CLOSED:
             raise ConnectionClosed(self.close_code, None, self.close_reason) from self.transfer_data_exception
         
-        if state == WEBSOCKET_STATE_CLOSING:
+        if state == WEB_SOCKET_STATE_CLOSING:
             if not self.close_code:
                 #if we started the closing handshake, wait for its completion
                 await shield(self.close_connection_task, self._loop)
@@ -550,7 +558,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
     
     async def transfer_data(self):
         """
-        The transfer data task of a websocket keeps reading it's messages and putting it into it's ``.messages``
+        The transfer data task of a web socket keeps reading it's messages and putting it into it's ``.messages``
         ``AsyncQueue``.
         
         Meanwhile runs, it wrapped inside of a ``Task`` and can be accessed as ``.transfer_data_task``.
@@ -566,39 +574,39 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
                 
                 self.messages.set_result(message)
         
-        except GeneratorExit as err:
-            exception = ConnectionClosed(1013, err)
+        except GeneratorExit as exception:
+            exception = ConnectionClosed(1013, exception)
             self.fail_connection(self.close_code or 1013)
-            to_reraise = err
+            to_reraise = exception
         
-        except CancelledError as err:
+        except CancelledError as exception:
             # we already failed connection
-            exception = ConnectionClosed(self.close_code or 1000, err, self.close_reason)
-            to_reraise = err
+            exception = ConnectionClosed(self.close_code or 1000, exception, self.close_reason)
+            to_reraise = exception
         
-        except WebSocketProtocolError as err:
-            exception = ConnectionClosed(1002, err)
+        except WebSocketProtocolError as exception:
+            exception = ConnectionClosed(1002, exception)
             self.fail_connection(1002)
             to_reraise = None
         
-        except (ConnectionError, EOFError, TimeoutError) as err:
-            exception = ConnectionClosed(1006, err)
+        except (ConnectionError, EOFError, TimeoutError) as exception:
+            exception = ConnectionClosed(1006, exception)
             self.fail_connection(1006)
             to_reraise = None
         
-        except UnicodeDecodeError as err:
-            exception = ConnectionClosed(1007, err)
+        except UnicodeDecodeError as exception:
+            exception = ConnectionClosed(1007, exception)
             self.fail_connection(1007)
             to_reraise = None
         
-        except PayloadError as err:
-            exception = ConnectionClosed(1009, err)
+        except PayloadError as exception:
+            exception = ConnectionClosed(1009, exception)
             self.fail_connection(1009)
             to_reraise = None
         
-        except BaseException as err:
+        except BaseException as exception:
             await write_exception_async(
-                err,
+                exception,
                 [
                     'Unexpected exception occurred at ',
                     repr(self),
@@ -607,7 +615,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
                 loop = self._loop,
             )
             # should not happen
-            exception = ConnectionClosed(1011, err)
+            exception = ConnectionClosed(1011, exception)
             self.fail_connection(1011)
             to_reraise = None
         
@@ -631,7 +639,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
     
     async def read_message(self):
         """
-        Reads a message from the websocket.
+        Reads a message from the web socket.
         
         This method is a coroutine.
         
@@ -647,7 +655,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             - Incomplete fragmented message.
             - If the reserved bits are not `0`.
             - If the frame is a control frame, but is too long for one.
-            - If the websocket frame is fragmented frame. (Might be supported if people request is.)
+            - If the web socket frame is fragmented frame. (Might be supported if people request is.)
             - If the frame operation_code is not any of the expected ones.
             - Close frame received with invalid status code.
             - Close frame too short.
@@ -658,14 +666,14 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         if frame is None: # close frame
             return
         
-        if frame.operation_code == WEBSOCKET_OPERATION_TEXT:
+        if frame.operation_code == WEB_SOCKET_OPERATION_TEXT:
             text = True
-        elif frame.operation_code == WEBSOCKET_OPERATION_BINARY:
+        elif frame.operation_code == WEB_SOCKET_OPERATION_BINARY:
             text = False
         else: # frame.operation_code == OP_CONT:
             raise WebSocketProtocolError(
-                f'Unexpected operation_code, got {frame.operation_code!r}, expected {WEBSOCKET_OPERATION_TEXT!r} or '
-                f'{WEBSOCKET_OPERATION_BINARY!r}.'
+                f'Unexpected operation_code, got {frame.operation_code!r}, expected {WEB_SOCKET_OPERATION_TEXT!r} or '
+                f'{WEB_SOCKET_OPERATION_BINARY!r}.'
             )
         
         # we got a whole frame, nice
@@ -691,10 +699,10 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             if frame is None:
                 raise WebSocketProtocolError('Incomplete fragmented message.')
             
-            if frame.operation_code != WEBSOCKET_OPERATION_CONTINUOUS:
+            if frame.operation_code != WEB_SOCKET_OPERATION_CONTINUOUS:
                 raise WebSocketProtocolError(
                     f'Unexpected operation_code, got {frame.operation_code!r}, expected '
-                    f'{WEBSOCKET_OPERATION_CONTINUOUS!r}.'
+                    f'{WEB_SOCKET_OPERATION_CONTINUOUS!r}.'
                 )
         
         if text:
@@ -711,8 +719,8 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
     
     async def read_data_frame(self, max_size):
         """
-        Reads a websocket frame from the websocket. If the frame is a control frame processes and loops for reading an
-        another one.
+        Reads a web socket frame from the web socket.
+        If the frame is a control frame processes and loops for reading an another one.
         
         This method is a coroutine.
         
@@ -722,14 +730,14 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         Returns
         -------
         frame : ``WebSocketFrame``, `None`
-            The read websocket frame. Returns `None` if close frame was received.
+            The read web socket frame. Returns `None` if close frame was received.
         
         Raises
         ------
         WebSocketProtocolError
             - If the reserved bits are not `0`.
             - If the frame is a control frame, but is too long for one.
-            - If the websocket frame is fragmented frame. (Might be supported if people request is.)
+            - If the web socket frame is fragmented frame. (Might be supported if people request is.)
             - If the frame operation_code is not any of the expected ones.
             - Close frame received with invalid status code.
             - Close frame too short.
@@ -738,7 +746,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         """
         while True:
             
-            frame = await self.set_payload_reader(self._read_websocket_frame(self.is_client, max_size))
+            frame = await self.set_payload_reader(self._read_web_socket_frame(self.is_client, max_size))
             
             extensions = self.extensions
             if (extensions is not None):
@@ -748,7 +756,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             frame.check()
             
             # most likely
-            if frame.operation_code in WEBSOCKET_DATA_OPERATIONS:
+            if frame.operation_code in WEB_SOCKET_DATA_OPERATIONS:
                 return frame
 
             if (await self._process_control_frame(frame)):
@@ -759,14 +767,14 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
     
     async def _process_control_frame(self, frame):
         """
-        Processes a control websocket frame.
+        Processes a control web socket frame.
         
         This method is a coroutine.
         
         Parameters
         ----------
         frame : ``WebSocketFrame``
-            A received control websocket frame.
+            A received control web socket frame.
         
         Returns
         -------
@@ -780,7 +788,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             - Close frame too short.
         """
         operation_code = frame.operation_code
-        if operation_code == WEBSOCKET_OPERATION_CLOSE:
+        if operation_code == WEB_SOCKET_OPERATION_CLOSE:
             data = frame.data
             length = len(data)
             if length >= 2:
@@ -800,7 +808,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             await self.write_close_frame(frame.data)
             return False
         
-        if operation_code == WEBSOCKET_OPERATION_PING:
+        if operation_code == WEB_SOCKET_OPERATION_PING:
             await self.pong(frame.data)
             return True
         
@@ -815,54 +823,54 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         return True
     
     
-    async def write_frame(self, operation_code, data, _expected_state = WEBSOCKET_STATE_OPEN):
+    async def write_frame(self, operation_code, data, _expected_state = WEB_SOCKET_STATE_OPEN):
         """
-        Writes the data as websocket.
+        Writes the data as web socket.
         
         This method is a coroutine.
         
         Parameters
         ----------
         operation_code : `int`
-            The operation code of the websocket frame.
+            The operation code of the web socket frame.
             
             Can be 1 of the following:
             
             +-----------------------------------+-------+
             | Respective name                   | Value |
             +===================================+=======+
-            | WEBSOCKET_OPERATION_CONTINUOUS    | 0     |
+            | WEB_SOCKET_OPERATION_CONTINUOUS    | 0     |
             +-----------------------------------+-------+
-            | WEBSOCKET_OPERATION_TEXT          | 1     |
+            | WEB_SOCKET_OPERATION_TEXT          | 1     |
             +-----------------------------------+-------+
-            | WEBSOCKET_OPERATION_BINARY        | 2     |
+            | WEB_SOCKET_OPERATION_BINARY        | 2     |
             +-----------------------------------+-------+
-            | WEBSOCKET_OPERATION_CLOSE         | 8     |
+            | WEB_SOCKET_OPERATION_CLOSE         | 8     |
             +-----------------------------------+-------+
-            | WEBSOCKET_OPERATION_PING          | 9     |
+            | WEB_SOCKET_OPERATION_PING          | 9     |
             +-----------------------------------+-------+
-            | WEBSOCKET_OPERATION_PONG          | 10    |
+            | WEB_SOCKET_OPERATION_PONG          | 10    |
             +-----------------------------------+-------+
         
         data : `bytes-like`
             The data to send.
         
         _expected_state : `str`
-            Expected state of the websocket. If the websocket is in other state, an `Exception` it raised.
-            Defaults to `'WEBSOCKET_STATE_OPEN'`.
+            Expected state of the web socket. If the web socket is in other state, an `Exception` it raised.
+            Defaults to `'WEB_SOCKET_STATE_OPEN'`.
             
             Can be set as one of the following values:
             
             +-------------------------------+-------------------+
             | Respective name               | Value             |
             +===============================+===================+
-            | WEBSOCKET_STATE_CONNECTING    | `1`               |
+            | WEB_SOCKET_STATE_CONNECTING    | `1`               |
             +-------------------------------+-------------------+
-            | WEBSOCKET_STATE_OPEN          | `2`               |
+            | WEB_SOCKET_STATE_OPEN          | `2`               |
             +-------------------------------+-------------------+
-            | WEBSOCKET_STATE_CLOSING       | `3`               |
+            | WEB_SOCKET_STATE_CLOSING       | `3`               |
             +-------------------------------+-------------------+
-            | WEBSOCKET_STATE_CLOSED        | `4`               |
+            | WEB_SOCKET_STATE_CLOSED        | `4`               |
             +-------------------------------+-------------------+
             
             Note, that state == compared by memory address and not by value.
@@ -879,7 +887,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         RuntimeError
             Protocol has no attached transport.
             - WebSocket connection not yet established.
-            - Cannot write to websocket with it's current state.
+            - Cannot write to web socket with it's current state.
         """
         # Defensive assertion for protocol compliance.
         if self.state != _expected_state:
@@ -897,7 +905,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
                     
                     frame.check()
                 
-                self.write_websocket_frame(frame, self.is_client)
+                self.write_web_socket_frame(frame, self.is_client)
                 await self.drain()
             except ConnectionError:
                 self.fail_connection()
@@ -907,7 +915,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
     
     async def write_close_frame(self, data = b''):
         """
-        Writes close frame to the websocket if the websocket is not yet closed.
+        Writes close frame to the web socket if the web socket is not yet closed.
         
         This method is a coroutine.
         
@@ -927,21 +935,21 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             WebSocket connection closed.
         Exception
             - WebSocket connection not yet established.
-            - Cannot write to websocket with it's current state.
+            - Cannot write to web socket with it's current state.
         RuntimeError
             Protocol has no attached transport.
         """
         # check connection before we write
-        if self.state == WEBSOCKET_STATE_OPEN:
-            self.state = WEBSOCKET_STATE_CLOSING
-            await self.write_frame(WEBSOCKET_OPERATION_CLOSE, data, WEBSOCKET_STATE_CLOSING)
+        if self.state == WEB_SOCKET_STATE_OPEN:
+            self.state = WEB_SOCKET_STATE_CLOSING
+            await self.write_frame(WEB_SOCKET_OPERATION_CLOSE, data, WEB_SOCKET_STATE_CLOSING)
     
     
     async def close_connection(self):
         """
-        Makes sure that the websocket is closed correctly.
+        Makes sure that the web socket is closed correctly.
         
-        Meanwhile the websocket is closing, it's ``.close_connection_task`` is set as a ``Task`` object wrapping the
+        Meanwhile the web socket is closing, it's ``.close_connection_task`` is set as a ``Task`` object wrapping the
         ``.close_connection`` coroutine to avoid race condition.
         
         This method is a coroutine.
@@ -1026,7 +1034,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
     
     def fail_connection(self, code = 1006, reason = ''):
         """
-        Closes the websocket if any unexpected exception occurred.
+        Closes the web socket if any unexpected exception occurred.
         
         Parameters
         ----------
@@ -1056,14 +1064,14 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             # Do not cancel with `CancelledError` because then we to silence it elsewhere.
             transfer_data_task.cancel_with(TimeoutError)
         
-        # send a close frame when the state == WEBSOCKET_STATE_OPEN and the connection is not broken
-        if code != 1006 and self.state == WEBSOCKET_STATE_OPEN:
+        # send a close frame when the state == WEB_SOCKET_STATE_OPEN and the connection is not broken
+        if code != 1006 and self.state == WEB_SOCKET_STATE_OPEN:
             
             frame_data = self._serialize_close(code, reason)
             # Write the close frame without draining the write buffer.
-            self.state = WEBSOCKET_STATE_CLOSING
+            self.state = WEB_SOCKET_STATE_CLOSING
             
-            frame = WebSocketFrame(True, WEBSOCKET_OPERATION_CLOSE, frame_data)
+            frame = WebSocketFrame(True, WEB_SOCKET_OPERATION_CLOSE, frame_data)
             
             extensions = self.extensions
             if (extensions is not None):
@@ -1072,7 +1080,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
                 
                 frame.check()
             
-            self.write_websocket_frame(frame, self.is_client)
+            self.write_web_socket_frame(frame, self.is_client)
         
         # start close_connection_task if the opening handshake didn't succeed.
         close_connection_task = self.close_connection_task
@@ -1096,7 +1104,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             If the connection was closed, then `exception` is given as `None`. This can happen at the case, when eof is
             received as well.
         """
-        self.state = WEBSOCKET_STATE_CLOSED
+        self.state = WEB_SOCKET_STATE_CLOSED
         if not self.close_code:
             self.close_code = 1006
         
@@ -1119,7 +1127,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             Returns `False` if the transport will close itself. If it returns `True`, then closing the transport is up
             to the protocol.
             
-            Returns `True` if the websocket is not secure.
+            Returns `True` if the web socket is not secure.
         """
         HttpReadWriteProtocol.eof_received(self)
         return (not self.is_ssl)

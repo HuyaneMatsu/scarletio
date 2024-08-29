@@ -1,12 +1,13 @@
 __all__ = ('ClaimedExecutor', 'Executor', 'ExecutorThread', 'SyncQueue', 'SyncWait', )
 
-import sys, warnings
+import sys
 from collections import deque
 from sys import _current_frames as get_current_frames
 from threading import Event as SyncEvent, Lock as SyncLock, Thread, current_thread
 
-from ...utils import alchemy_incendiary, ignore_frame, include, render_frames_into
+from ...utils import DEFAULT_ANSI_HIGHLIGHTER, alchemy_incendiary, ignore_frame, include, render_frames_into
 from ...utils.trace import render_exception_into
+from ...utils.trace.rendering import add_trace_title_into
 
 from ..exceptions import CancelledError
 from ..time import LOOP_TIME
@@ -215,7 +216,7 @@ class SyncQueue:
         """Returns the sync queue's representation."""
         with self._lock:
             repr_parts = [
-                self.__class__.__name__,
+                type(self).__name__,
                 '([',
             ]
             
@@ -262,12 +263,14 @@ class SyncQueue:
         max_length : `None`, `int`
         """
         return self._results.maxlen
+
     
     def clear(self):
         """
         Clears the queue.
         """
         self._results.clear()
+
     
     def copy(self):
         """
@@ -286,6 +289,7 @@ class SyncQueue:
             new._lock = SyncLock()
             
         return new
+
     
     def reverse(self):
         """
@@ -293,11 +297,13 @@ class SyncQueue:
         """
         with self._lock:
             self._results.reverse()
+
     
     def __len__(self):
         """Returns the queue's length."""
         with self._lock:
             return len(self._results)
+
     
     def __bool__(self):
         """Returns `True` if the queue has any elements."""
@@ -383,14 +389,14 @@ class ExecutorThread(Thread):
                     result = func()
                 except BaseException as err:
                     if isinstance(err, StopIteration):
-                        exception = RuntimeError(f'{err.__class__.__name__} cannot be raised to a Future.')
+                        exception = RuntimeError(f'{type(err).__name__} cannot be raised to a Future.')
                         exception.__cause__ = err
                         err = exception
                         exception = None
                     
-                    future._loop.call_soon_thread_safe(future.__class__.set_exception_if_pending, future, err)
+                    future._loop.call_soon_thread_safe(type(future).set_exception_if_pending, future, err)
                 else:
-                    future._loop.call_soon_thread_safe(future.__class__.set_result_if_pending, future, result)
+                    future._loop.call_soon_thread_safe(type(future).set_result_if_pending, future, result)
                     result = None
                 
                 finally:
@@ -400,7 +406,7 @@ class ExecutorThread(Thread):
             
             except BaseException as err:
                 extracted = [
-                    self.__class__.__name__,
+                    type(self).__name__,
                     ' exception occurred\n',
                     repr(self),
                     '\n',
@@ -518,58 +524,78 @@ class ExecutorThread(Thread):
         return frames
     
     
-    def print_stack(self, limit = -1, file = None):
+    def print_stack(self, limit = -1, file = None, *, highlighter = None):
         """
         Prints the stack of the executor.
         
         Parameters
         ----------
         limit : `int` = `-1`, Optional
-            The maximal amount of stacks to print. By giving it as negative integer, there will be no stack limit
-            to print out.
+            The maximal amount of stacks to print.
+            By giving it as negative integer, there will be no stack limit to print out.
+        
         file : `None`, `I/O stream` = `None`, Optional
             The file to print the stack to. Defaults to `sys.stderr`.
+        
+        highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
+            Formatter storing highlighting details.
         """
         local_thread = current_thread()
         if isinstance(local_thread, EventThread):
-            return local_thread.run_in_executor(alchemy_incendiary(self._print_stack, (self, limit, file),))
+            return local_thread.run_in_executor(alchemy_incendiary(self._print_stack, (self, limit, file, highlighter),))
         else:
-            self._print_stack(self, limit, file)
+            self._print_stack(self, limit, file, highlighter)
     
     
     @staticmethod
-    def _print_stack(self, limit, file):
+    def _print_stack(self, limit, file, highlighter):
         """
         Prints the stack or traceback of the executor to the given `file`.
         
         Parameters
         ----------
         limit : `int`
-            The maximal amount of stacks to print. By giving it as negative integer, there will be no stack limit
-            to print out,
+            The maximal amount of stacks to print.
+            By giving it as negative integer, there will be no stack limit to print out,
+        
         file : `None`, `I/O stream`
             The file to print the stack to. Defaults to `sys.stderr`.
+        
+        highlighter : `None`, ``HighlightFormatterContext``
+            Formatter storing highlighting details.
         
         Notes
         -----
         This function calls blocking operations and should not run inside of an event loop.
         """
-        if file is None:
-            file = sys.stdout
+        if (file is None) and (highlighter is None):
+            highlighter = DEFAULT_ANSI_HIGHLIGHTER
         
         frames = self.get_stack(limit)
-        if frames:
-            extracted = ['Stack for ', repr(self), ' (most recent call last):\n']
-            extracted = render_frames_into(frames, extend = extracted)
-        else:
-            extracted = ['No stack for ', repr(self), '\n']
+        extend = []
         
-        file.write(''.join(extracted))
+        if not frames:
+            extend.append('No stack for ')
+            extend.append(repr(self))
+            extend.append('\n')
+        
+        else:
+            extend.append('Stack for ')
+            extend.append(repr(self))
+            extend.append('\n')
+            extend = add_trace_title_into('(Most recent call last):', extend, highlighter)
+            extend.append('\n')
+            extend = render_frames_into(frames, extend = extend, highlighter = highlighter)
+        
+        if (file is None):
+            file = sys.stderr
+        
+        file.write(''.join(extend))
 
 
     def __repr__(self):
         """Returns the executor thread's representation."""
-        repr_parts = ['<', self.__class__.__name__]
+        repr_parts = ['<', type(self).__name__]
         
         self.is_alive() # Updates status
         if self._is_stopped:
@@ -629,7 +655,7 @@ class ExecutionPair:
     
     def __repr__(self):
         """Returns the execution pair's representation."""
-        return f'{self.__class__.__name__}(func = {self.func!r}, future = {self.future!r})'
+        return f'{type(self).__name__}(func = {self.func!r}, future = {self.future!r})'
 
 
 class _ClaimEndedCallback:
@@ -728,7 +754,7 @@ class ClaimedExecutor:
         executor = self.executor
         if executor is None:
             raise RuntimeError(
-                f'Executing on an already closed `{self.__class__.__name__}`.'
+                f'Executing on an already closed `{type(self).__name__}`.'
             )
         
         future = self.parent.create_future()
@@ -768,7 +794,7 @@ class ClaimedExecutor:
         """Entering a claimed executor returns itself."""
         return self
     
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exception_type, exception_value, exception_traceback):
         """Releases the claimed executor."""
         self.release()
         return False
@@ -852,7 +878,7 @@ class Executor:
     
     def __repr__(self):
         """Returns the executor's representation."""
-        return f'<{self.__class__.__name__} free = {self.get_free_executor_count()}, used = {self.get_used_executor_count()}>'
+        return f'<{type(self).__name__} free = {self.get_free_executor_count()}, used = {self.get_used_executor_count()}>'
     
     
     def get_used_executor_count(self):
@@ -969,7 +995,7 @@ class Executor:
         if not isinstance(local_thread, EventThread):
             raise RuntimeError(
                 f'`{self!r}.create_future` was not called from an `{EventThread.__name__}`, but from '
-                f'{local_thread.__class__.__name__}; {local_thread!r}.'
+                f'{type(local_thread).__name__}; {local_thread!r}.'
             )
         
         return Future(local_thread)

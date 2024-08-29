@@ -1,161 +1,18 @@
-__all__ = ('BasicAuth', 'HttpVersion', 'HttpVersion10', 'HttpVersion11',)
+__all__ = ('HttpVersion', 'HttpVersion10', 'HttpVersion11',)
 
-import base64, binascii, re
+import re
 import socket as module_socket
 from collections import namedtuple
 
 from ..core import CancelledError, Task
 
 
-sentinel = object()
-
 HttpVersion = namedtuple('HttpVersion', ('major', 'minor'))
 HttpVersion10 = HttpVersion(1, 0)
 HttpVersion11 = HttpVersion(1, 1)
 
-BASIC_AUTH_DEFAULT_ENCODING = 'latin1'
 
-class BasicAuth:
-    """
-    Http basic authorization implementation.
-    
-    Attributes
-    ----------
-    username : `str`
-        Authorization login username.
-    password : `str`
-        Authorization password. Can be empty string.
-    encoding : `str`
-        Encoding used to encode the authorization headers.
-    """
-    __slots__ = ('username', 'password', 'encoding',)
-    
-    def __new__(cls, username, password = '', encoding = BASIC_AUTH_DEFAULT_ENCODING):
-        """
-        Creates a new ``BasicAuth`` with the given parameters.
-        
-        Attributes
-        ----------
-        username : `str`
-            Authorization login name.
-        password : `str`, Optional
-            Authorization password. Can be empty string.
-        encoding : `str`, Optional
-            Encoding used to encode the authorization headers. Defaults to `'latin1'`.
-        
-        Raises
-        ------
-        ValueError
-            If `username` is given as `None`.
-            If `username` contains `':'` character.
-            If password is given as `None`.
-        """
-        if username is None:
-            raise ValueError(
-                '`username` cannot be `None`.'
-            )
-        
-        if ':' in username:
-            raise ValueError(
-                f'`username` contains `\':\'` which is not allowed (RFC 1945#section-11.1), got {username!r}.'
-            )
-        
-        if password is None:
-            raise ValueError(
-                '`password` cannot be `None`.'
-            )
-        
-        self = object.__new__(cls)
-        
-        self.username = username
-        self.password = password
-        self.encoding = encoding
-        
-        return self
-    
-    
-    @classmethod
-    def decode(cls, auth_header, encoding = BASIC_AUTH_DEFAULT_ENCODING):
-        """
-        Creates a new ``BasicAuth`` from the given HTTP header value and.
-        
-        Parameters
-        ----------
-        auth_header : `str`
-            Authorization header value.
-        encoding : `str` = `BASIC_AUTH_DEFAULT_ENCODING`, Optional
-            Encoding used to encode the authorization headers. Defaults to `'latin1'`.
-        
-        Returns
-        -------
-        self : ``BasicAuth``.
-        
-        Raises
-        ------
-        ValueError
-            If the authorization method is not `'basic'`.
-            If cannot parse the authorization headers.
-            Cannot decode authorization header.
-        """
-        split = auth_header.strip().split(' ')
-        if len(split) == 2:
-            if split[0].strip().lower() != 'basic':
-                raise ValueError(
-                    f'Unknown authorization method: {split[0]!r}.'
-                )
-            
-            to_decode = split[1]
-        else:
-            raise ValueError(
-                f'Could not parse authorization header from: {auth_header!r}.'
-            )
-        
-        try:
-            username, _, password = base64.b64decode(to_decode.encode('ascii')).decode(encoding).partition(':')
-        except binascii.Error as err:
-            raise ValueError('Invalid base64 encoding.') from err
-        
-        self = object.__new__(cls)
-        self.username = username
-        self.password = password
-        self.encoding = encoding
-        return self
-    
-    
-    def encode(self):
-        """
-        Encodes the authorization to it's header value.
-        
-        Returns
-        -------
-        auth_header : `str`
-        """
-        credits_ = (f'{self.username}:{self.password}').encode(self.encoding)
-        sub_value = base64.b64encode(credits_).decode(self.encoding)
-        return f'Basic {sub_value}'
-    
-    
-    def __repr__(self):
-        """Returns the basic authorisation's representation."""
-        repr_parts = [
-            self.__class__.__name__,
-            '(username = ',
-            repr(self.username),
-        ]
-        
-        password = self.password
-        if password:
-            repr_parts.append(', password = ')
-            repr_parts.append(repr(password))
-        
-        encoding = self.encoding
-        if encoding != BASIC_AUTH_DEFAULT_ENCODING:
-            repr_parts.append(', encoding = ')
-            repr_parts.append(repr(encoding))
-        
-        repr_parts.append(')')
-        
-        return ''.join(repr_parts)
+BASIC_AUTH_DEFAULT_ENCODING = 'latin1'
 
 
 _ipv4_pattern = '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
@@ -172,10 +29,11 @@ _ipv6_pattern = (
 
 _ipv4_regex = re.compile(_ipv4_pattern)
 _ipv6_regex = re.compile(_ipv6_pattern, flags = re.I)
-_ipv4_regex_b = re.compile(_ipv4_pattern.encode('ascii'))
-_ipv6_regex_b = re.compile(_ipv6_pattern.encode('ascii'), flags = re.I)
+_ipv4_regex_b = re.compile(_ipv4_pattern.encode('utf-8'))
+_ipv6_regex_b = re.compile(_ipv6_pattern.encode('utf-8'), flags = re.I)
 
 del _ipv4_pattern, _ipv6_pattern, re
+
 
 def is_ip_address(host):
     """
@@ -183,7 +41,7 @@ def is_ip_address(host):
     
     Parameters
     ----------
-    host : None`, `str`, `bytes-like`
+    host : None | str | bytes-like`
         Host value.
     
     Returns
@@ -193,31 +51,107 @@ def is_ip_address(host):
     Raises
     ------
     TypeError
-        If `host` was not given neither as `str`, `bytes-like`.
+        - If `host`'s type is invalid.
     """
     if host is None:
         return False
     
     if isinstance(host, str):
-        if _ipv4_regex.match(host) is not None:
+        if _ipv4_regex.fullmatch(host) is not None:
             return True
         
-        if _ipv6_regex.match(host) is not None:
+        if _ipv6_regex.fullmatch(host) is not None:
             return True
         
         return False
         
     if isinstance(host, (bytes, bytearray, memoryview)):
-        if _ipv4_regex_b.match(host) is not None:
+        if _ipv4_regex_b.fullmatch(host) is not None:
             return True
         
-        if _ipv6_regex_b.match(host) is not None:
+        if _ipv6_regex_b.fullmatch(host) is not None:
             return True
         
         return False
     
     raise TypeError(
-        f'`host` can be `None`, `str`, `bytes-like`, got {host.__class__.__name__}; {host!r}.'
+        f'`host` can be `None`, `str`, `bytes-like`, got {type(host).__name__}; {host!r}.'
+    )
+
+
+def is_ipv4_address(host):
+    """
+    Returns whether the given host is an `ipv4` ip address.
+    
+    Parameters
+    ----------
+    host : None | str | bytes-like`
+        Host value.
+    
+    Returns
+    -------
+    is_ipv4_address : `bool`
+    
+    Raises
+    ------
+    TypeError
+        - If `host`'s type is invalid.
+    """
+    if host is None:
+        return False
+    
+    if isinstance(host, str):
+        if _ipv4_regex.fullmatch(host) is not None:
+            return True
+        
+        return False
+    
+    if isinstance(host, (bytes, bytearray, memoryview)):
+        if _ipv4_regex_b.fullmatch(host) is not None:
+            return True
+        
+        return False
+    
+    raise TypeError(
+        f'`host` can be `None`, `str`, `bytes-like`, got {type(host).__name__}; {host!r}.'
+    )
+
+
+def is_ipv6_address(host):
+    """
+    Returns whether the given host is an `ipv6` ip address.
+    
+    Parameters
+    ----------
+    host : None | str | bytes-like`
+        Host value.
+    
+    Returns
+    -------
+    is_ipv6_address : `bool`
+    
+    Raises
+    ------
+    TypeError
+        - If `host`'s type is invalid.
+    """
+    if host is None:
+        return False
+    
+    if isinstance(host, str):
+        if _ipv6_regex.fullmatch(host) is not None:
+            return True
+        
+        return False
+    
+    if isinstance(host, (bytes, bytearray, memoryview)):
+        if _ipv6_regex_b.fullmatch(host) is not None:
+            return True
+        
+        return False
+    
+    raise TypeError(
+        f'`host` can be `None`, `str`, `bytes-like`, got {type(host).__name__}; {host!r}.'
     )
 
 
@@ -376,19 +310,18 @@ class Timeout:
         return f'<{type(self).__name__}>'
 
 
-def tcp_nodelay(transport, value):
+def set_tcp_nodelay(transport, value):
     """
     Sets or removes tcp nodelay socket option to the given transport's socket if applicable.
     
     Parameters
     ----------
-    transport : `object`
+    transport : ``AbstractTransportLayerBase``
         Asynchronous transport implementation.
     value : `bool`
         Value to set tcp nodelay to.
     """
     socket = transport.get_extra_info('socket')
-    
     if socket is None:
         return
     
@@ -400,3 +333,20 @@ def tcp_nodelay(transport, value):
         socket.setsockopt(module_socket.IPPROTO_TCP, module_socket.TCP_NODELAY, value)
     except OSError:
         pass
+
+
+def freeze_headers(proxy_headers):
+    """
+    Creates a frozen version of the proxy headers.
+    
+    Parameters
+    ----------
+    proxy_headers : `None | IgnoreCaseMultiValueDictionary`
+        Proxy headers.
+    
+    Returns
+    -------
+    proxy_headers_frozen : `None | tuple<(str, tuple<str>)>`
+    """
+    if (proxy_headers is not None) and proxy_headers:
+        return (*((key, tuple(proxy_headers.get_all(key))) for key in sorted(proxy_headers.keys())),)

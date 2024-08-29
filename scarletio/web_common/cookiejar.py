@@ -102,7 +102,7 @@ def parse_cookie_date(date_str):
     return DateTime(year, month, day, hour, minute, second, tzinfo = TimeZone.utc)
 
 
-def do_domains_match(domain, hostname):
+def do_domains_match(domain, host_name):
     """
     Implements domain matching adhering to RFC 6265.
     
@@ -110,25 +110,26 @@ def do_domains_match(domain, hostname):
     ----------
     domain : `str`
         The domain's name to match.
-    hostname : `str`
-        The hostname to match.
+    host_name : `str`
+        The host_name to match.
     
     Returns
     -------
     domain_matching : `bool`
     """
-    if hostname == domain:
+    if host_name == domain:
         return True
 
-    if not hostname.endswith(domain):
+    if not host_name.endswith(domain):
         return False
 
-    non_matching = hostname[:-len(domain)]
+    non_matching = host_name[:-len(domain)]
 
     if not non_matching.endswith('.'):
         return False
 
-    return not is_ip_address(hostname)
+    return not is_ip_address(host_name)
+
 
 def do_paths_match(request_path, cookie_path):
     """
@@ -306,9 +307,9 @@ class CookieJar:
         response_url : ``URL`` = `URL()`, Optional
             Respective response's url.
         """
-        hostname = response_url.raw_host
+        host_name = response_url.raw_host
         
-        if (not self.unsafe) and is_ip_address(hostname):
+        if (not self.unsafe) and is_ip_address(host_name):
             # Don't accept cookies from IPs
             return
         
@@ -325,17 +326,17 @@ class CookieJar:
                 domain = ''
                 del cookie['domain']
             
-            if not domain and hostname is not None:
-                # Set the cookie's domain to the response hostname and set its host-only-flag
-                self.host_only_cookies.add((hostname, name))
-                domain = cookie['domain'] = hostname
+            if not domain and host_name is not None:
+                # Set the cookie's domain to the response host_name and set its host-only-flag
+                self.host_only_cookies.add((host_name, name))
+                domain = cookie['domain'] = host_name
             
             if domain.startswith('.'):
                 # Remove leading dot
                 domain = domain[1:]
                 cookie['domain'] = domain
             
-            if hostname and (not do_domains_match(domain, hostname)):
+            if host_name and (not do_domains_match(domain, host_name)):
                 # Setting cookies for different domains is not allowed
                 continue
             
@@ -389,9 +390,9 @@ class CookieJar:
         self._do_expiration()
         
         filtered = SimpleCookie()
-        hostname = request_url.raw_host
-        if hostname is None:
-            hostname = ''
+        host_name = request_url.raw_host
+        if host_name is None:
+            host_name = ''
         
         is_not_secure = (request_url.scheme not in ('https', 'wss'))
         
@@ -404,14 +405,14 @@ class CookieJar:
                 filtered[name] = cookie.value
                 continue
             
-            if not self.unsafe and is_ip_address(hostname):
+            if not self.unsafe and is_ip_address(host_name):
                 continue
             
             if (domain, name) in self.host_only_cookies:
-                if domain != hostname:
+                if domain != host_name:
                     continue
             
-            elif not do_domains_match(domain, hostname):
+            elif not do_domains_match(domain, host_name):
                 continue
             
             if not do_paths_match(request_url.path, cookie['path']):

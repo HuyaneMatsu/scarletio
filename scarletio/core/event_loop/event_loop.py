@@ -7,7 +7,7 @@ from functools import partial as partial_func
 from heapq import heappop, heappush
 from itertools import chain
 from selectors import DefaultSelector, EVENT_READ, EVENT_WRITE
-from ssl import SSLContext, create_default_context
+from ssl import SSLContext, create_default_context as create_default_ssl_context
 from stat import S_ISSOCK
 from threading import Thread, current_thread
 
@@ -1305,7 +1305,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         """
         if isinstance(ssl, bool):
             if ssl:
-                ssl = create_default_context()
+                ssl = create_default_ssl_context()
             else:
                 ssl = None
         
@@ -1601,7 +1601,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         """
         if isinstance(ssl, bool):
             if ssl:
-                ssl = create_default_context()
+                ssl = create_default_ssl_context()
             else:
                 ssl = None
         
@@ -3026,7 +3026,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         restore_signals = True,
         start_new_session = False,
         pass_fds = (),
-        **process_open_kwargs,
+        **process_open_keyword_parameters,
     ):
         """
         Create a subprocess from cmd.
@@ -3088,7 +3088,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         pass_fds : `tuple` = `()`, Optional (Keyword only)
             An optional sequence of file descriptors to keep open between the parent and the child. Providing any
             `pass_fds` forces `close_fds` to be `True`. POSIX only, defaults to empty tuple.
-        **process_open_kwargs : Additional keyword parameters
+        **process_open_keyword_parameters : Additional keyword parameters
             Additional parameters to pass to the `Popen`.
         
         Returns
@@ -3105,7 +3105,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         if not isinstance(command, (bytes, str)):
             raise TypeError(f'`command` can be `bytes`, `str`, got {command.__class__.__name__}; {command!r}.')
         
-        process_open_kwargs = {
+        process_open_keyword_parameters = {
             'preexec_fn' : preexecution_function,
             'close_fds' : close_fds,
             'cwd' : cwd,
@@ -3114,10 +3114,10 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             'restore_signals' : restore_signals,
             'start_new_session' : start_new_session,
             'pass_fds' : pass_fds,
-            **process_open_kwargs
+            **process_open_keyword_parameters
         }
         
-        return await AsyncProcess(self, command, True, stdin, stdout, stderr, 0, extra, process_open_kwargs)
+        return await AsyncProcess(self, command, True, stdin, stdout, stderr, 0, extra, process_open_keyword_parameters)
     
     
     async def subprocess_exec(
@@ -3136,7 +3136,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         restore_signals = True,
         start_new_session = False,
         pass_fds = (),
-        **process_open_kwargs,
+        **process_open_keyword_parameters,
     ):
         """
         Create a subprocess from one or more string parameters specified by args.
@@ -3201,7 +3201,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         pass_fds : `tuple` = `()`, Optional (Keyword only)
             An optional sequence of file descriptors to keep open between the parent and the child. Providing any
             `pass_fds` forces `close_fds` to be `True`. POSIX only, defaults to empty tuple.
-        **process_open_kwargs : Additional keyword parameters
+        **process_open_keyword_parameters : Additional keyword parameters
             Additional parameters to pass to the `Popen`.
         
         Returns
@@ -3213,7 +3213,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         NotImplementedError
             Not supported on windows by the library.
         """
-        process_open_kwargs = {
+        process_open_keyword_parameters = {
             'preexec_fn' : preexecution_function,
             'close_fds' : close_fds,
             'cwd' : cwd,
@@ -3222,11 +3222,11 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             'restore_signals' : restore_signals,
             'start_new_session' : start_new_session,
             'pass_fds' : pass_fds,
-            **process_open_kwargs,
+            **process_open_keyword_parameters,
         }
         
         return await AsyncProcess(
-            self, (program, *args), False, stdin, stdout, stderr, 0, extra, process_open_kwargs
+            self, (program, *args), False, stdin, stdout, stderr, 0, extra, process_open_keyword_parameters
         )
 
     if not IS_UNIX:
@@ -3255,7 +3255,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             restore_signals = True,
             start_new_session = False,
             pass_fds = (),
-            **process_open_kwargs,
+            **process_open_keyword_parameters,
         ):
             raise NotImplementedError
         
@@ -3276,6 +3276,6 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             restore_signals = True,
             start_new_session = False,
             pass_fds = (),
-            **process_open_kwargs,
+            **process_open_keyword_parameters,
         ):
             raise NotImplementedError

@@ -1,36 +1,37 @@
 __all__ = ('WebSocketServer', )
 
 from functools import partial as partial_func
+from warnings import warn
 
 from ..core import Task, TaskGroup, skip_poll_cycle
 from ..utils import IgnoreCaseMultiValueDictionary
 
-from .websocket_server_protocol import WebSocketServerProtocol
+from .web_socket_server_protocol import WebSocketServerProtocol
 
 
 class WebSocketServer:
     """
-    Asynchronous websocket server implementation.
+    Asynchronous web socket server implementation.
     
     Attributes
     ----------
     loop : ``EventThread``
-        The event loop to what the websocket server is bound to.
-    websockets : `set` of (``WebSocketServerProtocol``, `object`)
-        Active server side asynchronous websocket protocol implementations.
+        The event loop to what the web socket server is bound to.
+    web_sockets : `set` of (``WebSocketServerProtocol``, `object`)
+        Active server side asynchronous web socket protocol implementations.
     close_connection_task : `None`, ``Task`` of ``_close``
-        Close connection task, what's result is set, when closing of the websocket is done.
+        Close connection task, what's result is set, when closing of the web socket is done.
         
         Should not be cancelled.
         
         Set, when ``.close`` is called.
     handler : `async-callable`
-        An asynchronous callable, what will handle a websocket connection.
+        An asynchronous callable, what will handle a web socket connection.
         
-        Should be given as an `async-callable` accepting `1` parameter the respective asynchronous server side websocket
-        protocol implementations.
+        Should be given as an `async-callable` accepting `1` parameter the respective asynchronous server side
+        web socket protocol implementations.
     server : `None`, ``Server``
-        Asynchronous server instance. Set meanwhile the websocket server is running.
+        Asynchronous server instance. Set meanwhile the web socket server is running.
     protocol_parameters : `tuple` of `object`
         WebSocket protocol parameters.
         
@@ -41,15 +42,15 @@ class WebSocketServer:
             - `is_ssl` : `bool`
                 Whether the server is secure.
             - `origin` : `None`, `str`. Value of the Origin header.
-            - `available_extensions` : `None` or (`list` of `object`).Available websocket extensions.
-                Each websocket extension should have the following `4` attributes / methods:
+            - `available_extensions` : `None` or (`list` of `object`). Available web socket extensions.
+                Each web socket extension should have the following `4` attributes / methods:
                 - `name`: `str`. The extension's name.
                 - `request_params` : `list` of `tuple` (`str`, `str`). Additional header parameters of the extension.
-                - `decode` : `callable`. Decoder method, what processes a received websocket frame. Should accept `2`
-                    parameters: The respective websocket ``Frame``, and the ˙max_size` as `int`, what describes the
+                - `decode` : `callable`. Decoder method, what processes a received web socket frame. Should accept `2`
+                    parameters: The respective ``WebSocketFrame``, and the ˙max_size` as `int`, what describes the
                     maximal size of a received frame. If it is passed, ``PayloadError`` is raised.
-                - `encode` : `callable`. Encoder method, what processes the websocket frames to send. Should accept `1`
-                    parameter, the respective websocket ``Frame``.
+                - `encode` : `callable`. Encoder method, what processes the web socket frames to send. Should accept `1`
+                    parameter, the respective ``WebSocketFrame``.
             - `available_subprotocols` : `None` or (`list` of `str`). A list of supported subprotocols in order of
                 decreasing preference.
             - `extra_response_headers` : `None` or (``IgnoreCaseMultiValueDictionary``, `dict-like`) of (`str`, `str`) items. Extra
@@ -65,7 +66,8 @@ class WebSocketServer:
                 following parameters:
                 - `parsed_header_subprotocols` : `list` of `str`. The subprotocols supported by the client.
                 - `available_subprotocols` : `list` of `str`. The subprotocols supported by the server.
-            - `websocket_kwargs` : `dict` of (`str`, `object`). Extra parameters for creating the websocket protocol.
+            - `web_socket_keyword_parameters` : `dict` of (`str`, `object`).
+                Extra parameters for creating the web socket protocol.
                 
                 Can have any of the following items:
                 - `close_timeout` : `float`. The maximal duration in seconds what is waited for response after close
@@ -76,7 +78,7 @@ class WebSocketServer:
                     Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of
                     it is removed. Defaults to `None`.
     """
-    __slots__ = ('loop', 'websockets', 'close_connection_task', 'handler', 'server', 'protocol_parameters')
+    __slots__ = ('loop', 'web_sockets', 'close_connection_task', 'handler', 'server', 'protocol_parameters')
     
     async def __new__(
         cls,
@@ -92,9 +94,10 @@ class WebSocketServer:
         available_subprotocols = None,
         request_processor = None,
         subprotocol_selector = None,
-        websocket_kwargs = None,
+        web_socket_keyword_parameters = None,
         ssl = None,
-        **server_kwargs,
+        websocket_kwargs = ...,
+        **server_keyword_parameters,
     ):
         """
         Creates a new ``WebSocketServer`` with the given parameters.
@@ -104,29 +107,29 @@ class WebSocketServer:
         Parameters
         ----------
         loop : ``EventThread``
-            The event loop to what the websocket server is bound to.
+            The event loop to what the web socket server is bound to.
         host : `None`, `str`, `iterable` of (`None`, `str`)
             To what network interfaces should the server be bound.
         port : `None`, `int`
             The port to use by the `host`(s).
         handler : `async-callable`
-            An asynchronous callable, what will handle a websocket connection.
+            An asynchronous callable, what will handle a web socket connection.
             
             Should be given as an `async-callable` accepting `1` parameter the respective asynchronous server side
-            websocket protocol implementations.
+            web socket protocol implementations.
         protocol : `object` = ``WebSocketServerProtocol``, Optional (Keyword only)
-            Asynchronous server side websocket protocol implementation.
+            Asynchronous server side web socket protocol implementation.
         available_extensions : `None` or (`list` of `object`) = `None`, Optional (Keyword only)
-            Available websocket extensions.
+            Available web socket extensions.
             
-            Each websocket extension should have the following `4` attributes / methods:
+            Each web socket extension should have the following `4` attributes / methods:
             - `name`: `str`. The extension's name.
             - `request_params` : `list` of `tuple` (`str`, `str`). Additional header parameters of the extension.
-            - `decode` : `callable`. Decoder method, what processes a received websocket frame. Should accept `2`
-                parameters: The respective websocket ``Frame``, and the ˙max_size` as `int`, what decides the
+            - `decode` : `callable`. Decoder method, what processes a received web socket frame. Should accept `2`
+                parameters: The respective ``WebSocketFrame``, and the ˙max_size` as `int`, what decides the
                 maximal size of a received frame. If it is passed, ``PayloadError`` is raised.
-            - `encode` : `callable`. Encoder method, what processes the websocket frames to send. Should accept `1`
-                parameter, the respective websocket ``Frame``.
+            - `encode` : `callable`. Encoder method, what processes the web socket frames to send. Should accept `1`
+                parameter, the respective ``WebSocketFrame``.
         extra_response_headers : `None` or (``IgnoreCaseMultiValueDictionary``, `dict-like`) of
                 (`str`, `str`) items = `None`, Optional (Keyword only)
             Extra headers to send with the http response.
@@ -147,8 +150,8 @@ class WebSocketServer:
             User hook to select subprotocols. Should accept the following parameters:
             - `parsed_header_subprotocols` : `list` of `str`. The subprotocols supported by the client.
             - `available_subprotocols` : `list` of `str`. The subprotocols supported by the server.
-        websocket_kwargs : `None`, `dict` of (`str`, `object`) = `None`, Optional (Keyword only)
-            Extra parameters for creating the websocket protocol.
+        web_socket_keyword_parameters : `None`, `dict` of (`str`, `object`) = `None`, Optional (Keyword only)
+            Extra parameters for creating the web socket protocol.
             
             Can have any of the following items:
             - `close_timeout` : `float`. The maximal duration in seconds what is waited for response after close
@@ -159,8 +162,8 @@ class WebSocketServer:
                 it is removed.
         ssl : `None`, ``SSLContext`` = `None`, Optional (Keyword only)
             Whether and what ssl is enabled for the connections.
-        **server_kwargs : Keyword parameters
-            Additional keyword parameters to create the websocket server with.
+        **server_keyword_parameters : Keyword parameters
+            Additional keyword parameters to create the web socket server with.
         
         Other Parameters
         ----------------
@@ -199,8 +202,19 @@ class WebSocketServer:
         OsError
             Error while attempting to binding to address.
         """
-        if websocket_kwargs is None:
-            websocket_kwargs = {}
+        if (websocket_kwargs is not None):
+            warn(
+                (
+                    f'`{cls.__name__}.__new__`\'s `websocket_kwargs` parameter is deprecated and will be removed in '
+                    f'2025 august. Please use `web_socket_keyword_parameters` instead.'
+                ),
+                FutureWarning,
+                stacklevel = 2,
+            )
+            web_socket_keyword_parameters = websocket_kwargs
+        
+        if web_socket_keyword_parameters is None:
+            web_socket_keyword_parameters = {}
         
         is_ssl = (ssl is not None)
         
@@ -230,16 +244,16 @@ class WebSocketServer:
         self = object.__new__(cls)
         self.loop = loop
         self.handler = handler
-        self.websockets = set()
+        self.web_sockets = set()
         self.close_connection_task = None
         self.server = None
         self.protocol_parameters = (
             handler, host, port, is_ssl, origin, available_extensions, available_subprotocols, extra_response_headers,
-            request_processor, subprotocol_selector, websocket_kwargs
+            request_processor, subprotocol_selector, web_socket_keyword_parameters
         )
         
         factory = partial_func(protocol, self,)
-        server = await loop.create_server_to(factory, host, port, ssl = ssl, **server_kwargs)
+        server = await loop.create_server_to(factory, host, port, ssl = ssl, **server_keyword_parameters)
         
         self.server = server
         await server.start()
@@ -249,31 +263,31 @@ class WebSocketServer:
     
     def register(self, protocol):
         """
-        Registers a newly created server side websocket to the websocket server itself.
+        Registers a newly created server side web socket to the web socket server itself.
         
         Parameters
         ----------
         protocol : ``WebSocketServerProtocol``, `object`
-            The connected server side websocket.
+            The connected server side web socket.
         """
-        self.websockets.add(protocol)
+        self.web_sockets.add(protocol)
     
     
     def unregister(self, protocol):
         """
-        Unregisters a newly created server side websocket from the websocket server itself.
+        Unregisters a newly created server side web socket from the web socket server itself.
         
         Parameters
         ----------
         protocol : ``WebSocketServerProtocol``, `object`
-            The disconnected server side websocket.
+            The disconnected server side web socket.
         """
-        self.websockets.discard(protocol)
+        self.web_sockets.discard(protocol)
     
     
     def is_serving(self):
         """
-        Returns whether the websocket server is serving.
+        Returns whether the web socket server is serving.
         
         Returns
         -------
@@ -291,12 +305,12 @@ class WebSocketServer:
     
     def close(self):
         """
-        Closes the websocket server. Returns a closing task, what can be awaited.
+        Closes the web socket server. Returns a closing task, what can be awaited.
         
         Returns
         -------
         close_connection_task : ``Task`` of ``_close``
-            Close connection task, what's result is set, when closing of the websocket is done.
+            Close connection task, what's result is set, when closing of the web socket is done.
             
             Should not be cancelled.
         """
@@ -310,7 +324,7 @@ class WebSocketServer:
     
     async def _close(self):
         """
-        Closes the websocket server. If the websocket task is already closed does nothing.
+        Closes the web socket server. If the web socket task is already closed does nothing.
         
         This method is a coroutine.
         """
@@ -326,14 +340,14 @@ class WebSocketServer:
         # Skip 1 full loop
         await skip_poll_cycle(loop)
         
-        websockets = self.websockets
-        if websockets:
-            await TaskGroup(loop, (loop.create_task(websocket.close(1001)) for websocket in websockets)).wait_all()
+        web_sockets = self.web_sockets
+        if web_sockets:
+            await TaskGroup(loop, (loop.create_task(web_socket.close(1001)) for web_socket in web_sockets)).wait_all()
             
-        if websockets:
+        if web_sockets:
             tasks = []
-            for websocket in websockets:
-                task = websocket.handler_task
+            for web_socket in web_sockets:
+                task = web_socket.handler_task
                 if task is None:
                     continue
                 
@@ -344,3 +358,19 @@ class WebSocketServer:
                 future = TaskGroup(loop, tasks).wait_all()
                 tasks = None
                 await future
+    
+    
+    @property
+    def websockets(self):
+        """
+        Deprecated and will be removed in 2025 august. Please use ``.web_sockets` instead.
+        """
+        warn(
+            (
+                f'`{type(self).__name__}.websockets` is deprecated and will be removed in 2025 august. '
+                f'Please use `web_sockets` instead.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
+        return self.web_sockets

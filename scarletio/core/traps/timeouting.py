@@ -96,14 +96,14 @@ class repeat_timeout:
         return self
     
     
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exception_type, exception_value, exception_traceback):
         """Exists the repeated timeout, dropping `TimeoutError` when cancelled."""
         handle = self._handle
         if (handle is not None):
             self._handle = None
             handle.cancel()
         
-        if exc_type is CancelledError and self._timed_out:
+        if exception_type is CancelledError and self._timed_out:
             raise TimeoutError from None
         
         return False

@@ -31,7 +31,7 @@ class HttpErrorBase(Exception):
 
 class InvalidHandshake(HttpErrorBase):
     """
-    Raised when websocket handshake fails.
+    Raised when web socket handshake fails.
     
     Attributes
     ----------
@@ -82,7 +82,7 @@ class HttpProcessingError(HttpErrorBase):
 
 class AbortHandshake(HttpProcessingError):
     """
-    Raised when websocket handshake is aborted on server side.
+    Raised when web socket handshake is aborted on server side.
     
     Attributes
     ----------
@@ -127,14 +127,14 @@ class ProxyError(HttpProcessingError):
 
 class InvalidOrigin(InvalidHandshake):
     """
-    Raised when a websocket handshake received invalid origin header.
+    Raised when a web socket handshake received invalid origin header.
     """
     __slots__ = ()
 
 
 class InvalidUpgrade(InvalidHandshake):
     """
-    Raised when a websocket was not correctly upgraded.
+    Raised when a web socket was not correctly upgraded.
     """
     __slots__ = ()
 
@@ -178,7 +178,7 @@ CLOSE_REASONS = {
 
 def get_close_reason(code):
     """
-    Gets close for any websocket close code.
+    Gets close for any web socket close code.
     
     Parameters
     ----------
@@ -210,7 +210,7 @@ def get_close_reason(code):
 
 class ConnectionClosed(Exception):
     """
-    Connection closed exception raised when a websocket is closed.
+    Connection closed exception raised when a web socket is closed.
     
     Attributes
     ----------
@@ -230,7 +230,7 @@ class ConnectionClosed(Exception):
         Parameters
         ----------
         code : `int`
-            The websocket close code.
+            The web socket close code.
         exception : `None`, `BaseException`
             Source exception if applicable.
         reason : `None`, `str` = `None`, Optional
@@ -249,7 +249,7 @@ class ConnectionClosed(Exception):
     @property
     def reason(self):
         """
-        Returns the websocket close reason.
+        Returns the web socket close reason.
         
         Returns
         -------
@@ -273,7 +273,7 @@ class ConnectionClosed(Exception):
 
 class WebSocketProtocolError(Exception):
     """
-    Exception raised by websocket when receiving invalid payload.
+    Exception raised by web socket when receiving invalid payload.
     """
     __slots__ = ()
     __init__ = object.__init__

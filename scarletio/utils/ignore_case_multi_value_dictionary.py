@@ -38,7 +38,15 @@ class IgnoreCaseMultiValueDictionary(MultiValueDictionary):
                 set_item(self, key, [value])
         
         else:
-            for key, value in iterable:
+            for item in iterable:
+                if not isinstance(item, tuple) or len(item) != 2:
+                    raise ValueError(
+                        f'iterable items must be type `tuple` of `2` elements a `key` and a `value`; '
+                        f'got {type(item).__name__}; {item!r}.'
+                    )
+                
+                key, value = item
+                
                 key = IgnoreCaseString(key)
                 try:
                     values = get_item(self, key)

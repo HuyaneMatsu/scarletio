@@ -625,7 +625,7 @@ class ExceptionWriterContextManager:
         return True
     
     
-    async def __aexit__(self, exception_type, exception, exception_traceback):
+    async def __aexit__(self, exception_type, exception_value, exception_traceback):
         """
         Exits the context manager.
         
@@ -634,7 +634,7 @@ class ExceptionWriterContextManager:
         exception_type : `None`, `type<BaseException>`
             The occurred exception's type if any.
         
-        exception : `None`, `BaseException`
+        exception_value : `None`, `BaseException`
             The occurred exception if any.
         
         exception_traceback : `None`, `TracebackType`
@@ -645,11 +645,11 @@ class ExceptionWriterContextManager:
         captured : `bool`
             Whether the exception was captured.
         """
-        if not self._should_capture(exception, True):
+        if not self._should_capture(exception_value, True):
             return False
         
         await write_exception_async(
-            exception,
+            exception_value,
             before = self._get_location_message(),
             filter = self.filter,
             highlighter = self.highlighter,

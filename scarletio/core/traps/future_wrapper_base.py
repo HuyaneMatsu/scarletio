@@ -39,7 +39,7 @@ class FutureWrapperBase:
 
     def __repr__(self):
         """Returns the future sync wrapper's representation."""
-        repr_parts = ['<', self.__class__.__name__]
+        repr_parts = ['<', type(self).__name__]
         
         future = self._future
         state = future._state
@@ -196,31 +196,3 @@ class FutureWrapperBase:
             Whether the wrapper future is completed.
         """
         raise NotImplementedError
-    
-    # Deprecations
-    
-    def cancelled(self):
-        warn(
-            f'`{self.__class__.__name__}.cancelled` is deprecated.',
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return self.is_cancelled()
-    
-    
-    def done(self):
-        warn(
-            f'`{self.__class__.__name__}.done` is deprecated.',
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return self.is_done()
-    
-    
-    def pending(self):
-        warn(
-            f'`{self.__class__.__name__}.pending` is deprecated.',
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return self.is_pending()

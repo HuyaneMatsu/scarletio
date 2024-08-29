@@ -1,8 +1,12 @@
-__all__ = ('TransportLayerBase', 'SocketTransportLayer', 'DatagramSocketTransportLayer',)
+__all__ = ('TransportLayerBase', 'SocketTransportLayer', 'SocketTransportLayerBase', 'DatagramSocketTransportLayer',)
 
-import reprlib, selectors
-import socket as module_socket
-from collections import deque
+import reprlib
+from collections import deque as Deque
+from selectors import EVENT_READ, EVENT_WRITE
+from socket import (
+    AF_INET as SOCKET_FAMILY_INET, AF_INET6 as SOCKET_FAMILY_INET6, IPPROTO_TCP as SOCKET_PROTOL_TCP,
+    SHUT_WR as SOCKET_SHUTDOWN_WR, SOCK_STREAM as SOCKET_TYPE_STREAM, socket as SocketError
+)
 
 from ...utils import copy_docs, include
 
@@ -13,17 +17,23 @@ from .extra_info import (
 )
 
 
+try:
+    from socket import TCP_NODELAY as SOCKET_OPTION_TCP_NODELAY
+except ImportError:
+    SOCKET_OPTION_TCP_NODELAY = 0
+
+
 write_exception_async = include('write_exception_async')
 
 
-if hasattr(module_socket, 'TCP_NODELAY'):
+if SOCKET_OPTION_TCP_NODELAY:
     def _set_nodelay(socket):
         if (
-            (socket.family in (module_socket.AF_INET, module_socket.AF_INET6)) and
-            (socket.type == module_socket.SOCK_STREAM) and
-            (socket.proto == module_socket.IPPROTO_TCP)
+            (socket.family in (SOCKET_FAMILY_INET, SOCKET_FAMILY_INET6)) and
+            (socket.type == SOCKET_TYPE_STREAM) and
+            (socket.proto == SOCKET_PROTOL_TCP)
         ):
-            socket.setsockopt(module_socket.IPPROTO_TCP, module_socket.TCP_NODELAY, 1)
+            socket.setsockopt(SOCKET_PROTOL_TCP, SOCKET_OPTION_TCP_NODELAY, 1)
 else:
     def _set_nodelay(socket):
         pass
@@ -96,14 +106,18 @@ class SocketTransportLayerBase(TransportLayerBase):
     
     Attributes
     ----------
-    _extra : `dict` of (`str`, `object`) items
-        Optional transport information.
-    _loop : ``EventThread``
-        The event loop to what the transport is bound to.
+    _buffer : `bytearray`
+        Transport's buffer.
     _closing : `bool`
-        Whether the transport ic closing.
+        Whether the transport ic closing. Set when ``.close`` is called.
     _connection_lost : `bool`
         Set as `True`, when ``._call_connection_lost`` is scheduled.
+    _extra : `dict<str, object>`
+        Optional transport information.
+    _file_descriptor : `int`
+        The transport's socket's file descriptor identifier.
+    _loop : ``EventThread``
+        The event loop to what the transport is bound to.
     _high_water : `int`
         The ``.protocol`` is paused writing when the buffer size passes the high water mark. Defaults to `65536`.
     _low_water : `int`
@@ -111,19 +125,15 @@ class SocketTransportLayerBase(TransportLayerBase):
     _paused : `bool`
         Whether the transport's reading is paused by the protocol.
     _protocol : `None`, ``SSLBidirectionalTransportLayer, ``ReadProtocolBase``, `object`
-        Asynchronous protocol implementation used by the transport.
-        
-        After closing the transport is set to `None`.
+        Asynchronous protocol implementation used by the transport. After closing is set to `None`.
     _protocol_paused : `bool`
         Whether ``.protocol`` is paused writing.
-    _socket : `socket.socket`
+    _socket : `SocketType`
         The socket used by the transport.
-    _socket_file_descriptor : `int`
-        The transport's socket's file descriptor identifier.
     """
     __slots__ = (
-        '_closing', '_connection_lost', '_high_water', '_low_water', '_paused', '_protocol', '_protocol_paused',
-        '_socket', '_socket_file_descriptor'
+        '_buffer', '_closing', '_connection_lost', '_file_descriptor', '_high_water', '_low_water', '_paused',
+        '_protocol', '_protocol_paused', '_socket', 
     )
     
     def __new__(cls, loop, extra, socket, protocol, waiter):
@@ -134,14 +144,14 @@ class SocketTransportLayerBase(TransportLayerBase):
         ----------
         loop : ``EventThread``
             The event loop to what the transport is bound to.
-        extra : `None`, `dict` of (`str`, `object`) items
+        extra : `None | dict<str, object>`
             Optional transport information.
-        socket : `socket.socket`
+        socket : `SocketType`
             The socket used by the transport.
-        protocol : ``ProtocolBase``
+        protocol : ``ReadProtocolBase``
             Asynchronous protocol implementation used by the transport.
-        waiter : `None`, ``Future`
-            Waiter, what's result is set, when the transport connected. Defaults to `None`.
+        waiter : `None`, ``Future``
+            Waiter, what's result is set, when the transport connected.
         """
         extra = set_extra_info(extra, EXTRA_INFO_NAME_SOCKET, socket)
         
@@ -155,7 +165,7 @@ class SocketTransportLayerBase(TransportLayerBase):
         if has_extra_info(extra, EXTRA_INFO_NAME_PEER_NAME):
             try:
                 peer_name = socket.getpeername()
-            except module_socket.error:
+            except SocketError:
                 peer_name = None
             
             extra = set_extra_info(extra, EXTRA_INFO_NAME_PEER_NAME, peer_name)
@@ -164,72 +174,86 @@ class SocketTransportLayerBase(TransportLayerBase):
         self = TransportLayerBase.__new__(cls, loop, extra)
         
         self._protocol_paused = False
-        self._set_write_buffer_limits()
         
         self._socket = socket
-        self._socket_file_descriptor = socket.fileno()
+        self._file_descriptor = socket.fileno()
         self._protocol = protocol
         self._buffer = bytearray()
-        self._connection_lost = False  # Set when call to connection_lost scheduled.
-        self._closing = False  # Set when close() called.
+        self._connection_lost = False
+        self._closing = False
         self._paused = False
+        
+        self._set_write_buffer_limits()
         
         return self
     
     
     def __repr__(self):
         """Returns the socket transport layer's representation."""
-        repr_parts = [
-            '<',
-            self.__class__.__name__,
-        ]
+        repr_parts = ['<', type(self).__name__]
         
+        # state
         if self._socket is None:
-            repr_parts.append(' closed')
+            state = 'closed'
         elif self._closing:
-            repr_parts.append(' closing')
+            state = 'closing'
+        else:
+            state = 'open'
         
-        repr_parts.append(' file_descriptor = ')
-        repr_parts.append(repr(self._socket_file_descriptor))
+        repr_parts.append(' state = ')
+        repr_parts.append(state)
+        
+        # file_descriptor
+        repr_parts.append(', file_descriptor = ')
+        repr_parts.append(repr(self._file_descriptor))
         
         loop = self._loop
-        #is the transport open?
-        if (loop is not None) and loop.running:
         
+        # read
+        if not loop.running:
+            polling = False
+        
+        else:
             try:
-                key = loop.selector.get_key(self._socket_file_descriptor)
+                key = loop.selector.get_key(self._file_descriptor)
             except KeyError:
                 polling = 0
             else:
-                polling = key.events & selectors.EVENT_READ
-            
-            repr_parts.append(' read = ')
-            if polling:
-                state = 'polling'
-            else:
-                state = 'idle'
-            repr_parts.append(state)
-
+                polling = key.events & EVENT_READ
+        
+        if polling:
+            state = 'polling'
+        else:
+            state = 'idle'
+        
+        repr_parts.append(', read = ')
+        repr_parts.append(state)
+        
+        # write
+        if not loop.running:
+            polling = False
+        
+        else:
             try:
-                key = loop.selector.get_key(self._socket_file_descriptor)
+                key = loop.selector.get_key(self._file_descriptor)
             except KeyError:
                 polling = 0
             else:
-                polling = key.events & selectors.EVENT_WRITE
-
-            repr_parts.append(' write = <')
-            if polling:
-                state = 'polling'
-            else:
-                state = 'idle'
-            repr_parts.append(state)
-
-            repr_parts.append(', buffer_size = ')
-            
-            buffer_size = self.get_write_buffer_size()
-            repr_parts.append(str(buffer_size))
-            repr_parts.append('>')
+                polling = key.events & EVENT_WRITE
         
+        if polling:
+            state = 'polling'
+        else:
+            state = 'idle'
+        
+        repr_parts.append(', write = ')
+        repr_parts.append(state)
+        
+        # buffer size
+        buffer_size = self.get_write_buffer_size()
+        repr_parts.append(', buffer_size = ')
+        repr_parts.append(str(buffer_size))
+    
         repr_parts.append('>')
         return ''.join(repr_parts)
     
@@ -265,10 +289,10 @@ class SocketTransportLayerBase(TransportLayerBase):
             return
         
         self._closing = True
-        self._loop.remove_reader(self._socket_file_descriptor)
+        self._loop.remove_reader(self._file_descriptor)
         if not self._buffer:
             self._connection_lost = True
-            self._loop.remove_writer(self._socket_file_descriptor)
+            self._loop.remove_writer(self._file_descriptor)
             self._loop.call_soon(self._call_connection_lost, None)
     
     
@@ -399,11 +423,11 @@ class SocketTransportLayerBase(TransportLayerBase):
         buffer = self._buffer
         if buffer:
             buffer.clear()
-            self._loop.remove_writer(self._socket_file_descriptor)
+            self._loop.remove_writer(self._file_descriptor)
         
         if not self._closing:
             self._closing = True
-            self._loop.remove_reader(self._socket_file_descriptor)
+            self._loop.remove_reader(self._file_descriptor)
         
         self._connection_lost = True
         self._loop.call_soon(self._call_connection_lost, exception)
@@ -468,9 +492,9 @@ class SocketTransportLayer(SocketTransportLayerBase):
         After closing the transport is set to `None`.
     _protocol_paused : `bool`
         Whether ``.protocol`` is paused writing.
-    _socket : `socket.socket`
+    _socket : `SocketType`
         The socket used by the transport.
-    _socket_file_descriptor : `int`
+    _file_descriptor : `int`
         The transport's socket's file descriptor identifier.
     _at_eof : `bool`
         Whether ``.write_eof`` was called.
@@ -479,7 +503,7 @@ class SocketTransportLayer(SocketTransportLayerBase):
     _server : `None`, ``Server``
         If the transport is server side, it's server is set as this attribute.
     """
-    __slots__ = ('_at_eof', '_buffer', '_server')
+    __slots__ = ('_at_eof', '_server')
     
     def __new__(cls, loop, extra, socket, protocol, waiter, server):
         """
@@ -491,7 +515,7 @@ class SocketTransportLayer(SocketTransportLayerBase):
             The event loop to what the transport is bound to.
         extra : `None`, `dict` of (`str`, `object`) items
             Optional transport information.
-        socket : `socket.socket`
+        socket : `SocketType`
             The socket used by the transport.
         protocol : ``ProtocolBase``
             Asynchronous protocol implementation used by the transport.
@@ -513,7 +537,7 @@ class SocketTransportLayer(SocketTransportLayerBase):
         _set_nodelay(socket)
         
         # only start reading when connection_made() has been called
-        loop.call_soon(loop.add_reader, self._socket_file_descriptor, self._read_ready)
+        loop.call_soon(loop.add_reader, self._file_descriptor, self._read_ready)
         if (waiter is not None):
             # only wake up the waiter when connection_made() has been called
             loop.call_soon(type(waiter).set_result_if_pending, waiter, None)
@@ -556,7 +580,7 @@ class SocketTransportLayer(SocketTransportLayerBase):
                     return
             
             # Not all was written; register write handler.
-            self._loop.add_writer(self._socket_file_descriptor, self._write_ready)
+            self._loop.add_writer(self._file_descriptor, self._write_ready)
         
         # Add it to the buffer.
         self._buffer.extend(data)
@@ -572,7 +596,7 @@ class SocketTransportLayer(SocketTransportLayerBase):
         self._at_eof = True
         
         if not self._buffer:
-            self._socket.shutdown(module_socket.SHUT_WR)
+            self._socket.shutdown(SOCKET_SHUTDOWN_WR)
     
 
     @copy_docs(SocketTransportLayerBase.can_write_eof)
@@ -591,7 +615,7 @@ class SocketTransportLayer(SocketTransportLayerBase):
             return False
         
         self._paused = True
-        self._loop.remove_reader(self._socket_file_descriptor)
+        self._loop.remove_reader(self._file_descriptor)
         return True
     
     
@@ -602,7 +626,7 @@ class SocketTransportLayer(SocketTransportLayerBase):
         
         self._paused = False
         if not self._closing:
-            self._loop.add_reader(self._socket_file_descriptor, self._read_ready)
+            self._loop.add_reader(self._file_descriptor, self._read_ready)
         
         return True
     
@@ -645,7 +669,7 @@ class SocketTransportLayer(SocketTransportLayerBase):
             elif self._protocol.eof_received():
                 # We're keeping the connection open so the protocol can write more, but we still can't receive more,
                 # so remove the reader callback.
-                self._loop.remove_reader(self._socket_file_descriptor)
+                self._loop.remove_reader(self._file_descriptor)
             
             else:
                 self.close()
@@ -664,7 +688,7 @@ class SocketTransportLayer(SocketTransportLayerBase):
         except (BlockingIOError, InterruptedError):
             pass
         except BaseException as err:
-            self._loop.remove_writer(self._socket_file_descriptor)
+            self._loop.remove_writer(self._file_descriptor)
             self._buffer.clear()
             self._fatal_error(err, 'Fatal write error on socket transport')
         else:
@@ -673,13 +697,13 @@ class SocketTransportLayer(SocketTransportLayerBase):
             
             self._maybe_resume_protocol()  # May append to buffer.
             if not self._buffer:
-                self._loop.remove_writer(self._socket_file_descriptor)
+                self._loop.remove_writer(self._file_descriptor)
                 
                 if self._closing:
                     self._call_connection_lost(None)
                 
                 elif self._at_eof:
-                    self._socket.shutdown(module_socket.SHUT_WR)
+                    self._socket.shutdown(SOCKET_SHUTDOWN_WR)
 
 
 class DatagramSocketTransportLayer(SocketTransportLayerBase):
@@ -708,15 +732,15 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
         After closing the transport is set to `None`.
     _protocol_paused : `bool`
         Whether ``.protocol`` is paused writing.
-    _socket : `socket.socket`
+    _socket : `SocketType`
         The socket used by the transport.
-    _socket_file_descriptor : `int`
+    _file_descriptor : `int`
         The transport's socket's file descriptor identifier.
     _address : `None` or (`str`, `int`)
         The last address, where the transport sent data. Defaults to `None`. The send target address should not differ
         from the last, where the transport sent data.
     """
-    __slots__ = ('_address', '_buffer', )
+    __slots__ = ('_address', )
     
     def __new__(cls, loop, extra, socket, protocol, waiter, address):
         """
@@ -728,7 +752,7 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
             The event loop to what the transport is bound to.
         extra : `None`, `dict` of (`str`, `object`) items
             Optional transport information.
-        socket : `socket.socket`
+        socket : `SocketType`
             The socket used by the transport.
         protocol : ``ProtocolBase``
             Asynchronous protocol implementation used by the transport.
@@ -740,7 +764,7 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
         """
         self = SocketTransportLayerBase.__new__(cls, loop, extra, socket, protocol, waiter)
         
-        self._buffer = deque()
+        self._buffer = Deque()
         self._address = address
         
         loop.call_soon(self._protocol.connection_made, self)
@@ -803,7 +827,7 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
         if self._closing:
             return
         
-        self._loop.add_reader(self._socket_file_descriptor, self._read_ready)
+        self._loop.add_reader(self._file_descriptor, self._read_ready)
     
     
     @copy_docs(SocketTransportLayerBase._read_ready)
@@ -873,7 +897,7 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
                 else:
                     self._socket.send(data)
             except (BlockingIOError, InterruptedError):
-                self._loop.add_writer(self._socket_file_descriptor, self._send_to_ready)
+                self._loop.add_writer(self._file_descriptor, self._send_to_ready)
             
             except OSError as err:
                 self._protocol.error_received(err)
@@ -919,6 +943,6 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
         
         self._maybe_resume_protocol() # May append to buffer.
         if not buffer:
-            self._loop.remove_writer(self._socket_file_descriptor)
+            self._loop.remove_writer(self._file_descriptor)
             if self._closing:
                 self._call_connection_lost(None)

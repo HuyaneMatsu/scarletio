@@ -75,7 +75,7 @@ class ReadProtocolBase(AbstractProtocolBase):
         """Returns the transport's representation."""
         repr_parts = [
             '<',
-            self.__class__.__name__,
+            type(self).__name__,
         ]
         
         if self._at_eof:
@@ -246,13 +246,15 @@ class ReadProtocolBase(AbstractProtocolBase):
             self._payload_reader = None
             self._payload_waiter = None
             payload_waiter.set_result_if_pending(result)
+        
         except GeneratorExit as err:
             payload_waiter = self._payload_waiter
             self._payload_reader = None
             self._payload_waiter = None
-            exception = CancelledError()
+            exception = ConnectionError('Payload reader destroyed.')
             exception.__cause__ = err
             payload_waiter.set_exception_if_pending(exception)
+        
         except BaseException as err:
             payload_waiter = self._payload_waiter
             self._payload_reader = None
@@ -297,13 +299,15 @@ class ReadProtocolBase(AbstractProtocolBase):
                 self._payload_reader = None
                 self._payload_waiter = None
                 payload_waiter.set_result_if_pending(result)
+            
             except GeneratorExit as err:
                 payload_waiter = self._payload_waiter
                 self._payload_reader = None
                 self._payload_waiter = None
-                exception = CancelledError()
+                exception = ConnectionError('Payload reader destroyed.')
                 exception.__cause__ = err
                 payload_waiter.set_exception_if_pending(exception)
+            
             except BaseException as err:
                 payload_waiter = self._payload_waiter
                 self._payload_reader = None
@@ -387,10 +391,12 @@ class ReadProtocolBase(AbstractProtocolBase):
                     result = args
                 
                 payload_waiter.set_result_if_pending(result)
+            
             except GeneratorExit as err:
-                exception = CancelledError()
+                exception = ConnectionError('Payload reader destroyed.')
                 exception.__cause__ = err
                 payload_waiter.set_exception_if_pending(exception)
+            
             except BaseException as err:
                 payload_waiter.set_exception_if_pending(err)
             
@@ -851,6 +857,7 @@ class ReadWriteProtocolBase(ReadProtocolBase):
         drain_waiter = Future(self._loop)
         self._drain_waiter = drain_waiter
         await drain_waiter
+    
     
     @copy_docs(ReadProtocolBase.connection_lost)
     def connection_lost(self, exception):
