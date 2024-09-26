@@ -2800,13 +2800,13 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         if (reuse_address is not None) and (not isinstance(reuse_address, bool)):
             raise TypeError(
                 '`reuse_address` can be `None`,`bool`, got '
-                f'{reuse_address.__class__.__name__};{reuse_address!r}.'
+                f'{type(reuse_address).__name__}; {reuse_address!r}.'
             )
         
         if (reuse_port is not None) and (not isinstance(reuse_port, bool)):
             raise TypeError(
                 '`reuse_address` can be `None`, `bool`, got '
-                f'{reuse_port.__class__.__name__}; {reuse_port!r}.'
+                f'{type(reuse_port).__name__}; {reuse_port!r}.'
             )
         
         if (reuse_port is not None) and reuse_port and (not hasattr(module_socket, 'SO_REUSEPORT')):
@@ -2829,7 +2829,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
                 else:
                     raise TypeError(
                         f'`host` can contain `None`, `str` elements, got '
-                        f'`{host_element.__class__.__name__}`; {host_element!r}; host={host!r}.'
+                        f'`{type(host_element).__name__}`; {host_element!r}; host = {host!r}.'
                     )
                 
                 hosts.append(host_element)
@@ -2837,7 +2837,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
                 
         else:
             raise TypeError(
-                f'`host` can be `None`, `str`, `iterable` of (`None`, `str`), got {host.__class__.__name__}; {host!r}.'
+                f'`host` can be `None`, `str`, `iterable` of (`None`, `str`), got {type(host).__name__}; {host!r}.'
             )
         
         sockets = []

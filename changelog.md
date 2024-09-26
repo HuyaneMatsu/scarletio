@@ -1,3 +1,9 @@
+# 1.0.78 *\[2024-09-15\]*
+
+#### Bug fixes
+
+- Fix `UnboundLocalError` in `WebSocketCommonProtocol.transfer_data`. (Since 1.0.77)
+
 # 1.0.77 *\[2024-09-15\]*
 
 #### Improvements

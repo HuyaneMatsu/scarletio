@@ -575,32 +575,32 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
                 self.messages.set_result(message)
         
         except GeneratorExit as exception:
-            exception = ConnectionClosed(1013, exception)
+            transfer_data_exception = ConnectionClosed(1013, exception)
             self.fail_connection(self.close_code or 1013)
             to_reraise = exception
         
         except CancelledError as exception:
             # we already failed connection
-            exception = ConnectionClosed(self.close_code or 1000, exception, self.close_reason)
+            transfer_data_exception = ConnectionClosed(self.close_code or 1000, exception, self.close_reason)
             to_reraise = exception
         
         except WebSocketProtocolError as exception:
-            exception = ConnectionClosed(1002, exception)
+            transfer_data_exception = ConnectionClosed(1002, exception)
             self.fail_connection(1002)
             to_reraise = None
         
         except (ConnectionError, EOFError, TimeoutError) as exception:
-            exception = ConnectionClosed(1006, exception)
+            transfer_data_exception = ConnectionClosed(1006, exception)
             self.fail_connection(1006)
             to_reraise = None
         
         except UnicodeDecodeError as exception:
-            exception = ConnectionClosed(1007, exception)
+            transfer_data_exception = ConnectionClosed(1007, exception)
             self.fail_connection(1007)
             to_reraise = None
         
         except PayloadError as exception:
-            exception = ConnectionClosed(1009, exception)
+            transfer_data_exception = ConnectionClosed(1009, exception)
             self.fail_connection(1009)
             to_reraise = None
         
@@ -615,13 +615,13 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
                 loop = self._loop,
             )
             # should not happen
-            exception = ConnectionClosed(1011, exception)
+            transfer_data_exception = ConnectionClosed(1011, exception)
             self.fail_connection(1011)
             to_reraise = None
         
         else:
             # connection was closed
-            exception = ConnectionClosed(self.close_code or 1000, None, self.close_reason)
+            transfer_data_exception = ConnectionClosed(self.close_code or 1000, None, self.close_reason)
             to_reraise = None
             
             # If we are a client and we receive this, we closed our own
@@ -630,8 +630,8 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
                 self.connection_lost_waiter.set_result_if_pending(None)
         
         if self.transfer_data_exception is None:
-            self.transfer_data_exception = exception
-            self.messages.set_exception(exception)
+            self.transfer_data_exception = transfer_data_exception
+            self.messages.set_exception(transfer_data_exception)
         
         if (to_reraise is not None):
             raise to_reraise
