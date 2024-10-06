@@ -266,7 +266,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
             If the web socket handshake succeeded and starting, it's handler can begin, returns `True`.
         """
         try:
-            self.request = request = await self.set_payload_reader(self._read_http_request())
+            self.request = request = await self.read_http_request()
             
             request_headers = request.headers
             if self.server.is_serving():

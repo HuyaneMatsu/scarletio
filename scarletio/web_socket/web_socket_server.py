@@ -235,7 +235,7 @@ class WebSocketServer:
         else:
             raise TypeError(
                 f'`extra_response_headers` can be `None`, `dict-like` with \'.items\' method, got '
-                f'{extra_response_headers.__class__.__name__}; {extra_response_headers!r}.'
+                f'{type(extra_response_headers).__name__}; {extra_response_headers!r}.'
             )
         
         if (extra_response_headers is not None) and (not extra_response_headers):

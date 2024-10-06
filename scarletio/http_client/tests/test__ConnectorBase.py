@@ -123,7 +123,7 @@ async def test__ConnectorBase__get_protocol__alive_protocol():
         connector = ConnectorBase(loop)
         
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         
         connector.alive_protocols_per_host[connection_key] = [
@@ -197,7 +197,7 @@ async def test__ConnectorBase__release__closed():
         connector = ConnectorBase(loop)
         
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         
         connector.acquired_protocols_per_host[connection_key] = {protocol}
@@ -230,7 +230,7 @@ async def test__ConnectorBase__release__keep():
         connector = ConnectorBase(loop)
         
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         
         connector.acquired_protocols_per_host[connection_key] = {protocol}
@@ -262,7 +262,7 @@ async def test__ConnectorBase__release__should_close():
         connector = ConnectorBase(loop)
         
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         
         connector.acquired_protocols_per_host[connection_key] = {protocol}
@@ -439,7 +439,7 @@ async def test__ConnectorBase__connect__cache_hit():
         connector = ConnectorBase(loop)
         
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         
         connector.alive_protocols_per_host[client_request.connection_key] = [(protocol, LOOP_TIME() + 100.0)]
@@ -502,7 +502,7 @@ async def test__ConnectorBase__connect__cache_miss():
         connector = ConnectorBase(loop)
         
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         
         output = await connector.connect(client_request)

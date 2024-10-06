@@ -80,7 +80,7 @@ class HttpServerProtocol(HttpReadWriteProtocol):
     
     async def lifetime_handler(self):
         try:
-            request = await self.set_payload_reader(self._read_http_request())
+            request = await self.read_http_request()
             
             response = await self.server.handler(request)
             self.write_http_response(**response)

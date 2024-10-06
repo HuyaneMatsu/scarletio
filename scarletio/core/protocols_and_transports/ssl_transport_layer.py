@@ -137,10 +137,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
     
     def __repr__(self):
         """Returns the ssl protocol transport's representation."""
-        repr_parts = [
-            '<',
-            self.__class__.__name__,
-        ]
+        repr_parts = ['<', type(self).__name__]
         
         if self._closing:
             repr_parts.append(' closing')
@@ -156,7 +153,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
                 field_added = True
             
             repr_parts.append(' transport = ')
-            repr_parts.append(transport.__class__.__name__)
+            repr_parts.append(type(transport).__name__)
         
         protocol = self._protocol
         if (protocol is not None):
@@ -164,7 +161,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
                 repr_parts.append(',')
             
             repr_parts.append(' protocol = ')
-            repr_parts.append(protocol.__class__.__name__)
+            repr_parts.append(type(protocol).__name__)
         
         repr_parts.append('>')
         return ''.join(repr_parts)

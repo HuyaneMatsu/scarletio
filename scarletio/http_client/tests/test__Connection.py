@@ -139,7 +139,7 @@ async def test__Connection__transport__protocol_has_transport():
         connector = ConnectorBase(loop)
         connection_key = _get_default_connection_key()
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         
         connection = Connection(connector, connection_key, protocol)
@@ -167,7 +167,7 @@ async def test__Connection__add_callback__open():
         connector = ConnectorBase(loop)
         connection_key = _get_default_connection_key()
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
             
         connection = Connection(connector, connection_key, protocol)
@@ -201,7 +201,7 @@ async def test__Connection__add_callback__closed():
         connector = ConnectorBase(loop)
         connection_key = _get_default_connection_key()
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
             
         connection = Connection(connector, connection_key, protocol)
@@ -234,7 +234,7 @@ async def test__Connection__run_callbacks():
         connector = ConnectorBase(loop)
         connection_key = _get_default_connection_key()
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
             
         connection = Connection(connector, connection_key, protocol)
@@ -279,7 +279,7 @@ async def test__Connection__close():
         connector = ConnectorBase(loop)
         connection_key = _get_default_connection_key()
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         connector.acquired_protocols_per_host[connection_key] = {protocol}
         
@@ -316,7 +316,7 @@ async def test__Connection__run_callbacks__release__should_close():
         connector = ConnectorBase(loop)
         connection_key = _get_default_connection_key()
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         connector.acquired_protocols_per_host[connection_key] = {protocol}
         protocol.set_exception(ConnectionError)
@@ -354,7 +354,7 @@ async def test__Connection__run_callbacks__release__should_open():
         connector = ConnectorBase(loop)
         connection_key = _get_default_connection_key()
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         connector.acquired_protocols_per_host[connection_key] = {protocol}
         
@@ -398,7 +398,7 @@ async def test__Connection__run_callbacks__detach():
         connector = ConnectorBase(loop)
         connection_key = _get_default_connection_key()
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         connector.acquired_protocols_per_host[connection_key] = {protocol}
         
@@ -478,7 +478,7 @@ async def test__Connection__closed__protocol_has_transport():
         connector = ConnectorBase(loop)
         connection_key = _get_default_connection_key()
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         
         connection = Connection(connector, connection_key, protocol)

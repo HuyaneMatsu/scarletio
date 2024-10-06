@@ -1,3 +1,19 @@
+# 1.0.79 *\[2024-10-??\]*
+
+#### Improvements
+
+- `ClientRequest` now supports streaming the response data through async iterating over its `.payload_stream`.
+- Add `PayloadStream`.
+- Add `WebsocketFrame.__eq__`.
+- Add `WebsocketFrame.__repr__`.
+
+#### Renames, Deprecation & Removals
+
+- Rename `WebsocketFrame.head_1` to `.head_0`.
+- Rename `WebsocketFrame.is_final` to `.final`.
+- Deprecate `WebsocketFrame.rsv1`, `.rsv2`, `.rsv3`.
+- Rename `ClientResponse.payload_waiter` to `.payload_stream`.
+
 # 1.0.78 *\[2024-09-26\]*
 
 #### Bug fixes

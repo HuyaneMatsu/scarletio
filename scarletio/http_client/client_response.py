@@ -31,6 +31,7 @@ class ClientResponse(RichAttributeErrorBaseType):
     
     body : `None | bytes`
         The received response body. Set as `None` if the response body is not yet received, or if it is empty.
+        Not set as non-`None` if the payload was streamed.
     
     closed : `bool`
         Whether the response is closed.
@@ -38,10 +39,6 @@ class ClientResponse(RichAttributeErrorBaseType):
     connection : `None | Connection`
         Connection used to receive the request response.
         Set as `None` if the response is ``.close``-d or ``.release``-d.
-    
-    payload_waiter : `None | Future`
-        Future used to retrieve the response's body.
-        It's result is set, when the respective protocol's reader task finished.
     
     cookies : `http.cookies.SimpleCookie`
         Received cookies with the response.
@@ -55,6 +52,10 @@ class ClientResponse(RichAttributeErrorBaseType):
     method : `str`
         Method of the respective request.
     
+    payload_stream : `None | PayloadStream`
+        Future used to retrieve the response's body.
+        It's result is set, when the respective protocol's reader task finished.
+    
     raw_message : `None | RawResponseMessage`
         Raw received http response.
     
@@ -65,8 +66,8 @@ class ClientResponse(RichAttributeErrorBaseType):
         Payload writer task of the respective request.
     """
     __slots__ = (
-        '_released', 'body', 'closed', 'connection', 'payload_waiter', 'cookies', 'history', 'loop',
-        'method', 'raw_message', 'url', 'write_body_task' 
+        '_released', 'body', 'closed', 'connection', 'cookies', 'history', 'loop', 'method', 'payload_stream',
+        'raw_message', 'url', 'write_body_task' 
     )
        
     def __new__(cls, request, connection):
@@ -91,7 +92,7 @@ class ClientResponse(RichAttributeErrorBaseType):
         self.history = None
         self.loop = request.loop
         self.method = request.method
-        self.payload_waiter = None
+        self.payload_stream = None
         self.raw_message = None
         self.url = request.original_url
         self.write_body_task = request.write_body_task
@@ -183,9 +184,7 @@ class ClientResponse(RichAttributeErrorBaseType):
         """
         try:
             protocol = self.connection.protocol
-            
-            payload_waiter = protocol.set_payload_reader(protocol._read_http_response())
-            self.raw_message = message = await payload_waiter
+            self.raw_message = message = await protocol.read_http_response()
             
             if self.method == METHOD_HEAD:
                 payload_reader = None
@@ -193,14 +192,14 @@ class ClientResponse(RichAttributeErrorBaseType):
                 payload_reader = protocol.get_payload_reader_task(message)
             
             if (payload_reader is None):
-                payload_waiter = None
+                payload_stream = None
                 self._response_eof(None)
             else:
-                payload_waiter = protocol.set_payload_reader(payload_reader)
-                payload_waiter.add_done_callback(self._response_eof)
-                protocol.handle_payload_waiter_cancellation()
+                payload_stream = protocol.set_payload_reader(payload_reader)
+                payload_stream.add_done_callback(self._response_eof)
+                protocol.handle_payload_stream_abortion()
             
-            self.payload_waiter = payload_waiter
+            self.payload_stream = payload_stream
             
             # cookies
             headers = message.headers
@@ -215,14 +214,14 @@ class ClientResponse(RichAttributeErrorBaseType):
             raise
     
     
-    def _response_eof(self, future):
+    def _response_eof(self, payload_stream):
         """
         Future callback added to the payload waiter future, to release the used connection.
         
         Parameters
         ----------
-        future : ``Future``
-            ``.payload_waiter`` future.
+        payload_stream : `None | PayloadStream`
+            The respective payload stream.
         """
         if self.closed:
             return
@@ -268,8 +267,8 @@ class ClientResponse(RichAttributeErrorBaseType):
         Called when response reading is cancelled or released.
         Sets `ConnectionError` to the respective protocol if the payload is still reading.
         """
-        payload_waiter = self.payload_waiter
-        if (payload_waiter is not None):
+        payload_stream = self.payload_stream
+        if (payload_stream is not None):
             connection = self.connection
             if (connection is not None):
                 connection.protocol.set_exception(ConnectionError('Connection closed.'))
@@ -298,14 +297,14 @@ class ClientResponse(RichAttributeErrorBaseType):
         -------
         body : `None | bytes`
         """
-        payload_waiter = self.payload_waiter
-        if (payload_waiter is None):
+        payload_stream = self.payload_stream
+        if (payload_stream is None):
             body = self.body
         else:
             try:
-                self.body = body = await payload_waiter
+                self.body = body = await payload_stream
             finally:
-                self.payload_waiter = None
+                self.payload_stream = None
         
         return body
     
@@ -521,3 +520,20 @@ class ClientResponse(RichAttributeErrorBaseType):
         
         self._release_connection()
         self._clean_up_writer()
+    
+    
+    @property
+    def payload_waiter(self):
+        """
+        Deprecated and will be removed in 2025 October. Please use `.payload_stream` instead.
+        """
+        warn(
+            (
+                f'`{type(self).__name__}.payload_waiter` is deprecated and will be removed in 2025 October. '
+                f'Please use `.payload_stream` instead. Note that it is a different type.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
+    
+        return self.payload_stream

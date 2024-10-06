@@ -1,16 +1,233 @@
 __all__ = ('DatagramAddressedReadProtocol', 'DatagramMergerReadProtocol', 'ReadProtocolBase', 'ReadWriteProtocolBase',)
 
-from collections import deque
+from collections import deque as Deque
+from functools import partial as partial_func
+from warnings import warn
 
-from ...utils import copy_docs
+from ...utils import copy_docs, to_coroutine
 
-from ..exceptions import CancelledError
 from ..traps import Future, Task, skip_ready_cycle
 
 from .abstract import AbstractProtocolBase
+from .payload_stream import PayloadStream
 
 
-CHUNK_LIMIT = 32
+BUFFER_SIZE_MAX = 131072
+
+
+def _get_end_intersection_sizes(chunk, offset, boundary):
+    """
+    Gets the end intersection sizes.
+    
+    Parameters
+    ----------
+    chunk : `bytes`
+        Data chunk to process.
+    
+    offset : `int`
+        Data chunk offset.
+    
+    boundary : `bytes`
+        Boundary to check intersection with.
+    
+    Returns
+    -------
+    intersection_sizes : `None | list<int>`
+    """
+    intersection_sizes = None
+    
+    chunk_length = len(chunk)
+    boundary_length = len(boundary) - 1
+    
+    chunk_start_index = chunk_length - boundary_length
+    if chunk_start_index < offset:
+        chunk_start_index = offset
+    elif chunk_start_index < 0:
+        chunk_start_index = 0
+    
+    for chunk_start_index in range(chunk_start_index, chunk_length):
+        for shift in range(0, chunk_length - chunk_start_index):
+            if chunk[chunk_start_index + shift] != boundary[shift]:
+                break
+        
+        else:
+            if intersection_sizes is None:
+                intersection_sizes = []
+            
+            intersection_sizes.append(chunk_length - chunk_start_index)
+    
+    return intersection_sizes
+
+
+def _finish_intersection_sizes(chunk, boundary, intersection_sizes):
+    """
+    Finishes intersection sizes.
+    
+    Parameters
+    ----------
+    chunk : `bytes`
+        Data chunk to process.
+    
+    boundary : `bytes`
+        Boundary to check intersection with.
+    
+    intersection_sizes : `list<int>`
+        Detected intersection sizes of on the previous chunk.
+        The processed ones are removed from it while the too low values to finish processing on are left in it.
+    
+    Returns
+    -------
+    consumed_bytes : `int`
+        Returns `-1` on failure.
+    intersection_sizes : `None | list<int>`
+        Leftover intersection sizes if chunk size is too small.
+    """
+    chunk_length = len(chunk)
+    boundary_length = len(boundary) - 1
+    continued_intersection_sizes = None
+    
+    for intersection_size in intersection_sizes:
+        leftover_size = boundary_length - intersection_size + 1
+        if leftover_size > chunk_length:
+            if continued_intersection_sizes is None:
+                continued_intersection_sizes = []
+            continued_intersection_sizes.append(intersection_size)
+            continue
+        
+        for shift in range(0, leftover_size):
+            if chunk[shift] != boundary[intersection_size + shift]:
+                break
+        
+        else:
+            # Mark all as processed
+            return leftover_size, None
+    
+    return -1, continued_intersection_sizes
+
+
+def _continue_intersection_sizes(chunk, boundary, intersection_sizes):
+    """
+    Continues intersection sizes on a new chunk.
+    
+    Parameters
+    ----------
+    chunk : `bytes`
+        Data chunk to process. Must have length > 0.
+    
+    boundary : `bytes`
+        Boundary to check intersection with.
+    
+    intersection_sizes : `list<int>`
+        Detected the non matched intersection sizes.
+    
+    Returns
+    -------
+    intersection_sizes : `None | list<int>`
+        The new matched intersection sizes.
+    """
+    chunk_length = len(chunk)
+    continued_intersection_sizes = None
+    
+    for intersection_size in intersection_sizes:
+        for shift in range(0, chunk_length):
+            if chunk[shift] != boundary[intersection_size + shift]:
+                break
+        
+        else:
+            if continued_intersection_sizes is None:
+                continued_intersection_sizes = []
+            
+            continued_intersection_sizes.append(intersection_size + shift + 1)
+    
+    return continued_intersection_sizes
+
+
+def _get_released_from_held_back(held_back, amount_to_keep):
+    """
+    Releases from held back chunks.
+    
+    Parameters
+    ----------
+    held_back : `None | list<bytes | memoryview>`
+        The held back chunks.
+    
+    amount_to_keep : `int`
+        The amount of bytes to hold back.
+    
+    Returns
+    -------
+    released : `None | list<bytes | memoryview>`
+    held_back : `None | list<bytes | memoryview>`
+    """
+    if held_back is None:
+        return None, None
+    
+    if amount_to_keep <= 0:
+        return held_back, None
+    
+    amount_to_release = sum(len(chunk) for chunk in held_back) - amount_to_keep
+    if amount_to_release <= 0:
+        return None, held_back
+    
+    released = []
+    
+    while True:
+        chunk = held_back[0]
+        chunk_length = len(chunk)
+        
+        amount_to_release -= chunk_length
+        if amount_to_release > 0:
+            del held_back[0]
+            released.append(chunk)
+            
+            if not held_back:
+                held_back = None
+                break
+            
+            continue
+        
+        if amount_to_release < 0:
+            split_at = len(chunk) + amount_to_release
+            chunk = memoryview(chunk)
+            held_back[0] = chunk[split_at :]
+            released.append(chunk[: split_at])
+            break
+        
+        del held_back[0]
+        released.append(chunk)
+        if held_back:
+            break
+        
+        held_back = None
+        break
+    
+    return released, held_back
+
+
+def _merge_intersection_sizes(intersection_sizes_0, intersection_sizes_1):
+    """
+    Merges two intersection sizes.
+    
+    Parameters
+    ----------
+    intersection_sizes_0 : `None | list<int>`
+        Intersection sizes to merge.
+    
+    intersection_sizes_1 : `None | list<int>`
+        Intersection sizes to merge.
+    
+    Returns
+    -------
+    intersection_sizes : `None | list<int>``
+    """
+    if intersection_sizes_0 is None:
+        return intersection_sizes_1
+    
+    if intersection_sizes_1 is None:
+        return intersection_sizes_0
+    
+    return [*intersection_sizes_0, *intersection_sizes_1]
+
 
 class ReadProtocolBase(AbstractProtocolBase):
     """
@@ -23,29 +240,35 @@ class ReadProtocolBase(AbstractProtocolBase):
     ----------
     _at_eof : `bool`
         Whether the protocol received end of file.
-    _chunks : `deque` of `bytes`
+    
+    _chunks : `Deque` of `bytes`
         Right feed, left pop queue, used to store the received data chunks.
+    
     _exception : `None`, `BaseException`
         Exception set by ``.set_exception``, when an unexpected exception occur meanwhile reading from socket.
+    
     _loop : ``EventThread``
         The event loop to what the protocol is bound to.
+    
     _offset : `int`
         Byte offset, of the used up data of the most-left chunk.
+    
     _paused : `bool`
         Whether the protocol's respective transport's reading is paused. Defaults to `False`.
         
         Also note, that not every transport supports pausing.
-    _payload_reader : `None`, `GeneratorType`
+    
+    _payload_stream : `None | Stream``
+        Payload stream of the protocol.
+    
+    _payload_reader : `None | GeneratorType | CoroutineType`
         Payload reader generator, what gets the control back, when data, eof or any exception is received.
-    _payload_waiter : `None` of ``Future``
-        Payload waiter of the protocol, what's result is set, when the ``.payload_reader`` generator returns.
-        
-        If cancelled or marked by done or any other methods, the payload reader will not be cancelled.
-    _transport : `None`, `object`
+    
+    _transport : `None | AbstractTransportLayerBase`
         Asynchronous transport implementation. Is set meanwhile the protocol is alive.
     """
     __slots__ = (
-        '_at_eof', '_chunks', '_exception', '_loop', '_offset', '_paused', '_payload_reader', '_payload_waiter',
+        '_at_eof', '_chunks', '_exception', '_loop', '_offset', '_paused', '_payload_reader', '_payload_stream',
         '_transport'
     )
     
@@ -59,24 +282,33 @@ class ReadProtocolBase(AbstractProtocolBase):
             The respective event loop, what the protocol uses for it's asynchronous tasks.
         """
         self = object.__new__(cls)
-        self._loop = loop
-        self._transport = None
-        self._exception = None
-        self._chunks = deque()
-        self._offset = 0
         self._at_eof = False
-        self._payload_reader = None
-        self._payload_waiter = None
+        self._loop = loop
+        self._chunks = Deque()
+        self._exception = None
+        self._offset = 0
         self._paused = False
+        self._payload_reader = None
+        self._payload_stream = None
+        self._transport = None
         return self
+    
+    
+    @property
+    def _payload_waiter(self):
+        """
+        Deprecated and will be removed at 2025 September. Please use `._payload_stream` instead.
+        """
+        warn(
+            f'f`{type(self).__name__}._payload_stream` is deprecated and will be removed in 2025 September. '
+            f'Please use `._payload_stream` instead.'
+        )
+        return self._payload_stream
     
     
     def __repr__(self):
         """Returns the transport's representation."""
-        repr_parts = [
-            '<',
-            type(self).__name__,
-        ]
+        repr_parts = ['<', type(self).__name__]
         
         if self._at_eof:
             repr_parts.append(' at eof')
@@ -164,8 +396,7 @@ class ReadProtocolBase(AbstractProtocolBase):
     
     
     # read related
-    @property
-    def size(self):
+    def get_size(self):
         """
         Returns the received and not yet processed data's size by the protocol.
         
@@ -173,14 +404,18 @@ class ReadProtocolBase(AbstractProtocolBase):
         -------
         size : `int`
         """
-        result = - self._offset
+        size = -self._offset
         for chunk in self._chunks:
-            result += len(chunk)
+            size += len(chunk)
         
-        return result
+        payload_stream = self._payload_stream
+        if (payload_stream is not None):
+            size += payload_stream.get_buffer_size()
+        
+        return size
     
     
-    def at_eof(self):
+    def is_at_eof(self):
         """
         Returns whether the protocol is at eof. If at eof, but has content left, then returns `False` however.
         
@@ -191,12 +426,12 @@ class ReadProtocolBase(AbstractProtocolBase):
         if not self._at_eof:
             return False
         
-        if (self._payload_reader is not None):
+        # Note:
+        # we cannot have `payload_reader` set because that consumes all of our `size` at once.
+        
+        if self.get_size():
             return False
         
-        if self.size:
-            return False
-    
         return True
     
     
@@ -204,12 +439,12 @@ class ReadProtocolBase(AbstractProtocolBase):
     def set_exception(self, exception):
         self._exception = exception
         
-        payload_waiter = self._payload_waiter
-        if (payload_waiter is None):
+        payload_stream = self._payload_stream
+        if (payload_stream is None):
             return
         
-        self._payload_waiter = None
-        payload_waiter.set_exception_if_pending(exception)
+        self._payload_stream = None
+        payload_stream.set_done_exception(exception)
         
         self._payload_reader.close()
         self._payload_reader = None
@@ -218,48 +453,36 @@ class ReadProtocolBase(AbstractProtocolBase):
     @copy_docs(AbstractProtocolBase.eof_received)
     def eof_received(self):
         self._at_eof = True
-        
         payload_reader = self._payload_reader
         if payload_reader is None:
             return False
         
+        payload_stream = self._payload_stream
+        self._payload_reader = None
+        self._payload_stream = None
+        
         try:
-             payload_reader.throw(CancelledError())
-        except CancelledError as err:
+            payload_reader.throw(EOFError(b''))
+        except EOFError as exception:
             new_exception = ConnectionError('Connection closed unexpectedly with EOF.')
-            new_exception.__cause__ = err
-            payload_waiter = self._payload_waiter
-            self._payload_reader = None
-            self._payload_waiter = None
-            payload_waiter.set_exception_if_pending(new_exception)
+            new_exception.__cause__ = exception
+            payload_stream.set_done_exception(new_exception)
         
-        except StopIteration as err:
-            args = err.args
-            if not args:
-                result = None
-            elif len(args) == 1:
-                result = args[0]
-            else:
-                result = args
-            
-            payload_waiter = self._payload_waiter
-            self._payload_reader = None
-            self._payload_waiter = None
-            payload_waiter.set_result_if_pending(result)
+        except StopIteration:
+            payload_stream.set_done_success()
         
-        except GeneratorExit as err:
-            payload_waiter = self._payload_waiter
-            self._payload_reader = None
-            self._payload_waiter = None
-            exception = ConnectionError('Payload reader destroyed.')
-            exception.__cause__ = err
-            payload_waiter.set_exception_if_pending(exception)
+        except GeneratorExit as exception:
+            new_exception = ConnectionError('Payload reader destroyed.')
+            new_exception.__cause__ = exception
+            payload_stream.set_done_exception(new_exception)
         
-        except BaseException as err:
-            payload_waiter = self._payload_waiter
-            self._payload_reader = None
-            self._payload_waiter = None
-            payload_waiter.set_exception_if_pending(err)
+        except BaseException as exception:
+            payload_stream.set_done_exception(exception)
+        
+        else:
+            payload_reader.close()
+            new_exception = RuntimeError('Payload stream ignored eof.')
+            payload_stream.set_done_exception(new_exception)
         
         return False
     
@@ -273,70 +496,58 @@ class ReadProtocolBase(AbstractProtocolBase):
         if (payload_reader is None):
             chunks = self._chunks
             chunks.append(data)
-            if (len(chunks) > CHUNK_LIMIT) and (not self._paused):
-                transport = self._transport
-                if (transport is not None):
-                    try:
-                        transport.pause_reading()
-                    except (AttributeError, NotImplementedError):
-                        #cant be paused
-                        self._transport = None
-                    else:
-                        self._paused = True
         else:
             try:
                 payload_reader.send(data)
-            except StopIteration as err:
-                args = err.args
-                if not args:
-                    result = None
-                elif len(args) == 1:
-                    result = args[0]
-                else:
-                    result = args
+            except BaseException as exception:
+                payload_stream = self._payload_stream
+                self._payload_reader = None
+                self._payload_stream = None
                 
-                payload_waiter = self._payload_waiter
-                self._payload_reader = None
-                self._payload_waiter = None
-                payload_waiter.set_result_if_pending(result)
-            
-            except GeneratorExit as err:
-                payload_waiter = self._payload_waiter
-                self._payload_reader = None
-                self._payload_waiter = None
-                exception = ConnectionError('Payload reader destroyed.')
-                exception.__cause__ = err
-                payload_waiter.set_exception_if_pending(exception)
-            
-            except BaseException as err:
-                payload_waiter = self._payload_waiter
-                self._payload_reader = None
-                self._payload_waiter = None
-                payload_waiter.set_exception_if_pending(err)
-    
-    
-    def handle_payload_waiter_cancellation(self):
-        """
-        If you expect, that the payload waiter will be cancelled from outside, call this method to throw eof into the
-        protocol at that case.
-        """
-        payload_waiter = self._payload_waiter
-        if (payload_waiter is not None):
-            payload_waiter.add_done_callback(self._payload_waiter_cancellation_callback)
-    
-    
-    def _payload_waiter_cancellation_callback(self, future):
-        """
-        Callback to the ``.payload_waiter`` by ``.handle_payload_waiter_cancellation`` to throw eof into the
-        ``.payload_reader`` task if payload waiter is cancelled from outside.
+                if isinstance(exception, StopIteration):
+                    payload_stream.set_done_success()
+                
+                elif isinstance(exception, EOFError):
+                    new_exception = ConnectionError('Connection closed unexpectedly with EOF.')
+                    new_exception.__cause__ = exception
+                    payload_stream.set_done_exception(new_exception)
+                
+                elif isinstance(exception, GeneratorExit):
+                    new_exception = ConnectionError('Payload reader destroyed.')
+                    new_exception.__cause__ = exception
+                    payload_stream.set_done_exception(new_exception)
+                
+                
+                else:
+                    payload_stream.set_done_exception(exception)
         
-        Parameters
-        ----------
-        future : ``Future``
-            The respective ``.payload_waiter``.
+        # Pause if buffer is too big
+        self._pause_reading()
+    
+    
+    def _pause_reading(self):
         """
-        if future.is_cancelled():
-            self.eof_received()
+        Called when the protocol should consider pausing reading of its transport.
+        """
+        if (self.get_size() > BUFFER_SIZE_MAX) and (not self._paused):
+            transport = self._transport
+            if (transport is not None):
+                try:
+                    transport.pause_reading()
+                except (AttributeError, NotImplementedError):
+                    # cant be paused
+                    self._transport = None
+                else:
+                    self._paused = True
+    
+    
+    def _resume_reading(self):
+        """
+        Called when the protocol should consider resuming reading of its transport.
+        """
+        if self._paused:
+            self._paused = False
+            self._transport.resume_reading()
     
     
     def cancel_current_reader(self):
@@ -352,64 +563,88 @@ class ReadProtocolBase(AbstractProtocolBase):
             return
         
         self._payload_reader = None
-        payload_reader.close()
         
-        payload_waiter = self._payload_waiter
-        self._payload_waiter = None
-        payload_waiter.cancel()
+        payload_stream = self._payload_stream
+        self._payload_stream = None
+        payload_stream.set_done_cancelled()
+        
+        payload_reader.close()
     
     
-    def set_payload_reader(self, payload_reader):
+    def set_payload_reader(self, payload_reader_function):
         """
         Sets payload reader to the protocol.
         
         Parameters
         ----------
-        payload_reader : `GeneratorType`
-            A generator, what gets control, every time a chunk is received, till it returns or raises.
+        payload_reader_function : `callable`
+            A function, that gets control, every time a chunk is received.
         
         Returns
         -------
-        payload_waiter : ``Future``
-            Waiter, to what the result of the `payload_reader` is set.
+        payload_stream : ``PayloadStream``
         """
         assert self._payload_reader is None, 'Payload reader already set!'
         
-        payload_waiter = Future(self._loop)
-        exception = self._exception
+        payload_stream = PayloadStream(self)
         
-        if (exception is None):
+        exception = self._exception
+        if (exception is not None):
+            payload_stream.set_done_exception(exception)
+        
+        else:
+            payload_reader = payload_reader_function(payload_stream)
+            
             try:
                 payload_reader.send(None)
-            except StopIteration as err:
-                args = err.args
-                if not args:
-                    result = None
-                elif len(args) == 1:
-                    result = args[0]
-                else:
-                    result = args
-                
-                payload_waiter.set_result_if_pending(result)
+            except StopIteration:
+                payload_stream.set_done_success()
             
-            except GeneratorExit as err:
-                exception = ConnectionError('Payload reader destroyed.')
-                exception.__cause__ = err
-                payload_waiter.set_exception_if_pending(exception)
+            except EOFError as exception:
+                new_exception = ConnectionError('Connection closed unexpectedly with EOF.')
+                new_exception.__cause__ = exception
+                payload_stream.set_done_exception(new_exception)
             
-            except BaseException as err:
-                payload_waiter.set_exception_if_pending(err)
+            except GeneratorExit as exception:
+                new_exception = ConnectionError('Payload reader destroyed.')
+                new_exception.__cause__ = exception
+                payload_stream.set_done_exception(new_exception)
+            
+            except BaseException as exception:
+                payload_stream.set_done_exception(exception)
             
             else:
-                self._payload_waiter = payload_waiter
+                self._payload_stream = payload_stream
                 self._payload_reader = payload_reader
-        else:
-            payload_waiter.set_exception(exception)
         
-        return payload_waiter
+        return payload_stream
     
     
-    async def read(self, n=-1):
+    def handle_payload_stream_abortion(self):
+        """
+        If you expect, that the payload waiter will be cancelled from outside, call this method to throw eof into the
+        protocol at that case.
+        """
+        payload_stream = self._payload_stream
+        if (payload_stream is not None):
+            payload_stream.add_done_callback(self._payload_stream_abortion_callback)
+    
+    
+    def _payload_stream_abortion_callback(self, payload_stream):
+        """
+        Callback added to ``._payload_stream`` by ``.handle_payload_stream_abortion`` to throw eof into the
+        ``.payload_reader`` task if payload stream is aborted from outside.
+        
+        Parameters
+        ----------
+        payload_stream : ``PayloadStream``
+            The respective ``._payload_stream``.
+        """
+        if payload_stream.is_aborted():
+            self.eof_received()
+    
+    
+    async def read(self, n = -1):
         """
         Reads up to `n` amount of bytes from the protocol.
         
@@ -426,10 +661,20 @@ class ReadProtocolBase(AbstractProtocolBase):
         -------
         result : `bytes`
         """
-        try:
-            return await self.set_payload_reader(self._read_until_eof() if n < 0 else self._read_exactly(n))
-        except EOFError as err:
-            return err.args[0]
+        if n < 0:
+            payload_stream = self.set_payload_reader(self._read_until_eof)
+        
+        elif n > 0:
+            payload_stream = self.set_payload_reader(partial_func(self._read_exactly, n, True))
+        
+        else:
+            exception = self._exception
+            if (exception is not None):
+                raise exception
+            
+            return b''
+        
+        return (await payload_stream)
     
     
     async def read_exactly(self, n):
@@ -451,30 +696,51 @@ class ReadProtocolBase(AbstractProtocolBase):
         ------
         ValueError
             If `n` is less than `0`.
-        EOFError
-            Connection lost before `0` bytes were received.
-        BaseException
-            Connection lost exception if applicable.
+        ConnectionError
+            Connection lost before `n` bytes were received.
         """
+        
+        if n > 0:
+            return (await self.set_payload_reader(partial_func(self._read_exactly, n, False)))
+        
+        if n < 0:
+            raise ValueError(f'`.read_exactly` size can not be less than `0`, got {n!r}.')
+        
+        # n == 0
         exception = self._exception
         if (exception is not None):
             raise exception
         
-        if n < 1:
-            if n == 0:
-                return b''
-            
-            raise ValueError(f'`.read_exactly` size can not be less than `0`, got {n!r}.')
-        
-        return await self.set_payload_reader(self._read_exactly(n))
+        return b''
     
     
     async def read_line(self):
         raise NotImplementedError
     
     
-    async def read_until(self):
-        raise NotImplementedError
+    async def read_until(self, boundary):
+        """
+        Reads until the given boundary.
+        This method is a coroutine.
+        
+        Parameters
+        ----------
+        boundary : `bytes`
+            The boundary to read until. Consumed but not returned.
+        
+        Raises
+        ------
+        ConnectionError
+            Connection lost before boundary hit.
+        """
+        if not boundary:
+            exception = self._exception
+            if (exception is not None):
+                raise exception
+            
+            return b''
+        
+        return await self.set_payload_reader(partial_func(self._read_until, boundary))
     
     
     async def read_once(self):
@@ -489,42 +755,128 @@ class ReadProtocolBase(AbstractProtocolBase):
         
         Raises
         ------
-        BaseException
-            Connection lost exception if applicable.
+        ConnectionError
+            At end of file.
         """
-        exception = self._exception
-        if (exception is not None):
-            raise exception
-        
-        return await self.set_payload_reader(self._read_once())
+        return (await self.set_payload_reader(self._read_once))
     
     
+    @to_coroutine
     def _wait_for_data(self):
         """
         Payload reader task helper, what waits for 1 chunk to be receive, then adds it to ``._chunks`` and also returns
         it as well.
         
-        This method is a generator.
+        This method is an awaitable generator.
         
         Returns
         -------
         chunk : `bytes`
-        
-        Raises
-        ------
-        CancelledError
-            If the reader task is cancelled not by receiving eof.
         """
-        if self._paused:
-            self._paused = False
-            self._transport.resume_reading()
+        self._resume_reading()
         
         chunk = yield
         self._chunks.append(chunk)
         return chunk
     
     
-    def _read_exactly(self, n):
+    async def _read_exactly_by_chunk(self, n):
+        """
+        Reads exactly `n` chunks and yields them back.
+        
+        This method is a coroutine generator.
+        
+        Parameters
+        ----------
+        n : `int`
+            The amount of bytes to read. Must be greater than 0.
+        
+        Returns
+        -------
+        chunk : `bytes-like`
+        
+        Raises
+        ------
+        EofError
+            Connection lost before `n` bytes were received.
+        """
+        chunks = self._chunks
+        if chunks:
+            chunk = chunks[0]
+            offset = self._offset
+        else:
+            if self._at_eof:
+                raise EOFError(b'')
+            
+            chunk = await self._wait_for_data()
+            offset = 0
+        
+        chunk_size = len(chunk)
+        if offset == 0:
+            if chunk_size > n:
+                self._offset = n
+                yield memoryview(chunk)[:n]
+                return
+            
+            # chunk same size as the requested?
+            if chunk_size == n:
+                del chunks[0]
+                # offset is already 0, nice!
+                yield chunk
+                return
+            
+            n -= len(chunk)
+            del chunks[0]
+            yield chunk
+        
+        else:
+            end = offset + n
+            if chunk_size > end:
+                self._offset = end
+                yield memoryview(chunk)[offset : end]
+                return
+            
+            # chunk_size + offset end when the requested's end is.
+            if chunk_size == end:
+                del chunks[0]
+                self._offset = 0
+                yield memoryview(chunk)[offset:]
+                return
+            
+            n -= (chunk_size - offset)
+            del chunks[0]
+            yield memoryview(chunk)[offset:]
+        
+        while True:
+            if chunks:
+                chunk = chunks[0]
+            else:
+                if self._at_eof:
+                    self._offset = 0
+                    raise EOFError(b'')
+                
+                chunk = await self._wait_for_data()
+            
+            chunk_size = len(chunk)
+            
+            n -= chunk_size
+            if n > 0:
+                yield chunk
+                del chunks[0]
+                continue
+            
+            if n == 0:
+                yield chunk
+                del chunks[0]
+                self._offset = 0
+                return
+            
+            offset = self._offset = chunk_size + n
+            yield memoryview(chunk)[:offset]
+            return
+    
+    
+    async def _read_exactly(self, n, allow_eof, payload_stream):
         """
         Payload reader task, what reads exactly `n` bytes from the protocol.
         
@@ -533,250 +885,281 @@ class ReadProtocolBase(AbstractProtocolBase):
         Parameters
         ----------
         n : `int`
-            The amount of bytes to read.
+            The amount of bytes to read. Must be greater than 0.
         
-        Returns
-        -------
-        collected : `bytes`
+        allow_eof : `bool`
+            Whether end of file is allowed.
+        
+        payload_stream : ``PayloadStream``
+            Payload buffer to read into.
         
         Raises
         ------
-        ValueError
-            If `n` is given as a negative integer.
         EofError
             Connection lost before `n` bytes were received.
-        CancelledError
-            If the reader task is cancelled not by receiving eof.
         """
-        if n < 1:
-            if n < 0:
-                raise ValueError(f'`.read_exactly` called with negative `n`, got {n!r}.')
-            else:
-                return b''
+        try:
+            async for chunk in self._read_exactly_by_chunk(n):
+                payload_stream.add_received_chunk(chunk)
+        except EOFError:
+            if not allow_eof:
+                raise
         
-        chunks = self._chunks
-        if chunks:
-            chunk = chunks[0]
-            offset = self._offset
-        else:
-            if self._at_eof:
-                raise EOFError(b'')
-            
-            chunk = yield from self._wait_for_data()
-            offset = 0
-        
-        chunk_size = len(chunk)
-        if offset == 0:
-            if chunk_size > n:
-                self._offset = n
-                return chunk[:n]
-            # chunk same size as the requested?
-            elif chunk_size == n:
-                del chunks[0]
-                # offset is already 0, nice!
-                return chunk
-            
-            else:
-                n -= len(chunk)
-                collected = [chunk]
-                del chunks[0]
-        else:
-            end = offset + n
-            if chunk_size > end:
-                self._offset = end
-                return chunk[offset:end]
-            # chunk_size + offset end when the requested's end is.
-            elif chunk_size == end:
-                del chunks[0]
-                self._offset = 0
-                return chunk[offset:]
-            
-            else:
-                n -= (chunk_size - offset)
-                collected = [memoryview(chunk)[offset:]]
-                del chunks[0]
-        
-        while True:
-            if chunks:
-                chunk = chunks[0]
-            else:
-                if self._at_eof:
-                    self._offset = 0
-                    raise EOFError(b''.join(collected))
-                
-                chunk = yield from self._wait_for_data()
-            
-            chunk_size = len(chunk)
-            
-            n -= chunk_size
-            
-            if n > 0:
-                collected.append(chunk)
-                del chunks[0]
-                continue
-            
-            if n == 0:
-                collected.append(chunk)
-                del chunks[0]
-                self._offset = 0
-                return b''.join(collected)
-            
-            offset = self._offset = chunk_size + n
-            collected.append(memoryview(chunk)[:offset])
-            return b''.join(collected)
+        payload_stream.set_done_success()
     
     
-    def _read_until(self, boundary):
+    async def _read_exactly_as_one(self, n):
         """
-        Payload reader task, what reads until `boundary` is hit.
+        Reads exactly `n` bytes of data at once and returns it. Can be used by other payload readers.
         
-        This method is a generator.
+        This method is a coroutine.
+        
+        Parameters
+        ----------
+        n : `int`
+            The amount of bytes to read. Must be greater than 0.
+        
+        Raises
+        ------
+        EofError
+            Connection lost before `n` bytes were received.
+        """
+        chunks = []
+        async for chunk in self._read_exactly_by_chunk(n):
+            chunks.append(chunk)
+        
+        return b''.join(chunks)
+    
+    
+    async def _read_until_by_chunk(self, boundary):
+        """
+        Payload reader task, what reads until `boundary` is hit. Yields back each data chunk.
+        
+        This method is a coroutine.
         
         Parameters
         ----------
         boundary : `bytes`
-            The amount of bytes to read.
-        
-        Returns
-        -------
-        collected : `bytes`, `bytearray`
+            The boundary to read until. Consumed but not returned.
         
         Raises
         ------
         EofError
-            Connection lost before `n` bytes were received.
-        CancelledError
-            If the reader task is cancelled not by receiving eof.
+            Connection lost before boundary hit.
         """
-        # This method is mainly used for multipart reading, and we can forget optimizations usually.
-        boundary_length = len(boundary)
         chunks = self._chunks
-        if chunks:
-            chunk = chunks[0]
-            offset = self._offset
-        else:
-            if self._at_eof:
-                raise EOFError(b'')
-            
-            chunk = yield from self._wait_for_data()
-            offset = 0
+        intersection_sizes = None
+        held_back = None
         
-        # Optimal case is when we instantly hit boundary.
-        if len(chunk) > boundary_length:
-            index = chunk.find(boundary, offset)
-            if index != -1:
-                # Barrier found
-                data = chunk[offset:index]
-                offset += boundary
-                if offset == len(chunk):
-                    del chunks[0]
-                    offset = 0
-                self._offset = offset
-                return data
-            
-            offset = len(chunk) - boundary_length
-        
-        # Second case, we create a bytearray and push the data to it.
-        data = bytearray(chunk)
         while True:
             if chunks:
                 chunk = chunks[0]
+                offset = self._offset
             else:
                 if self._at_eof:
                     raise EOFError(b'')
                 
-                chunk = yield from self._wait_for_data()
+                chunk = await self._wait_for_data()
+                offset = 0
             
-            data.extend(chunk)
+            if (intersection_sizes is not None):
+                offset, intersection_sizes = _finish_intersection_sizes(chunk, boundary, intersection_sizes)
+                # Found boundary in between?
+                if offset != -1:
+                    # Do not offset if offset if at the end of the chunk. Delete chunk instead.
+                    if offset == len(chunk):
+                        del chunks[0]
+                        offset = 0
+                    self._offset = offset
+                    
+                    released, held_back = _get_released_from_held_back(held_back, len(boundary) - offset)
+                    if (released is not None):
+                        for to_release in released:
+                            yield to_release
+                    released = None
+                    return
+                
+                if (intersection_sizes is None):
+                    # Release all.
+                    for to_release in held_back:
+                        yield to_release
+                    held_back = None
+                    self._offset = 0
+                    offset = 0
+                
+                else:
+                    del chunks[0]
+                    self._offset = 0
+                    # Chunk too small?
+                    held_back.append(chunk)
+                    intersection_sizes = _merge_intersection_sizes(
+                        _continue_intersection_sizes(chunk, boundary, intersection_sizes),
+                        _get_end_intersection_sizes(chunk, 0, boundary),
+                    )
+                    released, held_back = _get_released_from_held_back(held_back, len(boundary))
+                    if (released is not None):
+                        for to_release in released:
+                            yield to_release
+                    
+                    released = None
+                    continue
+            
             index = chunk.find(boundary, offset)
+            
+            # Found boundary?
             if index != -1:
-                # Barrier found
-                offset = len(chunk) - len(data) + index + boundary_length
+                original_offset = offset
+                offset = index + len(boundary)
                 if offset == len(chunk):
                     del chunks[0]
                     offset = 0
-                
                 self._offset = offset
-                del data[index:]
-                return data
+                
+                if original_offset != index:
+                    yield memoryview(chunk)[original_offset : index]
+                return
             
-            offset = len(data) - boundary_length
             del chunks[0]
+            self._offset = 0
+            if offset:
+                chunk = memoryview(chunk)[offset:]
+            intersection_sizes = _get_end_intersection_sizes(chunk, offset, boundary)
+            if (intersection_sizes is not None):
+                offset = len(chunk) - intersection_sizes[0]
+                held_back = [memoryview(chunk)[offset:]]
+                
+                # Do not yield if `offset == 0` 
+                if not offset:
+                    continue
+                
+                chunk = memoryview(chunk)[:offset]
+            
+            yield chunk
+            
+            # Repeat loop
+            continue
     
     
-    def _read_until_eof(self):
+    async def _read_until(self, boundary, payload_stream):
+        """
+        Payload reader task, what reads until `boundary` is hit.
+        
+        This method is a coroutine.
+        
+        Parameters
+        ----------
+        boundary : `bytes`
+            The boundary to read until. Consumed but not returned.
+        
+        payload_stream : ``PayloadStream``
+            Payload buffer to read into.
+        
+        Raises
+        ------
+        EofError
+            Connection lost before boundary hit.
+        CancelledError
+            If the reader task is cancelled not by receiving eof.
+        """
+        async for chunk in self._read_until_by_chunk(boundary):
+            payload_stream.add_received_chunk(chunk)
+    
+    
+    async def _read_until_as_one(self, boundary):
+        """
+        Reads until `boundary` is hit at once and returns it. Can be used by other payload readers.
+        
+        This method is a coroutine.
+        
+        Parameters
+        ----------
+        boundary : `bytes`
+            The boundary to read until. Consumed but not returned.
+        
+        Raises
+        ------
+        EofError
+            Connection lost before boundary hit.
+        """
+        chunks = []
+        async for chunk in self._read_until_by_chunk(boundary):
+            chunks.append(chunk)
+        
+        return b''.join(chunks)
+    
+    
+    async def _read_until_eof(self, payload_stream):
         """
         Payload reader task, which reads the protocol until EOF is hit.
         
-        This method is a generator.
+        This method is a coroutine.
         
-        Returns
-        -------
-        collected : `bytes`
-        
-        Raises
-        ------
-        CancelledError
-            If the reader task is cancelled not by receiving eof.
+        Parameters
+        ----------
+        payload_stream : ``PayloadStream``
+            Payload buffer to read into.
         """
         chunks = self._chunks
-        
-        if not self._at_eof:
-            while True:
-                try:
-                    yield from self._wait_for_data()
-                except (CancelledError, GeneratorExit):
-                    if self._at_eof:
-                        break
-                    
-                    raise
-        
-        if not chunks:
-            return b''
-        
         offset = self._offset
-        if offset:
-            chunks[0] = memoryview(chunks[0])[offset:]
+        self._offset = 0
+        while chunks:
+            chunk = chunks.popleft()
+            if offset:
+                chunk = memoryview(chunk)[offset :]
+                offset = 0
+            
+            payload_stream.add_received_chunk(chunk)
         
-        collected = b''.join(chunks)
-        chunks.clear()
-        return collected
+        while not self._at_eof:
+            try:
+                chunk = await self._wait_for_data()
+            except EOFError:
+                break
+            
+            except GeneratorExit:
+                payload_stream.set_done_exception(ConnectionError('Payload reader destroyed.'))
+                raise
+            
+            del chunks[0]
+            payload_stream.add_received_chunk(chunk)
+        
+        payload_stream.set_done_success()
     
     
-    def _read_once(self):
+    async def _read_once(self, payload_stream):
         """
         Reader task for reading exactly one chunk out.
         
-        This method is a generator.
+        This method is a coroutine.
         
-        Returns
-        -------
-        chunk : `bytes`
-            The read chunk. Returns empty `bytes` on eof.
-        
-        Raises
-        ------
-        CancelledError
-            If the reader task is cancelled not by receiving eof.
+        Parameters
+        ----------
+        payload_stream : ``PayloadStream``
+            Payload buffer to read into.
         """
         chunks = self._chunks
-        if not chunks:
-            try:
-                yield from self._wait_for_data()
-            except (CancelledError, GeneratorExit):
-                if self._at_eof:
-                    return b''
-                
-                raise
-        
-        chunk = chunks.popleft()
         offset = self._offset
-        if offset:
+        if chunks:
             self._offset = 0
-            chunk = chunk[offset:]
+            chunk = chunks.popleft()
+            if offset:
+                chunk = memoryview(chunk)[offset :]
+            
+            payload_stream.add_received_chunk(chunk)
+            payload_stream.set_done_success()
+            return
         
-        return chunk
-
+        if self._at_eof:
+            return
+        
+        try:
+            chunk = await self._wait_for_data()
+        except EOFError:
+            pass
+        
+        else:
+            del chunks[0]
+            payload_stream.add_received_chunk(chunk)
 
 
 class ReadWriteProtocolBase(ReadProtocolBase):
@@ -787,26 +1170,33 @@ class ReadWriteProtocolBase(ReadProtocolBase):
     ----------
     _at_eof : `bool`
         Whether the protocol received end of file.
-    _chunks : `deque` of `bytes`
+    
+    _chunks : `Deque` of `bytes`
         Right feed, left pop queue, used to store the received data chunks.
+    
     _exception : `None`, `BaseException`
         Exception set by ``.set_exception``, when an unexpected exception occur meanwhile reading from socket.
+    
     _loop : ``EventThread``
         The event loop to what the protocol is bound to.
+    
     _offset : `int`
         Byte offset, of the used up data of the most-left chunk.
+    
     _paused : `bool`
         Whether the protocol's respective transport's reading is paused. Defaults to `False`.
         
         Also note, that not every transport supports pausing.
+    
     _payload_reader : `None`, `GeneratorType`
         Payload reader generator, what gets the control back, when data, eof or any exception is received.
-    _payload_waiter : `None` of ``Future``
-        Payload waiter of the protocol, what's result is set, when the ``.payload_reader`` generator returns.
-        
-        If cancelled or marked by done or any other methods, the payload reader will not be cancelled.
+    
+    _payload_stream : `None | PayloadStream`
+        Payload stream of the protocol.
+    
     _transport : `None`, `object`
         Asynchronous transport implementation. Is set meanwhile the protocol is alive.
+    
     _drain_waiter : `None`, ``Future``
         A future, what is used to block the writing task, till it's writen data is drained.
     """
@@ -1104,7 +1494,7 @@ class DatagramMergerReadProtocol(ReadProtocolBase):
     ----------
     _at_eof : `bool`
         Whether the protocol received end of file.
-    _chunks : `deque` of `bytes`
+    _chunks : `Deque` of `bytes`
         Right feed, left pop queue, used to store the received data chunks.
     _exception : `None`, `BaseException`
         Exception set by ``.set_exception``, when an unexpected exception occur meanwhile reading from socket.
@@ -1118,7 +1508,7 @@ class DatagramMergerReadProtocol(ReadProtocolBase):
         Also note, that not every transport supports pausing.
     _payload_reader : `None`, `GeneratorType`
         Payload reader generator, what gets the control back, when data, eof or any exception is received.
-    _payload_waiter : `None` of ``Future``
+    _payload_stream : `None` of ``Future``
         Payload waiter of the protocol, what's result is set, when the ``.payload_reader`` generator returns.
         
         If cancelled or marked by done or any other methods, the payload reader will not be cancelled.

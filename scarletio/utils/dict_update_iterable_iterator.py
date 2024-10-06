@@ -29,7 +29,7 @@ def _dict_update_iterable_iterator(iterable):
         except TypeError:
             raise TypeError(
                 f'Cannot convert dictionary update sequence element #{index} to a sequence; '
-                f'got item={item!r}; iterable={iterable!r}.'
+                f'got item = {item!r}; iterable = {iterable!r}.'
             ) from None
         
         try:
@@ -37,7 +37,7 @@ def _dict_update_iterable_iterator(iterable):
         except StopIteration:
             raise ValueError(
                 f'Dictionary update sequence element #{index} has length `0`; 2 is required; '
-                f'got item={item!r}; iterable={iterable!r}.'
+                f'got item = {item!r}; iterable = {iterable!r}.'
             ) from None
         
         try:
@@ -45,7 +45,7 @@ def _dict_update_iterable_iterator(iterable):
         except StopIteration:
             raise ValueError(
                 f'Dictionary update sequence element #{index} has length `1`; 2 is required; '
-                f'got item={item!r}; iterable={iterable!r}.'
+                f'got item = {item!r}; iterable = {iterable!r}.'
             ) from None
         
         try:
@@ -66,7 +66,7 @@ def _dict_update_iterable_iterator(iterable):
             
             raise ValueError(
                 f'Dictionary update sequence element #{index} has length {length}; 2 is required; '
-                f'got item={item!r}; iterable={iterable!r}.'
+                f'got item = {item!r}; iterable = {iterable!r}.'
             )
         
         yield key, value

@@ -74,9 +74,8 @@ setup(
         'Topic :: Software Development :: Libraries',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
-    include_package_data = True,
-    package_data = {
-    },
+    include_package_data = False,
+    package_data = {},
     python_requires = '>=3.6',
     install_requires = [
         'chardet>=2.0',

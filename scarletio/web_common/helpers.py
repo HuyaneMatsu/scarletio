@@ -1,10 +1,17 @@
 __all__ = ('HttpVersion', 'HttpVersion10', 'HttpVersion11',)
 
-import re
+from re import I as re_ignore_case, compile as re_compile
 import socket as module_socket
 from collections import namedtuple
 
 from ..core import CancelledError, Task
+from ..utils import IgnoreCaseMultiValueDictionary, include
+
+from .exceptions import PayloadError
+
+
+RawRequestMessage = include('RawRequestMessage')
+RawResponseMessage = include('RawResponseMessage')
 
 
 HttpVersion = namedtuple('HttpVersion', ('major', 'minor'))
@@ -27,12 +34,12 @@ _ipv6_pattern = (
     ':|:(:[A-F0-9]{1,4}){7})$'
 )
 
-_ipv4_regex = re.compile(_ipv4_pattern)
-_ipv6_regex = re.compile(_ipv6_pattern, flags = re.I)
-_ipv4_regex_b = re.compile(_ipv4_pattern.encode('utf-8'))
-_ipv6_regex_b = re.compile(_ipv6_pattern.encode('utf-8'), flags = re.I)
+_ipv4_regex = re_compile(_ipv4_pattern)
+_ipv6_regex = re_compile(_ipv6_pattern, flags = re_ignore_case)
+_ipv4_regex_b = re_compile(_ipv4_pattern.encode('utf-8'))
+_ipv6_regex_b = re_compile(_ipv6_pattern.encode('utf-8'), flags = re_ignore_case)
 
-del _ipv4_pattern, _ipv6_pattern, re
+del _ipv4_pattern, _ipv6_pattern
 
 
 def is_ip_address(host):
@@ -350,3 +357,149 @@ def freeze_headers(proxy_headers):
     """
     if (proxy_headers is not None) and proxy_headers:
         return (*((key, tuple(proxy_headers.get_all(key))) for key in sorted(proxy_headers.keys())),)
+
+
+HTTP_STATUS_RP = re_compile(b'[ \t]*HTTP/(\\d+)\\.(\\d+)[ \t]+(\\d\\d\\d)(?:[ \t]+(.*?))?[ \t]*(?:\r\n|$)')
+HTTP_REQUEST_RP = re_compile(b'[ \t]*([^ \t]+)[ \t]+([^ \t]+)[ \t]+HTTP/(\\d+)\\.(\\d+)[ \t]*(?:\r\n|$)')
+
+
+def parse_http_response(data):
+    """
+    Parses http response message.
+    
+    Parameters
+    ----------
+    data : `bytes`
+        Data to parse from.
+    
+    Returns
+    -------
+    response_message : ``RawResponseMessage``
+    
+    Raises
+    ------
+    PayloadError
+        Invalid data received.
+    """
+    parsed = HTTP_STATUS_RP.match(data, 0)
+    if parsed is None:
+        line_end = data.find(b'\r\n')
+        if line_end == -1:
+            line_end = len(data)
+        
+        raise PayloadError(f'Invalid status line: {data[0 : line_end]!r}.')
+    
+    offset = parsed.end()
+    major, minor, status, reason = parsed.groups()
+    if reason is None:
+        pass
+    if not reason:
+        reason = None
+    else:
+        reason = reason.decode('utf-8', errors = 'surrogateescape')
+    
+    headers = parse_http_headers(data, offset)
+    return RawResponseMessage(HttpVersion(int(major), int(minor)), int(status), reason, headers)
+
+
+def parse_http_request(data):
+    """
+    Parses http request message.
+    
+    Parameters
+    ----------
+    data : `bytes`
+        Data to parse from.
+    
+    Returns
+    -------
+    request_message : ``RawRequestMessage``
+    
+    Raises
+    ------
+    PayloadError
+        Invalid data received.
+    """
+    parsed = HTTP_REQUEST_RP.match(data, 0)
+    if parsed is None:
+        line_end = data.find(b'\r\n')
+        if line_end == -1:
+            line_end = len(data)
+        
+        raise PayloadError(f'Invalid request line: {data[0 : line_end]!r}.')
+    
+    offset = parsed.end()
+    method, path, major, minor = parsed.groups()
+    method = method.decode('utf-8', 'surrogateescape').upper()
+    path = path.decode('utf-8', 'surrogateescape')
+
+    headers = parse_http_headers(data, offset)
+    return RawRequestMessage(HttpVersion(int(major), int(minor)), method, path, headers)
+
+
+def parse_http_headers(data, offset):
+    """
+    Parses http headers from the given data.
+    
+    Parameters
+    ----------
+    data : `bytes`
+        Data to parse from.
+    
+    offset : `int`
+        Position to start parsing at.
+    
+    Returns
+    -------
+    headers : ``IgnoreCaseMultiValueDictionary``
+    
+    Raises
+    ------
+    PayloadError
+        Invalid data received.
+    """
+    headers = IgnoreCaseMultiValueDictionary()
+    while True:
+        end_index = data.find(b'\r\n', offset)
+        if end_index == -1:
+            end_index = len(data)
+        
+        # Found \r\n instantly, we done!
+        # The case, when there is nothing inside of the headers.
+        if end_index <= offset:
+            return headers
+        
+        # At this case something is in the line, but is it a header?
+        middle_index = data.find(b':', offset, end_index)
+        if middle_index <= offset:
+            raise PayloadError(f'Invalid header line: {data[offset : end_index]!r}.')
+        
+        name = data[offset : middle_index].lstrip()
+        value = data[middle_index + 1 : end_index].strip()
+        offset = end_index + 2
+            
+        name = name.decode('utf-8', 'surrogateescape')
+        
+        # continuous?
+        if (len(data) > offset) and data[offset] in (b'\t'[0], b' '[0]):
+            value_continuous = [value]
+            while True:
+                end_index = data.find(b'\r\n', offset)
+                if end_index == -1:
+                    end_index = len(data)
+                
+                # find \r\n
+                value_continuous.append(data[offset : end_index].strip())
+                # add \r\n shift
+                offset = end_index + 2
+                
+                # continuous again?
+                if (len(data) > offset) and data[offset] in (b'\t'[0], b' '[0]):
+                    continue
+                break
+            
+            value = b' '.join(value_continuous)
+            value_continuous = None
+        
+        # Store, nice!
+        headers[name] = value.decode('utf-8', 'surrogateescape')

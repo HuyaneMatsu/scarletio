@@ -143,7 +143,6 @@ async def _test__EventThread__socket_receive_into__racing(loop, http_server, soc
     await task
 
 
-
 async def test__EventThread__socket_send_all__racing():
     """
     Tests socket race condition of ``EventThread.socket_send_all``.

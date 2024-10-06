@@ -1,5 +1,9 @@
 __all__ = ('WebSocketFrame', )
 
+from warnings import warn
+
+from ..utils import RichAttributeErrorBaseType
+
 from .exceptions import WebSocketProtocolError
 
 
@@ -38,7 +42,7 @@ def apply_web_socket_mask(mask, data):
     return data_bytes
 
 
-class WebSocketFrame:
+class WebSocketFrame(RichAttributeErrorBaseType):
     """
     Represents a web socket frame.
     
@@ -46,24 +50,26 @@ class WebSocketFrame:
     ----------
     data : `bytes`
         The data of the frame.
-    head_1 : `int`
-        The first bytes of web socket frame's, because it holds all the required data needed.
-    """
-    __slots__ = ('data', 'head_1',)
     
-    def __init__(self, is_final, operation_code, data):
+    head_0 : `int`
+        The first byte of the web socket frame.
+    """
+    __slots__ = ('data', 'head_0')
+    
+    def __new__(cls, final, operation_code, data):
         """
         Creates a web socket frame.
         
         Parameters
         -----------
-        is_final : `bool`
+        final : `bool`
             Whether this web socket frame is a final web socket frame.
             When sending web socket frames, the data of frames it collected, till a final frame is received.
+        
         operation_code : `int`
             The operation code of the web socket frame.
             
-            Can be 1 of the following:
+            Can be any of the following:
             
             +-----------------------------------+-------+
             | Respective name                   | Value |
@@ -84,11 +90,46 @@ class WebSocketFrame:
         data : `bytes`
             The data to ship with the web socket frame.
         """
+        self = object.__new__(cls)
         self.data = data
-        self.head_1 = (is_final << 7) | operation_code
+        self.head_0 = (final << 7) | operation_code
+        return self
+    
+    
+    def __eq__(self, other):
+        """Returns whether the two websocket frames are equal."""
+        if type(self) is not type(self):
+            return NotImplemented
+        
+        if self.head_0 != other.head_0:
+            return False
+        
+        if self.data != other.data:
+            return False
+        
+        return True
+    
+    
+    def __repr__(self):
+        """Returns the websocket frame's representation."""
+        repr_parts = ['<', type(self).__name__]
+        
+        # final
+        repr_parts.append(' final = ')
+        repr_parts.append(repr(self.final))
+        
+        repr_parts.append(', operation_code = ')
+        repr_parts.append(repr(self.operation_code))
+        
+        repr_parts.append(', data (length) = ')
+        repr_parts.append(repr(len(self.data)))
+        
+        repr_parts.append('>')
+        return ''.join(repr_parts)
+        
     
     @property
-    def is_final(self):
+    def final(self):
         """
         Returns whether the web socket frame is final.
         
@@ -96,7 +137,7 @@ class WebSocketFrame:
         -------
         is_final : `bool`
         """
-        return (self.head_1 & 0b10000000) >> 7
+        return True if (self.head_0 & 0b10000000) else False
     
     
     @property
@@ -104,13 +145,17 @@ class WebSocketFrame:
         """
         Returns the first reserved bit of the web socket frame's head.
         
-        Defaults to `0˙
-        
         Returns
         -------
         rsv1 : `int`
         """
-        return (self.head_1 & 0b01000000) >> 6
+        warn(
+            f'`{type(self).__name__}.rsv1` is deprecated and will be removed in 2025 October.',
+            FutureWarning,
+            stacklevel = 2,
+        )
+        
+        return True if (self.head_0 & 0b01000000) else False
     
     
     @property
@@ -118,13 +163,17 @@ class WebSocketFrame:
         """
         Returns the second reserved bit of the web socket frame's head.
         
-        Defaults to `0˙
-        
         Returns
         -------
         rsv2 : `int`
         """
-        return (self.head_1 & 0b00100000) >> 5
+        warn(
+            f'`{type(self).__name__}.rsv2` is deprecated and will be removed in 2025 October.',
+            FutureWarning,
+            stacklevel = 2,
+        )
+        
+        return True if (self.head_0 & 0b00100000) else False
     
     
     @property
@@ -132,13 +181,17 @@ class WebSocketFrame:
         """
         Returns the third reserved bit of the web socket frame's head.
         
-        Defaults to `0˙
-        
         Returns
         -------
         rsv3 : `int`
         """
-        return (self.head_1 & 0b00010000) >> 4
+        warn(
+            f'`{type(self).__name__}.rsv3` is deprecated and will be removed in 2025 October.',
+            FutureWarning,
+            stacklevel = 2,
+        )
+        
+        return True if (self.head_0 & 0b00010000) else False
     
     
     @property
@@ -167,7 +220,7 @@ class WebSocketFrame:
             | WEB_SOCKET_OPERATION_PONG         | 10    |
             +-----------------------------------+-------+
         """
-        return  self.head_1 & 0b00001111
+        return self.head_0 & 0b00001111
     
     
     def check(self):
@@ -182,17 +235,17 @@ class WebSocketFrame:
             - If the web socket frame is fragmented frame. (Might be supported if people request is.)
             - If the frame operation_code is not any of the expected ones.
         """
-        if self.head_1 & 0b01110000:
+        if self.head_0 & 0b01110000:
             raise WebSocketProtocolError('Reserved bits must be `0`.')
         
-        operation_code = self.head_1 & 0b00001111
+        operation_code = self.head_0 & 0b00001111
         if operation_code in WEB_SOCKET_DATA_OPERATIONS:
             return
         
         if operation_code in WEB_SOCKET_CONTROL_OPERATIONS:
             if len(self.data) > 125:
                 raise WebSocketProtocolError('Control frame too long.')
-            if not self.head_1 & 0b10000000:
+            if not self.head_0 & 0b10000000:
                 raise WebSocketProtocolError('Fragmented control frame.')
             return
         
@@ -200,22 +253,57 @@ class WebSocketFrame:
     
     
     @classmethod
-    def _from_fields(cls, data, head_1):
+    def _from_fields(cls, head_0, data):
         """
         Creates a new web socket frame instance.
         
         Parameters
         ----------
+        head_0 : `int`
+            The 0th byte of web socket frame. It holds all the required data.
+        
         data : `bytes`
             The data of the frame.
-        head_1 : `int`
-            The first bytes of web socket frame's, because it holds all the required data needed.
         
         Returns
         -------
-        self : ``WebSocketFrame``
+        self : `instance<cls>`
         """
         self = object.__new__(cls)
+        self.head_0 = head_0
         self.data = data
-        self.head_1 = head_1
         return self
+    
+    
+    @property
+    def head_1(self):
+        """
+        Deprecated and will be removed in 2025 october.
+        """
+        warn(
+            (
+                f'`{type(self).__name__}.head_1` is deprecated and will be removed in 2025 October. '
+                f'Please use `.head_0` instead.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
+        
+        return self.head_0
+    
+    
+    @property
+    def is_final(self):
+        """
+        Deprecated and will be removed in 2025 october.
+        """
+        warn(
+            (
+                f'`{type(self).__name__}.is_final` is deprecated and will be removed in 2025 October. '
+                f'Please use `.final` instead.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
+        
+        return self.final

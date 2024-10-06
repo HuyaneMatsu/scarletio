@@ -677,7 +677,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             )
         
         # we got a whole frame, nice
-        if frame.is_final:
+        if frame.final:
             message = frame.data
             
             if text:
@@ -692,7 +692,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             max_size -= len(frame.data)
             
             frames.append(frame)
-            if frame.is_final:
+            if frame.final:
                 break
             
             frame = await self.read_data_frame(max_size = max_size)
@@ -707,7 +707,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         
         if text:
             try:
-                message = ''.join(DECODER.decode(frame.data, frame.is_final) for frame in frames)
+                message = ''.join(DECODER.decode(frame.data, frame.final) for frame in frames)
             except:
                 DECODER.reset()
                 raise
@@ -746,7 +746,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         """
         while True:
             
-            frame = await self.set_payload_reader(self._read_web_socket_frame(self.is_client, max_size))
+            frame = await self.read_web_socket_frame(self.is_client, max_size)
             
             extensions = self.extensions
             if (extensions is not None):

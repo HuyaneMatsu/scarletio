@@ -216,7 +216,7 @@ class HTTPRequestHandler(HttpReadWriteProtocol):
             Returns `None` if reading the request fails.
         """
         try:
-            request_message = await self.set_payload_reader(self._read_http_request())
+            request_message = await self.read_http_request()
         except (GeneratorExit, CancelledError):
             raise
         

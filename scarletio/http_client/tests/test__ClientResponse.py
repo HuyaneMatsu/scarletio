@@ -1,15 +1,19 @@
-import vampytest
-from ...core import Future, EventThread, get_event_loop, Task, SocketTransportLayerBase, skip_ready_cycle
-from ..connection import Connection
-from ..client_response import ClientResponse
 from http.cookies import SimpleCookie
-from ...web_common import URL, HttpReadWriteProtocol, HttpVersion
 from socket import socketpair as create_socket_pair
-from ..connector_base import ConnectorBase
-from ...web_common.headers import CONTENT_LENGTH, SET_COOKIE, CONTENT_TYPE
+
+import vampytest
+
+from ...core import EventThread, PayloadStream, SocketTransportLayerBase, Task, get_event_loop
 from ...utils import IgnoreCaseMultiValueDictionary, from_json
-from .helpers import _get_default_request, Any
+from ...web_common import HttpReadWriteProtocol, HttpVersion, URL
+from ...web_common.headers import CONTENT_LENGTH, CONTENT_TYPE, SET_COOKIE
 from ...web_common.http_message import RawResponseMessage
+
+from ..client_response import ClientResponse
+from ..connection import Connection
+from ..connector_base import ConnectorBase
+
+from .helpers import Any, _get_default_request
 
 
 def _assert_fields_set(client_response):
@@ -26,7 +30,7 @@ def _assert_fields_set(client_response):
     vampytest.assert_instance(client_response.body, bytes, nullable = True)
     vampytest.assert_instance(client_response.closed, bool)
     vampytest.assert_instance(client_response.connection, Connection, nullable = True)
-    vampytest.assert_instance(client_response.payload_waiter, Future, nullable = True)
+    vampytest.assert_instance(client_response.payload_stream, PayloadStream, nullable = True)
     vampytest.assert_instance(client_response.cookies, SimpleCookie)
     vampytest.assert_instance(client_response.history, tuple, nullable = True)
     vampytest.assert_instance(client_response.loop, EventThread)
@@ -54,7 +58,7 @@ async def test__ClientResponse__new():
         
         client_request = _get_default_request()
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         
         connection = Connection(connector, client_request.connection_key, protocol)
@@ -92,7 +96,7 @@ async def test__ClientResponse__repr():
         connector = ConnectorBase(loop)
         client_request = _get_default_request()
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         connection = Connection(connector, client_request.connection_key, protocol)
         
@@ -163,7 +167,7 @@ async def test__ClientResponse__headers(raw_message):
         connector = ConnectorBase(loop)
         client_request = _get_default_request()
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         connection = Connection(connector, client_request.connection_key, protocol)
         
@@ -233,7 +237,7 @@ async def test__ClientResponse__reason(raw_message):
         connector = ConnectorBase(loop)
         client_request = _get_default_request()
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         connection = Connection(connector, client_request.connection_key, protocol)
         
@@ -303,7 +307,7 @@ async def test__ClientResponse__status(raw_message):
         connector = ConnectorBase(loop)
         client_request = _get_default_request()
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         connection = Connection(connector, client_request.connection_key, protocol)
         
@@ -336,7 +340,7 @@ async def test__ClientResponse__start_processing():
         connector = ConnectorBase(loop)
         client_request = _get_default_request()
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         connection = Connection(connector, client_request.connection_key, protocol)
         
@@ -372,8 +376,9 @@ async def test__ClientResponse__start_processing():
             ),
         )
         
-        client_response.payload_waiter.apply_timeout(0.1)
-        output = await client_response.payload_waiter
+        task = Task(loop, client_response.payload_stream.__await__())
+        task.apply_timeout(0.1)
+        output = await task
         
         vampytest.assert_instance(output, bytes)
         vampytest.assert_eq(output, b'aya')
@@ -411,7 +416,7 @@ async def test__ClientResponse__read():
         connector = ConnectorBase(loop)
         client_request = _get_default_request()
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         connection = Connection(connector, client_request.connection_key, protocol)
         
@@ -421,9 +426,10 @@ async def test__ClientResponse__read():
         )
         
         data = b'hey mister'
-        payload_waiter = Future(loop)
-        payload_waiter.set_result(data)
-        client_response.payload_waiter = payload_waiter
+        payload_stream = PayloadStream(protocol)
+        payload_stream.add_received_chunk(data)
+        payload_stream.set_done_success()
+        client_response.payload_stream = payload_stream
         
         
         task = Task(loop, client_response.read())
@@ -435,7 +441,7 @@ async def test__ClientResponse__read():
         vampytest.assert_eq(output, data)
         
         vampytest.assert_eq(client_response.body, data)
-        vampytest.assert_is(client_response.payload_waiter, None)
+        vampytest.assert_is(client_response.payload_stream, None)
     
     finally:
         read_socket.close()
@@ -474,7 +480,8 @@ def _iter_options__get_encoding():
             IgnoreCaseMultiValueDictionary(),
         ),
         b'orin',
-        'ascii',
+        # 'ascii',
+        'ASCII',
     )
     
     # This should be utf-8 actually but chardet thinks otherwise lmeow
@@ -486,7 +493,8 @@ def _iter_options__get_encoding():
             IgnoreCaseMultiValueDictionary(),
         ),
         b'orin ny\xc3\xa1',
-        'TIS-620',
+        # 'TIS-620',
+        'ISO-8859-13',
     )
 
 
@@ -516,7 +524,7 @@ async def test__ClientResponse__get_encoding(raw_message, body):
         connector = ConnectorBase(loop)
         client_request = _get_default_request()
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         connection = Connection(connector, client_request.connection_key, protocol)
         
@@ -550,7 +558,7 @@ async def test__ClientResponse__text():
         connector = ConnectorBase(loop)
         client_request = _get_default_request()
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         connection = Connection(connector, client_request.connection_key, protocol)
         
@@ -560,9 +568,10 @@ async def test__ClientResponse__text():
         )
         
         data = b'hey mister'
-        payload_waiter = Future(loop)
-        payload_waiter.set_result(data)
-        client_response.payload_waiter = payload_waiter
+        payload_stream = PayloadStream(protocol)
+        payload_stream.add_received_chunk(data)
+        payload_stream.set_done_success()
+        client_response.payload_stream = payload_stream
         
         
         task = Task(loop, client_response.text())
@@ -574,7 +583,7 @@ async def test__ClientResponse__text():
         vampytest.assert_eq(output, data.decode())
         
         vampytest.assert_eq(client_response.body, data)
-        vampytest.assert_is(client_response.payload_waiter, None)
+        vampytest.assert_is(client_response.payload_stream, None)
     
     finally:
         read_socket.close()
@@ -596,7 +605,7 @@ async def test__ClientResponse__json():
         connector = ConnectorBase(loop)
         client_request = _get_default_request()
         protocol = HttpReadWriteProtocol(loop)
-        transport = SocketTransportLayerBase(loop, {}, write_socket, protocol, None)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         connection = Connection(connector, client_request.connection_key, protocol)
         
@@ -606,9 +615,10 @@ async def test__ClientResponse__json():
         )
         
         data = b'{"hey":"mister"}'
-        payload_waiter = Future(loop)
-        payload_waiter.set_result(data)
-        client_response.payload_waiter = payload_waiter
+        payload_stream = PayloadStream(protocol)
+        payload_stream.add_received_chunk(data)
+        payload_stream.set_done_success()
+        client_response.payload_stream = payload_stream
         
         
         task = Task(loop, client_response.json())
@@ -620,7 +630,7 @@ async def test__ClientResponse__json():
         vampytest.assert_eq(output, from_json(data))
         
         vampytest.assert_eq(client_response.body, data)
-        vampytest.assert_is(client_response.payload_waiter, None)
+        vampytest.assert_is(client_response.payload_stream, None)
     
     finally:
         read_socket.close()

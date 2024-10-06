@@ -2,7 +2,7 @@ __all__ = ()
 
 from reprlib import repr as short_repr
 
-from ..utils import RichAttributeErrorBaseType, copy_docs
+from ..utils import RichAttributeErrorBaseType, copy_docs, export
 
 from .headers import CONNECTION, CONTENT_ENCODING, TRANSFER_ENCODING, UPGRADE
 from .helpers import HttpVersion11
@@ -300,6 +300,7 @@ class RawMessage(RichAttributeErrorBaseType):
         self._cache_flags = cache_flags
 
 
+@export
 class RawResponseMessage(RawMessage):
     """
     Represents a raw http response message.
@@ -376,6 +377,7 @@ class RawResponseMessage(RawMessage):
         return True
 
 
+@export
 class RawRequestMessage(RawMessage):
     """
     Represents a raw http request message.
