@@ -27,15 +27,22 @@ class Any:
         return type(other) is expected_type
 
 
-def _get_default_connection_key():
+def _get_default_connection_key(*, host = ...):
     """
     Creates and returns a connection key.
+    
+    Parameters
+    ----------
+    host : `str`, Optional (Keyword only)
+        Host name.
     
     Returns
     -------
     connection_key : ``ConnectionKey``
     """
-    host = '1.1.1.1'
+    if host is ...:
+        host = '1.1.1.1'
+    
     port = 96
     proxy_auth = BasicAuth('miau', 'land')
     proxy_headers = IgnoreCaseMultiValueDictionary([('hey', 'mister')])

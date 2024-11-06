@@ -773,8 +773,9 @@ async def test__ClientResponse__begin():
         protocol = HttpReadWriteProtocol(loop)
         transport = SocketTransportLayer(loop, {}, write_socket, protocol, None, None)
         protocol.connection_made(transport)
+        performed_requests = 2
         
-        connection = Connection(connector, client_request.connection_key, protocol)
+        connection = Connection(connector, client_request.connection_key, protocol, performed_requests)
         
         client_response = client_request.begin(connection)
         vampytest.assert_instance(client_response, ClientResponse)

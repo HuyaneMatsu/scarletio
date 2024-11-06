@@ -7,7 +7,7 @@ from ..core import LOOP_TIME
 from ..utils import RichAttributeErrorBaseType
 
 from .connection import Connection
-from .constants import CONNECTION_KEEP_ALIVE_TIMEOUT
+from .protocol_basket import ProtocolBasket
 
 
 class ConnectorBase(RichAttributeErrorBaseType):
@@ -16,13 +16,6 @@ class ConnectorBase(RichAttributeErrorBaseType):
     
     Attributes
     ----------
-    acquired_protocols_per_host : `dict<ConnectionKey, set<AbstractProtocolBase>>`
-        Acquired protocols for each host.
-    
-    alive_protocols_per_host : `dict<ConnectionKey, list<(AbstractProtocolBase, float)>`
-        Alive, not used protocols for each host.
-        Each element of the values stores when the connection was last used as well.
-    
     clean_up_handle : `None | TimerWeakHandle`
         Weak handle, which cleans up the timed out connections of the connector.
     
@@ -38,13 +31,15 @@ class ConnectorBase(RichAttributeErrorBaseType):
     loop : ``EventThread``
         The event loop to what the connector is bound to.
     
+    protocols_by_host : `dict<ConnectionKey, ConnectionBasket>`
+        Protocols for each host.
+    
     Notes
     -----
     Connectors support weakreferencing.
     """
     __slots__ = (
-        '__weakref__', 'acquired_protocols_per_host', 'alive_protocols_per_host', 'clean_up_handle', 'closed',
-        'cookies', 'force_close', 'loop'
+        '__weakref__', 'clean_up_handle', 'closed', 'cookies', 'force_close', 'loop', 'protocols_by_host'
     )
     
     def __new__(cls, loop, *deprecated, force_close = False):
@@ -74,8 +69,7 @@ class ConnectorBase(RichAttributeErrorBaseType):
             force_close = deprecated[0]
         
         self = object.__new__(cls)
-        self.acquired_protocols_per_host = {}
-        self.alive_protocols_per_host = {}
+        self.protocols_by_host = {}
         self.clean_up_handle = None
         self.closed = False
         self.cookies = SimpleCookie()
@@ -101,33 +95,30 @@ class ConnectorBase(RichAttributeErrorBaseType):
             handle.cancel()
         
         # Clean up unused transports.
-        alive_protocols_per_host = self.alive_protocols_per_host
-        if not alive_protocols_per_host:
+        protocols_by_host = self.protocols_by_host
+        if not protocols_by_host:
             return
         
         now = LOOP_TIME()
-        to_remove_keys = []
+        to_remove_keys = None
         
-        for key, alive_protocols_for_host in alive_protocols_per_host.items():
-            for index in reversed(range(len(alive_protocols_for_host))):
-                protocol, expiration = alive_protocols_for_host[index]
-                if expiration > now:
-                    continue
-                
-                del alive_protocols_for_host[index]
-                
-                transport = protocol.get_transport()
-                if key.secure and (transport is not None):
-                    transport.abort()
+        for protocol_basket in protocols_by_host.values():
+            protocol_basket.clean_up_expired_protocols(now)
+            if protocol_basket:
+                continue
             
-            if not alive_protocols_for_host:
-                to_remove_keys.append(key)
+            if to_remove_keys is None:
+                to_remove_keys = []
+            
+            to_remove_keys.append(protocol_basket.connection_key)
         
-        for key in to_remove_keys:
-            del alive_protocols_per_host[key]
+        if (to_remove_keys is not None):
+            for key in to_remove_keys:
+                del protocols_by_host[key]
         
-        if alive_protocols_per_host:
-            self.clean_up_handle = self.loop.call_after_weak(CONNECTION_KEEP_ALIVE_TIMEOUT, self._clean_up)
+        closest_expiration = self.get_closest_expiration()
+        if closest_expiration != -1:
+            self.clean_up_handle = self.loop.call_at_weak(closest_expiration, self._clean_up)
     
     
     def close(self):
@@ -139,21 +130,16 @@ class ConnectorBase(RichAttributeErrorBaseType):
         
         self.closed = True
         
+        protocols_by_host = self.protocols_by_host
         try:
             if not self.loop.running:
                 return
             
-            for alive_protocols_for_host in self.alive_protocols_per_host.values():
-                for protocol, expiration in alive_protocols_for_host:
-                    protocol.close()
+            for protocol_basket in protocols_by_host.values():
+                protocol_basket.close()
             
-            for protocols in self.acquired_protocols_per_host.values():
-                for protocol in protocols:
-                    protocol.close()
-        
         finally:
-            self.acquired_protocols_per_host.clear()
-            self.alive_protocols_per_host.clear()
+            protocols_by_host.clear()
     
     
     async def connect(self, request):
@@ -179,25 +165,18 @@ class ConnectorBase(RichAttributeErrorBaseType):
         """
         key = request.connection_key
         
-        protocol = self.get_protocol(key)
+        protocol, performed_requests = self.pop_available_protocol(key)
         if protocol is None:
             protocol = await self.create_connection(request)
             if self.closed:
                 protocol.close()
                 raise ConnectionError('Connector is closed.')
         
-        acquired_protocols_per_host = self.acquired_protocols_per_host
-        try:
-            acquired_protocols_for_host = acquired_protocols_per_host[key]
-        except KeyError:
-            acquired_protocols_for_host = acquired_protocols_per_host[key] = set()
-        
-        acquired_protocols_for_host.add(protocol)
-        
-        return Connection(self, key, protocol)
+        self.add_used_protocol(key, protocol)
+        return Connection(self, key, protocol, performed_requests)
     
     
-    def get_protocol(self, key):
+    def pop_available_protocol(self, key):
         """
         Gets a protocol for the given connection key.
         
@@ -210,38 +189,76 @@ class ConnectorBase(RichAttributeErrorBaseType):
         -------
         protocol : `None | AbstractProtocolBase`
             Protocol connected to the respective host. Defaults to `None` if there is not any.
+        
+        performed_requests : `int`
+            The amount of performed requests on the protocol.
         """
+        protocols_by_host = self.protocols_by_host
         try:
-            alive_protocols_for_host = self.alive_protocols_per_host[key]
+            protocol_basket = protocols_by_host[key]
         except KeyError:
-            return None
+            return None, 0
         
-        now = LOOP_TIME()
+        protocol_and_performed_requests = protocol_basket.pop_available_protocol(LOOP_TIME())
+        if not protocol_basket:
+            del protocols_by_host[key]
         
-        while alive_protocols_for_host:
-            protocol, expiration = alive_protocols_for_host.pop()
-            if (protocol.get_transport() is None):
-                continue
-            
-            if now > expiration:
-                transport = protocol.get_transport()
-                protocol.close()
-                if key.secure and (transport is not None):
-                    transport.abort()
-                continue
-            
-            if not alive_protocols_for_host:
-                del self.alive_protocols_per_host[key]
-            
-            return protocol
-        
-        del self.alive_protocols_per_host[key]
-        return None
+        return protocol_and_performed_requests
     
     
-    def release_acquired_protocol(self, key, protocol):
+    def add_used_protocol(self, key, protocol):
         """
-        Removes the given acquired protocol from the connector.
+        Adds a protocol as used.
+        
+        Parameters
+        ----------
+        key : ``ConnectionKey``
+            A key that contains information about the host.
+        
+        protocol : ``AbstractProtocolBase``
+            The protocol to add.
+        """
+        protocols_by_host = self.protocols_by_host
+        try:
+            protocol_basket = protocols_by_host[key]
+        except KeyError:
+            protocol_basket = ProtocolBasket(key)
+            protocols_by_host[key] = protocol_basket
+        
+        protocol_basket.add_used_protocol(protocol)
+    
+    
+    def add_available_protocol(self, key, protocol, keep_alive_timeout, performed_requests):
+        """
+        Adds a protocol as available.
+        
+        Parameters
+        ----------
+        key : ``ConnectionKey``
+            A key that contains information about the host.
+        
+        protocol : ``AbstractProtocolBase``
+            The protocol to add.
+        
+        keep_alive_timeout : `float`
+            How long the connection can be reused.
+        
+        performed_requests : `int`
+            The amount of performed requests on the connection.
+        """
+        protocols_by_host = self.protocols_by_host
+        try:
+            protocol_basket = protocols_by_host[key]
+        except KeyError:
+            protocol_basket = ProtocolBasket(key)
+            protocols_by_host[key] = protocol_basket
+        
+        protocol_basket.add_available_protocol(protocol, LOOP_TIME(), keep_alive_timeout, performed_requests)
+    
+    
+    def release_used_protocol(self, key, protocol):
+        """
+        Removes the given used protocol from the connector.
         
         Parameters
         ----------
@@ -254,22 +271,18 @@ class ConnectorBase(RichAttributeErrorBaseType):
         if self.closed:
             return
         
-        acquired_protocols_per_host = self.acquired_protocols_per_host
+        protocols_by_host = self.protocols_by_host
         try:
-            acquired_protocols_for_host = acquired_protocols_per_host[key]
+            protocol_basket = protocols_by_host[key]
         except KeyError:
             return
         
-        try:
-            acquired_protocols_for_host.remove(protocol)
-        except KeyError:
-            return
-        
-        if not acquired_protocols_for_host:
-            del acquired_protocols_per_host[key]
+        protocol_basket.remove_used_protocol(protocol)
+        if not protocol_basket:
+            del protocols_by_host[key]
     
     
-    def release(self, key, protocol, should_close = False):
+    def release(self, key, protocol, should_close, keep_alive_timeout, performed_requests):
         """
         Releases the given protocol from the connector.
         If the connection should not be closed, not closes it, instead stores it for future reuse.
@@ -284,11 +297,17 @@ class ConnectorBase(RichAttributeErrorBaseType):
         
         should_close : `bool`
             Whether the respective connection should be closed.
+        
+        keep_alive_timeout : `float`
+            How long the connection can be reused.
+        
+        performed_requests : `int`
+            The amount of performed requests on the connection.
         """
         if self.closed:
             return
         
-        self.release_acquired_protocol(key, protocol)
+        self.release_used_protocol(key, protocol)
         
         if should_close or self.force_close or protocol.should_close():
             transport = protocol.get_transport()
@@ -297,15 +316,36 @@ class ConnectorBase(RichAttributeErrorBaseType):
                 transport.abort()
             return
         
-        try:
-            alive_protocols_for_host = self.alive_protocols_per_host[key]
-        except KeyError:
-            alive_protocols_for_host = self.alive_protocols_per_host[key] = []
-        
-        alive_protocols_for_host.append((protocol, LOOP_TIME() + CONNECTION_KEEP_ALIVE_TIMEOUT))
+        self.add_available_protocol(key, protocol, keep_alive_timeout, performed_requests)
         
         if self.clean_up_handle is None:
-            self.clean_up_handle = self.loop.call_after_weak(CONNECTION_KEEP_ALIVE_TIMEOUT, self._clean_up)
+            self.clean_up_handle = self.loop.call_after_weak(keep_alive_timeout, self._clean_up)
+    
+    
+    def get_closest_expiration(self):
+        """
+        Returns the closest expiration time or `-1.0`.
+        
+        Returns
+        -------
+        closest_expiration : `float`
+        """
+        closest_expiration = -1.0
+        
+        for protocol_basket in self.protocols_by_host.values():
+            expiration = protocol_basket.get_closest_expiration()
+            if expiration == -1.0:
+                continue
+            
+            if closest_expiration == -1.0:
+                closest_expiration = expiration
+                continue
+            
+            if expiration < closest_expiration:
+                closest_expiration = expiration
+                continue
+        
+        return closest_expiration
     
     
     async def create_connection(self, request):

@@ -13,6 +13,7 @@ from ...web_common.headers import METHOD_GET
 from ..client_request import ClientRequest
 from ..connection import Connection
 from ..connector_base import ConnectorBase
+from ..protocol_basket import ProtocolBasket
 
 from .helpers import Any, _get_default_connection_key
 
@@ -27,13 +28,12 @@ def _assert_fields_set(connector):
         The connector to check.
     """
     vampytest.assert_instance(connector, ConnectorBase)
-    vampytest.assert_instance(connector.acquired_protocols_per_host, dict)
-    vampytest.assert_instance(connector.alive_protocols_per_host, dict)
     vampytest.assert_instance(connector.clean_up_handle, TimerWeakHandle, nullable = True)
     vampytest.assert_instance(connector.closed, bool)
     vampytest.assert_instance(connector.cookies, SimpleCookie)
     vampytest.assert_instance(connector.force_close, bool)
     vampytest.assert_instance(connector.loop, EventThread)
+    vampytest.assert_instance(connector.protocols_by_host, dict)
 
 
 async def test__ConnectorBase__new():
@@ -52,9 +52,9 @@ async def test__ConnectorBase__new():
     vampytest.assert_eq(connector.force_close, force_close)
 
 
-async def test__ConnectorBase__get_protocol__no_protocol():
+async def test__ConnectorBase__pop_available_protocol__no_protocol():
     """
-    Tests whether ``ConnectorBase.get_protocol`` works as intended.
+    Tests whether ``ConnectorBase.pop_available_protocol`` works as intended.
     
     Case: No protocols.
     
@@ -65,14 +65,19 @@ async def test__ConnectorBase__get_protocol__no_protocol():
     
     connector = ConnectorBase(loop)
     
-    output = connector.get_protocol(connection_key)
-    vampytest.assert_instance(output, AbstractProtocolBase, nullable = True)
-    vampytest.assert_is(output, None)
+    output = connector.pop_available_protocol(connection_key)
+    vampytest.assert_instance(output, tuple)
+    vampytest.assert_eq(len(output), 2)
+    output_protocol, output_performed_requests = output
+    vampytest.assert_instance(output_protocol, AbstractProtocolBase, nullable = True)
+    vampytest.assert_is(output_protocol, None)
+    vampytest.assert_instance(output_performed_requests, int)
+    vampytest.assert_eq(output_performed_requests, 0)
 
 
-async def test__ConnectorBase__get_protocol__no_alive_protocol():
+async def test__ConnectorBase__pop_available_protocol__no_alive_protocol():
     """
-    Tests whether ``ConnectorBase.get_protocol`` works as intended.
+    Tests whether ``ConnectorBase.pop_available_protocol`` works as intended.
     
     Case: No alive protocols.
     
@@ -91,24 +96,30 @@ async def test__ConnectorBase__get_protocol__no_alive_protocol():
         protocol_0.connection_made(transport_0)
         
         protocol_1 = HttpReadWriteProtocol(loop)
-        connector.alive_protocols_per_host[connection_key] = [
-            (protocol_0, 0.0),
-            (protocol_1, LOOP_TIME() + 1.0),
-        ]
         
-        output = connector.get_protocol(connection_key)
-        vampytest.assert_false(connector.alive_protocols_per_host)
-        vampytest.assert_instance(output, AbstractProtocolBase, nullable = True)
-        vampytest.assert_is(output, None)
+        protocol_basket = ProtocolBasket(connection_key)
+        protocol_basket.add_available_protocol(protocol_0, 0.0, 15.0, 0)
+        protocol_basket.add_available_protocol(protocol_1, LOOP_TIME() - 1.0, 15.0, 6)
+        connector.protocols_by_host[connection_key] = protocol_basket
+        
+        output = connector.pop_available_protocol(connection_key)
+        vampytest.assert_false(connector.protocols_by_host)
+        vampytest.assert_instance(output, tuple)
+        vampytest.assert_eq(len(output), 2)
+        output_protocol, output_performed_requests = output
+        vampytest.assert_instance(output_protocol, AbstractProtocolBase, nullable = True)
+        vampytest.assert_is(output_protocol, None)
+        vampytest.assert_instance(output_performed_requests, int)
+        vampytest.assert_eq(output_performed_requests, 0)
     
     finally:
         read_socket.close()
         write_socket.close()
 
 
-async def test__ConnectorBase__get_protocol__alive_protocol():
+async def test__ConnectorBase__pop_available_protocol__alive_protocol():
     """
-    Tests whether ``ConnectorBase.get_protocol`` works as intended.
+    Tests whether ``ConnectorBase.pop_available_protocol`` works as intended.
     
     Case: Alive protocol.
     
@@ -126,23 +137,28 @@ async def test__ConnectorBase__get_protocol__alive_protocol():
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         
-        connector.alive_protocols_per_host[connection_key] = [
-            (protocol, LOOP_TIME() + 1.0),
-        ]
+        protocol_basket = ProtocolBasket(connection_key)
+        protocol_basket.add_available_protocol(protocol, LOOP_TIME() + 1.0, 15.0, 6)
+        connector.protocols_by_host[connection_key] = protocol_basket
         
-        output = connector.get_protocol(connection_key)
-        vampytest.assert_false(connector.alive_protocols_per_host)
-        vampytest.assert_instance(output, AbstractProtocolBase, nullable = True)
-        vampytest.assert_is(output, protocol)
+        output = connector.pop_available_protocol(connection_key)
+        vampytest.assert_false(connector.protocols_by_host)
+        vampytest.assert_instance(output, tuple)
+        vampytest.assert_eq(len(output), 2)
+        output_protocol, output_performed_requests = output
+        vampytest.assert_instance(output_protocol, AbstractProtocolBase, nullable = True)
+        vampytest.assert_is(output_protocol, protocol)
+        vampytest.assert_instance(output_performed_requests, int)
+        vampytest.assert_eq(output_performed_requests, 6)
     
     finally:
         read_socket.close()
         write_socket.close()
 
 
-async def test__ConnectorBase__release_acquired_protocol():
+async def test__ConnectorBase__release_used_protocol():
     """
-    Tests whether ``ConnectorBase.release_acquired_protocol`` works as intended.
+    Tests whether ``ConnectorBase.release_used_protocol`` works as intended.
     
     This function is a coroutine.
     """
@@ -152,15 +168,21 @@ async def test__ConnectorBase__release_acquired_protocol():
     connector = ConnectorBase(loop)
     protocol = HttpReadWriteProtocol(loop)
     
-    connector.acquired_protocols_per_host[connection_key] = {protocol}
+    protocol_basket = ProtocolBasket(connection_key)
+    protocol_basket.add_used_protocol(protocol)
     
-    connector.release_acquired_protocol(connection_key, protocol)
-    vampytest.assert_false(connector.acquired_protocols_per_host)
+    connector.protocols_by_host[connection_key] = protocol_basket
+    
+    connector.release_used_protocol(connection_key, protocol)
+    
+    # Should empty both.
+    vampytest.assert_false(protocol_basket)
+    vampytest.assert_false(connector.protocols_by_host)
 
 
-async def test__ConnectorBase__release_acquired_protocol__has_more():
+async def test__ConnectorBase__release_used_protocol__has_more():
     """
-    Tests whether ``ConnectorBase.release_acquired_protocol`` works as intended.
+    Tests whether ``ConnectorBase.release_used_protocol`` works as intended.
     
     Case: has more.
     
@@ -173,11 +195,17 @@ async def test__ConnectorBase__release_acquired_protocol__has_more():
     protocol_0 = HttpReadWriteProtocol(loop)
     protocol_1 = HttpReadWriteProtocol(loop)
     
-    connector.acquired_protocols_per_host[connection_key] = {protocol_0, protocol_1}
+    protocol_basket_0 = ProtocolBasket(connection_key)
+    protocol_basket_0.add_used_protocol(protocol_0)
+    protocol_basket_0.add_used_protocol(protocol_1)
     
-    connector.release_acquired_protocol(connection_key, protocol_0)
-    vampytest.assert_true(connector.acquired_protocols_per_host)
-    vampytest.assert_eq(connector.acquired_protocols_per_host, {connection_key: {protocol_1}})
+    protocol_basket_1 = ProtocolBasket(connection_key)
+    protocol_basket_1.add_used_protocol(protocol_1)
+    
+    connector.protocols_by_host[connection_key] = protocol_basket_0
+    
+    connector.release_used_protocol(connection_key, protocol_0)
+    vampytest.assert_eq(connector.protocols_by_host, {connection_key: protocol_basket_1})
 
 
 async def test__ConnectorBase__release__closed():
@@ -200,13 +228,14 @@ async def test__ConnectorBase__release__closed():
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         
-        connector.acquired_protocols_per_host[connection_key] = {protocol}
+        protocol_basket = ProtocolBasket(connection_key)
+        protocol_basket.add_used_protocol(protocol)
+    
         connector.close()
         
-        connector.release(connection_key, protocol)
+        connector.release(connection_key, protocol, False, 15.0, 2)
         
-        vampytest.assert_false(connector.acquired_protocols_per_host)
-        vampytest.assert_false(connector.alive_protocols_per_host)
+        vampytest.assert_false(connector.protocols_by_host)
         
     finally:
         read_socket.close()
@@ -233,13 +262,18 @@ async def test__ConnectorBase__release__keep():
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         
-        connector.acquired_protocols_per_host[connection_key] = {protocol}
+        protocol_basket = ProtocolBasket(connection_key)
+        protocol_basket.add_used_protocol(protocol)
         
-        connector.release(connection_key, protocol)
+        connector.protocols_by_host[connection_key] = protocol_basket
         
-        vampytest.assert_false(connector.acquired_protocols_per_host)
-        vampytest.assert_eq(connector.alive_protocols_per_host, {connection_key: [(protocol, Any(float))]})
+        connector.release(connection_key, protocol, False, 15.0, 2)
+        
+        vampytest.assert_is_not(protocol_basket, None)
+        protocol_basket = connector.protocols_by_host.get(connection_key, None)
         vampytest.assert_is_not(connector.clean_up_handle, None)
+        vampytest.assert_is(protocol_basket.used, None)
+        vampytest.assert_eq(protocol_basket.available, [(protocol, Any(float), 2)])
     finally:
         read_socket.close()
         write_socket.close()
@@ -265,12 +299,13 @@ async def test__ConnectorBase__release__should_close():
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         
-        connector.acquired_protocols_per_host[connection_key] = {protocol}
+        protocol_basket = ProtocolBasket(connection_key)
+        protocol_basket.add_used_protocol(protocol)
+        connector.protocols_by_host[connection_key] = protocol_basket
         
-        connector.release(connection_key, protocol, should_close = True)
+        connector.release(connection_key, protocol, True, -1.0, 2)
         
-        vampytest.assert_false(connector.acquired_protocols_per_host)
-        vampytest.assert_false(connector.alive_protocols_per_host)
+        vampytest.assert_false(connector.protocols_by_host)
         vampytest.assert_true(transport.is_closing())
         
     finally:
@@ -300,14 +335,15 @@ async def test__ConnectorBase__close():
         transport_1 = SocketTransportLayerBase(loop, {}, write_socket, protocol_1, None)
         protocol_1.connection_made(transport_1)
         
-        connector.acquired_protocols_per_host[connection_key] = {protocol_0}
-        connector.alive_protocols_per_host[connection_key] = [(protocol_1, LOOP_TIME() + 100.0)]
+        protocol_basket = ProtocolBasket(connection_key)
+        protocol_basket.add_used_protocol(protocol_0)
+        protocol_basket.add_available_protocol(protocol_1, LOOP_TIME() + 100.0, 15.0, 2)
+        connector.protocols_by_host[connection_key] = protocol_basket
         
         connector.close()
         
-        vampytest.assert_false(connector.acquired_protocols_per_host)
-        vampytest.assert_false(connector.alive_protocols_per_host)
-            
+        vampytest.assert_false(connector.protocols_by_host)
+        
         vampytest.assert_true(connector.closed)
         vampytest.assert_true(transport_0.is_closing())
         vampytest.assert_true(transport_1.is_closing())
@@ -341,14 +377,14 @@ async def test__ConnectorBase__clean_up__everything_cleaned_up():
         transport_1 = SocketTransportLayerBase(loop, {}, write_socket, protocol_1, None)
         protocol_1.connection_made(transport_1)
         
-        connector.alive_protocols_per_host[connection_key] = [
-            (protocol_0, LOOP_TIME() - 100.0),
-            (protocol_1, LOOP_TIME() - 100.0),
-        ]
+        protocol_basket = ProtocolBasket(connection_key)
+        protocol_basket.add_available_protocol(protocol_0, LOOP_TIME() - 100.0, 15.0, 2)
+        protocol_basket.add_available_protocol(protocol_1, LOOP_TIME() - 100.0, 15.0, 3)
+        connector.protocols_by_host[connection_key] = protocol_basket
         
         connector._clean_up()
         
-        vampytest.assert_false(connector.alive_protocols_per_host)
+        vampytest.assert_false(connector.protocols_by_host)
         vampytest.assert_is(connector.clean_up_handle, None)
         
         vampytest.assert_true(transport_0.is_closing())
@@ -383,14 +419,17 @@ async def test__ConnectorBase__clean_up__not_everything_is_cleaned_up():
         transport_1 = SocketTransportLayerBase(loop, {}, write_socket, protocol_1, None)
         protocol_1.connection_made(transport_1)
         
-        connector.alive_protocols_per_host[connection_key] = [
-            (protocol_0, LOOP_TIME() - 100.0),
-            (protocol_1, LOOP_TIME() + 100.0),
-        ]
+        protocol_basket = ProtocolBasket(connection_key)
+        protocol_basket.add_available_protocol(protocol_0, LOOP_TIME() - 100.0, 15.0, 3)
+        protocol_basket.add_available_protocol(protocol_1, LOOP_TIME() + 100.0, 15.0, 4)
+        connector.protocols_by_host[connection_key] = protocol_basket
         
         connector._clean_up()
         
-        vampytest.assert_eq(connector.alive_protocols_per_host, {connection_key: [(protocol_1, Any(float))]})
+        protocol_basket = connector.protocols_by_host.get(connection_key, None)
+        vampytest.assert_is_not(protocol_basket, None)
+        
+        vampytest.assert_eq(protocol_basket.available, [(protocol_1, Any(float), 4)])
         vampytest.assert_is_not(connector.clean_up_handle, None)
         
         vampytest.assert_true(transport_0.is_closing())
@@ -399,7 +438,7 @@ async def test__ConnectorBase__clean_up__not_everything_is_cleaned_up():
     finally:
         read_socket.close()
         write_socket.close()
-    
+
 
 async def test__ConnectorBase__connect__cache_hit():
     """
@@ -442,7 +481,9 @@ async def test__ConnectorBase__connect__cache_hit():
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         
-        connector.alive_protocols_per_host[client_request.connection_key] = [(protocol, LOOP_TIME() + 100.0)]
+        protocol_basket = ProtocolBasket(client_request.connection_key)
+        protocol_basket.add_available_protocol(protocol, LOOP_TIME() + 100.0, 15.0, 6)
+        connector.protocols_by_host[client_request.connection_key] = protocol_basket
         
         output = await connector.connect(client_request)
         
@@ -451,9 +492,10 @@ async def test__ConnectorBase__connect__cache_hit():
         vampytest.assert_eq(output.key, client_request.connection_key)
         vampytest.assert_is(output.protocol, protocol)
         
-        vampytest.assert_eq(connector.acquired_protocols_per_host, {client_request.connection_key: {protocol}})
-        vampytest.assert_false(connector.alive_protocols_per_host)
-        
+        protocol_basket = connector.protocols_by_host.get(client_request.connection_key, None)
+        vampytest.assert_is_not(protocol_basket, None)
+        vampytest.assert_is(protocol_basket.available, None)
+        vampytest.assert_eq(protocol_basket.used, {protocol})
     finally:
         ConnectorBase.create_connection = original_create_connection
         read_socket.close()
@@ -512,10 +554,129 @@ async def test__ConnectorBase__connect__cache_miss():
         vampytest.assert_eq(output.key, client_request.connection_key)
         vampytest.assert_is(output.protocol, protocol)
         
-        vampytest.assert_eq(connector.acquired_protocols_per_host, {client_request.connection_key: {protocol}})
-        vampytest.assert_false(connector.alive_protocols_per_host)
+        protocol_basket = connector.protocols_by_host.get(client_request.connection_key, None)
+        vampytest.assert_is_not(protocol_basket, None)
+        vampytest.assert_is(protocol_basket.available, None)
+        vampytest.assert_eq(protocol_basket.used, {protocol})
         
     finally:
         ConnectorBase.create_connection = original_create_connection
         read_socket.close()
         write_socket.close()
+
+
+async def test__ConnectorBase__get_closest_expiration__no_available_protocols():
+    """
+    Tests whether ``ConnectorBase.get_closest_expiration`` works as intended.
+    
+    Case: No available protocols.
+    
+    This function is a coroutine.
+    """
+    connection_key = _get_default_connection_key()
+    loop = get_event_loop()
+    
+    connector = ConnectorBase(loop)
+    
+    protocol = HttpReadWriteProtocol(loop)
+    
+    protocol_basket = ProtocolBasket(connection_key)
+    protocol_basket.add_used_protocol(protocol)
+    connector.protocols_by_host[connection_key] = protocol_basket
+    
+    output = connector.get_closest_expiration()
+    vampytest.assert_instance(output, float)
+    vampytest.assert_eq(output, -1.0)
+
+
+async def test__ConnectorBase__get_closest_expiration__with_available_protocols():
+    """
+    Tests whether ``ConnectorBase.get_closest_expiration`` works as intended.
+    
+    Case: With available protocols.
+    
+    This function is a coroutine.
+    """
+    connection_key_0 = _get_default_connection_key(host = '1.1.1.1')
+    connection_key_1 = _get_default_connection_key(host = '1.1.1.2')
+    loop = get_event_loop()
+    now = 5000.0
+    
+    connector = ConnectorBase(loop)
+    
+    protocol_0 = HttpReadWriteProtocol(loop)
+    protocol_1 = HttpReadWriteProtocol(loop)
+    
+    protocol_basket_0 = ProtocolBasket(connection_key_0)
+    protocol_basket_0.add_available_protocol(protocol_0, now + 2.0, 15.0, 2)
+    connector.protocols_by_host[connection_key_0] = protocol_basket_0
+    
+    protocol_basket_1 = ProtocolBasket(connection_key_1)
+    protocol_basket_1.add_available_protocol(protocol_1, now + 1.0, 15.0, 2)
+    connector.protocols_by_host[connection_key_1] = protocol_basket_1
+    
+    output = connector.get_closest_expiration()
+    vampytest.assert_instance(output, float)
+    vampytest.assert_eq(output, now + 1.0 + 15.0)
+
+
+async def test__ConnectorBase__add_available_protocol():
+    """
+    Tests whether ``ConnectorBase.add_available_protocol`` works as intended.
+    
+    This function is a coroutine.
+    """
+    connection_key = _get_default_connection_key()
+    loop = get_event_loop()
+    
+    connector = ConnectorBase(loop)
+    
+    protocol_0 = HttpReadWriteProtocol(loop)
+    protocol_1 = HttpReadWriteProtocol(loop)
+    
+    # add 1
+    connector.add_available_protocol(connection_key, protocol_0, 15.0, 2)
+    
+    protocol_basket = connector.protocols_by_host.get(connection_key, None)
+    vampytest.assert_is_not(protocol_basket, None)
+    vampytest.assert_eq(protocol_basket.available, [(protocol_0, Any(float), 2)])
+    vampytest.assert_is(protocol_basket.used, None)
+
+    # add 1 more
+    connector.add_available_protocol(connection_key, protocol_1, 15.0, 4)
+    
+    protocol_basket = connector.protocols_by_host.get(connection_key, None)
+    vampytest.assert_is_not(protocol_basket, None)
+    vampytest.assert_eq(protocol_basket.available, [(protocol_0, Any(float), 2), (protocol_1, Any(float), 4)])
+    vampytest.assert_is(protocol_basket.used, None)
+
+
+async def test__ConnectorBase__add_used_protocol():
+    """
+    Tests whether ``ConnectorBase.add_used_protocol`` works as intended.
+    
+    This function is a coroutine.
+    """
+    connection_key = _get_default_connection_key()
+    loop = get_event_loop()
+    
+    connector = ConnectorBase(loop)
+    
+    protocol_0 = HttpReadWriteProtocol(loop)
+    protocol_1 = HttpReadWriteProtocol(loop)
+    
+    # add 1
+    connector.add_used_protocol(connection_key, protocol_0)
+    
+    protocol_basket = connector.protocols_by_host.get(connection_key, None)
+    vampytest.assert_is_not(protocol_basket, None)
+    vampytest.assert_is(protocol_basket.available, None)
+    vampytest.assert_eq(protocol_basket.used, {protocol_0})
+
+    # add 1 more
+    connector.add_used_protocol(connection_key, protocol_1)
+    
+    protocol_basket = connector.protocols_by_host.get(connection_key, None)
+    vampytest.assert_is_not(protocol_basket, None)
+    vampytest.assert_is(protocol_basket.available, None)
+    vampytest.assert_eq(protocol_basket.used, {protocol_0, protocol_1})

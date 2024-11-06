@@ -2,9 +2,11 @@ import vampytest
 
 from ...utils import IgnoreCaseMultiValueDictionary
 
-from ..headers import CONNECTION, CONTENT_ENCODING, TRANSFER_ENCODING, UPGRADE
+from ..constants import KEEP_ALIVE_CONNECTION_TIMEOUT_KEY, KEEP_ALIVE_MAX_REQUESTS_KEY
+from ..headers import CONNECTION, CONTENT_ENCODING, KEEP_ALIVE, TRANSFER_ENCODING, UPGRADE
 from ..helpers import HttpVersion
 from ..http_message import RawMessage
+from ..keep_alive_info import KeepAliveInfo
 
 
 def _assert_fields_set(message):
@@ -19,6 +21,7 @@ def _assert_fields_set(message):
     vampytest.assert_instance(message, RawMessage)
     vampytest.assert_instance(message._cache_encoding, str, nullable = True)
     vampytest.assert_instance(message._cache_flags, int)
+    vampytest.assert_instance(message._cache_keep_alive, KeepAliveInfo, nullable = True)
     vampytest.assert_instance(message.headers, IgnoreCaseMultiValueDictionary)
     vampytest.assert_instance(message.version, HttpVersion)
 
@@ -292,6 +295,7 @@ def test__RawMessage__encoding__missing():
     
     output = message.encoding
     vampytest.assert_instance(output, str, nullable = True)
+    vampytest.assert_eq(message._cache_encoding, output)
     vampytest.assert_eq(output, None)
 
 
@@ -313,6 +317,7 @@ def test__RawMessage__encoding__has():
     
     output = message.encoding
     vampytest.assert_instance(output, str, nullable = True)
+    vampytest.assert_eq(message._cache_encoding, output)
     vampytest.assert_eq(output, 'utf-8')
 
 
@@ -347,7 +352,7 @@ def _iter_options__keep_alive():
             ]),
             'version': HttpVersion(1, 1),
         },
-        True,
+        KeepAliveInfo.create_default(),
     )
     
     yield (
@@ -357,7 +362,7 @@ def _iter_options__keep_alive():
             ]),
             'version': HttpVersion(1, 0),
         },
-        False,
+        None,
     )
     
     yield (
@@ -367,7 +372,7 @@ def _iter_options__keep_alive():
             ]),
             'version': HttpVersion(1, 1),
         },
-        False,
+        None,
     )
     
     yield (
@@ -377,7 +382,7 @@ def _iter_options__keep_alive():
             ]),
             'version': HttpVersion(1, 0),
         },
-        False,
+        None,
     )
     
     yield (
@@ -387,7 +392,7 @@ def _iter_options__keep_alive():
             ]),
             'version': HttpVersion(1, 1),
         },
-        True,
+        KeepAliveInfo.create_default(),
     )
     
     yield (
@@ -397,7 +402,17 @@ def _iter_options__keep_alive():
             ]),
             'version': HttpVersion(1, 0),
         },
-        True,
+        KeepAliveInfo.create_default(),
+    )
+    
+    yield (
+        {
+            'headers': IgnoreCaseMultiValueDictionary([
+                (KEEP_ALIVE, f'{KEEP_ALIVE_CONNECTION_TIMEOUT_KEY}=5,{KEEP_ALIVE_MAX_REQUESTS_KEY}=1000'),
+            ]),
+            'version': HttpVersion(1, 1),
+        },
+        KeepAliveInfo(5.0, 1000),
     )
 
 
@@ -418,7 +433,8 @@ def test__RawMessage__keep_alive(keyword_parameters):
     message = RawMessage(**keyword_parameters)
     
     output = message.keep_alive
-    vampytest.assert_instance(output, bool)
+    vampytest.assert_instance(output, KeepAliveInfo, nullable = True)
+    vampytest.assert_eq(message._cache_keep_alive, output)
     return output
 
 
@@ -438,8 +454,9 @@ def test__RawMessage__keep_alive__set():
         headers,
     )
     
-    message.keep_alive = True
+    message.keep_alive = KeepAliveInfo(10.0, 20)
     
     output = message.keep_alive
-    vampytest.assert_instance(output, bool)
-    vampytest.assert_eq(output, True)
+    vampytest.assert_instance(output, KeepAliveInfo, nullable = True)
+    vampytest.assert_eq(message._cache_keep_alive, output)
+    vampytest.assert_eq(output, KeepAliveInfo(10.0, 20))

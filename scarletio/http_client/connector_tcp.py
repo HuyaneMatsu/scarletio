@@ -30,13 +30,6 @@ class ConnectorTCP(ConnectorBase):
     
     Attributes
     ----------
-    acquired_protocols_per_host : `dict<ConnectionKey, set<HttpReadWriteProtocol>>`
-        Acquired protocols for each host.
-    
-    alive_protocols_per_host : `dict<ConnectionKey, list<(HttpReadWriteProtocol, float)>`
-        Alive, not used protocols for each host.
-        Each element of the values stores when the connection was last used as well.
-    
     cookies : `http.cookies.SimpleCookie`
         Cookies of the connection.
     
@@ -61,6 +54,9 @@ class ConnectorTCP(ConnectorBase):
     loop : ``EventThread``
         The event loop to what the connector is bound to.
     
+    protocols_by_host : `dict<ConnectionKey, ConnectionBasket>`
+        Protocols for each host.
+    
     resolve_host_tasks_and_waiters : `dict<(None | str, None | int), \
             (Task<.resolve>, list<Future<(None | HostInfoBasket, None | BaseException)>>)>`
         Active host info resolving tasks and waiters.
@@ -75,7 +71,10 @@ class ConnectorTCP(ConnectorBase):
     -----
     Connectors support weakreferencing.
     """
-    __slots__ = ('family', 'host_info_basket_cache', 'local_address', 'resolve_host_tasks_and_waiters', 'ssl_context', 'ssl_fingerprint')
+    __slots__ = (
+        'family', 'host_info_basket_cache', 'local_address', 'resolve_host_tasks_and_waiters', 'ssl_context',
+        'ssl_fingerprint'
+    )
     
     def __new__(
         cls,
@@ -545,9 +544,6 @@ class ConnectorTCP(ConnectorBase):
         # create connection to proxy server
         protocol = await self.create_direct_connection(proxy_request)
         
-        # Proxy might have buggy keep-alive support, close the connection.
-        protocol.close()
-        
         authorization = proxy_request.headers.pop(AUTHORIZATION, None)
         if (authorization is not None):
             if request.is_secure():
@@ -561,7 +557,7 @@ class ConnectorTCP(ConnectorBase):
         ssl_context = self.get_ssl_context(request)
         proxy_request.method = METHOD_CONNECT
         proxy_request.url = request.url
-        connection = Connection(self, request.connection_key.copy_proxyless(), protocol)
+        connection = Connection(self, request.connection_key.copy_proxyless(), protocol, 0)
         
         response = proxy_request.begin(connection)
         try:

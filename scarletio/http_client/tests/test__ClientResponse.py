@@ -61,7 +61,7 @@ async def test__ClientResponse__new():
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         
-        connection = Connection(connector, client_request.connection_key, protocol)
+        connection = Connection(connector, client_request.connection_key, protocol, 2)
         
         client_request.write_body_task = Task(loop, mock_write_body(client_request, connector))
         
@@ -98,7 +98,7 @@ async def test__ClientResponse__repr():
         protocol = HttpReadWriteProtocol(loop)
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
-        connection = Connection(connector, client_request.connection_key, protocol)
+        connection = Connection(connector, client_request.connection_key, protocol, 2)
         
         client_response = ClientResponse(
             client_request,
@@ -169,7 +169,7 @@ async def test__ClientResponse__headers(raw_message):
         protocol = HttpReadWriteProtocol(loop)
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
-        connection = Connection(connector, client_request.connection_key, protocol)
+        connection = Connection(connector, client_request.connection_key, protocol, 2)
         
         client_response = ClientResponse(
             client_request,
@@ -239,7 +239,7 @@ async def test__ClientResponse__reason(raw_message):
         protocol = HttpReadWriteProtocol(loop)
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
-        connection = Connection(connector, client_request.connection_key, protocol)
+        connection = Connection(connector, client_request.connection_key, protocol, 2)
         
         client_response = ClientResponse(
             client_request,
@@ -309,7 +309,7 @@ async def test__ClientResponse__status(raw_message):
         protocol = HttpReadWriteProtocol(loop)
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
-        connection = Connection(connector, client_request.connection_key, protocol)
+        connection = Connection(connector, client_request.connection_key, protocol, 2)
         
         client_response = ClientResponse(
             client_request,
@@ -342,7 +342,7 @@ async def test__ClientResponse__start_processing():
         protocol = HttpReadWriteProtocol(loop)
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
-        connection = Connection(connector, client_request.connection_key, protocol)
+        connection = Connection(connector, client_request.connection_key, protocol, 2)
         
         client_response = ClientResponse(
             client_request,
@@ -390,13 +390,13 @@ async def test__ClientResponse__start_processing():
             {'okuu': 'sun'},
         )
         
+        protocol_basket = connector.protocols_by_host.get(client_request.connection_key, None)
+        vampytest.assert_is_not(protocol_basket, None)
         vampytest.assert_eq(
-            connector.alive_protocols_per_host,
-            {
-                client_request.connection_key: [(protocol, Any(float))],
-            },
+            protocol_basket.available,
+            [(protocol, Any(float), 3)],
         )
-        
+    
     finally:
         read_socket.close()
         write_socket.close()
@@ -418,7 +418,7 @@ async def test__ClientResponse__read():
         protocol = HttpReadWriteProtocol(loop)
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
-        connection = Connection(connector, client_request.connection_key, protocol)
+        connection = Connection(connector, client_request.connection_key, protocol, 2)
         
         client_response = ClientResponse(
             client_request,
@@ -526,7 +526,7 @@ async def test__ClientResponse__get_encoding(raw_message, body):
         protocol = HttpReadWriteProtocol(loop)
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
-        connection = Connection(connector, client_request.connection_key, protocol)
+        connection = Connection(connector, client_request.connection_key, protocol, 2)
         
         client_response = ClientResponse(
             client_request,
@@ -560,7 +560,7 @@ async def test__ClientResponse__text():
         protocol = HttpReadWriteProtocol(loop)
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
-        connection = Connection(connector, client_request.connection_key, protocol)
+        connection = Connection(connector, client_request.connection_key, protocol, 2)
         
         client_response = ClientResponse(
             client_request,
@@ -607,7 +607,7 @@ async def test__ClientResponse__json():
         protocol = HttpReadWriteProtocol(loop)
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
-        connection = Connection(connector, client_request.connection_key, protocol)
+        connection = Connection(connector, client_request.connection_key, protocol, 2)
         
         client_response = ClientResponse(
             client_request,

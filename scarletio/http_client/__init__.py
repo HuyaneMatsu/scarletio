@@ -10,6 +10,7 @@ from .host_info_basket import *
 from .http_client import *
 from .request_context_manager import *
 from .request_info import *
+from .protocol_basket import *
 from .ssl_fingerprint import *
 from .web_socket_context_manager import *
 
@@ -26,6 +27,7 @@ __all__ = (
     *host_info_basket.__all__,
     *http_client.__all__,
     *request_context_manager.__all__,
+    *protocol_basket.__all__,
     *request_info.__all__,
     *ssl_fingerprint.__all__,
     *web_socket_context_manager.__all__,

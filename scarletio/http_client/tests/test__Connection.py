@@ -4,10 +4,12 @@ from socket import socketpair as create_socket_pair
 
 from ...core import AbstractTransportLayerBase, SocketTransportLayerBase, get_event_loop
 from ...web_common import HttpReadWriteProtocol
+from ...web_common.keep_alive_info import KeepAliveInfo
 
 from ..connection import Connection
 from ..connection_key import ConnectionKey
 from ..connector_base import ConnectorBase
+from ..protocol_basket import ProtocolBasket
 
 from .helpers import Any, _get_default_connection_key
 
@@ -25,6 +27,7 @@ def _assert_fields_set(connection):
     vampytest.assert_instance(connection.callbacks, list)
     vampytest.assert_instance(connection.connector, ConnectorBase)
     vampytest.assert_instance(connection.key, ConnectionKey)
+    vampytest.assert_instance(connection.performed_requests, int)
     vampytest.assert_instance(connection.protocol, HttpReadWriteProtocol, nullable = True)
 
 
@@ -38,13 +41,15 @@ async def test__Connection__new():
     connector = ConnectorBase(loop)
     connection_key = _get_default_connection_key()
     protocol = HttpReadWriteProtocol(loop)
+    performed_requests = 2
     
-    connection = Connection(connector, connection_key, protocol)
+    connection = Connection(connector, connection_key, protocol, performed_requests)
     _assert_fields_set(connection)
     
     vampytest.assert_eq(connection.connector, connector)
     vampytest.assert_eq(connection.key, connection_key)
     vampytest.assert_eq(connection.protocol, protocol)
+    vampytest.assert_eq(connection.performed_requests, performed_requests)
 
 
 async def test__Connection__repr():
@@ -57,8 +62,9 @@ async def test__Connection__repr():
     connector = ConnectorBase(loop)
     connection_key = _get_default_connection_key()
     protocol = HttpReadWriteProtocol(loop)
+    performed_requests = 2
     
-    connection = Connection(connector, connection_key, protocol)
+    connection = Connection(connector, connection_key, protocol, performed_requests)
     
     output = repr(connection)
     vampytest.assert_instance(output, str)
@@ -74,18 +80,22 @@ async def test__Connection__del():
     connector = ConnectorBase(loop)
     connection_key = _get_default_connection_key()
     protocol = HttpReadWriteProtocol(loop)
-    connector.acquired_protocols_per_host[connection_key] = {protocol}
+    performed_requests = 2
     
-    connection = Connection(connector, connection_key, protocol)
+    protocol_basket = ProtocolBasket(connection_key)
+    protocol_basket.add_used_protocol(protocol)
+    connector.protocols_by_host[connection_key] = protocol_basket
+    
+    connection = Connection(connector, connection_key, protocol, performed_requests)
     
     connection.__del__()
-    vampytest.assert_false(connector.acquired_protocols_per_host)
-    vampytest.assert_false(connector.alive_protocols_per_host)
+    vampytest.assert_false(connector.protocols_by_host)
+    vampytest.assert_false(protocol_basket)
 
 
-async def test__Connection__transport__no_protocol():
+async def test__Connection__get_transport__no_protocol():
     """
-    Tests whether ``Connection.transport`` works as intended.
+    Tests whether ``Connection.get_transport`` works as intended.
     
     Case: no protocol.
     
@@ -95,18 +105,19 @@ async def test__Connection__transport__no_protocol():
     connector = ConnectorBase(loop)
     connection_key = _get_default_connection_key()
     protocol = HttpReadWriteProtocol(loop)
+    performed_requests = 2
     
-    connection = Connection(connector, connection_key, protocol)
+    connection = Connection(connector, connection_key, protocol, performed_requests)
     connection.close()
     
-    output = connection.transport
+    output = connection.get_transport()
     vampytest.assert_instance(output, AbstractTransportLayerBase, nullable = True)
     vampytest.assert_is(output, None)
 
 
-async def test__Connection__transport__protocol_no_transport():
+async def test__Connection__get_transport__protocol_no_transport():
     """
-    Tests whether ``Connection.transport`` works as intended.
+    Tests whether ``Connection.get_transport`` works as intended.
     
     Case: protocol no transport.
     
@@ -116,22 +127,24 @@ async def test__Connection__transport__protocol_no_transport():
     connector = ConnectorBase(loop)
     connection_key = _get_default_connection_key()
     protocol = HttpReadWriteProtocol(loop)
+    performed_requests = 2
     
-    connection = Connection(connector, connection_key, protocol)
+    connection = Connection(connector, connection_key, protocol, performed_requests)
     
-    output = connection.transport
+    output = connection.get_transport()
     vampytest.assert_instance(output, AbstractTransportLayerBase, nullable = True)
     vampytest.assert_is(output, None)
 
 
-async def test__Connection__transport__protocol_has_transport():
+async def test__Connection__get_transport__protocol_has_transport():
     """
-    Tests whether ``Connection.transport`` works as intended.
+    Tests whether ``Connection.get_transport`` works as intended.
     
     Case: protocol has transport.
     
     This function is a coroutine.
     """
+    performed_requests = 2
     read_socket, write_socket = create_socket_pair()
     
     try:
@@ -142,9 +155,9 @@ async def test__Connection__transport__protocol_has_transport():
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         
-        connection = Connection(connector, connection_key, protocol)
+        connection = Connection(connector, connection_key, protocol, performed_requests)
         
-        output = connection.transport
+        output = connection.get_transport()
         vampytest.assert_instance(output, AbstractTransportLayerBase, nullable = True)
         vampytest.assert_is(output, transport)
     
@@ -161,7 +174,9 @@ async def test__Connection__add_callback__open():
     
     This function is a coroutine.
     """
+    performed_requests = 2
     read_socket, write_socket = create_socket_pair()
+    
     try:
         loop = get_event_loop()
         connector = ConnectorBase(loop)
@@ -170,7 +185,7 @@ async def test__Connection__add_callback__open():
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
             
-        connection = Connection(connector, connection_key, protocol)
+        connection = Connection(connector, connection_key, protocol, performed_requests)
         
         callback_called = False
         
@@ -195,7 +210,9 @@ async def test__Connection__add_callback__closed():
     
     This function is a coroutine.
     """
+    performed_requests = 2
     read_socket, write_socket = create_socket_pair()
+    
     try:
         loop = get_event_loop()
         connector = ConnectorBase(loop)
@@ -204,7 +221,7 @@ async def test__Connection__add_callback__closed():
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
             
-        connection = Connection(connector, connection_key, protocol)
+        connection = Connection(connector, connection_key, protocol, performed_requests)
         connection.close()
         
         callback_called = False
@@ -214,8 +231,8 @@ async def test__Connection__add_callback__closed():
             callback_called = True
         
         connection.add_callback(callback)
-        vampytest.assert_true(callback_called)
         vampytest.assert_eq(connection.callbacks, [])
+        vampytest.assert_true(callback_called)
     
     finally:
         read_socket.close()
@@ -228,7 +245,9 @@ async def test__Connection__run_callbacks():
     
     This function is a coroutine.
     """
+    performed_requests = 2
     read_socket, write_socket = create_socket_pair()
+    
     try:
         loop = get_event_loop()
         connector = ConnectorBase(loop)
@@ -237,7 +256,7 @@ async def test__Connection__run_callbacks():
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
             
-        connection = Connection(connector, connection_key, protocol)
+        connection = Connection(connector, connection_key, protocol, performed_requests)
         
         callback_0_called = False
         callback_1_called = False
@@ -273,7 +292,9 @@ async def test__Connection__close():
     
     This function is a coroutine.
     """
+    performed_requests = 2
     read_socket, write_socket = create_socket_pair()
+    
     try:
         loop = get_event_loop()
         connector = ConnectorBase(loop)
@@ -281,9 +302,12 @@ async def test__Connection__close():
         protocol = HttpReadWriteProtocol(loop)
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
-        connector.acquired_protocols_per_host[connection_key] = {protocol}
         
-        connection = Connection(connector, connection_key, protocol)
+        protocol_basket = ProtocolBasket(connection_key)
+        protocol_basket.add_used_protocol(protocol)
+        connector.protocols_by_host[connection_key] = protocol_basket
+        
+        connection = Connection(connector, connection_key, protocol, performed_requests)
         
         def callback():
             return None
@@ -292,8 +316,7 @@ async def test__Connection__close():
         
         connection.close()
         
-        vampytest.assert_false(connector.acquired_protocols_per_host)
-        vampytest.assert_false(connector.alive_protocols_per_host)
+        vampytest.assert_false(connector.protocols_by_host)
         vampytest.assert_eq(connection.callbacks, [])
         vampytest.assert_is(connection.protocol, None)
     
@@ -310,7 +333,10 @@ async def test__Connection__run_callbacks__release__should_close():
     
     This function is a coroutine.
     """
+    performed_requests = 2
+    keep_alive_info = KeepAliveInfo.create_default()
     read_socket, write_socket = create_socket_pair()
+    
     try:
         loop = get_event_loop()
         connector = ConnectorBase(loop)
@@ -318,20 +344,23 @@ async def test__Connection__run_callbacks__release__should_close():
         protocol = HttpReadWriteProtocol(loop)
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
-        connector.acquired_protocols_per_host[connection_key] = {protocol}
+        
+        protocol_basket = ProtocolBasket(connection_key)
+        protocol_basket.add_used_protocol(protocol)
+        connector.protocols_by_host[connection_key] = protocol_basket
+        
         protocol.set_exception(ConnectionError)
         
-        connection = Connection(connector, connection_key, protocol)
+        connection = Connection(connector, connection_key, protocol, performed_requests)
         
         def callback():
             return None
         
         connection.add_callback(callback)
         
-        connection.release()
+        connection.release(keep_alive_info)
         
-        vampytest.assert_false(connector.acquired_protocols_per_host)
-        vampytest.assert_false(connector.alive_protocols_per_host)
+        vampytest.assert_false(connector.protocols_by_host)
         vampytest.assert_eq(connection.callbacks, [])
         vampytest.assert_is(connection.protocol, None)
     
@@ -348,7 +377,10 @@ async def test__Connection__run_callbacks__release__should_open():
     
     This function is a coroutine.
     """
+    performed_requests = 2
+    keep_alive_info = KeepAliveInfo.create_default()
     read_socket, write_socket = create_socket_pair()
+    
     try:
         loop = get_event_loop()
         connector = ConnectorBase(loop)
@@ -356,25 +388,27 @@ async def test__Connection__run_callbacks__release__should_open():
         protocol = HttpReadWriteProtocol(loop)
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
-        connector.acquired_protocols_per_host[connection_key] = {protocol}
         
-        connection = Connection(connector, connection_key, protocol)
+        protocol_basket = ProtocolBasket(connection_key)
+        protocol_basket.add_used_protocol(protocol)
+        connector.protocols_by_host[connection_key] = protocol_basket
+        
+        connection = Connection(connector, connection_key, protocol, performed_requests)
         
         def callback():
             return None
         
         connection.add_callback(callback)
         
-        connection.release()
+        connection.release(keep_alive_info)
         
-        vampytest.assert_false(connector.acquired_protocols_per_host)
+        protocol_basket = connector.protocols_by_host.get(connection_key, None)
+        vampytest.assert_is_not(protocol_basket, None)
+        vampytest.assert_is(protocol_basket.used, None)
         vampytest.assert_eq(
-            connector.alive_protocols_per_host,
-            {
-                connection_key: [(protocol, Any(float))],
-            },
+            protocol_basket.available,
+            [(protocol, Any(float), performed_requests + 1)],
         )
-        vampytest.assert_false(connector.acquired_protocols_per_host)
         vampytest.assert_eq(connection.callbacks, [])
         vampytest.assert_is(connection.protocol, None)
     
@@ -392,7 +426,9 @@ async def test__Connection__run_callbacks__detach():
     
     This function is a coroutine.
     """
+    performed_requests = 2
     read_socket, write_socket = create_socket_pair()
+    
     try:
         loop = get_event_loop()
         connector = ConnectorBase(loop)
@@ -400,9 +436,12 @@ async def test__Connection__run_callbacks__detach():
         protocol = HttpReadWriteProtocol(loop)
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
-        connector.acquired_protocols_per_host[connection_key] = {protocol}
         
-        connection = Connection(connector, connection_key, protocol)
+        protocol_basket = ProtocolBasket(connection_key)
+        protocol_basket.add_used_protocol(protocol)
+        connector.protocols_by_host[connection_key] = protocol_basket
+        
+        connection = Connection(connector, connection_key, protocol, performed_requests)
         
         def callback():
             return None
@@ -411,9 +450,7 @@ async def test__Connection__run_callbacks__detach():
         
         connection.detach()
         
-        vampytest.assert_false(connector.acquired_protocols_per_host)
-        vampytest.assert_false(connector.alive_protocols_per_host)
-        vampytest.assert_false(connector.acquired_protocols_per_host)
+        vampytest.assert_false(connector.protocols_by_host)
         vampytest.assert_eq(connection.callbacks, [])
         vampytest.assert_is(connection.protocol, None)
     
@@ -434,18 +471,19 @@ async def test__Connection__closed__no_protocol():
     connector = ConnectorBase(loop)
     connection_key = _get_default_connection_key()
     protocol = HttpReadWriteProtocol(loop)
+    performed_requests = 2
     
-    connection = Connection(connector, connection_key, protocol)
+    connection = Connection(connector, connection_key, protocol, performed_requests)
     connection.close()
     
-    output = connection.closed
+    output = connection.is_closed()
     vampytest.assert_instance(output, bool)
     vampytest.assert_eq(output, True)
 
 
-async def test__Connection__closed__protocol_no_transport():
+async def test__Connection__is_closed__protocol_no_transport():
     """
-    Tests whether ``Connection.closed`` works as intended.
+    Tests whether ``Connection.is_closed`` works as intended.
     
     Case: protocol no transport.
     
@@ -455,22 +493,24 @@ async def test__Connection__closed__protocol_no_transport():
     connector = ConnectorBase(loop)
     connection_key = _get_default_connection_key()
     protocol = HttpReadWriteProtocol(loop)
+    performed_requests = 2
     
-    connection = Connection(connector, connection_key, protocol)
+    connection = Connection(connector, connection_key, protocol, performed_requests)
     
-    output = connection.closed
+    output = connection.is_closed()
     vampytest.assert_instance(output, bool)
     vampytest.assert_eq(output, True)
 
 
-async def test__Connection__closed__protocol_has_transport():
+async def test__Connection__is_closed__protocol_has_transport():
     """
-    Tests whether ``Connection.transport`` works as intended.
+    Tests whether ``Connection.is_closed`` works as intended.
     
     Case: protocol has transport.
     
     This function is a coroutine.
     """
+    performed_requests = 2
     read_socket, write_socket = create_socket_pair()
     
     try:
@@ -481,9 +521,9 @@ async def test__Connection__closed__protocol_has_transport():
         transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
         protocol.connection_made(transport)
         
-        connection = Connection(connector, connection_key, protocol)
+        connection = Connection(connector, connection_key, protocol, performed_requests)
         
-        output = connection.closed
+        output = connection.is_closed()
         vampytest.assert_instance(output, bool)
         vampytest.assert_eq(output, False)
     

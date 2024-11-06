@@ -17,6 +17,7 @@ from ..connector_tcp import ConnectorTCP
 from ..constants import SSL_CONTEXT_UNVERIFIED
 from ..host_info import HostInfo
 from ..host_info_basket import HostInfoBasket
+from ..protocol_basket import ProtocolBasket
 from ..ssl_fingerprint import SSLFingerprint
 
 from .helpers import _get_default_connection_key
@@ -32,8 +33,6 @@ def _assert_fields_set(connector):
         The connector to check.
     """
     vampytest.assert_instance(connector, ConnectorTCP)
-    vampytest.assert_instance(connector.acquired_protocols_per_host, dict)
-    vampytest.assert_instance(connector.alive_protocols_per_host, dict)
     vampytest.assert_instance(connector.clean_up_handle, TimerWeakHandle, nullable = True)
     vampytest.assert_instance(connector.closed, bool)
     vampytest.assert_instance(connector.cookies, SimpleCookie)
@@ -43,6 +42,7 @@ def _assert_fields_set(connector):
     vampytest.assert_instance(connector.local_address, tuple, nullable = True)
     vampytest.assert_instance(connector.loop, EventThread)
     vampytest.assert_instance(connector.resolve_host_tasks_and_waiters, dict)
+    vampytest.assert_instance(connector.protocols_by_host, dict)
     vampytest.assert_instance(connector.ssl_context, SSLContext, nullable = True)
 
 
@@ -109,16 +109,18 @@ async def test__ConnectorTCP__close():
             except CancelledError:
                 resolve_host_function_cancelled = True
         
-        connector.acquired_protocols_per_host[connection_key] = {protocol_0}
-        connector.alive_protocols_per_host[connection_key] = [(protocol_1, LOOP_TIME() + 100.0)]
+        protocol_basket = ProtocolBasket(connection_key)
+        protocol_basket.add_used_protocol(protocol_0)
+        protocol_basket.add_available_protocol(protocol_1, LOOP_TIME() + 1000.0, 15.0, 2)
+        connector.protocols_by_host[connection_key] = protocol_basket
+        
         connector.resolve_host_tasks_and_waiters[(None, None)] = (Task(loop, resolve_host_function()), [])
         
         await skip_ready_cycle()
         
         connector.close()
         
-        vampytest.assert_false(connector.acquired_protocols_per_host)
-        vampytest.assert_false(connector.alive_protocols_per_host)
+        vampytest.assert_false(connector.protocols_by_host)
             
         vampytest.assert_true(connector.closed)
         vampytest.assert_true(transport_0.is_closing())

@@ -251,15 +251,12 @@ class ClientResponse(RichAttributeErrorBaseType):
         
         raw_message = self.raw_message
         if raw_message is None:
-            keep_alive = False
+            keep_alive = None
         else:
             keep_alive = raw_message.keep_alive
         
         self.connection = None
-        if keep_alive:
-            connection.release()
-        else:
-            connection.close()
+        connection.release(keep_alive)
     
     
     def _notify_content(self):

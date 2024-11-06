@@ -215,7 +215,7 @@ class HTTPClient(RichAttributeErrorBaseType):
                 
                 connection = await self.connector.connect(request)
                 
-                set_tcp_nodelay(connection.transport, True)
+                set_tcp_nodelay(connection.get_transport(), True)
                 
                 response = request.begin(connection)
                 await response.start_processing()
@@ -475,7 +475,7 @@ class HTTPClient(RichAttributeErrorBaseType):
                 
                 connection = await self.connector.connect(request)
                 
-                set_tcp_nodelay(connection.transport, True)
+                set_tcp_nodelay(connection.get_transport(), True)
                 
                 response = request.begin(connection)
                 await response.start_processing()

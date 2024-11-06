@@ -55,7 +55,7 @@ async def request_coroutine():
     )
     
     connector = ConnectorBase(loop)
-    connection = Connection(connector, request.connection_key, HttpReadWriteProtocol(loop))
+    connection = Connection(connector, request.connection_key, HttpReadWriteProtocol(loop), 2)
     
     # If we do not call `request.begin` we do not send anything. Teehee
     return ClientResponse(request, connection)

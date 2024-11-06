@@ -162,14 +162,14 @@ class ClientRequest(RichAttributeErrorBaseType):
         # Check authorization
         if auth is None:
             # If authorization is given, try to detect from url.
-            username = url.user
+            user_id = url.user
             password = url.password
             
-            if (username is not None) and username:
+            if (user_id is not None) and user_id:
                 if password is None:
                     password = ''
                 
-                auth = BasicAuth(username, password)
+                auth = BasicAuth(user_id, password)
         
         # Store auth in headers is applicable.
         if (auth is not None):

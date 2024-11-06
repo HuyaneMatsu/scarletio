@@ -4,8 +4,9 @@ from reprlib import repr as short_repr
 
 from ..utils import RichAttributeErrorBaseType, copy_docs, export
 
-from .headers import CONNECTION, CONTENT_ENCODING, TRANSFER_ENCODING, UPGRADE
+from .headers import CONNECTION, CONTENT_ENCODING, KEEP_ALIVE, TRANSFER_ENCODING, UPGRADE
 from .helpers import HttpVersion11
+from .keep_alive_info import KeepAliveInfo
 
 
 CACHE_FLAG_UPGRADE_SET = 1 << 0
@@ -17,7 +18,6 @@ CACHE_FLAG_CHUNKED_VALUE = 1 << 3
 CACHE_FLAG_ENCODING_SET = 1 << 4
 
 CACHE_FLAG_KEEP_ALIVE_SET = 1 << 5
-CACHE_FLAG_KEEP_ALIVE_VALUE = 1 << 6
 
 
 class RawMessage(RichAttributeErrorBaseType):
@@ -32,13 +32,16 @@ class RawMessage(RichAttributeErrorBaseType):
     _cache_flags : `int`
         Cache flags for properties.
     
+    _cache_keep_alive : `None | KeepAliveInfo`.
+        cache field for ``.keep_alive`` property.
+    
     headers : `IgnoreCaseMultiValueDictionary<str, str>`
         The headers of the http message.
     
     version : ``HttpVersion``
         The http version of the response.
     """
-    __slots__ = ('_cache_encoding', '_cache_flags', 'headers', 'version')
+    __slots__ = ('_cache_encoding', '_cache_flags', '_cache_keep_alive', 'headers', 'version')
     
     def __new__(cls, version, headers):
         """
@@ -55,6 +58,7 @@ class RawMessage(RichAttributeErrorBaseType):
         self = object.__new__(cls)
         self._cache_encoding = None
         self._cache_flags = 0
+        self._cache_keep_alive = None
         self.headers = headers
         self.version = version
         return self
@@ -96,7 +100,7 @@ class RawMessage(RichAttributeErrorBaseType):
             repr_parts.append(repr(chunked))
         
         keep_alive = self.keep_alive
-        if keep_alive:
+        if (keep_alive is not None):
             repr_parts.append(', keep_alive = ')
             repr_parts.append(repr(keep_alive))
         
@@ -247,8 +251,8 @@ class RawMessage(RichAttributeErrorBaseType):
         else:
             encoding = encoding.casefold()
         
-        cache_flags |= CACHE_FLAG_ENCODING_SET
-        self._cache_flags = cache_flags
+        self._cache_flags = cache_flags | CACHE_FLAG_ENCODING_SET
+        self._cache_encoding = encoding
         return encoding
 
         
@@ -269,35 +273,30 @@ class RawMessage(RichAttributeErrorBaseType):
         """
         cache_flags = self._cache_flags
         if cache_flags & CACHE_FLAG_KEEP_ALIVE_SET:
-            return True if cache_flags & CACHE_FLAG_KEEP_ALIVE_VALUE else False
+            return self._cache_keep_alive
         
         try:
             connection = self.headers[CONNECTION]
         except KeyError:
-            value = self.version >= HttpVersion11
+            keep_alive_enabled = self.version >= HttpVersion11
         else:
-            value = ('close' not in connection.casefold())
+            keep_alive_enabled = ('close' not in connection.casefold())
         
-        if value:
-            cache_flags |= CACHE_FLAG_KEEP_ALIVE_VALUE
+        if keep_alive_enabled:
+            keep_alive = KeepAliveInfo.from_header_value(self.headers.get(KEEP_ALIVE))
+        else:
+            keep_alive = None
         
-        cache_flags |= CACHE_FLAG_KEEP_ALIVE_SET
-        self._cache_flags = cache_flags
+        self._cache_flags = cache_flags | CACHE_FLAG_KEEP_ALIVE_SET
+        self._cache_keep_alive = keep_alive
         
-        return value
+        return keep_alive
     
     
     @keep_alive.setter
     def keep_alive(self, value):
-        cache_flags = self._cache_flags
-        cache_flags |= CACHE_FLAG_KEEP_ALIVE_SET
-        
-        if value:
-            cache_flags |= CACHE_FLAG_KEEP_ALIVE_VALUE
-        else:
-            cache_flags &= ~CACHE_FLAG_KEEP_ALIVE_VALUE
-        
-        self._cache_flags = cache_flags
+        self._cache_flags |= CACHE_FLAG_KEEP_ALIVE_SET
+        self._cache_keep_alive = value
 
 
 @export
@@ -307,8 +306,14 @@ class RawResponseMessage(RawMessage):
     
     Attributes
     ----------
+    _cache_encoding : `None | str`
+        Cache field for ``.encoding`` property.
+    
     _cache_flags : `int`
         Cache flags for properties.
+    
+    _cache_keep_alive : `None | KeepAliveInfo`.
+        cache field for ``.keep_alive`` property.
     
     headers : `IgnoreCaseMultiValueDictionary<str, str>`
         The headers of the http message.
@@ -384,8 +389,14 @@ class RawRequestMessage(RawMessage):
     
     Attributes
     ----------
+    _cache_encoding : `None | str`
+        Cache field for ``.encoding`` property.
+    
     _cache_flags : `int`
         Cache flags for properties.
+    
+    _cache_keep_alive : `None | KeepAliveInfo`.
+        cache field for ``.keep_alive`` property.
     
     headers : `IgnoreCaseMultiValueDictionary<str, str>`
         The headers of the http message.

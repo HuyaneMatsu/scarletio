@@ -1,3 +1,22 @@
+# 1.0.80 *\[2024-11-??\]*
+
+#### Improvements
+
+- Add `KeepAliveInfo`.
+- Add `Connection.performed_requests`.
+- Add `ProtocolBasket` to group 
+    `ConnectorBase.acquired_protocols_per_host` and `ConnectorBase.alive_protocols_per_host` into a single `.protocols_by_host`.
+- Add `Keep-Alive` header support.
+
+#### Bug fixes
+
+- Fix `RawMessage.encoding` was not cached correctly.
+
+#### Renames, Deprecation & Removals
+
+- Rename `Connection.transport` to `.get_transport`.
+- Rename `Connection.closed` to `.is_closed`.
+
 # 1.0.79 *\[2024-10-13\]*
 
 #### Improvements

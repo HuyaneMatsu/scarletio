@@ -1,5 +1,6 @@
 from .basic_auth import *
 from .compressors import *
+from .constants import *
 from .cookiejar import *
 from .exceptions import *
 from .form_data import *
@@ -9,6 +10,7 @@ from .helpers import *
 from .http_message import *
 from .http_protocol import *
 from .http_stream_writer import *
+from .keep_alive_info import *
 from .mime_type import *
 from .multipart import *
 from .quoting import *
@@ -21,6 +23,7 @@ __all__ = (
     'headers',
     *basic_auth.__all__,
     *compressors.__all__,
+    *constants.__all__,
     *cookiejar.__all__,
     *exceptions.__all__,
     *form_data.__all__,
@@ -30,6 +33,7 @@ __all__ = (
     *http_message.__all__,
     *http_protocol.__all__,
     *http_stream_writer.__all__,
+    *keep_alive_info.__all__,
     *mime_type.__all__,
     *multipart.__all__,
     *quoting.__all__,
