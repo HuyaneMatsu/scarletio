@@ -6,7 +6,7 @@ from http.cookies import CookieError, SimpleCookie
 from warnings import warn
 
 from ..utils import RichAttributeErrorBaseType, from_json
-from ..web_common.headers import CONTENT_TYPE, METHOD_HEAD, SET_COOKIE
+from ..web_common.headers import CONTENT_TYPE, METHOD_CONNECT, METHOD_HEAD, SET_COOKIE
 from ..web_common.multipart import MimeType
 
 from .constants import JSON_RE
@@ -186,18 +186,23 @@ class ClientResponse(RichAttributeErrorBaseType):
             protocol = self.connection.protocol
             self.raw_message = message = await protocol.read_http_response()
             
-            if self.method == METHOD_HEAD:
-                payload_reader = None
-            else:
-                payload_reader = protocol.get_payload_reader_task(message)
-            
-            if (payload_reader is None):
+            if self.method == METHOD_CONNECT:            
+                # Do not read anything if we are doing a connect request.
                 payload_stream = None
-                self._response_eof(None)
+            
             else:
-                payload_stream = protocol.set_payload_reader(payload_reader)
-                payload_stream.add_done_callback(self._response_eof)
-                protocol.handle_payload_stream_abortion()
+                if self.method == METHOD_HEAD:
+                    payload_reader = None
+                else:
+                    payload_reader = protocol.get_payload_reader_task(message)
+                
+                if (payload_reader is None):
+                    payload_stream = None
+                    self._response_eof(None)
+                else:
+                    payload_stream = protocol.set_payload_reader(payload_reader)
+                    payload_stream.add_done_callback(self._response_eof)
+                    protocol.handle_payload_stream_abortion()
             
             self.payload_stream = payload_stream
             
@@ -268,7 +273,9 @@ class ClientResponse(RichAttributeErrorBaseType):
         if (payload_stream is not None):
             connection = self.connection
             if (connection is not None):
-                connection.protocol.set_exception(ConnectionError('Connection closed.'))
+                protocol = connection.protocol
+                if (protocol is not None):
+                    protocol.set_exception(ConnectionError('Connection closed.'))
         
         self._released = True
     

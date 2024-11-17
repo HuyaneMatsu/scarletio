@@ -257,7 +257,6 @@ class SSLPipe:
                 # Call do_handshake() until it doesn't raise anymore.
                 self._ssl_object.do_handshake()
                 self._state = state = SSL_PIPE_STATE_WRAPPED
-                
                 handshake_callback = self._handshake_callback
                 if (handshake_callback is not None):
                     handshake_callback(None)
@@ -271,7 +270,7 @@ class SSLPipe:
                 while True:
                     chunk = self._ssl_object.read(MAX_SIZE)
                     application_data.append(chunk)
-                    if not chunk:  # close_notify
+                    if not chunk:
                         break
             
             elif state == SSL_PIPE_STATE_SHUTDOWN:
@@ -295,10 +294,11 @@ class SSLPipe:
                     handshake_callback = self._handshake_callback
                     if (handshake_callback is not None):
                         handshake_callback(err)
+                
                 raise
             
             self._need_ssl_data = (err_number == SSL_ERROR_WANT_READ)
-
+        
         # Check for record level data that needs to be sent back. Happens for the initial handshake and renegotiation.
         if self._outgoing.pending:
             ssl_data.append(self._outgoing.read())
@@ -335,6 +335,7 @@ class SSLPipe:
             if offset < len(data):
                 ssl_data.append(memoryview(data)[offset:])
             offset = len(data)
+        
         else:
             view = memoryview(data)
             while True:

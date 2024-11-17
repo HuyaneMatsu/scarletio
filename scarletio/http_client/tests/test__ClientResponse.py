@@ -448,7 +448,6 @@ async def test__ClientResponse__read():
         write_socket.close()
 
 
-
 def _iter_options__get_encoding():
     # nothing
     yield (

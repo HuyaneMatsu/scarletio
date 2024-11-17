@@ -4,18 +4,34 @@
 
 - Add `KeepAliveInfo`.
 - Add `Connection.performed_requests`.
-- Add `ProtocolBasket` to group 
-    `ConnectorBase.acquired_protocols_per_host` and `ConnectorBase.alive_protocols_per_host` into a single `.protocols_by_host`.
+- Add `ProtocolBasket` to group  `ConnectorBase.acquired_protocols_per_host` and
+    `ConnectorBase.alive_protocols_per_host` into a  single `.protocols_by_host`.
 - Add `Keep-Alive` header support.
+- `URL` implementation has been completely rewritten changing the defaults of many properties = methods.
+- Add `URL.is_host_ip_v4`.
+- Add `URL.is_host_ip_v6`.
+- Add `Proxy`.
+- Add `proxy` parameter to `HTTPClient.__new__` and `HTTPClient._request2` methods.
+- Add support for `scheme`-less urls.
 
 #### Bug fixes
 
 - Fix `RawMessage.encoding` was not cached correctly.
+- Fix fatal `SSLError`-s were not propagated.
+- Fix `ConnectorTcp.create_proxy_connection`.
 
 #### Renames, Deprecation & Removals
 
 - Rename `Connection.transport` to `.get_transport`.
 - Rename `Connection.closed` to `.is_closed`.
+- Rename `BasicAuth` to `BasicAuthorization`.
+- Rename `auth` parameters & attributes to `.authorization`. Also affects the ones with the `proxy_` prefix as well.
+- Rename `URL.raw_subdomain` to `URL.raw_sub_domain`.
+- Rename `URL.subdomain` to `URL.sub_domain`.
+- Deprecate `URL.raw_parts`.
+- Deprecate `URL.raw_name`.
+- Deprecate `HTTPClient.__new__` and `HTTPClient._request2`'s `proxy_auth`, `proxy_url`, `proxy_haders` parameters,
+    use `proxy` instead.
 
 # 1.0.79 *\[2024-10-13\]*
 

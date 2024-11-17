@@ -45,6 +45,7 @@ setup(
         'scarletio.utils.trace.frame_proxy',
         'scarletio.utils.type_proxies',
         'scarletio.web_common',
+        'scarletio.web_common.url',
         'scarletio.web_socket',
     ],
     url = 'https://github.com/HuyaneMatsu/scarletio',

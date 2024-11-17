@@ -51,7 +51,6 @@ async def request_coroutine():
         None,
         None,
         None,
-        None,
     )
     
     connector = ConnectorBase(loop)

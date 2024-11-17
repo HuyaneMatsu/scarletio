@@ -2,11 +2,12 @@ from ssl import create_default_context as create_default_ssl_context
 
 from ...core import get_event_loop
 from ...utils import IgnoreCaseMultiValueDictionary
-from ...web_common import BasicAuth, URL
+from ...web_common import BasicAuthorization, URL
 from ...web_common.headers import METHOD_GET
 
 from ..client_request import ClientRequest
 from ..connection_key import ConnectionKey
+from ..proxy import Proxy
 from ..ssl_fingerprint import SSLFingerprint
 
 
@@ -44,9 +45,12 @@ def _get_default_connection_key(*, host = ...):
         host = '1.1.1.1'
     
     port = 96
-    proxy_auth = BasicAuth('miau', 'land')
-    proxy_headers = IgnoreCaseMultiValueDictionary([('hey', 'mister')])
-    proxy_url = URL('https://orindance.party/')
+    
+    proxy = Proxy(
+        URL('https://orindance.party/'),
+        authorization = BasicAuthorization('miau', 'land'),
+        headers = IgnoreCaseMultiValueDictionary([('hey', 'mister')]),
+    ) 
     secure = True
     ssl_context = create_default_ssl_context()
     ssl_fingerprint = SSLFingerprint(b'a' * 32)
@@ -54,9 +58,7 @@ def _get_default_connection_key(*, host = ...):
     return ConnectionKey(
         host,
         port,
-        proxy_auth,
-        proxy_headers,
-        proxy_url,
+        proxy,
         secure,
         ssl_context,
         ssl_fingerprint,
@@ -79,7 +81,6 @@ def _get_default_request():
         METHOD_GET,
         url,
         IgnoreCaseMultiValueDictionary(),
-        None,
         None,
         None,
         None,

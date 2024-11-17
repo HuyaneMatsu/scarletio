@@ -69,11 +69,16 @@ class AbstractTransportLayerBase:
         return
     
     
-    def abort(self):
+    def abort(self, exception = None):
         """
         Closes the transport immediately.
         
         The buffered data will be lost.
+        
+        Parameters
+        ----------
+        exception : `None | BaseException` = `None`, Optional
+            Exception caused aborting cause if any.
         """
         return
     

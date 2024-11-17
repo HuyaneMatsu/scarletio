@@ -297,8 +297,8 @@ class SocketTransportLayerBase(TransportLayerBase):
     
     
     @copy_docs(TransportLayerBase.abort)
-    def abort(self):
-        self._force_close(None)
+    def abort(self, exception = None):
+        self._force_close(exception)
     
     
     @copy_docs(TransportLayerBase.set_write_buffer_limits)

@@ -6,7 +6,6 @@ from ...core import AbstractProtocolBase, SocketTransportLayerBase, get_event_lo
 from ...web_common import HttpReadWriteProtocol
 
 from ..connection_key import ConnectionKey
-from ..constants import CONNECTION_KEEP_ALIVE_TIMEOUT
 from ..protocol_basket import ProtocolBasket
 
 from .helpers import _get_default_connection_key
@@ -424,8 +423,13 @@ def test__ProtocolBasket__pop_available_protocol__no_protocol():
     
     output = protocol_basket.pop_available_protocol(now)
     
-    vampytest.assert_instance(output, AbstractProtocolBase, nullable = True)
-    vampytest.assert_is(output, None)
+    vampytest.assert_instance(output, tuple)
+    vampytest.assert_eq(len(output), 2)
+    output_protocol, output_performed_requests = output
+    vampytest.assert_instance(output_protocol, AbstractProtocolBase, nullable = True)
+    vampytest.assert_is(output_protocol, None)
+    vampytest.assert_instance(output_performed_requests, int)
+    vampytest.assert_eq(output_performed_requests, 0)
 
 
 async def test__ProtocolBasket__pop_available_protocol__no_alive_protocol():

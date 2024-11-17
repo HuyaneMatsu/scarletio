@@ -1,7 +1,6 @@
 __all__ = ()
 
 from ..utils import RichAttributeErrorBaseType
-from ..web_common.helpers import freeze_headers
 
 
 class ConnectionKey(RichAttributeErrorBaseType):
@@ -16,14 +15,8 @@ class ConnectionKey(RichAttributeErrorBaseType):
     port : `int`
         The host's port.
     
-    proxy_auth : `None | BasicAuth`
-        Proxy authorization sent with the request.
-    
-    proxy_headers_frozen : `None | tuple<(str, tuple<str>)>`
-        Proxy headers to use if applicable.
-    
-    proxy_url : `None | URL`
-        Proxy url to use if applicable.
+    proxy : `None | Proxy`
+        Proxy if applicable.
     
     secure : `bool`
         Whether the connection is secure.
@@ -35,10 +28,10 @@ class ConnectionKey(RichAttributeErrorBaseType):
         Alternative way to accept ssl or to block it depending whether the fingerprint is the same or changed.
     """
     __slots__ = (
-        'host', 'port', 'proxy_auth', 'proxy_headers_frozen', 'proxy_url', 'secure', 'ssl_context', 'ssl_fingerprint'
+        'host', 'port', 'proxy', 'secure', 'ssl_context', 'ssl_fingerprint'
     )
     
-    def __new__(cls, host, port, proxy_auth, proxy_headers, proxy_url, secure, ssl_context, ssl_fingerprint):
+    def __new__(cls, host, port, proxy, secure, ssl_context, ssl_fingerprint):
         """
         Creates a new connection key.
         
@@ -50,14 +43,8 @@ class ConnectionKey(RichAttributeErrorBaseType):
         port : `int`
             The host's port.
         
-        proxy_auth : `None | BasicAuth`
-            Proxy authorization sent with the request.
-        
-        proxy_headers : `None | IgnoreCaseMultiValueDictionary`
-            Proxy headers.
-        
-        proxy_url : `None | URL`
-            Proxy url to use if applicable.
+        proxy : `None | Proxy`
+            Proxy if applicable.
         
         secure : `bool`
             Whether the connection is secure.
@@ -68,14 +55,10 @@ class ConnectionKey(RichAttributeErrorBaseType):
         ssl_fingerprint : `None | SSLFingerprint`
             Alternative way to accept ssl or to block it depending whether the fingerprint is the same or changed.
         """
-        proxy_headers_frozen = freeze_headers(proxy_headers)
-        
         self = object.__new__(cls)
         self.host = host
         self.port = port
-        self.proxy_auth = proxy_auth
-        self.proxy_headers_frozen = proxy_headers_frozen
-        self.proxy_url = proxy_url
+        self.proxy = proxy
         self.secure = secure
         self.ssl_context = ssl_context
         self.ssl_fingerprint = ssl_fingerprint
@@ -94,23 +77,11 @@ class ConnectionKey(RichAttributeErrorBaseType):
         repr_parts.append(', post = ')
         repr_parts.append(repr(self.port))
         
-        # proxy_auth
-        proxy_auth = self.proxy_auth
-        if (proxy_auth is not None):
-            repr_parts.append(', proxy_auth = ')
-            repr_parts.append(repr(proxy_auth))
-        
-        # proxy_headers_frozen
-        proxy_headers_frozen = self.proxy_headers_frozen
-        if (proxy_headers_frozen is not None):
-            repr_parts.append(', proxy_headers_frozen = ')
-            repr_parts.append(repr(proxy_headers_frozen))
-        
-        # proxy_url
-        proxy_url = self.proxy_url
-        if (proxy_url is not None):
-            repr_parts.append(', proxy_url = ')
-            repr_parts.append(repr(proxy_url))
+        # proxy
+        proxy = self.proxy
+        if (proxy is not None):
+            repr_parts.append('proxy = ')
+            repr_parts.append(repr(proxy))
         
         # secure
         secure = self.secure
@@ -147,16 +118,8 @@ class ConnectionKey(RichAttributeErrorBaseType):
         if self.port != other.port:
             return False
         
-        # proxy_auth
-        if self.proxy_auth != other.proxy_auth:
-            return False
-        
-        # proxy_headers
-        if self.proxy_headers_frozen != other.proxy_headers_frozen:
-            return False
-        
-        # proxy_url
-        if self.proxy_url != other.proxy_url:
+        # proxy
+        if self.proxy != other.proxy:
             return False
         
         # secure
@@ -184,20 +147,10 @@ class ConnectionKey(RichAttributeErrorBaseType):
         # port
         hash_value ^= self.port << 17
         
-        # proxy_auth
-        proxy_auth = self.proxy_auth
-        if (proxy_auth is not None):
-            hash_value ^= hash(proxy_auth)
-        
-        # proxy_headers_frozen
-        proxy_headers_frozen = self.proxy_headers_frozen
-        if (proxy_headers_frozen is not None):
-            hash_value ^= hash(self.proxy_headers_frozen)
-        
-        # proxy_url
-        proxy_url = self.proxy_url
-        if (proxy_url is not None):
-            hash_value ^= hash(proxy_url)
+        # proxy
+        proxy = self.proxy
+        if (proxy is not None):
+            hash_value ^= hash(proxy)
         
         # secure
         hash_value ^= self.secure
@@ -226,9 +179,7 @@ class ConnectionKey(RichAttributeErrorBaseType):
         new = object.__new__(type(self))
         new.host = self.host
         new.port = self.port
-        new.proxy_auth = None
-        new.proxy_headers_frozen = None
-        new.proxy_url = None
+        new.proxy = None
         new.secure = self.secure
         new.ssl_context = self.ssl_context
         new.ssl_fingerprint = self.ssl_fingerprint

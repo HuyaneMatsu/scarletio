@@ -6,7 +6,7 @@ from os import urandom
 
 from ..core import AsyncQueue, Future, Lock
 from ..utils import IgnoreCaseMultiValueDictionary, include
-from ..web_common import BasicAuth, HttpVersion11, InvalidHandshake, URL
+from ..web_common import BasicAuthorization, HttpVersion11, InvalidHandshake, URL
 from ..web_common.header_building_and_parsing import (
     build_extensions, build_subprotocols, parse_connections, parse_extensions, parse_subprotocols, parse_upgrades
 )
@@ -234,7 +234,7 @@ class WebSocketClient(WebSocketCommonProtocol):
         user = url.user
         password = url.password
         if (user is not None) or (password is not None):
-            request_headers[AUTHORIZATION] = BasicAuth(user, password).encode()
+            request_headers[AUTHORIZATION] = BasicAuthorization(user, password).encode()
         
         if origin is not None:
             request_headers[ORIGIN] = origin

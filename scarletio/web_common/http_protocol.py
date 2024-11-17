@@ -700,7 +700,6 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
             extend((k, ': ', v, '\r\n'))
         
         result.append('\r\n')
-        
         transport.write(''.join(result).encode())
     
     

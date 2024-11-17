@@ -226,8 +226,8 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
     def data_received(self, data):
         try:
             ssl_data, application_data = self._ssl_pipe.feed_ssl_data(data)
-        except SSLError:
-            self.abort()
+        except SSLError as exception:
+            self.abort(exception)
             return
         
         for chunk in ssl_data:
@@ -304,7 +304,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
         if (handshake_exception is not None):
             self._transport.close()
             self._wake_up_connection_made_waiter(handshake_exception)
-            raise
+            raise handshake_exception
         
         # Add extra info that becomes available after handshake.
         extra = self._extra
@@ -364,17 +364,13 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
                 
                 # An entire chunk from the backlog was processed. We can delete it and reduce the outstanding buffer
                 # size.
-                del self._write_backlog[0]
+                del write_backlog[0]
         
         except BaseException as err:
             if self._in_handshake:
                 self._handshake_completed(err)
             else:
                 self._fatal_error(err, 'Fatal error on SSL transport.')
-            
-            if not isinstance(err, Exception):
-                # BaseException
-                raise
     
     
     @copy_docs(TransportLayerBase._fatal_error)
@@ -427,11 +423,11 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
     
     
     @copy_docs(TransportLayerBase.abort)
-    def abort(self):
+    def abort(self, exception = None):
         transport = self._transport
         if (transport is not None):
             try:
-                transport.abort()
+                transport.abort(exception)
             finally:
                 self._finalize()
 
@@ -440,7 +436,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
     def write(self, data):
         if not isinstance(data, (bytes, bytearray, memoryview)):
             raise TypeError(
-                f'`data` can be `bytes-like`, got {data.__class__.__name__}; {reprlib.repr(data)}.'
+                f'`data` can be `bytes-like`, got {type(data).__name__}; {reprlib.repr(data)}.'
             )
         
         if data:

@@ -472,7 +472,6 @@ async def test__ConnectorBase__connect__cache_hit():
             None,
             None,
             None,
-            None,
         )
         
         connector = ConnectorBase(loop)
@@ -530,7 +529,6 @@ async def test__ConnectorBase__connect__cache_miss():
             METHOD_GET,
             URL('https://orindance.party/'),
             IgnoreCaseMultiValueDictionary(),
-            None,
             None,
             None,
             None,

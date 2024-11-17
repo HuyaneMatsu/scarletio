@@ -1,4 +1,4 @@
-__all__ = ('BasicAuth', )
+__all__ = ('BasicAuthorization', )
 
 from warnings import warn
 from binascii import Error as EncodeOrDecodeError
@@ -13,7 +13,7 @@ USER_ID_PASSWORD_JOIN_RP = re_compile('(.*?)(?:\\:(.*))?')
 BASIC_AUTH_DEFAULT_ENCODING = 'latin1'
 
 
-class BasicAuth(RichAttributeErrorBaseType):
+class BasicAuthorization(RichAttributeErrorBaseType):
     """
     Http basic authorization implementation.
     

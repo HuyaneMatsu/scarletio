@@ -11,8 +11,8 @@ from warnings import warn
 from ..core import CancelledError, Future, SSLBidirectionalTransportLayer, Task
 from ..utils import CauseGroup, IgnoreCaseMultiValueDictionary
 from ..web_common.exceptions import ProxyError
-from ..web_common.headers import AUTHORIZATION, HOST, METHOD_CONNECT, METHOD_GET, PROXY_AUTHORIZATION
-from ..web_common.helpers import is_ip_address
+from ..web_common.headers import METHOD_CONNECT
+from ..web_common.helpers import is_ip_address, set_tcp_nodelay
 from ..web_common.http_protocol import HttpReadWriteProtocol
 
 from .client_request import ClientRequest
@@ -303,8 +303,7 @@ class ConnectorTCP(ConnectorBase):
             return
         
         # Strip extra dots from the end, keep one.
-        if host.endswith('..'):
-            host.rstrip('.') + '.'
+        # This is actually done now in url parsing because double dot is invalid.
         
         # Get old host info basket
         try:
@@ -370,7 +369,7 @@ class ConnectorTCP(ConnectorBase):
         RuntimeError
             If transport does not expose socket instance.
         """
-        if request.proxy_url is None:
+        if request.proxy is None:
             coroutine = self.create_direct_connection(request)
         else:
             coroutine = self.create_proxy_connection(request)
@@ -453,7 +452,7 @@ class ConnectorTCP(ConnectorBase):
         OSError
         """
         ssl_context = self.get_ssl_context(request)
-        fingerprint = self.get_ssl_fingerprint(request)
+        ssl_fingerprint = self.get_ssl_fingerprint(request)
         
         causes = None
         
@@ -481,9 +480,9 @@ class ConnectorTCP(ConnectorBase):
                 causes.append(exception)    
                 continue
             
-            if (fingerprint is not None):
+            if (ssl_fingerprint is not None):
                 try:
-                    fingerprint.check(protocol)
+                    ssl_fingerprint.check(protocol)
                 except ValueError as exception:
                     protocol.close_transport(force = True)
                     
@@ -522,42 +521,28 @@ class ConnectorTCP(ConnectorBase):
         RuntimeError
             If transport does not expose socket instance.
         """
-        headers = IgnoreCaseMultiValueDictionary(request.proxy_headers)
-        headers[HOST] = request.headers[HOST]
+        proxy = request.proxy
         
         proxy_request = ClientRequest(
             self.loop,
-            METHOD_GET,
-            request.proxy_url,
-            headers,
+            METHOD_CONNECT,
+            proxy.url,
+            IgnoreCaseMultiValueDictionary(proxy.headers),
             None,
             None,
             None,
-            request.proxy_auth,
+            proxy.authorization,
+            request.url,
             None,
-            None,
-            None,
-            request.ssl_context,
-            request.ssl_fingerprint,
+            proxy.ssl_context,
+            proxy.ssl_fingerprint,
         )
         
         # create connection to proxy server
         protocol = await self.create_direct_connection(proxy_request)
-        
-        authorization = proxy_request.headers.pop(AUTHORIZATION, None)
-        if (authorization is not None):
-            if request.is_secure():
-                proxy_request.headers[PROXY_AUTHORIZATION] = authorization
-            else:
-                request.headers[PROXY_AUTHORIZATION] = authorization
-        
-        if not request.is_secure():
-            return protocol
-        
         ssl_context = self.get_ssl_context(request)
-        proxy_request.method = METHOD_CONNECT
-        proxy_request.url = request.url
         connection = Connection(self, request.connection_key.copy_proxyless(), protocol, 0)
+        set_tcp_nodelay(connection.get_transport(), True)
         
         response = proxy_request.begin(connection)
         try:
@@ -568,26 +553,31 @@ class ConnectorTCP(ConnectorBase):
         
         try:
             connection.detach()
+            response.close()
             
             try:
                 status = response.status
                 if status != 200:
-                    message = response.message
-                    if message is None:
-                        message = HTTPStatus(status).phrase
+                    reason = response.reason
+                    if reason is None:
+                        reason = HTTPStatus(status).phrase
                     
-                    raise ProxyError(status, message, response.headers)
+                    raise ProxyError(status, reason, response.headers)
             except:
                 protocol.close()
                 raise
+            
+            if not request.is_secure():
+                return protocol
             
             underlying_transport = protocol._transport
             protocol = HttpReadWriteProtocol(self.loop)
             
             try:
-                waiter = Future(self._loop)
+                underlying_transport.pause_reading()
+                waiter = Future(self.loop)
                 ssl_protocol = SSLBidirectionalTransportLayer(
-                    self,
+                    self.loop,
                     protocol,
                     ssl_context,
                     waiter,
@@ -595,8 +585,7 @@ class ConnectorTCP(ConnectorBase):
                     request.host,
                     False,
                 )
-                
-                underlying_transport.pause_reading()
+                underlying_transport.set_protocol(ssl_protocol)
                 ssl_protocol.connection_made(underlying_transport)
                 underlying_transport.resume_reading()
                 
@@ -614,9 +603,10 @@ class ConnectorTCP(ConnectorBase):
                 raise OSError(request.connection_key, exception) from exception
             
             else:
-                protocol.connection_made(ssl_protocol._transport)
+                protocol.connection_made(ssl_protocol)
         
-        finally:
+        except:
             response.close()
+            raise
         
         return protocol

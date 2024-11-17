@@ -426,7 +426,6 @@ async def test__ConnectorTCP__resolve_host_iterator__ip_address():
             None,
             None,
             None,
-            None,
         )
         
         host_infos = []
@@ -498,7 +497,6 @@ async def test__ConnectorTCP__resolve_host_iterator__from_cache():
             METHOD_GET,
             url,
             IgnoreCaseMultiValueDictionary(),
-            None,
             None,
             None,
             None,
@@ -635,7 +633,6 @@ async def test__ConnectorTCP__resolve_host_iterator__from_cache_and_new():
             None,
             None,
             None,
-            None,
         )
         
         # before & break
@@ -706,7 +703,14 @@ def _iter_options__get_ssl_context():
         ssl_context_1,
         ssl_context_1,
     )
-
+    
+    yield (
+        url_0,
+        None,
+        None,
+        None,
+    )
+    
     yield (
         url_1,
         None,
@@ -741,7 +745,6 @@ async def test__ConnectorTCP__get_ssl_context(url, request_ssl_context, connecto
         METHOD_GET,
         url,
         IgnoreCaseMultiValueDictionary(),
-        None,
         None,
         None,
         None,
@@ -822,7 +825,6 @@ async def test__ConnectorTCP__get_ssl_fingerprint(url, request_ssl_fingerprint, 
         METHOD_GET,
         url,
         IgnoreCaseMultiValueDictionary(),
-        None,
         None,
         None,
         None,
@@ -922,7 +924,6 @@ async def test__ConnectorTCP__create_connection():
             METHOD_GET,
             url,
             IgnoreCaseMultiValueDictionary(),
-            None,
             None,
             None,
             None,

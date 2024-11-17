@@ -1,16 +1,16 @@
 __all__ = ('ClientRequest',)
 
 from http.cookies import Morsel, SimpleCookie
+from warnings import warn
 
 from ..core import CancelledError, Task
 from ..utils import IgnoreCaseMultiValueDictionary, RichAttributeErrorBaseType
 from ..web_common.form_data import FormData
 from ..web_common.headers import (
-    AUTHORIZATION, CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TYPE, COOKIE, HOST, METHOD_CONNECT,
+    AUTHORIZATION, CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TYPE, COOKIE, HOST, METHOD_CONNECT, PROXY_AUTHORIZATION,
     TRANSFER_ENCODING
 )
-from ..web_common import BasicAuth
-from ..web_common.helpers import is_ipv6_address
+from ..web_common import BasicAuthorization
 from ..web_common.http_stream_writer import HTTPStreamWriter
 from ..web_common.multipart import create_payload
 
@@ -26,7 +26,7 @@ class ClientRequest(RichAttributeErrorBaseType):
     
     Attributes
     ----------
-    auth : `None | BasicAuth`
+    authorization : `None | BasicAuthorization`
         Authorization sent with the request.
     
     body : `None | PayloadBase`
@@ -50,14 +50,11 @@ class ClientRequest(RichAttributeErrorBaseType):
     original_url : ``URL``
         The original url, what was asked to request.
     
-    proxy_auth : `None | BasicAuth`
-        Proxy authorization sent with the request.
+    proxied_url : `None | Url`
+        The proxied url that the requests connects to.
     
-    proxy_headers : `None | IgnoreCaseMultiValueDictionary`
-        Proxy headers to use if applicable.
-    
-    proxy_url : `None | URL`
-        Proxy url to use if applicable.
+    proxy : `None | Proxy`
+        Proxy if applicable.4
     
     response : `None | ClientResponse`
         Object representing the received response. Set as `None` till ``.send`` finishes.
@@ -75,8 +72,8 @@ class ClientRequest(RichAttributeErrorBaseType):
         Payload writer task, what is present meanwhile the request's payload is sending.
     """
     __slots__ = (
-        'auth', 'body', 'chunked', 'compression', 'headers', 'loop', 'method', 'original_url', 'proxy_auth',
-        'proxy_headers', 'proxy_url', 'response', 'ssl_context', 'ssl_fingerprint', 'url', 'write_body_task'
+        'authorization', 'body', 'chunked', 'compression', 'headers', 'loop', 'method', 'original_url', 'proxied_url',
+        'proxy', 'response', 'ssl_context', 'ssl_fingerprint', 'url', 'write_body_task'
     )
     
     def __new__(
@@ -88,10 +85,9 @@ class ClientRequest(RichAttributeErrorBaseType):
         data,
         query_string_parameters,
         cookies,
-        auth,
-        proxy_url,
-        proxy_headers,
-        proxy_auth,
+        authorization,
+        proxied_url,
+        proxy,
         ssl_context,
         ssl_fingerprint,
     ):
@@ -121,17 +117,11 @@ class ClientRequest(RichAttributeErrorBaseType):
         cookies : `None | dict<str, str | Morsel>`
             Cookies OwO.
         
-        auth : `None`, ``BasicAuth``
+        authorization : `None | BasicAuthorization`
             Authorization sent with the request.
         
-        proxy_url : `None | URL`
-            Proxy url to use if applicable.
-        
-        proxy_headers : `None | IgnoreCaseMultiValueDictionary`
-            Proxy headers sent with the request.
-        
-        proxy_auth : `None | BasicAuth`
-            Proxy authorization sent with the request.
+        proxy : `None | Proxy`
+            Proxy if applicable.
         
         ssl_context : `None | SSLContext``
             The connection's ssl type.
@@ -152,15 +142,24 @@ class ClientRequest(RichAttributeErrorBaseType):
             - If one of `data`'s field's content has unknown content-encoding.
             - If one of `data`'s field's content has unknown content-transfer-encoding.
         """
+        # check url
         if url.host is None:
-            raise ValueError('Host could not be detected.')
+            raise ValueError(f'Host could not be detected from url: {url!r}')
+        
+        # check proxied_url
+        if (method == METHOD_CONNECT):
+            if proxied_url is None:
+                raise TypeError(f'`proxied_url` cannot be `None` if `method == METHOD_CONNECT`.')
+            
+            if proxied_url.host is None:
+                raise ValueError(f'Host could not be detected from url: {proxied_url!r}')
         
         # Add extra query parameters to the url and remove fragments
         url = url.extend_query(query_string_parameters)
         request_url = url.with_fragment(None)
         
         # Check authorization
-        if auth is None:
+        if authorization is None:
             # If authorization is given, try to detect from url.
             user_id = url.user
             password = url.password
@@ -169,23 +168,21 @@ class ClientRequest(RichAttributeErrorBaseType):
                 if password is None:
                     password = ''
                 
-                auth = BasicAuth(user_id, password)
+                authorization = BasicAuthorization(user_id, password)
         
-        # Store auth in headers is applicable.
-        if (auth is not None):
-            headers[AUTHORIZATION] = auth.to_header()
+        # Store authorization in headers is applicable.
+        # Use `proxy_authorization` header if we are doing a connect request. 
+        if (authorization is not None):
+            headers[PROXY_AUTHORIZATION if method == METHOD_CONNECT else AUTHORIZATION] = authorization.to_header()
         
-        for key, value in DEFAULT_HEADERS:
-            headers.setdefault(key, value)
+        # Add default headers. Except if we are making a connect request.
+        if (method != METHOD_CONNECT):
+            for key, value in DEFAULT_HEADERS:
+                headers.setdefault(key, value)
         
-        # Add host to headers if not present.
-        if HOST not in headers:
-            location = request_url.raw_host
-            if is_ipv6_address(location):
-                location = f'[{location}]'
-            else:
-                location = location.rstrip('.')
-            
+        # Add host to headers if not present. Except if we are making a connect request.
+        if (method != METHOD_CONNECT) and (HOST not in headers):
+            location = request_url.raw_host.rstrip('.')
             if not request_url.is_default_port():
                 port = request_url.port
                 if (port is not None):
@@ -280,7 +277,7 @@ class ClientRequest(RichAttributeErrorBaseType):
         
         # Everything seems correct, create the object.
         self = object.__new__(cls)
-        self.auth = auth
+        self.authorization = authorization
         self.body = data
         self.chunked = chunked
         self.compression = compression
@@ -288,9 +285,8 @@ class ClientRequest(RichAttributeErrorBaseType):
         self.loop = loop
         self.method = method
         self.original_url = url
-        self.proxy_auth = proxy_auth
-        self.proxy_headers = proxy_headers
-        self.proxy_url = proxy_url
+        self.proxied_url = proxied_url
+        self.proxy = proxy
         self.response = None
         self.ssl_context = ssl_context
         self.ssl_fingerprint = ssl_fingerprint 
@@ -308,7 +304,15 @@ class ClientRequest(RichAttributeErrorBaseType):
         -------
         is_secure : `bool`
         """
-        return self.url.scheme in ('https', 'wss')
+        scheme = self.url.scheme
+        if scheme in ('http', 'ws'):
+            return False
+        
+        if scheme in ('https', 'wss'):
+            return True
+        
+        # If we have any other scheme let the user decide whether it is ssl or nah.
+        return (self.ssl_context is not None)
     
     
     @property
@@ -323,9 +327,7 @@ class ClientRequest(RichAttributeErrorBaseType):
         return ConnectionKey(
             self.host,
             self.port,
-            self.proxy_auth,
-            self.proxy_headers,
-            self.proxy_url,
+            self.proxy,
             self.is_secure(),
             self.ssl_context,
             self.ssl_fingerprint,
@@ -430,20 +432,15 @@ class ClientRequest(RichAttributeErrorBaseType):
         response : ``ClientResponse``
         """
         try:
-            url = self.url
             if self.method == METHOD_CONNECT:
+                url = self.proxied_url
                 path = url.raw_host
-                if is_ipv6_address(path):
-                    path = f'[{path}]'
-                
                 port = url.port
                 if port is not None:
                     path = f'{path}:{port}'
             
-            elif (self.proxy_url is not None) and (not self.is_secure()):
-                path = str(url)
-            
             else:
+                url = self.url
                 path = url.raw_path
                 raw_query_string = url.raw_query_string
                 if raw_query_string:
@@ -460,3 +457,77 @@ class ClientRequest(RichAttributeErrorBaseType):
         except:
             connection.close()
             raise
+    
+    
+    @property
+    def auth(self):
+        """
+        ``.auth`` is deprecated and will be removed in 2025 November.
+        Please use ``.authorization`` instead.
+        """
+        warn(
+            (
+                f'`{type(self).__name__}.auth` is deprecated and will be removed in 2025 November. '
+                f'Please use `.authorization instead.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
+        return self.authorization
+
+    
+    @property
+    def proxy_auth(self):
+        """
+        ``.proxy_auth`` is deprecated and will be removed in 2025 November.
+        Please use ``.proxy.authorization`` instead.
+        """
+        warn(
+            (
+                f'`{type(self).__name__}.proxy_auth` is deprecated and will be removed in 2025 November. '
+                f'Please use `.proxy.authorization instead.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
+        proxy = self.proxy
+        if (proxy is not None):
+            return proxy.authorization
+
+    
+    @property
+    def proxy_headers(self):
+        """
+        ``.proxy_headers`` is deprecated and will be removed in 2025 November.
+        Please use ``.proxy.headers`` instead.
+        """
+        warn(
+            (
+                f'`{type(self).__name__}.proxy_headers` is deprecated and will be removed in 2025 November. '
+                f'Please use `.proxy.headers instead.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
+        proxy = self.proxy
+        if (proxy is not None):
+            return proxy.headers
+    
+    
+    @property
+    def proxy_url(self):
+        """
+        ``.proxy_url`` is deprecated and will be removed in 2025 November.
+        Please use ``.proxy.url`` instead.
+        """
+        warn(
+            (
+                f'`{type(self).__name__}.proxy_url` is deprecated and will be removed in 2025 November. '
+                f'Please use `.proxy.url instead.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
+        proxy = self.proxy
+        if (proxy is not None):
+            return proxy.url

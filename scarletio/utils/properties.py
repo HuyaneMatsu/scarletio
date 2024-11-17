@@ -246,7 +246,7 @@ class cached_property:
     name : `str`
         The name of the cached property.
     """
-    __slots__ = ('fget', 'name',)
+    __slots__ = ('fget', 'fset', 'name',)
     
     @has_docs
     def __new__(cls, fget):
@@ -283,14 +283,29 @@ class cached_property:
         
         self = object.__new__(cls)
         self.fget = fget
+        self.fset = None
         self.name = name
         return self
+    
+    
+    def setter(self, fset):
+        new = object.__new__(type(self))
+        new.fget = self.fget
+        new.fset = fset
+        new.name = self.name
+        return new
+        
     
     def __get__(self, obj, type_):
         if obj is None:
             return self
         
-        value = obj._cache.get(self.name, ...)
+        cache = obj._cache
+        if cache is None:
+            cache = {}
+            obj._cache = cache
+        
+        value = cache.get(self.name, ...)
         if value is ...:
             value = self.fget(obj)
             obj._cache[self.name] = value
@@ -298,7 +313,19 @@ class cached_property:
         return value
     
     def __set__(self, obj, value):
-        raise AttributeError('can\'t set attribute')
+        fset = self.fset
+        if fset is None:
+            raise AttributeError('can\'t set attribute')
+        
+        value = fset(value)
+        
+        cache = obj._cache
+        if cache is None:
+            cache = {}
+            obj._cache = cache
+        
+        cache[self.name] = value
+    
     
     def __delete__(self, obj):
         raise AttributeError('can\'t delete attribute')

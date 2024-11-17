@@ -488,8 +488,8 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
     
     
     @copy_docs(TransportLayerBase.abort)
-    def abort(self):
-        self._close(None)
+    def abort(self, exception = None):
+        self._close(exception)
     
     
     @copy_docs(TransportLayerBase._fatal_error)

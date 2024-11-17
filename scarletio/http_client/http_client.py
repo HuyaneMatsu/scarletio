@@ -4,7 +4,7 @@ from ssl import SSLContext, create_default_context as create_default_ssl_context
 from warnings import warn
 
 from ..utils import IgnoreCaseMultiValueDictionary, RichAttributeErrorBaseType, export
-from ..web_common import BasicAuth, CookieJar, URL
+from ..web_common import CookieJar, URL
 from ..web_common.headers import (
     AUTHORIZATION, CONTENT_LENGTH, LOCATION, METHOD_DELETE, METHOD_GET, METHOD_HEAD, METHOD_OPTIONS, METHOD_PATCH,
     METHOD_POST, METHOD_PUT, URI
@@ -15,6 +15,7 @@ from ..web_socket import WebSocketClient
 from .client_request import ClientRequest
 from .connector_tcp import ConnectorTCP
 from .constants import REQUEST_TIMEOUT_DEFAULT
+from .proxy import Proxy
 from .request_context_manager import RequestContextManager
 from .ssl_fingerprint import SSLFingerprint
 from .web_socket_context_manager import WebSocketContextManager
@@ -36,15 +37,21 @@ class HTTPClient(RichAttributeErrorBaseType):
     loop : ``EventThread``
         The event loop used by the http client.
     
-    proxy_url : `None | URL`
-        Proxy url to use with all of the requests of the http client.
-    
-    proxy_auth : `None | BasicAuth`
-        Proxy authorization to send with all the requests of the http client.
+    proxy : `None | Proxy`
+        Proxy to use for each request.
     """
-    __slots__ = ('connector', 'cookie_jar', 'loop', 'proxy_headers', 'proxy_auth', 'proxy_url')
+    __slots__ = ('connector', 'cookie_jar', 'loop', 'proxy')
     
-    def __new__(cls, loop, *deprecated, connector = None, proxy_auth = None, proxy_headers = None, proxy_url = None):
+    def __new__(
+        cls,
+        loop,
+        *deprecated,
+        connector = None,
+        proxy = ...,
+        proxy_headers = ...,
+        proxy_url = ...,
+        proxy_auth = ...,
+    ):
         """
         Creates a new ``HTTPClient`` with the given parameters.
         
@@ -57,14 +64,8 @@ class HTTPClient(RichAttributeErrorBaseType):
             Connector to be used by the client.
             If not given or given as `None`, a new ``ConnectorTCP`` is created and used.
         
-        proxy_auth : `None | BasicAuth` = `None`, Optional (Keyword only)
-            Proxy authorization to send with all the requests of the http client.
-        
-        proxy_headers : `None | dict<str, str> | IgnoreCaseMultiValueDictionary` = `None`, Optional (Keyword only)
-            Proxy headers to use with all of the requests of the http client.
-            
-        proxy_url : `None | str | URL` = `None`, Optional (Keyword only)
-            Proxy url to use with all of the requests of the http client.
+        proxy : `None | Proxy`, Optional
+            Proxy to use with every request.
         
         Raises
         ------
@@ -74,48 +75,68 @@ class HTTPClient(RichAttributeErrorBaseType):
         # deprecated
         deprecated_length = len(deprecated)
         if deprecated_length:
-            warn(
-                (
-                    f'The `proxy_url` and `proxy_headers` parameters in `{cls.__name__}.__new__` are moved to be '
-                    f'keyword only. Support for positional is deprecated and will be removed in 2025 August.'
-                ),
-                FutureWarning,
-                stacklevel = 2,
-            )
-            
             proxy_url = deprecated[0]
             
             if deprecated_length > 1:
                 proxy_auth = deprecated[1]
+        
+        if (proxy_auth is not ...):
+            warn(
+                (
+                    f'`{cls.__name__}.__new__`\'s `proxy_auth` is deprecated '
+                    f'and will be removed at 2025 November. '
+                    'Please use `proxy = Proxy(url, authorization = authorization)` instead.'
+                ),
+                FutureWarning,
+                stacklevel = 2,
+            )
+        
+        if (proxy_headers is not ...):
+            warn(
+                (
+                    f'`{cls.__name__}.__new__`\'s `proxy_headers` is deprecated '
+                    f'and will be removed at 2025 November. '
+                    'Please use `proxy = Proxy(url, headers = headers)` instead.'
+                ),
+                FutureWarning,
+                stacklevel = 2,
+            )
+        
+        if (proxy_url is not ...):
+            warn(
+                (
+                    f'`{cls.__name__}.__new__`\'s `proxy_url` is deprecated '
+                    f'and will be removed at 2025 November. '
+                    'Please use `proxy = Proxy(url)` instead.'
+                ),
+                FutureWarning,
+                stacklevel = 2,
+            )
+        
+        if proxy is ...:
+            if (proxy_url is ...):
+                proxy = None
+            else:
+                proxy = Proxy(proxy_url, headers = proxy_headers, authorization = proxy_auth)
+        
+        elif (proxy is not None) and (not isinstance(proxy, Proxy)):
+            raise TypeError(
+                f'`proxy` can be `None`, `{Proxy.__name__}`, got '
+                f'{type(proxy).__name__}; {proxy!r}.'
+            )
         
         
         # connector
         if (connector is None):
             connector = ConnectorTCP(loop)
         
-        # proxy_auth
-        if (proxy_auth is not None) and (not isinstance(proxy_auth, BasicAuth)):
-            raise TypeError(
-                f'`proxy_auth` can be `None`, `{BasicAuth.__name__}`, got '
-                f'{type(proxy_auth).__name__}; {proxy_auth!r}.'
-            )
-        
-        # proxy_headers
-        if (proxy_headers is not None):
-            proxy_headers = IgnoreCaseMultiValueDictionary(proxy_headers)
-        
-        # proxy_url
-        if (proxy_url is not None):
-            proxy_url = URL(proxy_url)
         
         # Construct
         self = object.__new__(cls)
         self.connector = connector
         self.cookie_jar = CookieJar()
         self.loop = loop
-        self.proxy_auth = proxy_auth
-        self.proxy_headers = proxy_headers
-        self.proxy_url = proxy_url
+        self.proxy = proxy
         return self
     
     
@@ -168,7 +189,7 @@ class HTTPClient(RichAttributeErrorBaseType):
         TimeoutError
             Did not receive answer in time.
         TypeError
-            - `proxy_auth`'s type is incorrect.
+            - `proxy_authorization`'s type is incorrect.
             - ˙Cannot serialize a field of the given `data`.
         
         See Also
@@ -186,17 +207,6 @@ class HTTPClient(RichAttributeErrorBaseType):
             while True:
                 cookies = self.cookie_jar.filter_cookies(url)
                 
-                proxy_url = self.proxy_url
-                if proxy_url is None:
-                    proxy_auth = None
-                    proxy_headers = None
-                
-                else:
-                    proxy_auth = self.proxy_auth
-                    proxy_headers = self.proxy_headers
-                    if (proxy_headers is not None):
-                        proxy_headers = proxy_headers.copy()
-                
                 request = ClientRequest(
                     self.loop,
                     method,
@@ -206,9 +216,8 @@ class HTTPClient(RichAttributeErrorBaseType):
                     params,
                     cookies,
                     None,
-                    proxy_url,
-                    proxy_headers,
-                    proxy_auth,
+                    None,
+                    self.proxy,
                     None,
                     None,
                 )
@@ -288,17 +297,20 @@ class HTTPClient(RichAttributeErrorBaseType):
         url,
         headers,
         *,
-        auth = None,
+        authorization = None,
         data = None,
         params = None,
-        proxy_url = ...,
-        proxy_auth = ...,
-        proxy_headers = ...,
+        proxy = ...,
         redirects = 3,
         timeout = REQUEST_TIMEOUT_DEFAULT,
         ssl = ...,
         ssl_context = None,
         ssl_fingerprint = None,
+        # Deprecated ones:
+        auth = ...,
+        proxy_auth = ...,
+        proxy_url = ...,
+        proxy_headers = ...,
     ):
         """
         Internal method for executing an http request with extra parameters
@@ -316,7 +328,7 @@ class HTTPClient(RichAttributeErrorBaseType):
         headers : `None | dict<str, str> | IgnoreCaseMultiValueDictionary`
             Request headers.
         
-        auth : `None`, ``BasicAuth`` = `None`, Optional (Keyword only)
+        authorization : `None`, ``BasicAuthorization`` = `None`, Optional (Keyword only)
             Authorization to use.
         
         data : `None`, `object` = `None`, Optional (Keyword only)
@@ -325,14 +337,8 @@ class HTTPClient(RichAttributeErrorBaseType):
         params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>` = `None`, \
                 Optional (Keyword only)
         
-        proxy_url : `None | str | URL`, Optional (Keyword only)
-            Proxy url to use instead of the client's own.
-        
-        proxy_auth : `None | BasicAuth`, Optional (Keyword only)
-            Proxy authorization to use instead of the client's.
-        
-        proxy_headers : `None | dict<str, str> | IgnoreCaseMultiValueDictionary`, Optional (Keyword only)
-            Proxy headers to use instead of the client's.
+        proxy : `None | Proxy`, Optional
+            Proxy to use with the request.
         
         redirects : `int` = `3`, Optional (Keyword only)
             The maximal amount of allowed redirects.
@@ -356,14 +362,14 @@ class HTTPClient(RichAttributeErrorBaseType):
             - Too many redirects.
             - Connector closed.
         TypeError
-            - `proxy_auth`'s type is incorrect.
+            - `proxy_authorization`'s type is incorrect.
             - ˙Cannot serialize a field of the given `data`.
         ValueError
             - Host could not be detected from `url`.
             - `compression` and `Content-Encoding` would be set at the same time.
             - `chunked` cannot be set, because `Transfer-Encoding: chunked` is already set.
             - `chunked` cannot be set, because `Content-Length` header is already present.
-            - `headers` contain authorization headers, but `auth` parameter is given as well.
+            - `headers` contain authorization headers, but `authorization` parameter is given as well.
         RuntimeError
             - If one of `data`'s field's content has unknown content-encoding.
             - If one of `data`'s field's content has unknown content-transfer-encoding.
@@ -410,42 +416,73 @@ class HTTPClient(RichAttributeErrorBaseType):
                     f'Got {type(ssl).__name__}; {ssl!r}.'
                 )
         
+        if auth is not ...:
+            warn(
+                (
+                    f'`{type(self).__name__}._request2`\'s `auth` parameters has been deprecated and will be '
+                    f'removed at 2025 November. Please use `authorization` instead.'
+                ),
+                FutureWarning,
+                stacklevel = 3,
+            )
+            authorization = auth
+        
+        
+        if (proxy_auth is not ...):
+            warn(
+                (
+                    f'`{type(self).__name__}._request2`\'s `proxy_auth` is deprecated '
+                    f'and will be removed at 2025 November. '
+                    'Please use `proxy = Proxy(url, authorization = authorization)` instead.'
+                ),
+                FutureWarning,
+                stacklevel = 3,
+            )
+        
+        if (proxy_headers is not ...):
+            warn(
+                (
+                    f'`{type(self).__name__}._request2`\'s `proxy_headers` is deprecated '
+                    f'and will be removed at 2025 November. '
+                    'Please use `proxy = Proxy(url, headers = headers)` instead.'
+                ),
+                FutureWarning,
+                stacklevel = 3,
+            )
+        
+        if (proxy_url is not ...):
+            warn(
+                (
+                    f'`{type(self).__name__}._request2`\'s `proxy_url` is deprecated '
+                    f'and will be removed at 2025 November. '
+                    'Please use `proxy = Proxy(url)` instead.'
+                ),
+                FutureWarning,
+                stacklevel = 3,
+            )
+        
+        
         # Transform headers to IgnoreCaseMultiValueDictionary
         headers = IgnoreCaseMultiValueDictionary(headers)
         
-        if (headers and (auth is not None) and AUTHORIZATION in headers):
+        if (headers and (authorization is not None) and AUTHORIZATION in headers):
             raise ValueError(
-                f'Can\'t combine {AUTHORIZATION!r} header with the `auth` parameter. '
-                f'Got auth = {auth!r}; headers[{AUTHORIZATION!r}] = {headers[AUTHORIZATION]!r}.'
+                f'Can\'t combine {AUTHORIZATION!r} header with the `authorization` parameter. '
+                f'Got authorization = {authorization!r}; headers[{AUTHORIZATION!r}] = {headers[AUTHORIZATION]!r}.'
             )
         
-        # proxy_url
-        if (proxy_url is ...):
-            proxy_url = self.proxy_url
-        elif (proxy_url is not None):
-            proxy_url = URL(proxy_url)
-        
-        if (proxy_url is None):
-            proxy_auth = None
-            proxy_headers = None
-        
-        else:
-            # proxy_auth
-            if (proxy_auth is ...):
-                proxy_auth = self.proxy_auth
-            elif (proxy_auth is not None) and (not isinstance(proxy_auth, BasicAuth)):
-                raise TypeError(
-                    f'`proxy_auth` can be `None`, `{BasicAuth.__name__}`, got '
-                    f'{type(proxy_auth).__name__}; {proxy_auth!r}.'
-                )
-            
-            # proxy_headers
-            if (proxy_headers is ...):
-                proxy_headers = self.proxy_headers
-                if (proxy_headers is not None):
-                    proxy_headers = proxy_headers.copy()
+        # proxy
+        if proxy is ...:
+            if (proxy_url is ...):
+                proxy = self.proxy
             else:
-                proxy_headers = IgnoreCaseMultiValueDictionary(headers)
+                proxy = Proxy(proxy_url, headers = proxy_headers, authorization = proxy_auth)
+        
+        elif (proxy is not None) and (not isinstance(proxy, Proxy)):
+            raise TypeError(
+                f'`proxy` can be `None`, `{Proxy.__name__}`, got '
+                f'{type(proxy).__name__}; {proxy!r}.'
+            )
         
         history = []
         url = URL(url)
@@ -453,10 +490,7 @@ class HTTPClient(RichAttributeErrorBaseType):
         with Timeout(self.loop, timeout):
             while True:
                 cookies = self.cookie_jar.filter_cookies(url)
-
-                if (proxy_url is not None):
-                    proxy_url = URL(proxy_url)
-
+                
                 request = ClientRequest(
                     self.loop,
                     method,
@@ -465,10 +499,9 @@ class HTTPClient(RichAttributeErrorBaseType):
                     data,
                     params,
                     cookies,
-                    auth,
-                    proxy_url,
-                    proxy_headers,
-                    proxy_auth,
+                    authorization,
+                    None,
+                    proxy,
                     ssl_context,
                     ssl_fingerprint,
                 )
@@ -527,7 +560,6 @@ class HTTPClient(RichAttributeErrorBaseType):
                     
                     url = redirect_url
                     params = None
-                    await response.release()
                     continue
                 
                 break
@@ -658,7 +690,7 @@ class HTTPClient(RichAttributeErrorBaseType):
         
         Other Parameters
         ----------------
-        auth : `None | BasicAuth`, Optional (Keyword only)
+        authorization : `None | BasicAuthorization`, Optional (Keyword only)
             Authorization to use.
         
         data : `None | object`, Optional (Keyword only)
@@ -671,7 +703,7 @@ class HTTPClient(RichAttributeErrorBaseType):
         redirects : `int`, Optional (Keyword only)
             The maximal amount of allowed redirects.
         
-        proxy_auth : `None | BasicAuth`, Optional (Keyword only)
+        proxy_authorization : `None | BasicAuthorization`, Optional (Keyword only)
             Proxy authorization to use instead of the client's.
         
         proxy_headers : `None | dict<str, str> | IgnoreCaseMultiValueDictionary`, Optional (Keyword only)

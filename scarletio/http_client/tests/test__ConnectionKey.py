@@ -2,11 +2,10 @@ from ssl import SSLContext, create_default_context as create_default_ssl_context
 
 import vampytest
 
-from ...utils import IgnoreCaseMultiValueDictionary
-from ...web_common import BasicAuth, URL
-from ...web_common.helpers import freeze_headers
+from ...web_common import URL
 
 from ..connection_key import ConnectionKey
+from ..proxy import Proxy
 from ..ssl_fingerprint import SSLFingerprint
 
 
@@ -22,9 +21,7 @@ def _assert_fields_set(connection_key):
     vampytest.assert_instance(connection_key, ConnectionKey)
     vampytest.assert_instance(connection_key.host, str)
     vampytest.assert_instance(connection_key.port, int)
-    vampytest.assert_instance(connection_key.proxy_auth, BasicAuth, nullable = True)
-    vampytest.assert_instance(connection_key.proxy_headers_frozen, tuple, nullable = True)
-    vampytest.assert_instance(connection_key.proxy_url, URL, nullable = True)
+    vampytest.assert_instance(connection_key.proxy, Proxy, nullable = True)
     vampytest.assert_instance(connection_key.secure, bool)
     vampytest.assert_instance(connection_key.ssl_context, SSLContext, nullable = True)
     vampytest.assert_instance(connection_key.ssl_fingerprint, SSLFingerprint, nullable = True)
@@ -36,9 +33,7 @@ def test__ConnectionKey__new():
     """
     host = '1.1.1.1'
     port = 96
-    proxy_auth = BasicAuth('miau', 'land')
-    proxy_headers = IgnoreCaseMultiValueDictionary([('hey', 'mister')])
-    proxy_url = URL('https://orindance.party/')
+    proxy = Proxy(URL('https://orindance.party/'))
     secure = True
     ssl_context = create_default_ssl_context()
     ssl_fingerprint = SSLFingerprint(b'a' * 32)
@@ -46,9 +41,7 @@ def test__ConnectionKey__new():
     connection_key = ConnectionKey(
         host,
         port,
-        proxy_auth,
-        proxy_headers,
-        proxy_url,
+        proxy,
         secure,
         ssl_context,
         ssl_fingerprint,
@@ -58,9 +51,7 @@ def test__ConnectionKey__new():
     
     vampytest.assert_eq(connection_key.host, host)
     vampytest.assert_eq(connection_key.port, port)
-    vampytest.assert_eq(connection_key.proxy_auth, proxy_auth)
-    vampytest.assert_eq(connection_key.proxy_headers_frozen, freeze_headers(proxy_headers))
-    vampytest.assert_eq(connection_key.proxy_url, proxy_url)
+    vampytest.assert_eq(connection_key.proxy, proxy)
     vampytest.assert_eq(connection_key.secure, secure)
     vampytest.assert_eq(connection_key.ssl_context, ssl_context)
     vampytest.assert_eq(connection_key.ssl_fingerprint, ssl_fingerprint)
@@ -72,9 +63,7 @@ def test__ConnectionKey__repr():
     """
     host = '1.1.1.1'
     port = 96
-    proxy_auth = BasicAuth('miau', 'land')
-    proxy_headers = IgnoreCaseMultiValueDictionary([('hey', 'mister')])
-    proxy_url = URL('https://orindance.party/')
+    proxy = Proxy(URL('https://orindance.party/'))
     secure = True
     ssl_context = create_default_ssl_context()
     ssl_fingerprint = SSLFingerprint(b'a' * 32)
@@ -82,9 +71,7 @@ def test__ConnectionKey__repr():
     connection_key = ConnectionKey(
         host,
         port,
-        proxy_auth,
-        proxy_headers,
-        proxy_url,
+        proxy,
         secure,
         ssl_context,
         ssl_fingerprint,
@@ -97,9 +84,7 @@ def test__ConnectionKey__repr():
 def _iter_options__eq():
     host = '1.1.1.1'
     port = 96
-    proxy_auth = BasicAuth('miau', 'land')
-    proxy_headers = IgnoreCaseMultiValueDictionary([('hey', 'mister')])
-    proxy_url = URL('https://orindance.party/')
+    proxy = Proxy(URL('https://orindance.party/'))
     secure = True
     ssl_context = create_default_ssl_context()
     ssl_fingerprint = SSLFingerprint(b'a' * 32)
@@ -107,9 +92,7 @@ def _iter_options__eq():
     keyword_parameters = {
         'host': host,
         'port': port,
-        'proxy_auth': proxy_auth,
-        'proxy_headers': proxy_headers,
-        'proxy_url': proxy_url,
+        'proxy': proxy,
         'secure': secure,
         'ssl_context': ssl_context,
         'ssl_fingerprint': ssl_fingerprint,
@@ -143,25 +126,7 @@ def _iter_options__eq():
         keyword_parameters,
         {
             **keyword_parameters,
-            'proxy_auth': None,
-        },
-        False,
-    )
-    
-    yield (
-        keyword_parameters,
-        {
-            **keyword_parameters,
-            'proxy_headers': None,
-        },
-        False,
-    )
-    
-    yield (
-        keyword_parameters,
-        {
-            **keyword_parameters,
-            'proxy_url': None,
+            'proxy': None,
         },
         False,
     )
@@ -224,9 +189,7 @@ def test__ConnectionKey__hash():
     """
     host = '1.1.1.1'
     port = 96
-    proxy_auth = BasicAuth('miau', 'land')
-    proxy_headers = IgnoreCaseMultiValueDictionary([('hey', 'mister')])
-    proxy_url = URL('https://orindance.party/')
+    proxy = Proxy(URL('https://orindance.party/'))
     secure = True
     ssl_context = create_default_ssl_context()
     ssl_fingerprint = SSLFingerprint(b'a' * 32)
@@ -234,9 +197,7 @@ def test__ConnectionKey__hash():
     connection_key = ConnectionKey(
         host,
         port,
-        proxy_auth,
-        proxy_headers,
-        proxy_url,
+        proxy,
         secure,
         ssl_context,
         ssl_fingerprint,
@@ -252,9 +213,7 @@ def test__ConnectionKey__copy_proxyless():
     """
     host = '1.1.1.1'
     port = 96
-    proxy_auth = BasicAuth('miau', 'land')
-    proxy_headers = IgnoreCaseMultiValueDictionary([('hey', 'mister')])
-    proxy_url = URL('https://orindance.party/')
+    proxy = Proxy(URL('https://orindance.party/'))
     secure = True
     ssl_context = create_default_ssl_context()
     ssl_fingerprint = SSLFingerprint(b'a' * 32)
@@ -262,9 +221,7 @@ def test__ConnectionKey__copy_proxyless():
     connection_key = ConnectionKey(
         host,
         port,
-        proxy_auth,
-        proxy_headers,
-        proxy_url,
+        proxy,
         secure,
         ssl_context,
         ssl_fingerprint,
@@ -279,8 +236,6 @@ def test__ConnectionKey__copy_proxyless():
         ConnectionKey(
             host,
             port,
-            None,
-            None,
             None,
             secure,
             ssl_context,

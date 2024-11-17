@@ -5,9 +5,10 @@ import vampytest
 
 from ...core import  SocketTransportLayer, Task, get_event_loop
 from ...utils import IgnoreCaseMultiValueDictionary
-from ...web_common import BasicAuth, HttpReadWriteProtocol, URL
+from ...web_common import BasicAuthorization, HttpReadWriteProtocol, URL
 from ...web_common.headers import (
-    AUTHORIZATION, CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TYPE, COOKIE, HOST, METHOD_GET, TRANSFER_ENCODING
+    AUTHORIZATION, CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TYPE, COOKIE, HOST, METHOD_CONNECT, METHOD_GET,
+    PROXY_AUTHORIZATION, TRANSFER_ENCODING
 )
 from ...web_common.multipart import BytesPayload
 from ...web_common.multipart import PayloadBase
@@ -19,6 +20,7 @@ from ..connection_key import ConnectionKey
 from ..connector_base import ConnectorBase
 from ..constants import DEFAULT_HEADERS
 from ..request_info import RequestInfo
+from ..proxy import Proxy
 from ..ssl_fingerprint import SSLFingerprint
 
 
@@ -32,16 +34,15 @@ def _assert_fields_set(client_request):
         The client request to test.
     """
     vampytest.assert_instance(client_request, ClientRequest)
-    vampytest.assert_instance(client_request.auth, BasicAuth, nullable = True)
+    vampytest.assert_instance(client_request.authorization, BasicAuthorization, nullable = True)
     vampytest.assert_instance(client_request.body, PayloadBase, nullable = True)
     vampytest.assert_instance(client_request.chunked, bool)
     vampytest.assert_instance(client_request.compression, str, nullable = True)
     vampytest.assert_instance(client_request.headers, IgnoreCaseMultiValueDictionary)
     vampytest.assert_instance(client_request.method, str)
     vampytest.assert_instance(client_request.original_url, URL)
-    vampytest.assert_instance(client_request.proxy_auth, BasicAuth, nullable = True)
-    vampytest.assert_instance(client_request.proxy_headers, IgnoreCaseMultiValueDictionary, nullable = True)
-    vampytest.assert_instance(client_request.proxy_url, URL, nullable = True)
+    vampytest.assert_instance(client_request.proxied_url, URL, nullable = True)
+    vampytest.assert_instance(client_request.proxy, Proxy, nullable = True)
     vampytest.assert_instance(client_request.ssl_context, SSLContext, nullable = True)
     vampytest.assert_instance(client_request.ssl_fingerprint, SSLFingerprint, nullable = True)
     vampytest.assert_instance(client_request.url, URL)
@@ -61,10 +62,9 @@ async def test__ClientResponse__new():
     data = b'aya'
     query_string_parameters = {'query': 'me'}
     cookies = {'nue': 'murasa'}
-    auth = BasicAuth('okuu', 'crown')
-    proxy_url = URL('https://orindance.party/miau')
-    proxy_headers = IgnoreCaseMultiValueDictionary([('hey', 'sister')])
-    proxy_auth = BasicAuth('orin', 'cat')
+    authorization = BasicAuthorization('okuu', 'crown')
+    proxied_url = URL('https://orindance.party')
+    proxy = Proxy(URL('https://orindance.party/miau'))
     ssl_context = create_default_ssl_context()
     ssl_fingerprint = SSLFingerprint(b'a' * 32)
     
@@ -76,10 +76,9 @@ async def test__ClientResponse__new():
         data,
         query_string_parameters,
         cookies,
-        auth,
-        proxy_url,
-        proxy_headers,
-        proxy_auth,
+        authorization,
+        proxied_url,
+        proxy,
         ssl_context,
         ssl_fingerprint,
     )
@@ -101,10 +100,9 @@ def _iter_options__new():
         'data': None,
         'query_string_parameters': None,
         'cookies': None,
-        'auth': None,
-        'proxy_url': None,
-        'proxy_headers': None,
-        'proxy_auth': None,
+        'authorization': None,
+        'proxied_url': None,
+        'proxy': None,
         'ssl_context': None,
         'ssl_fingerprint': None,
     }
@@ -166,6 +164,19 @@ def _iter_options__new():
                 *DEFAULT_HEADERS,
                 (HOST, 'orindance.party'),
             ]),
+        ),
+    )
+    
+    # Test default headers | connect request
+    yield (
+        {
+            **keyword_parameters,
+            'method': METHOD_CONNECT,
+            'proxied_url': URL('https://orindance.party/'),
+        },
+        ('headers', ),
+        (
+            IgnoreCaseMultiValueDictionary(),
         ),
     )
     
@@ -244,37 +255,55 @@ def _iter_options__new():
         ),
     )
     
-    # Test auth in url
+    # Test authorization in url
     yield (
         {
             **keyword_parameters,
             'url': url.with_user('hey').with_password('mister'),
         },
-        ('auth', 'headers', 'url'),
+        ('authorization', 'headers', 'url'),
         (
-            BasicAuth('hey', 'mister'),
+            BasicAuthorization('hey', 'mister'),
             IgnoreCaseMultiValueDictionary([
                 *DEFAULT_HEADERS,
                 (HOST, 'orindance.party'),
-                (AUTHORIZATION, BasicAuth('hey', 'mister').to_header())
+                (AUTHORIZATION, BasicAuthorization('hey', 'mister').to_header())
             ]),
             url.with_user('hey').with_password('mister'),
         ),
     )
     
-    # Test auth as parameter
+    # Test authorization as parameter
     yield (
         {
             **keyword_parameters,
-            'auth': BasicAuth('hey', 'mister'),
+            'authorization': BasicAuthorization('hey', 'mister'),
         },
-        ('auth', 'headers', 'url'),
+        ('authorization', 'headers', 'url'),
         (
-            BasicAuth('hey', 'mister'),
+            BasicAuthorization('hey', 'mister'),
             IgnoreCaseMultiValueDictionary([
                 *DEFAULT_HEADERS,
                 (HOST, 'orindance.party'),
-                (AUTHORIZATION, BasicAuth('hey', 'mister').to_header())
+                (AUTHORIZATION, BasicAuthorization('hey', 'mister').to_header())
+            ]),
+            url,
+        ),
+    )
+    
+    # Test authorization as parameter | connect request.
+    yield (
+        {
+            **keyword_parameters,
+            'method': METHOD_CONNECT,
+            'authorization': BasicAuthorization('hey', 'mister'),
+            'proxied_url': URL('https://orindance.party/'),
+        },
+        ('authorization', 'headers', 'url'),
+        (
+            BasicAuthorization('hey', 'mister'),
+            IgnoreCaseMultiValueDictionary([
+                (PROXY_AUTHORIZATION, BasicAuthorization('hey', 'mister').to_header())
             ]),
             url,
         ),
@@ -421,11 +450,6 @@ async def test__ClientRequest__new__processing(keyword_parameters, return_attrib
     # copy headers
     keyword_parameters['headers'] = keyword_parameters['headers'].copy()
     
-    # copy proxy headers
-    proxy_headers = keyword_parameters['proxy_headers']
-    if (proxy_headers is not None):
-        keyword_parameters['proxy_headers'] = proxy_headers.copy()
-    
     # Construct
     client_request = ClientRequest(
         loop,
@@ -437,31 +461,40 @@ async def test__ClientRequest__new__processing(keyword_parameters, return_attrib
     return (*(getattr(client_request, attribute_name) for attribute_name in return_attribute_names),)
 
 
-
 def _iter_options__is_secure():
     yield (
         URL('http://orindance.party/'),
+        None,
         False,
     )
     
     yield (
         URL('ws://orindance.party/'),
+        None,
         False,
     )
     
     yield (
         URL('https://orindance.party/'),
+        None,
         True,
     )
     
     yield (
         URL('wss://orindance.party/'),
+        None,
+        True,
+    )
+    
+    yield (
+        URL('orindance.party/'),
+        create_default_ssl_context(),
         True,
     )
 
 
 @vampytest._(vampytest.call_from(_iter_options__is_secure()).returning_last())
-async def test__ClientRequest__is_secure(url):
+async def test__ClientRequest__is_secure(url, ssl_context):
     """
     Tests whether ``ClientRequest.is_secure`` works as intended.
     
@@ -470,7 +503,10 @@ async def test__ClientRequest__is_secure(url):
     Parameters
     ----------
     url : ``URL``
-        Url to create client response with.
+        Url to create client request with.
+    
+    ssl_context : `None | SSLContext`
+        Ssl context to create the request with.
     
     Returns
     -------
@@ -490,8 +526,7 @@ async def test__ClientRequest__is_secure(url):
         None,
         None,
         None,
-        None,
-        None,
+        ssl_context,
         None,
     )
     
@@ -513,10 +548,9 @@ async def test__ClientResponse__connection_key():
     data = b'aya'
     query_string_parameters = {'query': 'me'}
     cookies = {'nue': 'murasa'}
-    auth = BasicAuth('okuu', 'crown')
-    proxy_url = URL('https://orindance.party/miau')
-    proxy_headers = IgnoreCaseMultiValueDictionary([('hey', 'sister')])
-    proxy_auth = BasicAuth('orin', 'cat')
+    authorization = BasicAuthorization('okuu', 'crown')
+    proxied_url = URL('https://orindance.party/')
+    proxy = Proxy(URL('https://orindance.party/miau'))
     ssl_context = create_default_ssl_context()
     ssl_fingerprint = SSLFingerprint(b'a' * 32)
     
@@ -528,10 +562,9 @@ async def test__ClientResponse__connection_key():
         data,
         query_string_parameters,
         cookies,
-        auth,
-        proxy_url,
-        proxy_headers,
-        proxy_auth,
+        authorization,
+        proxied_url,
+        proxy,
         ssl_context,
         ssl_fingerprint,
     )
@@ -544,9 +577,7 @@ async def test__ClientResponse__connection_key():
         ConnectionKey(
             'orindance.party',
             443,
-            proxy_auth,
-            proxy_headers,
-            proxy_url,
+            proxy,
             True,
             ssl_context,
             ssl_fingerprint,
@@ -567,10 +598,9 @@ async def test__ClientResponse__request_info():
     data = b'aya'
     query_string_parameters = {'query': 'me'}
     cookies = {'nue': 'murasa'}
-    auth = BasicAuth('okuu', 'crown')
-    proxy_url = URL('https://orindance.party/miau')
-    proxy_headers = IgnoreCaseMultiValueDictionary([('hey', 'sister')])
-    proxy_auth = BasicAuth('orin', 'cat')
+    authorization = BasicAuthorization('okuu', 'crown')
+    proxied_url = URL('https://orindance.party/')
+    proxy = Proxy(URL('https://orindance.party/miau'))
     ssl_context = create_default_ssl_context()
     ssl_fingerprint = SSLFingerprint(b'a' * 32)
     
@@ -582,10 +612,9 @@ async def test__ClientResponse__request_info():
         data,
         query_string_parameters,
         cookies,
-        auth,
-        proxy_url,
-        proxy_headers,
-        proxy_auth,
+        authorization,
+        proxied_url,
+        proxy,
         ssl_context,
         ssl_fingerprint,
     )
@@ -598,7 +627,7 @@ async def test__ClientResponse__request_info():
         RequestInfo(
             IgnoreCaseMultiValueDictionary([
                 ('hey', 'mister'),
-                (AUTHORIZATION, BasicAuth('okuu', 'crown').to_header()),
+                (AUTHORIZATION, BasicAuthorization('okuu', 'crown').to_header()),
                 *DEFAULT_HEADERS,
                 (HOST, 'orindance.party'),
                 (COOKIE, 'nue=murasa'),
@@ -644,7 +673,7 @@ async def test__ClientResponse__host(url):
     Parameters
     ----------
     url : ``URL``
-        Url to create client response with.
+        Url to create client request with.
     
     Returns
     -------
@@ -658,7 +687,6 @@ async def test__ClientResponse__host(url):
         METHOD_GET,
         url,
         IgnoreCaseMultiValueDictionary(),
-        None,
         None,
         None,
         None,
@@ -706,7 +734,7 @@ async def test__ClientResponse__port(url):
     Parameters
     ----------
     url : ``URL``
-        Url to create client response with.
+        Url to create client request with.
     
     Returns
     -------
@@ -720,7 +748,6 @@ async def test__ClientResponse__port(url):
         METHOD_GET,
         url,
         IgnoreCaseMultiValueDictionary(),
-        None,
         None,
         None,
         None,
@@ -759,7 +786,6 @@ async def test__ClientResponse__begin():
             url,
             IgnoreCaseMultiValueDictionary(),
             data,
-            None,
             None,
             None,
             None,

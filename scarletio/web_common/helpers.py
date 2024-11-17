@@ -1,4 +1,4 @@
-__all__ = ('HttpVersion', 'HttpVersion10', 'HttpVersion11',)
+__all__ = ('HttpVersion', 'HttpVersion10', 'HttpVersion11', 'freeze_headers',)
 
 from re import I as re_ignore_case, compile as re_compile
 import socket as module_socket
@@ -342,21 +342,21 @@ def set_tcp_nodelay(transport, value):
         pass
 
 
-def freeze_headers(proxy_headers):
+def freeze_headers(headers):
     """
-    Creates a frozen version of the proxy headers.
+    Creates a frozen version of the given headers.
     
     Parameters
     ----------
-    proxy_headers : `None | IgnoreCaseMultiValueDictionary`
+    headers : `None | IgnoreCaseMultiValueDictionary`
         Proxy headers.
     
     Returns
     -------
     proxy_headers_frozen : `None | tuple<(str, tuple<str>)>`
     """
-    if (proxy_headers is not None) and proxy_headers:
-        return (*((key, tuple(proxy_headers.get_all(key))) for key in sorted(proxy_headers.keys())),)
+    if (headers is not None) and headers:
+        return (*((key, tuple(headers.get_all(key, ()))) for key in sorted(headers.keys())),)
 
 
 HTTP_STATUS_RP = re_compile(b'[ \t]*HTTP/(\\d+)\\.(\\d+)[ \t]+(\\d\\d\\d)(?:[ \t]+(.*?))?[ \t]*(?:\r\n|$)')
