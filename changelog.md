@@ -1,3 +1,14 @@
+# 1.0.81 *\[2024-11-21\]*
+
+#### Improvements
+
+- Add `URL.is_host_ip`.
+- `ProtocolBasket.pop_available_protocol` now always returns the protocol that is the closest to expiration.
+
+#### Bug fixes
+
+- Fix `ConnectorTCP` did not cache `HostInfoBasket`-s as intended.
+
 # 1.0.80 *\[2024-11-21\]*
 
 #### Improvements

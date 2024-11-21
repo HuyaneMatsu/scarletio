@@ -432,22 +432,8 @@ class ClientRequest(RichAttributeErrorBaseType):
         response : ``ClientResponse``
         """
         try:
-            if self.method == METHOD_CONNECT:
-                url = self.proxied_url
-                path = url.raw_host
-                port = url.port
-                if port is not None:
-                    path = f'{path}:{port}'
-            
-            else:
-                url = self.url
-                path = url.raw_path
-                raw_query_string = url.raw_query_string
-                if raw_query_string:
-                    path = f'{path}?{raw_query_string}'
-            
             # Note: perhaps move `write_http_request` to `HTTPStreamWriter`. 
-            connection.protocol.write_http_request(self.method, path, self.headers)
+            connection.protocol.write_http_request(self.method, self._build_path_to_request(), self.headers)
             self.write_body_task = Task(self.loop, self.write_body(connection))
             
             self.response = response = ClientResponse(self, connection)
@@ -457,6 +443,31 @@ class ClientRequest(RichAttributeErrorBaseType):
         except:
             connection.close()
             raise
+    
+    
+    def _build_path_to_request(self):
+        """
+        Builds the path to be requested.
+        
+        Returns
+        -------
+        path : `str`
+        """
+        if self.method == METHOD_CONNECT:
+            url = self.proxied_url
+            path = url.raw_host
+            port = url.port
+            if (port is not None):
+                path = f'{path}:{port}'
+        
+        else:
+            url = self.url
+            path = url.raw_path
+            raw_query_string = url.raw_query_string
+            if (raw_query_string is not None):
+                path = f'{path}?{raw_query_string}'
+    
+        return path
     
     
     @property

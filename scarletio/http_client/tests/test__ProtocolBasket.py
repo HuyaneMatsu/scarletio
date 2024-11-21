@@ -234,7 +234,6 @@ async def test__ProtocolBasket__eq(
     return output
 
 
-
 def _iter_options__bool():
     yield (
         0,
@@ -504,6 +503,52 @@ async def test__ProtocolBasket__pop_available_protocol__alive_protocol():
         vampytest.assert_is(output_protocol, protocol)
         vampytest.assert_instance(output_performed_requests, int)
         vampytest.assert_eq(output_performed_requests, 5)
+    
+    finally:
+        read_socket.close()
+        write_socket.close()
+
+
+
+async def test__ProtocolBasket__pop_available_protocol__pop_closest():
+    """
+    Tests whether ``ProtocolBasket.pop_available_protocol`` works as intended.
+    
+    Case: Pop closest.
+    
+    This function is a coroutine.
+    """
+    read_socket, write_socket = create_socket_pair()
+    now = 5000
+    
+    try:
+        connection_key = _get_default_connection_key()
+        loop = get_event_loop()
+        
+        protocol_basket = ProtocolBasket(connection_key)
+        
+        protocol_0 = HttpReadWriteProtocol(loop)
+        transport_0 = SocketTransportLayerBase(loop, None, write_socket, protocol_0, None)
+        protocol_0.connection_made(transport_0)
+        
+        protocol_1 = HttpReadWriteProtocol(loop)
+        transport_1 = SocketTransportLayerBase(loop, None, write_socket, protocol_1, None)
+        protocol_1.connection_made(transport_1)
+        
+        protocol_basket.add_available_protocol(protocol_0, now + 110.0, 15.0, 5)
+        protocol_basket.add_available_protocol(protocol_1, now + 100.0, 15.0, 6)
+        
+        output = protocol_basket.pop_available_protocol(now)
+        vampytest.assert_instance(output, tuple)
+        vampytest.assert_eq(len(output), 2)
+        output_protocol, output_performed_requests = output
+        vampytest.assert_is(output_protocol, protocol_1)
+    
+        output = protocol_basket.pop_available_protocol(now)
+        vampytest.assert_instance(output, tuple)
+        vampytest.assert_eq(len(output), 2)
+        output_protocol, output_performed_requests = output
+        vampytest.assert_is(output_protocol, protocol_0)
     
     finally:
         read_socket.close()

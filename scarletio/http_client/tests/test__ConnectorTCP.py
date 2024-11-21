@@ -195,12 +195,14 @@ async def test__ConnectorTCP__resolve_host__success():
         vampytest.assert_true(waiter.is_done())
         vampytest.assert_is(waiter.get_exception(), None)
         
+        expected_host_info_basket = HostInfoBasket.from_address_infos(host, [address_info_0, address_info_1])
         output = waiter.get_result()
         vampytest.assert_instance(output, tuple)
         vampytest.assert_eq(len(output), 2)
         vampytest.assert_instance(output[0], HostInfoBasket)
-        vampytest.assert_true(output[0] % HostInfoBasket.from_address_infos(host, [address_info_0, address_info_1]))
+        vampytest.assert_true(output[0] % expected_host_info_basket)
         vampytest.assert_is(output[1], None)
+        vampytest.assert_true(connector.host_info_basket_cache.get((host, port), None) % expected_host_info_basket)
         
     finally:
         type(loop).get_address_info = original_get_address_info

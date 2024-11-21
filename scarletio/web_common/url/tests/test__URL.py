@@ -629,6 +629,48 @@ def _iter_options__is_host_ip_v6():
     )
 
 
+def _iter_options__is_host_ip():
+    yield (
+        '',
+        False,
+    )
+    
+    yield (
+        'https://orindance.party',
+        False,
+    )
+    
+    yield (
+        '1.1.1.1',
+        True,
+    )
+    
+    yield (
+        '[::2]',
+        True,
+    )
+
+
+@vampytest._(vampytest.call_from(_iter_options__is_host_ip()).returning_last())
+def test__Url__is_host_ip(input_value):
+    """
+    Tests whether ``Url.is_host_ip`` works as intended.
+    
+    Parameters
+    ----------
+    input_value : `str`
+        Value to test with.
+    
+    Returns
+    -------
+    is_host_ip : `bool`
+    """
+    url = URL(input_value)
+    output = url.is_host_ip()
+    vampytest.assert_instance(output, bool)
+    return output
+
+
 @vampytest._(vampytest.call_from(_iter_options__is_host_ip_v6()).returning_last())
 def test__Url__is_host_ip_v6(input_value):
     """

@@ -12,7 +12,7 @@ from ..core import CancelledError, Future, SSLBidirectionalTransportLayer, Task
 from ..utils import CauseGroup, IgnoreCaseMultiValueDictionary
 from ..web_common.exceptions import ProxyError
 from ..web_common.headers import METHOD_CONNECT
-from ..web_common.helpers import is_ip_address, set_tcp_nodelay
+from ..web_common.helpers import set_tcp_nodelay
 from ..web_common.http_protocol import HttpReadWriteProtocol
 
 from .client_request import ClientRequest
@@ -229,7 +229,9 @@ class ConnectorTCP(ConnectorBase):
                 result = (None, exception)
             
             else:
-                result = (HostInfoBasket.from_address_infos(host, infos), None)
+                new_host_info_basket = HostInfoBasket.from_address_infos(host, infos)
+                self.host_info_basket_cache[host, port] = new_host_info_basket
+                result = (new_host_info_basket, None)
         
         finally:
             try:
@@ -294,11 +296,12 @@ class ConnectorTCP(ConnectorBase):
         BaseException
             Any other cached exception.
         """
-        host = request.url.raw_host
+        url = request.url
+        host = url.raw_host
         port = request.port
         
         # If host is an ip return
-        if is_ip_address(host):
+        if url.is_host_ip():
             yield HostInfo.from_ip(host, port, self.family)
             return
         

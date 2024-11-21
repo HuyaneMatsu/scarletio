@@ -608,6 +608,21 @@ class URL(RichAttributeErrorBaseType):
         return scheme_default_port == port
     
     
+    def is_host_ip(self):
+        """
+        Returns whether the host is an ip address.
+        
+        Returns
+        -------
+        is_ip : `bool`
+        """
+        host = self._host
+        if host is None:
+            return False
+        
+        return host.is_ip()
+    
+    
     def is_host_ip_v4(self):
         """
         Returns whether the host is an ipv4 address.

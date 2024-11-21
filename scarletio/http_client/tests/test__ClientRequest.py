@@ -833,3 +833,106 @@ async def test__ClientResponse__begin():
     finally:
         read_socket.close()
         write_socket.close()
+
+
+def _iter_options__build_path_to_request():
+    url = URL('https://orindance.party/')
+    
+    keyword_parameters = {
+        'method': METHOD_GET,
+        'url': url,
+        'headers': IgnoreCaseMultiValueDictionary(),
+        'data': None,
+        'query_string_parameters': None,
+        'cookies': None,
+        'authorization': None,
+        'proxied_url': None,
+        'proxy': None,
+        'ssl_context': None,
+        'ssl_fingerprint': None,
+    }
+    
+    
+    yield (
+        keyword_parameters,
+        '/',
+    )
+    
+    yield (
+        {
+            **keyword_parameters,
+            'url': URL('https://orindance.party/hey/mister'),
+        },
+        '/hey/mister',
+    )
+    
+    yield (
+        {
+            **keyword_parameters,
+            'url': URL('https://orindance.party:8000/'),
+        },
+        '/',
+    )
+    
+    yield (
+        {
+            **keyword_parameters,
+            'url': URL('https://orindance.party?nyan=er'),
+        },
+        '/?nyan=er',
+    )
+    
+    yield (
+        {
+            **keyword_parameters,
+            'method': METHOD_CONNECT,
+            'url': URL('https://www.astil.dev/'),
+            'proxied_url': URL('https://orindance.party?nyan=er'),
+        },
+        'orindance.party:443',
+    )
+    
+    yield (
+        {
+            **keyword_parameters,
+            'method': METHOD_CONNECT,
+            'url': URL('https://www.astil.dev/'),
+            'proxied_url': URL('https://orindance.party:8000?nyan=er'),
+        },
+        'orindance.party:8000',
+    )
+
+
+@vampytest._(vampytest.call_from(_iter_options__build_path_to_request()).returning_last())
+async def test__ClientRequest__build_path_to_request__processing(keyword_parameters):
+    """
+    Tests whether ``ClientRequest._build_path_to_request`` works as intended.
+    
+    This function is a coroutine.
+    
+    Parameters
+    ----------
+    keyword_parameters : `dict<str, object>`
+        Keyword parameter to create the request with.
+    
+    Returns
+    -------
+    output : `str`
+    """
+    loop = get_event_loop()
+    
+    # copy headers
+    keyword_parameters['headers'] = keyword_parameters['headers'].copy()
+    
+    # Construct
+    client_request = ClientRequest(
+        loop,
+        **keyword_parameters,
+    )
+    _assert_fields_set(client_request)
+    
+    # Return
+    output = client_request._build_path_to_request()
+    vampytest.assert_instance(output, str)
+    return output
+
