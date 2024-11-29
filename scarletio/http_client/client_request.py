@@ -296,6 +296,80 @@ class ClientRequest(RichAttributeErrorBaseType):
         return self
     
     
+    def __repr__(self):
+        """Returns the client requests' representation."""
+        repr_parts = ['<', type(self).__name__]
+        
+        # method
+        repr_parts.append(' method = ')
+        repr_parts.append(repr(self.method))
+        
+        # url
+        repr_parts.append(', url = ')
+        repr_parts.append(repr(self.url))
+        
+        # headers
+        repr_parts.append(', headers = ')
+        repr_parts.append(repr(self.headers))
+        
+        # original_url
+        original_url = self.original_url
+        if self.url != original_url:
+            repr_parts.append(', original_url = ')
+            repr_parts.append(repr(original_url))
+        
+        # authorization
+        authorization = self.authorization
+        if (authorization is not None):
+            repr_parts.append(', authorization = ')
+            repr_parts.append(repr(authorization))
+        
+        # body
+        body = self.body
+        if (body is not None):
+            repr_parts.append(', type(body) = ')
+            repr_parts.append(type(body).__name__)
+        
+        # chunked
+        chunked = self.chunked
+        if chunked:
+            repr_parts.append(', chunked = ')
+            repr_parts.append(repr(chunked))
+        
+        # compression
+        compression = self.compression
+        if (compression is not None):
+            repr_parts.append(', compression = ')
+            repr_parts.append(repr(compression))
+        
+        # proxied_url
+        proxied_url = self.proxied_url
+        if (proxied_url is not None):
+            repr_parts.append(', proxied_url = ')
+            repr_parts.append(repr(proxied_url))
+        
+        # proxy
+        proxy = self.proxy
+        if (proxy is not None):
+            repr_parts.append(', proxy = ')
+            repr_parts.append(repr(proxy))
+        
+        # ssl_context
+        ssl_context = self.ssl_context
+        if (ssl_context is not None):
+            repr_parts.append(', ssl_context = ')
+            repr_parts.append(repr(ssl_context))
+        
+        # ssl_fingerprint
+        ssl_fingerprint = self.ssl_fingerprint
+        if (ssl_fingerprint is not None):
+            repr_parts.append(', ssl_fingerprint = ')
+            repr_parts.append(repr(ssl_fingerprint))
+        
+        repr_parts.append('>')
+        return ''.join(repr_parts)
+    
+    
     def is_secure(self):
         """
         Returns whether the request is secure.
@@ -383,9 +457,6 @@ class ClientRequest(RichAttributeErrorBaseType):
         
         Parameters
         ----------
-        writer : ``HTTPStreamWriter``
-            Writer used to write the request's body into the connection's transport.
-        
         connection : ``Connection``
             Connection of the request with what the payload is sent.
         """
@@ -466,7 +537,7 @@ class ClientRequest(RichAttributeErrorBaseType):
             raw_query_string = url.raw_query_string
             if (raw_query_string is not None):
                 path = f'{path}?{raw_query_string}'
-    
+        
         return path
     
     

@@ -155,10 +155,7 @@ class URLPartBaseParsed(URLPartBase):
             decoded = self._decoded
         
         else:
-            if flags & URL_PART_FLAG_ENCODED_SET:
-                decoded = self._decode(self._encoded)
-            else:
-                decoded = self._serialize(self.parsed, False)
+            decoded = self._serialize(self.parsed, False)
             
             self._decoded = decoded
             self._flags = flags | URL_PART_FLAG_DECODED_SET
@@ -174,10 +171,7 @@ class URLPartBaseParsed(URLPartBase):
             encoded = self._encoded
         
         else:
-            if flags & URL_PART_FLAG_DECODED_SET:
-                encoded = self._encode(self._decoded)
-            else:
-                encoded = self._serialize(self.parsed, True)
+            encoded = self._serialize(self.parsed, True)
             
             self._encoded = encoded
             self._flags = flags | URL_PART_FLAG_ENCODED_SET

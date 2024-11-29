@@ -1,7 +1,8 @@
-__all__ = ('AttributeError', 'RichAttributeErrorBaseType',)
+__all__ = ('AttributeError', 'AttributeErrorBase', 'RichAttributeErrorBaseType',)
 
 
 ATTRIBUTE_ERROR_HAS_RICH_SLOTS = hasattr(AttributeError, 'obj') and hasattr(AttributeError, 'name')
+AttributeErrorBase = AttributeError
 
 
 class AttributeError(AttributeError):
@@ -18,13 +19,13 @@ class AttributeError(AttributeError):
     if ATTRIBUTE_ERROR_HAS_RICH_SLOTS:
         __slots__ = ()
         
-        attribute_name = AttributeError.name
-        instance = AttributeError.obj
+        attribute_name = AttributeErrorBase.name
+        instance = AttributeErrorBase.obj
     else:
         __slots__ = ('attribute_name', 'instance')
     
     def __new__(cls, instance, attribute_name):
-        self = Exception.__new__(cls, instance, attribute_name)
+        self = AttributeErrorBase.__new__(cls, instance, attribute_name)
         self.instance = instance
         self.attribute_name = attribute_name
         return self

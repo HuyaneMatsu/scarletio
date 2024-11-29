@@ -49,9 +49,9 @@ def _assert_fields_set(client_request):
     vampytest.assert_instance(client_request.write_body_task, Task, nullable = True)
 
 
-async def test__ClientResponse__new():
+async def test__ClientRequest__new():
     """
-    Tests whether ``ClientResponse.__new__`` works as intended.
+    Tests whether ``ClientRequest.__new__`` works as intended.
     
     This function is a coroutine.
     """
@@ -88,6 +88,44 @@ async def test__ClientResponse__new():
     vampytest.assert_eq(client_request.method, method)
     vampytest.assert_eq(client_request.ssl_context, ssl_context)
     vampytest.assert_eq(client_request.ssl_fingerprint, ssl_fingerprint)
+
+
+async def test__ClientRequest__repr():
+    """
+    Tests whether ``ClientRequest.__repr__`` works as intended.
+    
+    This function is a coroutine.
+    """
+    loop = get_event_loop()
+    method = METHOD_GET
+    url = URL('https://orindance.party/#mister')
+    headers = IgnoreCaseMultiValueDictionary([('hey', 'mister')])
+    data = b'aya'
+    query_string_parameters = {'query': 'me'}
+    cookies = {'nue': 'murasa'}
+    authorization = BasicAuthorization('okuu', 'crown')
+    proxied_url = URL('https://orindance.party')
+    proxy = Proxy(URL('https://orindance.party/miau'))
+    ssl_context = create_default_ssl_context()
+    ssl_fingerprint = SSLFingerprint(b'a' * 32)
+    
+    client_request = ClientRequest(
+        loop,
+        method,
+        url,
+        headers,
+        data,
+        query_string_parameters,
+        cookies,
+        authorization,
+        proxied_url,
+        proxy,
+        ssl_context,
+        ssl_fingerprint,
+    )
+    
+    output = repr(client_request)
+    vampytest.assert_instance(output, str)
 
 
 def _iter_options__new():
@@ -535,9 +573,9 @@ async def test__ClientRequest__is_secure(url, ssl_context):
     return output
 
 
-async def test__ClientResponse__connection_key():
+async def test__ClientRequest__connection_key():
     """
-    Tests whether ``ClientResponse.connection_key`` works as intended.
+    Tests whether ``ClientRequest.connection_key`` works as intended.
     
     This function is a coroutine.
     """
@@ -585,9 +623,9 @@ async def test__ClientResponse__connection_key():
     )
 
 
-async def test__ClientResponse__request_info():
+async def test__ClientRequest__request_info():
     """
-    Tests whether ``ClientResponse.request_info`` works as intended.
+    Tests whether ``ClientRequest.request_info`` works as intended.
     
     This function is a coroutine.
     """
@@ -664,7 +702,7 @@ def _iter_options__host():
 
 
 @vampytest._(vampytest.call_from(_iter_options__host()).returning_last())
-async def test__ClientResponse__host(url):
+async def test__ClientRequest__host(url):
     """
     Tests whether ``ClientRequest.host`` works as intended.
     
@@ -725,7 +763,7 @@ def _iter_options__port():
 
 
 @vampytest._(vampytest.call_from(_iter_options__port()).returning_last())
-async def test__ClientResponse__port(url):
+async def test__ClientRequest__port(url):
     """
     Tests whether ``ClientRequest.port`` works as intended.
     

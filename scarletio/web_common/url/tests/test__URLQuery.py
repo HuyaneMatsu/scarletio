@@ -117,3 +117,14 @@ def test__URLQuery__serialize(value, encoded):
     output = URLQuery._serialize(value, encoded)
     vampytest.assert_instance(output, str, nullable = True)
     return output
+
+
+def test__URLQuery__quote_applied_correctly():
+    """
+    Tests whether ``URLQuery`` quoting is applied as intended independently from call order.
+    """
+    output = URLQuery.create_from_parsed(MultiValueDictionary([('hey', 'mister'), ('nyan', 'ers')]))
+    vampytest.assert_eq(output.encoded, output.decoded)
+
+    output = URLQuery.create_from_parsed(MultiValueDictionary([('hey', 'mister'), ('nyan', 'ers')]))
+    vampytest.assert_eq(output.decoded, output.encoded)

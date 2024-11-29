@@ -584,7 +584,10 @@ class ReadProtocolBase(AbstractProtocolBase):
         -------
         payload_stream : ``PayloadStream``
         """
-        assert self._payload_reader is None, 'Payload reader already set!'
+        assert self._payload_reader is None, (
+            f'Payload reader already set! '
+            f'payload_reader = {self._payload_reader!r}; payload_reader_function = {payload_reader_function!r}'
+        )
         
         payload_stream = PayloadStream(self)
         

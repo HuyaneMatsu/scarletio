@@ -926,18 +926,25 @@ class CallableAnalyzer:
         -----
         `*args` parameter is ignored from the calculation.
         """
-        iterator = iter(self.parameters)
+        parameters = self.parameters
+        length = len(parameters)
+        index = 0
         start = 0
-        for parameter in iterator:
+        
+        while index < length:
+            parameter = parameters[index]
             if not parameter.is_positional():
                 return start, start
             
             if parameter.reserved:
+                index += 1
                 continue
             
             if parameter.has_default:
+                start = index
                 break
             
+            index += 1
             start += 1
             continue
         
@@ -945,9 +952,11 @@ class CallableAnalyzer:
             return start, start
         
         end = start
-        for parameter in iterator:
+        while index < length:
             if not parameter.is_positional():
                 return start, end
+            
+            index += 1
             
             if parameter.reserved:
                 continue

@@ -1,3 +1,20 @@
+# 1.0.82 *\[2024-11-29\]*
+
+#### Improvements
+
+- Add missing `ClientRequest.__repr__`.
+
+#### Bug fixes
+
+- Interactive console at a few cases did not display `SyntaxError` as intended while it should have.
+    This was due to badly built exceptions in the compiler. Workaround has been added.
+- Fix `CallableAnalyzer.get_non_reserved_positional_parameter_range` could return incorrect value if there were
+    parameters with default values set.
+- Fix `TypeError: BaseException.__new__(AttributeError) is not safe, use AttributeError.__new__()` in
+    `AttributeError.__new__` on pypy3.8.13.
+- Fix `URLQuery` and other url parts could apply quoting on a stacked way depending on cache order. (from 1.0.80)
+- Fix `ProtocolBasket.pop_available_protocol` could remove incorrect protocol from the basket. (from 1.0.81)
+
 # 1.0.81 *\[2024-11-21\]*
 
 #### Improvements

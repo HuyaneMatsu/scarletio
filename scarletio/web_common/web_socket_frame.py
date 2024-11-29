@@ -97,7 +97,7 @@ class WebSocketFrame(RichAttributeErrorBaseType):
     
     
     def __eq__(self, other):
-        """Returns whether the two websocket frames are equal."""
+        """Returns whether the two web socket frames are equal."""
         if type(self) is not type(self):
             return NotImplemented
         

@@ -535,8 +535,13 @@ async def test__ProtocolBasket__pop_available_protocol__pop_closest():
         transport_1 = SocketTransportLayerBase(loop, None, write_socket, protocol_1, None)
         protocol_1.connection_made(transport_1)
         
+        protocol_2 = HttpReadWriteProtocol(loop)
+        transport_2 = SocketTransportLayerBase(loop, None, write_socket, protocol_2, None)
+        protocol_2.connection_made(transport_2)
+        
         protocol_basket.add_available_protocol(protocol_0, now + 110.0, 15.0, 5)
         protocol_basket.add_available_protocol(protocol_1, now + 100.0, 15.0, 6)
+        protocol_basket.add_available_protocol(protocol_2, now + 120.0, 15.0, 6)
         
         output = protocol_basket.pop_available_protocol(now)
         vampytest.assert_instance(output, tuple)
@@ -549,6 +554,12 @@ async def test__ProtocolBasket__pop_available_protocol__pop_closest():
         vampytest.assert_eq(len(output), 2)
         output_protocol, output_performed_requests = output
         vampytest.assert_is(output_protocol, protocol_0)
+    
+        output = protocol_basket.pop_available_protocol(now)
+        vampytest.assert_instance(output, tuple)
+        vampytest.assert_eq(len(output), 2)
+        output_protocol, output_performed_requests = output
+        vampytest.assert_is(output_protocol, protocol_2)
     
     finally:
         read_socket.close()

@@ -3,8 +3,9 @@ __all__ = ()
 import sys, warnings
 
 from ....utils import add_console_input
-from ....utils.trace.exception_representation.syntax_error_helpers import is_syntax_error, right_strip_syntax_error_line
-
+from ....utils.trace.exception_representation.syntax_error_helpers import (
+    is_syntax_error_details_omitted, fixup_syntax_error_details_omitted, is_syntax_error, right_strip_syntax_error_line
+)
 
 PYTHON_COMPILE_FLAG_DONT_IMPLY_DEDENT = 1 << 9
 PYTHON_COMPILE_FLAG_ALLOW_TOP_LEVEL_AWAIT = 1 << 13
@@ -63,8 +64,23 @@ def maybe_compile(buffer, file_name):
             except IndentationError:
                 raise
             
-            except SyntaxError as err:
-                exception_1 = err
+            except SyntaxError as exception:
+                exception_0 = exception
+            
+            else:
+                if (code_object is not None):
+                    add_console_input(file_name, source)
+                    return code_object
+                
+                exception_0 = None
+            
+            try:
+                code_object = _try_compile(source, file_name, False)
+            except IndentationError:
+                raise
+            
+            except SyntaxError as exception:
+                exception_1 = exception
             
             else:
                 if (code_object is not None):
@@ -73,39 +89,38 @@ def maybe_compile(buffer, file_name):
                 
                 exception_1 = None
             
-            try:
-                code_object = _try_compile(source, file_name, False)
-            except IndentationError:
-                raise
-            
-            except SyntaxError as err:
-                exception_2 = err
+            if (exception_0 is None):
+                if (exception_1 is not None):
+                    if is_syntax_error_details_omitted(exception_1):
+                        fixup_syntax_error_details_omitted(exception_1)
+                    raise exception_1
             
             else:
-                if (code_object is not None):
-                    add_console_input(file_name, source)
-                    return code_object
-                
-                exception_2 = None
-            
-            if (exception_1 is None):
-                if (exception_2 is not None):
-                    raise exception_2
-            
-            else:
-                if (exception_2 is not None):
-                    if is_syntax_error(exception_1):
+                if (exception_1 is not None):
+                    if (
+                        is_syntax_error(exception_0) or
+                        (
+                            is_syntax_error_details_omitted(exception_0) and
+                            (fixup_syntax_error_details_omitted(exception_0) is None)
+                        )
+                    ):
+                        right_strip_syntax_error_line(exception_0)
+                    
+                    if (
+                        is_syntax_error(exception_1) or
+                        (
+                            is_syntax_error_details_omitted(exception_1) and
+                            (fixup_syntax_error_details_omitted(exception_1) is None)
+                        )
+                    ):
                         right_strip_syntax_error_line(exception_1)
                     
-                    if is_syntax_error(exception_2):
-                        right_strip_syntax_error_line(exception_2)
-                    
-                    if exception_1.args == exception_2.args:
-                        raise SyntaxError(*exception_1.args)
+                    if exception_0.args == exception_1.args:
+                        raise SyntaxError(*exception_0.args)
         
         finally:
+            exception_0 = None
             exception_1 = None
-            exception_2 = None
     
     return None
 

@@ -111,7 +111,7 @@ class Connection(RichAttributeErrorBaseType):
         """
         warn(
             (
-                f'`{type(self).__name__}.transport` is deprecated and will be removed in 2025 Apirl. '
+                f'`{type(self).__name__}.transport` is deprecated and will be removed in 2025 April. '
                 f'Please use `.get_transport()` instead.'
             ),
             FutureWarning,
@@ -266,7 +266,7 @@ class Connection(RichAttributeErrorBaseType):
         """
         warn(
             (
-                f'`{type(self).__name__}.closed` is deprecated and will be removed in 2025 Apirl. '
+                f'`{type(self).__name__}.closed` is deprecated and will be removed in 2025 April. '
                 f'Please use `.is_closed()` instead.'
             ),
             FutureWarning,

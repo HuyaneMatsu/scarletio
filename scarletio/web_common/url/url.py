@@ -973,12 +973,9 @@ class URL(RichAttributeErrorBaseType):
         -------
         query_string : `str`
         """
-        try:
-            query = self._query
-            if (query is not None):
-                return query.decoded
-        except:
-            raise ValueError()
+        query = self._query
+        if (query is not None):
+            return query.decoded
     
     
     @property

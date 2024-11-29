@@ -155,14 +155,15 @@ class ProtocolBasket(RichAttributeErrorBaseType):
         while available:
             # get the item with lowest expiration
             iterator = iter(available)
-            hit = next(iterator) 
-            index = 0
+            hit = next(iterator)
+            hit_index = 0
             
             for index, item in enumerate(iterator, 1):
                 if item[1] < hit[1]:
                     hit = item
+                    hit_index = index
             
-            del available[index]
+            del available[hit_index]
             protocol, expiration, performed_requests = hit
             if (protocol.get_transport() is None):
                 continue
