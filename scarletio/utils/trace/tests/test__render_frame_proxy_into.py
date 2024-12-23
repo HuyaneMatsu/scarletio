@@ -30,7 +30,7 @@ def test__render_frame_proxy_into__no_highlighter():
     Case: No highlighter.
     """
     frame_proxy = _get_input_frame()
-    output = render_frame_proxy_into(frame_proxy, [], None)
+    output = render_frame_proxy_into(frame_proxy, None, [])
     
     vampytest.assert_instance(output, list)
     
@@ -48,7 +48,7 @@ def test__render_frame_proxy_into__with_highlighter():
     Case: With highlighter.
     """
     frame_proxy = _get_input_frame()
-    output = render_frame_proxy_into(frame_proxy, [], DEFAULT_ANSI_HIGHLIGHTER)
+    output = render_frame_proxy_into(frame_proxy, DEFAULT_ANSI_HIGHLIGHTER, [])
     
     vampytest.assert_instance(output, list)
     

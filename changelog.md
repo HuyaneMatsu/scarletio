@@ -1,3 +1,18 @@
+# 1.0.83 *\[2024-12-23\]*
+
+#### Improvements
+
+- Add `get_token_type_and_repr_mode_for_variable`, `add_highlighted_part_into` and `add_highlighted_parts_into`
+    for helping for custom highlighters.
+- Add new highlight token types for styled texts:
+    - TOKEN_TYPE_TEXT
+    - TOKEN_TYPE_TEXT_NEGATIVE
+    - TOKEN_TYPE_TEXT_POSITIVE
+    - TOKEN_TYPE_TEXT_NEUTRAL
+    - TOKEN_TYPE_TEXT_UNKNOWN
+    - TOKEN_TYPE_TEXT_HIGHLIGHT
+- Update a few default highlight colors.
+
 # 1.0.82 *\[2024-11-29\]*
 
 #### Improvements

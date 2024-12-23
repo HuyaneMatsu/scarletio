@@ -583,7 +583,7 @@ class ExecutorThread(Thread):
             extend.append('Stack for ')
             extend.append(repr(self))
             extend.append('\n')
-            extend = add_trace_title_into('(Most recent call last):', extend, highlighter)
+            extend = add_trace_title_into('(Most recent call last):', highlighter, extend)
             extend.append('\n')
             extend = render_frames_into(frames, extend = extend, highlighter = highlighter)
         

@@ -75,7 +75,7 @@ class Parameter:
         """Returns the parameter's representation."""
         repr_parts = []
         repr_parts.append('<')
-        repr_parts.append(self.__class__.__name__)
+        repr_parts.append(type(self).__name__)
         repr_parts.append(' ')
         
         if self.reserved:

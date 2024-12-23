@@ -54,7 +54,7 @@ def test__render_exception_proxy_into__no_highlight():
     Case: No highlight.
     """
     exception_proxy = _get_input_exception_proxy()
-    output = render_exception_proxy_into(exception_proxy, [], None)
+    output = render_exception_proxy_into(exception_proxy, None, [])
     vampytest.assert_instance(output, list)
     
     for element in output:
@@ -74,7 +74,7 @@ def test__render_exception_proxy_into__with_highlight():
     Case: With highlight.
     """
     exception_proxy = _get_input_exception_proxy()
-    output = render_exception_proxy_into(exception_proxy, [], DEFAULT_ANSI_HIGHLIGHTER)
+    output = render_exception_proxy_into(exception_proxy, DEFAULT_ANSI_HIGHLIGHTER, [])
     vampytest.assert_instance(output, list)
     
     for element in output:

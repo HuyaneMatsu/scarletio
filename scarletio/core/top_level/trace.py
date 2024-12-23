@@ -10,10 +10,9 @@ from sys import _getframe as get_frame, platform as PLATFORM
 from threading import current_thread, get_ident
 
 from ...utils import (
-    DEFAULT_ANSI_HIGHLIGHTER, HIGHLIGHT_TOKEN_TYPES, HighlightFormatterContext, alchemy_incendiary, call, export,
-    include, render_exception_into, render_frames_into
+    DEFAULT_ANSI_HIGHLIGHTER, HIGHLIGHT_TOKEN_TYPES, HighlightFormatterContext, add_highlighted_part_into,
+    alchemy_incendiary, call, export, include, render_exception_into, render_frames_into
 )
-from ...utils.trace.rendering import _add_typed_part_into
 
 from .event_loop import get_event_loop
 
@@ -248,21 +247,21 @@ def write_exception_sync(exception, before = None, after = None, file = None, *,
     extend = []
     
     if (before is not None):
-        _add_typed_part_into(
+        add_highlighted_part_into(
             HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_ADDITIONAL_BEFORE,
             before,
-            extend,
             highlighter,
+            extend,
         )
     
     render_exception_into(exception, extend, filter = filter, highlighter = highlighter)
     
     if (after is not None):
-        _add_typed_part_into(
+        add_highlighted_part_into(
             HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_ADDITIONAL_AFTER,
             after,
-            extend,
             highlighter,
+            extend,
         )
     
     if file is None:

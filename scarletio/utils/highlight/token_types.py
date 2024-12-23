@@ -146,6 +146,16 @@ The token types for coloring are the following:
 +-----------------------------------------------------------+-------+-----------------------------------------------+
 | TOKEN_TYPE_CONSOLE_MARKER_PREFIX_CONTINUOUS               | 2222  | TOKEN_TYPE_CONSOLE_MARKER_PREFIX              |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_TEXT                                           | 3000  | TOKEN_TYPE_ALL                                |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_TEXT_NEGATIVE                                  | 3001  | TOKEN_TYPE_TEXT                               |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_TEXT_POSITIVE                                  | 3002  | TOKEN_TYPE_TEXT                               |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_TEXT_NEUTRAL                                   | 3003  | TOKEN_TYPE_TEXT                               |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_TEXT_UNKNOWN                                   | 3004  | TOKEN_TYPE_TEXT                               |
++-----------------------------------------------------------+-------+-----------------------------------------------+
 """
 __all__ = ()
 
@@ -236,6 +246,16 @@ TOKEN_TYPE_CONSOLE_MARKER_IN_CONTINUOUS = 2212
 TOKEN_TYPE_CONSOLE_MARKER_PREFIX = 2220
 TOKEN_TYPE_CONSOLE_MARKER_PREFIX_INITIAL = 2221
 TOKEN_TYPE_CONSOLE_MARKER_PREFIX_CONTINUOUS = 2222
+
+# TEXT
+
+TOKEN_TYPE_TEXT = 3000
+
+TOKEN_TYPE_TEXT_NEGATIVE = 3001
+TOKEN_TYPE_TEXT_POSITIVE = 3002
+TOKEN_TYPE_TEXT_NEUTRAL = 3003
+TOKEN_TYPE_TEXT_UNKNOWN = 3004
+TOKEN_TYPE_TEXT_TITLE = 3005
 
 
 TOKEN_STRUCTURE = {
@@ -341,6 +361,13 @@ TOKEN_STRUCTURE = {
             }
         },
     },
+    TOKEN_TYPE_TEXT : {
+        TOKEN_TYPE_TEXT_NEGATIVE : None,
+        TOKEN_TYPE_TEXT_POSITIVE : None,
+        TOKEN_TYPE_TEXT_NEUTRAL : None,
+        TOKEN_TYPE_TEXT_UNKNOWN : None,
+        TOKEN_TYPE_TEXT_TITLE : None,
+    }
 }
 
 

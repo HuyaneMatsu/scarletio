@@ -41,7 +41,7 @@ def render_frames_into(frames, extend = None, *, filter = None, highlighter = No
     frames = [frame for frame in frames if should_keep_frame(frame, filter = filter)]
     frame_groups = group_frames(frames)
     
-    render_frame_groups_into(frame_groups, extend, highlighter)
+    render_frame_groups_into(frame_groups, highlighter, extend)
     
     return extend
 
@@ -107,26 +107,26 @@ def render_exception_into(exception, extend = None, *, filter = None, highlighte
         if reason_type == REASON_TYPE_CAUSE_GROUP:
             extend = add_trace_title_into(
                 f'The following {len(exception)} exceptions where the reason of the exception following them:',
-                extend,
                 highlighter,
+                extend,
             )
             extend.append('\n\n')
             
             for index, cause in enumerate(exception, 1):
-                extend = add_trace_title_into(f'[Exception {index}] ', extend, highlighter)
+                extend = add_trace_title_into(f'[Exception {index}] ', highlighter, extend)
                 extend = render_exception_into(cause, extend = extend, filter = filter, highlighter = highlighter)
                 
                 if index != len(exception):
                     extend.append('\n')
         
         else:
-            extend = add_trace_title_into('Traceback (most recent call last):', extend, highlighter)
+            extend = add_trace_title_into('Traceback (most recent call last):', highlighter, extend)
             extend.append('\n')
             
             exception_proxy = ExceptionProxyRich(exception)
             populate_frame_proxies([*exception_proxy.iter_frames_no_repeat()])
             exception_proxy.drop_ignored_frames(filter = filter)
-            extend = render_exception_proxy_into(exception_proxy, extend, highlighter)
+            extend = render_exception_proxy_into(exception_proxy, highlighter, extend)
             
             if reason_type == REASON_TYPE_NONE:
                 break
@@ -146,7 +146,7 @@ def render_exception_into(exception, extend = None, *, filter = None, highlighte
         extend.append('\n')
         
         if (title is not None):
-            extend = add_trace_title_into(title, extend, highlighter)
+            extend = add_trace_title_into(title, highlighter, extend)
             extend.append('\n\n')
         continue
     

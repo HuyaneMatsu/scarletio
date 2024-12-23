@@ -69,7 +69,7 @@ def test__render_frame_group_into__no_repeat_no_highlight():
     Case: No repeat & no highlight.
     """
     frame_group = _get_input_frame_group()
-    output = render_frame_group_into(frame_group, [], None)
+    output = render_frame_group_into(frame_group, None, [])
     vampytest.assert_instance(output, list)
     
     for element in output:
@@ -89,7 +89,7 @@ def test__render_frame_group_into__no_repeat_with_highlight():
     Case: No repeat & with highlight.
     """
     frame_group = _get_input_frame_group()
-    output = render_frame_group_into(frame_group, [], DEFAULT_ANSI_HIGHLIGHTER)
+    output = render_frame_group_into(frame_group, DEFAULT_ANSI_HIGHLIGHTER, [])
     vampytest.assert_instance(output, list)
     
     for element in output:
@@ -127,7 +127,7 @@ def test__render_frame_group_into__with_repeat_no_highlight():
     frame_group.try_add_frame(frame_proxy_1)
     frame_group.repeat_count = 3
     
-    output = render_frame_group_into(frame_group, [], None)
+    output = render_frame_group_into(frame_group, None, [])
     vampytest.assert_instance(output, list)
     
     for element in output:

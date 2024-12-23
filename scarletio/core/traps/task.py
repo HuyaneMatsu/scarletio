@@ -551,15 +551,15 @@ class Task(Future):
                 extend.append('Stack for ')
                 extend.append(repr(self))
                 extend.append('\n')
-                extend = add_trace_title_into('(Most recent call last):', extend, highlighter)
+                extend = add_trace_title_into('(Most recent call last):', highlighter, extend)
                 extend.append('\n')
                 extend = render_frames_into(frames, extend = extend, highlighter = highlighter)
                 
                 if recursive:
                     extend = add_trace_title_into(
                         'Last frame is a repeat from a frame above. Rest of the recursive part is not rendered.',
-                        extend,
                         highlighter,
+                        extend,
                     )
         else:
             extend.append('Traceback for ')

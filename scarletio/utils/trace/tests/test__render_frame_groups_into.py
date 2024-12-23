@@ -67,7 +67,7 @@ def test__render_frame_groups_into__no_highlight():
     Case: No highlight.
     """
     frame_groups = _get_input_frame_groups()
-    output = render_frame_groups_into(frame_groups, [], None)
+    output = render_frame_groups_into(frame_groups, None, [])
     vampytest.assert_instance(output, list)
     
     for element in output:
@@ -87,7 +87,7 @@ def test__render_frame_groups_into__with_highlight():
     Case: With highlight.
     """
     frame_groups = _get_input_frame_groups()
-    output = render_frame_groups_into(frame_groups, [], DEFAULT_ANSI_HIGHLIGHTER)
+    output = render_frame_groups_into(frame_groups, DEFAULT_ANSI_HIGHLIGHTER, [])
     vampytest.assert_instance(output, list)
     
     for element in output:
@@ -108,7 +108,7 @@ def test__render_frame_groups_into__no_frame_groups():
     
     Case: No frame groups.
     """
-    output = render_frame_groups_into(None, [], None)
+    output = render_frame_groups_into(None, None, [])
     vampytest.assert_instance(output, list)
     
     for element in output:

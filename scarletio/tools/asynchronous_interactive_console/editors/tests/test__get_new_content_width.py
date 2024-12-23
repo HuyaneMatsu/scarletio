@@ -27,7 +27,7 @@ def test__get_new_content_width(prefix_length, terminal_width):
     
     Returns
     -------
-    output : `bool`
+    output : `int`
     """
     def get_terminal_size_mock():
         nonlocal terminal_width

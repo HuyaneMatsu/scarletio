@@ -3,10 +3,10 @@ __all__ = ()
 from ..export_include import include
 
 from .constants import (
-    ATTRIBUTE_ACCESS_OPERATOR, BUILTIN_CONSTANTS, BUILTIN_EXCEPTIONS, BUILTIN_VARIABLES, COMPLEX_RP, CONSOLE_PREFIX_RP,
-    FLOAT_RP, FORMAT_STRING_MATCH_STRING, FORMAT_STRING_POSTFIX_RP, IDENTIFIER_RP, INTEGER_BINARY_RP,
-    INTEGER_DECIMAL_RP, INTEGER_HEXADECIMAL_RP, INTEGER_OCTAL_RP, KEYWORDS, KEYWORD_ELLIPSIS, MAGIC_FUNCTIONS,
-    MAGIC_VARIABLES, OPERATOR_WORDS, OPERATOR_WP, PUNCTUATION_WP, SPACE_MATCH_RP, STRING_END_DOUBLE_RP,
+    ATTRIBUTE_ACCESS_OPERATOR, BUILTIN_CONSTANT_NAMES, BUILTIN_EXCEPTION_NAMES, BUILTIN_VARIABLE_NAMES, COMPLEX_RP,
+    CONSOLE_PREFIX_RP, FLOAT_RP, FORMAT_STRING_MATCH_STRING, FORMAT_STRING_POSTFIX_RP, IDENTIFIER_RP, INTEGER_BINARY_RP,
+    INTEGER_DECIMAL_RP, INTEGER_HEXADECIMAL_RP, INTEGER_OCTAL_RP, KEYWORDS, KEYWORD_ELLIPSIS, MAGIC_FUNCTION_NAMES,
+    MAGIC_VARIABLE_NAMES, OPERATOR_WORDS, OPERATOR_WP, PUNCTUATION_WP, SPACE_MATCH_RP, STRING_END_DOUBLE_RP,
     STRING_END_SINGLE_RP, STRING_MULTI_LINE_END_DOUBLE_RP, STRING_MULTI_LINE_END_SINGLE_RP, STRING_STARTER_RP
 )
 from .token_types import (
@@ -31,7 +31,7 @@ def _try_match_complex(context):
     
     Parameter
     ---------
-    context : ``HighlightContextBase``
+    context : ``HighlightParserContextBase``
         The context to use.
     
     Returns
@@ -61,7 +61,7 @@ def _try_match_float(context):
     
     Parameter
     ---------
-    context : ``HighlightContextBase``
+    context : ``HighlightParserContextBase``
         The context to use.
     
     Returns
@@ -91,7 +91,7 @@ def _try_match_integer_hexadecimal(context):
     
     Parameter
     ---------
-    context : ``HighlightContextBase``
+    context : ``HighlightParserContextBase``
         The context to use.
     
     Returns
@@ -121,7 +121,7 @@ def _try_match_integer_decimal(context):
     
     Parameter
     ---------
-    context : ``HighlightContextBase``
+    context : ``HighlightParserContextBase``
         The context to use.
     
     Returns
@@ -151,7 +151,7 @@ def _try_match_integer_octal(context):
     
     Parameter
     ---------
-    context : ``HighlightContextBase``
+    context : ``HighlightParserContextBase``
         The context to use.
     
     Returns
@@ -181,7 +181,7 @@ def _try_match_integer_binary(context):
     
     Parameter
     ---------
-    context : ``HighlightContextBase``
+    context : ``HighlightParserContextBase``
         The context to use.
     
     Returns
@@ -211,7 +211,7 @@ def _try_match_identifier(context):
     
     Parameter
     ---------
-    context : ``HighlightContextBase``
+    context : ``HighlightParserContextBase``
         The context to use.
     
     Returns
@@ -228,7 +228,7 @@ def _try_match_identifier(context):
     
     content = matched.group(0)
     
-    if content in BUILTIN_CONSTANTS:
+    if content in BUILTIN_CONSTANT_NAMES:
         token_type = TOKEN_TYPE_IDENTIFIER_BUILTIN_CONSTANT
     elif content in KEYWORDS:
         token_type = TOKEN_TYPE_IDENTIFIER_KEYWORD
@@ -237,16 +237,16 @@ def _try_match_identifier(context):
     else:
         last_token = context.get_last_related_token()
         if (last_token is not None) and (last_token.type == TOKEN_TYPE_SPECIAL_OPERATOR_ATTRIBUTE):
-            if content in MAGIC_FUNCTIONS:
+            if content in MAGIC_FUNCTION_NAMES:
                 token_type = TOKEN_TYPE_IDENTIFIER_MAGIC_FUNCTION
-            elif content in MAGIC_VARIABLES:
+            elif content in MAGIC_VARIABLE_NAMES:
                 token_type = TOKEN_TYPE_IDENTIFIER_MAGIC_VARIABLE
             else:
                 token_type = TOKEN_TYPE_IDENTIFIER_ATTRIBUTE
         else:
-            if content in BUILTIN_VARIABLES:
+            if content in BUILTIN_VARIABLE_NAMES:
                 token_type = TOKEN_TYPE_IDENTIFIER_BUILTIN_VARIABLE
-            elif content in BUILTIN_EXCEPTIONS:
+            elif content in BUILTIN_EXCEPTION_NAMES:
                 token_type = TOKEN_TYPE_IDENTIFIER_BUILTIN_EXCEPTION
             else:
                 token_type = TOKEN_TYPE_IDENTIFIER_VARIABLE
@@ -264,7 +264,7 @@ def _try_match_punctuation(context):
     
     Parameter
     ---------
-    context : ``HighlightContextBase``
+    context : ``HighlightParserContextBase``
         The context to use.
     
     Returns
@@ -292,7 +292,7 @@ def _try_match_operator(context):
     
     Parameter
     ---------
-    context : ``HighlightContextBase``
+    context : ``HighlightParserContextBase``
         The context to use.
     
     Returns
@@ -327,7 +327,7 @@ def _try_match_string(context):
     
     Parameter
     ---------
-    context : ``HighlightContextBase``
+    context : ``HighlightParserContextBase``
         The context to use.
     
     Returns
@@ -450,7 +450,7 @@ def _try_match_space(context):
     
     Parameter
     ---------
-    context : ``HighlightContextBase``
+    context : ``HighlightParserContextBase``
         The context to use.
     
     Returns
@@ -480,7 +480,7 @@ def _try_match_comment(context):
     
     Parameter
     ---------
-    context : ``HighlightContextBase``
+    context : ``HighlightParserContextBase``
         The context to use.
     
     Returns
@@ -515,7 +515,7 @@ def _try_match_anything(context):
     
     Parameter
     ---------
-    context : ``HighlightContextBase``
+    context : ``HighlightParserContextBase``
         The context to use.
     
     Returns
@@ -537,7 +537,7 @@ def _try_match_empty_line(context):
     
     Parameter
     ---------
-    context : ``HighlightContextBase``
+    context : ``HighlightParserContextBase``
         The context to use.
     
     Returns
@@ -562,7 +562,7 @@ def _try_match_console_prefix(context):
     
     Parameter
     ---------
-    context : ``HighlightContextBase``
+    context : ``HighlightParserContextBase``
         The context to use.
     
     Returns
@@ -595,7 +595,7 @@ def _try_match_linebreak(context):
     
     Parameters
     ----------
-    context : ``HighlightContextBase``
+    context : ``HighlightParserContextBase``
         The context to use.
     
     Returns

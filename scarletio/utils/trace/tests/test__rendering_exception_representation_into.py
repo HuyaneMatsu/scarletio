@@ -24,7 +24,7 @@ def test__render_exception_representation_generic_into__no_highlight():
         representation = representation
     )
     
-    output = _render_exception_representation_generic_into(exception_representation, [], None)
+    output = _render_exception_representation_generic_into(exception_representation, None, [])
     vampytest.assert_instance(output, list)
     
     for element in output:
@@ -47,7 +47,7 @@ def test__render_exception_representation_generic_into__with_highlight():
         representation = representation
     )
     
-    output = _render_exception_representation_generic_into(exception_representation, [], DEFAULT_ANSI_HIGHLIGHTER)
+    output = _render_exception_representation_generic_into(exception_representation, DEFAULT_ANSI_HIGHLIGHTER, [])
     vampytest.assert_instance(output, list)
     
     for element in output:
@@ -82,7 +82,7 @@ def test__render_exception_representation_attribute_error_into__no_highlight():
         suggestion_familiar_attribute_names = suggestion_familiar_attribute_names,
     )
     
-    output = _render_exception_representation_attribute_error_into(exception_representation, [], None)
+    output = _render_exception_representation_attribute_error_into(exception_representation, None, [])
     vampytest.assert_instance(output, list)
     
     for element in output:
@@ -115,7 +115,9 @@ def test__render_exception_representation_attribute_error_into__with_highlight()
         suggestion_familiar_attribute_names = suggestion_familiar_attribute_names,
     )
     
-    output = _render_exception_representation_attribute_error_into(exception_representation, [], DEFAULT_ANSI_HIGHLIGHTER)
+    output = _render_exception_representation_attribute_error_into(
+        exception_representation, DEFAULT_ANSI_HIGHLIGHTER, []
+    )
     vampytest.assert_instance(output, list)
     
     for element in output:
@@ -153,7 +155,7 @@ def test__render_exception_representation_attribute_error_into__frame_with_same_
         suggestion_matching_variable_exists = suggestion_matching_variable_exists,
     )
     
-    output = _render_exception_representation_attribute_error_into(exception_representation, [], None)
+    output = _render_exception_representation_attribute_error_into(exception_representation, None, [])
     vampytest.assert_instance(output, list)
     
     for element in output:
@@ -189,7 +191,7 @@ def test__render_exception_representation_attribute_error_into__unset_attribute(
         suggestion_attribute_unset = suggestion_attribute_unset,
     )
     
-    output = _render_exception_representation_attribute_error_into(exception_representation, [], None)
+    output = _render_exception_representation_attribute_error_into(exception_representation, None, [])
     vampytest.assert_instance(output, list)
     
     for element in output:
@@ -224,7 +226,7 @@ def test__render_exception_representation_attribute_error_into__other_variable_w
         suggestion_variable_names_with_attribute = suggestion_variable_names_with_attribute,
     )
     
-    output = _render_exception_representation_attribute_error_into(exception_representation, [], None)
+    output = _render_exception_representation_attribute_error_into(exception_representation, None, [])
     vampytest.assert_instance(output, list)
     
     for element in output:
@@ -265,7 +267,7 @@ def test__render_exception_representation_syntax_error_into__no_highlight():
         type_name = type_name,
     )
     
-    output = _render_exception_representation_syntax_error_into(exception_representation, [], None)
+    output = _render_exception_representation_syntax_error_into(exception_representation, None, [])
     vampytest.assert_instance(output, list)
     
     for element in output:
@@ -307,7 +309,7 @@ def test__render_exception_representation_syntax_error_into__with_highlight():
         type_name = type_name,
     )
     
-    output = _render_exception_representation_syntax_error_into(exception_representation, [], DEFAULT_ANSI_HIGHLIGHTER)
+    output = _render_exception_representation_syntax_error_into(exception_representation, DEFAULT_ANSI_HIGHLIGHTER, [])
     vampytest.assert_instance(output, list)
     
     for element in output:
@@ -328,7 +330,7 @@ def test__render_exception_representation_into__hit():
     """
     hit = False
     
-    def _renderer(exception_representation, into, highlighter):
+    def _renderer(exception_representation, highlighter, into):
         nonlocal hit
         hit = True
         return into
@@ -347,7 +349,7 @@ def test__render_exception_representation_into__hit():
         representation = 'hey mister'
     )
     
-    output = mocked(exception_representation, [], None)
+    output = mocked(exception_representation, None, [])
     vampytest.assert_instance(output, list)
     
     vampytest.assert_true(hit)
@@ -361,7 +363,7 @@ def test__render_exception_representation_into__miss():
     """
     hit = False
     
-    def _renderer(exception_representation, into, highlighter):
+    def _renderer(exception_representation, highlighter, into):
         nonlocal hit
         hit = True
         return into
@@ -378,7 +380,7 @@ def test__render_exception_representation_into__miss():
     
     exception_representation = None
     
-    output = mocked(exception_representation, [], None)
+    output = mocked(exception_representation, None, [])
     vampytest.assert_instance(output, list)
     
     vampytest.assert_false(hit)

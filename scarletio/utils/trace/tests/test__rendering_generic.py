@@ -3,116 +3,10 @@ import vampytest
 from ...highlight import DEFAULT_ANSI_HIGHLIGHTER, HIGHLIGHT_TOKEN_TYPES
 
 from ..rendering import (
-    _add_typed_part_into, _add_typed_parts_into, _produce_attribute_name, _produce_attribute_name_only,
-    _produce_file_location, _produce_grave_wrapped, _produce_variable_attribute_access,
-    _produce_variable_attribute_access_only, _produce_variable_name, _produce_variable_name_only, add_trace_title_into
+    _produce_attribute_name, _produce_attribute_name_only, _produce_file_location, _produce_grave_wrapped,
+    _produce_variable_attribute_access, _produce_variable_attribute_access_only, _produce_variable_name,
+    _produce_variable_name_only, add_trace_title_into
 )
-
-
-def test__add_typed_part_into__no_highlighter():
-    """
-    Tests whether ``_add_typed_part_into`` works as intended.
-    
-    Case: No highlighter.
-    """
-    token_type = HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_NUMERIC_FLOAT
-    input_value = 'koishi'
-    
-    output = _add_typed_part_into(token_type, input_value, [], None)
-    
-    vampytest.assert_instance(output, list)
-    vampytest.assert_eq(len(output), 1)
-    
-    part = output[0]
-    vampytest.assert_instance(part, str)
-    vampytest.assert_eq(part, input_value)
-
-
-def test__add_typed_part_into__with_highlighter():
-    """
-    Tests whether ``_add_typed_part_into`` works as intended.
-    
-    Case: With highlighter.
-    """
-    token_type = HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_NUMERIC_FLOAT
-    input_value = 'koishi'
-    
-    output = _add_typed_part_into(token_type, input_value, [], DEFAULT_ANSI_HIGHLIGHTER)
-    
-    vampytest.assert_instance(output, list)
-    vampytest.assert_eq(len(output), 3)
-    
-    part = output[0]
-    vampytest.assert_instance(part, str)
-    
-    part = output[1]
-    vampytest.assert_instance(part, str)
-    vampytest.assert_eq(part, input_value)
-
-    part = output[2]
-    vampytest.assert_instance(part, str)
-
-
-def test__add_typed_parts_into__no_highlighter():
-    """
-    Tests whether ``_add_typed_parts_into`` works as intended.
-    
-    Case: No highlighter.
-    """
-    input_value = [
-        (HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_NUMERIC_FLOAT, 'koishi'),
-        (HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_NUMERIC_FLOAT, 'satori'),
-    ]
-    
-    output = _add_typed_parts_into(input_value, [], None)
-    
-    vampytest.assert_instance(output, list)
-    vampytest.assert_eq(len(output), 2)
-    
-    part = output[0]
-    vampytest.assert_instance(part, str)
-    vampytest.assert_eq(part, input_value[0][1])
-    
-    part = output[1]
-    vampytest.assert_instance(part, str)
-    vampytest.assert_eq(part, input_value[1][1])
-
-
-def test__add_typed_parts_into__with_highlighter():
-    """
-    Tests whether ``_add_typed_parts_into`` works as intended.
-    
-    Case: No highlighter.
-    """
-    input_value = [
-        (HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_NUMERIC_FLOAT, 'koishi'),
-        (HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_NUMERIC_FLOAT, 'satori'),
-    ]
-    
-    output = _add_typed_parts_into(input_value, [], DEFAULT_ANSI_HIGHLIGHTER)
-    
-    vampytest.assert_instance(output, list)
-    vampytest.assert_eq(len(output), 6)
-    
-    part = output[0]
-    vampytest.assert_instance(part, str)
-    
-    part = output[1]
-    vampytest.assert_instance(part, str)
-    vampytest.assert_eq(part, input_value[0][1])
-    
-    part = output[2]
-    vampytest.assert_instance(part, str)
-    
-    part = output[3]
-    vampytest.assert_instance(part, str)
-    
-    part = output[4]
-    vampytest.assert_instance(part, str)
-    vampytest.assert_eq(part, input_value[1][1])
-
-    part = output[5]
-    vampytest.assert_instance(part, str)
 
 
 def test__add_trace_title_into__no_highlighter():
@@ -123,7 +17,7 @@ def test__add_trace_title_into__no_highlighter():
     """
     input_value = 'koishi'
     
-    output = add_trace_title_into(input_value, [], None)
+    output = add_trace_title_into(input_value, None, [])
     
     vampytest.assert_instance(output, list)
     vampytest.assert_eq(len(output), 1)
@@ -142,7 +36,7 @@ def test__add_trace_title_into__with_highlighter():
     """
     input_value = 'koishi'
     
-    output = add_trace_title_into(input_value, [], DEFAULT_ANSI_HIGHLIGHTER)
+    output = add_trace_title_into(input_value, DEFAULT_ANSI_HIGHLIGHTER, [])
     
     vampytest.assert_instance(output, list)
     vampytest.assert_eq(len(output), 3)

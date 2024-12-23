@@ -523,7 +523,7 @@ class AsynchronousInteractiveConsole:
                 fixup_syntax_error_line_from_buffer(syntax_error, editor.get_buffer())
             
             _render_exception_representation_syntax_error_into(
-                ExceptionRepresentationSyntaxError(syntax_error, None), into, self.highlighter
+                ExceptionRepresentationSyntaxError(syntax_error, None), self.highlighter, into
             )
         else:
             render_exception_into(syntax_error, into, filter = _ignore_console_frames, highlighter = self.highlighter)

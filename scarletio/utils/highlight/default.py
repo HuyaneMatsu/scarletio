@@ -9,9 +9,10 @@ from .token_types import (
     TOKEN_TYPE_IDENTIFIER_MAGIC, TOKEN_TYPE_NON_SPACE, TOKEN_TYPE_NUMERIC, TOKEN_TYPE_SPECIAL_CONSOLE_PREFIX,
     TOKEN_TYPE_SPECIAL_OPERATOR, TOKEN_TYPE_SPECIAL_OPERATOR_ATTRIBUTE, TOKEN_TYPE_SPECIAL_PUNCTUATION,
     TOKEN_TYPE_STRING, TOKEN_TYPE_STRING_UNICODE_FORMAT_CODE, TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK,
-    TOKEN_TYPE_STRING_UNICODE_FORMAT_POSTFIX, TOKEN_TYPE_TRACE, TOKEN_TYPE_TRACE_LOCATION_LINE_NUMBER,
-    TOKEN_TYPE_TRACE_LOCATION_NAME, TOKEN_TYPE_TRACE_LOCATION_PATH, TOKEN_TYPE_TRACE_TITLE,
-    TOKEN_TYPE_TRACE_EXCEPTION_REPR_GRAVE
+    TOKEN_TYPE_STRING_UNICODE_FORMAT_POSTFIX, TOKEN_TYPE_TEXT_NEGATIVE, TOKEN_TYPE_TEXT_NEUTRAL,
+    TOKEN_TYPE_TEXT_POSITIVE, TOKEN_TYPE_TEXT_TITLE, TOKEN_TYPE_TEXT_UNKNOWN, TOKEN_TYPE_TRACE,
+    TOKEN_TYPE_TRACE_EXCEPTION_REPR_GRAVE, TOKEN_TYPE_TRACE_LOCATION_LINE_NUMBER, TOKEN_TYPE_TRACE_LOCATION_NAME,
+    TOKEN_TYPE_TRACE_LOCATION_PATH, TOKEN_TYPE_TRACE_TITLE
 )
 
 
@@ -96,7 +97,7 @@ DEFAULT_ANSI_HIGHLIGHTER.set_highlight_ansi_code(
 )
 DEFAULT_ANSI_HIGHLIGHTER.set_highlight_ansi_code(
     TOKEN_TYPE_TRACE_LOCATION_PATH,
-    create_ansi_format_code(foreground_color = (174, 230, 151)),
+    create_ansi_format_code(foreground_color = (72, 201, 202)),
 )
 DEFAULT_ANSI_HIGHLIGHTER.set_highlight_ansi_code(
     TOKEN_TYPE_TRACE_LOCATION_LINE_NUMBER,
@@ -129,5 +130,33 @@ DEFAULT_ANSI_HIGHLIGHTER.set_highlight_ansi_code(
 )
 DEFAULT_ANSI_HIGHLIGHTER.set_highlight_ansi_code(
     TOKEN_TYPE_CONSOLE_MARKER,
-    create_ansi_format_code(foreground_color = (174, 230, 151)),
+    create_ansi_format_code(foreground_color = (78, 154, 6)),
+)
+
+# Add text highlights
+
+
+DEFAULT_ANSI_HIGHLIGHTER.set_highlight_ansi_code(
+    TOKEN_TYPE_TEXT_NEGATIVE,
+    create_ansi_format_code(foreground_color = (255, 0, 0)),
+)
+
+DEFAULT_ANSI_HIGHLIGHTER.set_highlight_ansi_code(
+    TOKEN_TYPE_TEXT_POSITIVE,
+    create_ansi_format_code(foreground_color = (0, 255, 0)),
+)
+
+DEFAULT_ANSI_HIGHLIGHTER.set_highlight_ansi_code(
+    TOKEN_TYPE_TEXT_NEUTRAL,
+    create_ansi_format_code(foreground_color = (0, 255, 255)),
+)
+
+DEFAULT_ANSI_HIGHLIGHTER.set_highlight_ansi_code(
+    TOKEN_TYPE_TEXT_UNKNOWN,
+    create_ansi_format_code(foreground_color = (255, 0, 255)),
+)
+
+DEFAULT_ANSI_HIGHLIGHTER.set_highlight_ansi_code(
+    TOKEN_TYPE_TEXT_TITLE,
+    create_ansi_format_code(foreground_color = (255, 251, 222)),
 )
