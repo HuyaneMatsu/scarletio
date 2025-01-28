@@ -60,7 +60,7 @@ async def test__ClientRequest__new():
     url = URL('https://orindance.party/#mister')
     headers = IgnoreCaseMultiValueDictionary([('hey', 'mister')])
     data = b'aya'
-    query_string_parameters = {'query': 'me'}
+    query = {'query': 'me'}
     cookies = {'nue': 'murasa'}
     authorization = BasicAuthorization('okuu', 'crown')
     proxied_url = URL('https://orindance.party')
@@ -74,7 +74,7 @@ async def test__ClientRequest__new():
         url,
         headers,
         data,
-        query_string_parameters,
+        query,
         cookies,
         authorization,
         proxied_url,
@@ -101,7 +101,7 @@ async def test__ClientRequest__repr():
     url = URL('https://orindance.party/#mister')
     headers = IgnoreCaseMultiValueDictionary([('hey', 'mister')])
     data = b'aya'
-    query_string_parameters = {'query': 'me'}
+    query = {'query': 'me'}
     cookies = {'nue': 'murasa'}
     authorization = BasicAuthorization('okuu', 'crown')
     proxied_url = URL('https://orindance.party')
@@ -115,7 +115,7 @@ async def test__ClientRequest__repr():
         url,
         headers,
         data,
-        query_string_parameters,
+        query,
         cookies,
         authorization,
         proxied_url,
@@ -136,7 +136,7 @@ def _iter_options__new():
         'url': url,
         'headers': IgnoreCaseMultiValueDictionary(),
         'data': None,
-        'query_string_parameters': None,
+        'query': None,
         'cookies': None,
         'authorization': None,
         'proxied_url': None,
@@ -157,7 +157,7 @@ def _iter_options__new():
     yield (
         {
             **keyword_parameters,
-            'query_string_parameters': {'hey': 'mister'},
+            'query': {'hey': 'mister'},
         },
         ('original_url', 'url'),
         (
@@ -171,7 +171,7 @@ def _iter_options__new():
         {
             **keyword_parameters,
             'url': url.extend_query({'hoy': 'murasa'}),
-            'query_string_parameters': {'hey': 'mister'},
+            'query': {'hey': 'mister'},
         },
         ('original_url', 'url'),
         (
@@ -584,7 +584,7 @@ async def test__ClientRequest__connection_key():
     url = URL('https://orindance.party/#mister')
     headers = IgnoreCaseMultiValueDictionary([('hey', 'mister')])
     data = b'aya'
-    query_string_parameters = {'query': 'me'}
+    query = {'query': 'me'}
     cookies = {'nue': 'murasa'}
     authorization = BasicAuthorization('okuu', 'crown')
     proxied_url = URL('https://orindance.party/')
@@ -598,7 +598,7 @@ async def test__ClientRequest__connection_key():
         url,
         headers,
         data,
-        query_string_parameters,
+        query,
         cookies,
         authorization,
         proxied_url,
@@ -634,7 +634,7 @@ async def test__ClientRequest__request_info():
     url = URL('https://orindance.party/#mister')
     headers = IgnoreCaseMultiValueDictionary([('hey', 'mister')])
     data = b'aya'
-    query_string_parameters = {'query': 'me'}
+    query = {'query': 'me'}
     cookies = {'nue': 'murasa'}
     authorization = BasicAuthorization('okuu', 'crown')
     proxied_url = URL('https://orindance.party/')
@@ -648,7 +648,7 @@ async def test__ClientRequest__request_info():
         url,
         headers,
         data,
-        query_string_parameters,
+        query,
         cookies,
         authorization,
         proxied_url,
@@ -673,8 +673,8 @@ async def test__ClientRequest__request_info():
                 (CONTENT_TYPE, 'application/octet-stream'),
             ]),
             method,
-            url.extend_query(query_string_parameters),
-            url.extend_query(query_string_parameters).with_fragment(None),
+            url.extend_query(query),
+            url.extend_query(query).with_fragment(None),
         ),
     )
 
@@ -881,7 +881,7 @@ def _iter_options__build_path_to_request():
         'url': url,
         'headers': IgnoreCaseMultiValueDictionary(),
         'data': None,
-        'query_string_parameters': None,
+        'query': None,
         'cookies': None,
         'authorization': None,
         'proxied_url': None,

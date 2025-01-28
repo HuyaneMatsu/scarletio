@@ -479,8 +479,7 @@ def _iter_options__get_encoding():
             IgnoreCaseMultiValueDictionary(),
         ),
         b'orin',
-        # 'ascii',
-        'ASCII',
+        'ascii',
     )
     
     # This should be utf-8 actually but chardet thinks otherwise lmeow
@@ -492,8 +491,8 @@ def _iter_options__get_encoding():
             IgnoreCaseMultiValueDictionary(),
         ),
         b'orin ny\xc3\xa1',
-        # 'TIS-620',
-        'ISO-8859-13',
+        # 'tis-620',
+        'iso-8859-13',
     )
 
 

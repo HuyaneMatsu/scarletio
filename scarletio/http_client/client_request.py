@@ -83,7 +83,7 @@ class ClientRequest(RichAttributeErrorBaseType):
         url,
         headers,
         data,
-        query_string_parameters,
+        query,
         cookies,
         authorization,
         proxied_url,
@@ -111,7 +111,7 @@ class ClientRequest(RichAttributeErrorBaseType):
         data : `None | bytes-like | io-like | FormData`
             Data to send as the request's body.
         
-        query_string_parameters : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`
+        query : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`
             Query string parameters.
         
         cookies : `None | dict<str, str | Morsel>`
@@ -155,7 +155,7 @@ class ClientRequest(RichAttributeErrorBaseType):
                 raise ValueError(f'Host could not be detected from url: {proxied_url!r}')
         
         # Add extra query parameters to the url and remove fragments
-        url = url.extend_query(query_string_parameters)
+        url = url.extend_query(query)
         request_url = url.with_fragment(None)
         
         # Check authorization

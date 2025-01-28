@@ -14,7 +14,7 @@ from .exceptions import PayloadError, WebSocketProtocolError
 from .headers import CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TRANSFER_ENCODING, CONTENT_TYPE, METHOD_CONNECT
 from .helpers import HttpVersion11, parse_http_headers, parse_http_request, parse_http_response
 from .http_message import RawRequestMessage, RawResponseMessage
-from .mime_type import MimeType
+from .content_type import parse_content_type
 from .web_socket_frame import WebSocketFrame, apply_web_socket_mask
 
 
@@ -287,9 +287,17 @@ class HttpReadProtocol(ReadProtocolBase):
         StopAsyncIteration
             The payload contains no more fields.
         """
-        content_type = headers[CONTENT_TYPE]
-        mime = MimeType(content_type)
-        boundary = mime.parameters['boundary']
+        content_type_header = headers.get(CONTENT_TYPE, None)
+        if content_type_header is None:
+            boundary = None
+        else:
+            content_type, content_type_parsing_error = parse_content_type(content_type_header)
+            boundary = content_type.get_parameter('boundary', '')
+            if not boundary:
+                boundary = None
+        
+        if (boundary is None):
+            raise PayloadError(f'Missing boundary: {boundary}.')
         
         is_first = True
         while True:

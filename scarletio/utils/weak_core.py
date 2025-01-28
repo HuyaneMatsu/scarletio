@@ -193,7 +193,7 @@ class WeakCallable(WeakReferer):
         
         Parameters
         ----------
-        *positional_parameters : Parameters
+        *positional_parameters : Positional parameters
             Parameters to call the weakreferenced callable with.
         **keyword_parameters : Keyword parameters
             Keyword parameters to call the weakreferenced callable with..

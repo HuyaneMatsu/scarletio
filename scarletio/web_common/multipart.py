@@ -3,7 +3,7 @@ __all__ = ('create_payload', )
 from base64 import b64encode as base_64_encode
 from binascii import b2a_qp as qp_encode
 from io import BufferedRandom, BufferedReader, BytesIO, IOBase, StringIO, TextIOBase
-from mimetypes import guess_type as guess_mime_type
+from mimetypes import guess_type as guess_content_type
 from os import SEEK_END, fstat as stat
 from re import compile as re_compile, escape as re_escape, sub as re_sub
 from urllib.parse import urlencode as url_encode
@@ -16,7 +16,7 @@ from .compressors import BROTLI_COMPRESSOR, ZLIB_COMPRESSOR, ZLIB_MAX_WBITS
 from .exceptions import ContentEncodingError
 from .header_building_and_parsing import CHARS, TOKENS, build_content_disposition_header
 from .headers import CONTENT_DISPOSITION, CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TRANSFER_ENCODING, CONTENT_TYPE
-from .mime_type import MimeType
+from .content_type import parse_content_type
 from .quoting import unquote
 
 
@@ -123,7 +123,7 @@ class PayloadBase:
             if file_name is None:
                 content_type = DEFAULT_CONTENT_TYPE
             else:
-                mime = guess_mime_type(file_name)[0]
+                mime = guess_content_type(file_name)[0]
                 if mime is None:
                     content_type = DEFAULT_CONTENT_TYPE
                 else:
@@ -296,8 +296,8 @@ class StringPayload(BytesPayload):
                 
                 keyword_parameters['content_type'] = content_type
             else:
-                mime_type = MimeType(content_type)
-                encoding = mime_type.parameters.get('charset', 'utf-8')
+                content_type, content_type_parsing_error = parse_content_type(content_type)
+                encoding = content_type.get_parameter('charset', 'utf-8')
             
             keyword_parameters['encoding'] = encoding
         
@@ -458,8 +458,8 @@ class TextIOPayload(IOBasePayload):
                 
                 keyword_parameters['content_type'] = content_type
             else:
-                mime_type = MimeType(content_type)
-                encoding = mime_type.parameters.get('charset', 'utf-8')
+                content_type, content_type_parsing_error = parse_content_type(content_type)
+                encoding = content_type.get_parameter('charset', 'utf-8')
             
             keyword_parameters['encoding'] = encoding
         else:

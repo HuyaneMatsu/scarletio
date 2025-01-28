@@ -22,7 +22,7 @@ def _iter_options():
 
 
 @vampytest._(vampytest.call_from(_iter_options()).returning_last())
-def test___get_released_from_held_back(held_back, amount_to_keep):
+def test__get_released_from_held_back(held_back, amount_to_keep):
     """
     Tests whether ``_get_released_from_held_back`` works as intended.
     

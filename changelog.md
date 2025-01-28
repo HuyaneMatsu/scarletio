@@ -1,3 +1,24 @@
+# 1.0.84 *\[2025-01-28\]*
+
+#### Improvements
+
+- Add `ContentTypeParsingError`.
+- Add missing `ContentType.__eq__`, `ContentType.__hash__`.
+- Add `parse_content_type(string)` replacing `ContentType(string)`.
+    It returns `(ContentType, None | ContentTypeParsingError)`.
+- Replace `ContentType.__init__` with `ContentType.__new__`. Its now a normal constructor and does not do any parsing.
+- Add `ContentType.create_empty`.
+
+#### Bug fixes
+
+- Fix `ClientResponse.get_encoding` could return non-case-folded value due to charset's output were not normalized.
+- Fix `content-type` parsing incorrectly handled tokens, quoted values. Now the parsing is way more stricter. 
+
+#### Renames, Deprecation & Removals
+
+- `HTTPClient`'s `params` parameters renamed to `query` to keep it in sync with `URL` implementation.
+- Rename `MIMEType` to `ContentType` to better reflect what its purpose is.
+
 # 1.0.83 *\[2024-12-23\]*
 
 #### Improvements

@@ -329,16 +329,16 @@ class WebSocketClient(WebSocketCommonProtocol):
                 for value in received_extensions:
                     parsed_extension_values.extend(parse_extensions(value))
                 
-                for name, params in parsed_extension_values:
+                for name, parameters in parsed_extension_values:
                     for extension in available_extensions:
-                        # do names and params match?
-                        if extension.name == name and extension.are_valid_params(params, accepted_extensions):
+                        # do names and parameters match?
+                        if extension.name == name and extension.are_valid_parameters(parameters, accepted_extensions):
                             accepted_extensions.append(extension)
                             break
                     else:
                         # no matching extension
                         raise InvalidHandshake(
-                            f'Unsupported extension: name = {name!r}, params = {params!r}.',
+                            f'Unsupported extension: name = {name!r}, parameters = {parameters!r}.',
                             response = response,
                         )
             

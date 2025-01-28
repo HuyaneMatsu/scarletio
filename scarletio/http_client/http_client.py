@@ -53,7 +53,7 @@ class HTTPClient(RichAttributeErrorBaseType):
         proxy_auth = ...,
     ):
         """
-        Creates a new ``HTTPClient`` with the given parameters.
+        Creates a new http client with the given parameters.
         
         Parameters
         ----------
@@ -140,7 +140,7 @@ class HTTPClient(RichAttributeErrorBaseType):
         return self
     
     
-    async def _request(self, method, url, headers, *, data = None, params = None, redirects = 3):
+    async def _request(self, method, url, headers, *, data = None, params = ..., query = None, redirects = 3):
         """
         Internal method for executing an http request.
         
@@ -160,7 +160,7 @@ class HTTPClient(RichAttributeErrorBaseType):
         data : `None | object` = `None`, Optional (Keyword only)
             Data to send a the body of the request.
         
-        params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>` = `None`, \
+        query : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>` = `None`, \
                 Optional (Keyword only)
             Query string parameters
         
@@ -198,6 +198,20 @@ class HTTPClient(RichAttributeErrorBaseType):
         - ``.request2`` : Executes an http request with extra parameters returning a request context manager.
         - ``._request2`` : Internal method for executing an http request with extra parameters.
         """
+        if (params is not ...):
+            warn(
+                (
+                    f'`{type(self).__name__}._request`\'s `params` parameter is deprecated '
+                    f'and will be removed at 2026 January. '
+                    'Please use `query` instead.'
+                ),
+                FutureWarning,
+                stacklevel = 3,
+            )
+            
+            query = params
+        
+        
         headers = IgnoreCaseMultiValueDictionary(headers)
         
         history = []
@@ -213,7 +227,7 @@ class HTTPClient(RichAttributeErrorBaseType):
                     url,
                     headers,
                     data,
-                    params,
+                    query,
                     cookies,
                     None,
                     None,
@@ -281,7 +295,7 @@ class HTTPClient(RichAttributeErrorBaseType):
                             pass
                     
                     url = redirect_url
-                    params = None
+                    query = None
                     response.release()
                     continue
                 
@@ -299,8 +313,9 @@ class HTTPClient(RichAttributeErrorBaseType):
         *,
         authorization = None,
         data = None,
-        params = None,
+        params = ...,
         proxy = ...,
+        query = None,
         redirects = 3,
         timeout = REQUEST_TIMEOUT_DEFAULT,
         ssl = ...,
@@ -334,11 +349,11 @@ class HTTPClient(RichAttributeErrorBaseType):
         data : `None`, `object` = `None`, Optional (Keyword only)
             Data to send a the body of the request.
         
-        params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>` = `None`, \
-                Optional (Keyword only)
-        
         proxy : `None | Proxy`, Optional
             Proxy to use with the request.
+        
+        query : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>` = `None`, \
+                Optional (Keyword only)
         
         redirects : `int` = `3`, Optional (Keyword only)
             The maximal amount of allowed redirects.
@@ -461,6 +476,18 @@ class HTTPClient(RichAttributeErrorBaseType):
                 stacklevel = 3,
             )
         
+        if (params is not ...):
+            warn(
+                (
+                    f'`{type(self).__name__}._request2`\'s `params` parameter is deprecated '
+                    f'and will be removed at 2026 January. '
+                    'Please use `query` instead.'
+                ),
+                FutureWarning,
+                stacklevel = 3,
+            )
+            
+            query = params
         
         # Transform headers to IgnoreCaseMultiValueDictionary
         headers = IgnoreCaseMultiValueDictionary(headers)
@@ -497,7 +524,7 @@ class HTTPClient(RichAttributeErrorBaseType):
                     url,
                     headers,
                     data,
-                    params,
+                    query,
                     cookies,
                     authorization,
                     None,
@@ -559,7 +586,7 @@ class HTTPClient(RichAttributeErrorBaseType):
                         redirect_url = url.join(redirect_url)
                     
                     url = redirect_url
-                    params = None
+                    query = None
                     continue
                 
                 break
@@ -645,7 +672,7 @@ class HTTPClient(RichAttributeErrorBaseType):
         data : `None | object`, Optional (Keyword only)
             Data to send a the body of the request.
         
-        params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
+        query : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
                 Optional (Keyword only)
             Query string parameters.
         
@@ -696,7 +723,7 @@ class HTTPClient(RichAttributeErrorBaseType):
         data : `None | object`, Optional (Keyword only)
             Data to send a the body of the request.
         
-        params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
+        query : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
                 Optional (Keyword only)
             Query string parameters.
         
@@ -759,7 +786,7 @@ class HTTPClient(RichAttributeErrorBaseType):
         data : `None | object`, Optional (Keyword only)
             Data to send a the body of the request.
         
-        params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
+        query : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
                 Optional (Keyword only)
             Query string parameters.
         
@@ -804,7 +831,7 @@ class HTTPClient(RichAttributeErrorBaseType):
         data : `None | object`, Optional (Keyword only)
             Data to send a the body of the request.
         
-        params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
+        query : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
                 Optional (Keyword only)
             Query string parameters.
         
@@ -849,7 +876,7 @@ class HTTPClient(RichAttributeErrorBaseType):
         data : `None | object`, Optional (Keyword only)
             Data to send a the body of the request.
         
-        params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
+        query : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
                 Optional (Keyword only)
             Query string parameters.
         
@@ -894,7 +921,7 @@ class HTTPClient(RichAttributeErrorBaseType):
         data : `None | object`, Optional (Keyword only)
             Data to send a the body of the request.
         
-        params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
+        query : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
                 Optional (Keyword only)
             Query string parameters.
         
@@ -939,7 +966,7 @@ class HTTPClient(RichAttributeErrorBaseType):
         data : `None | object`, Optional (Keyword only)
             Data to send a the body of the request.
         
-        params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
+        query : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
                 Optional (Keyword only)
             Query string parameters.
         
@@ -984,7 +1011,7 @@ class HTTPClient(RichAttributeErrorBaseType):
         data : `None | object`, Optional (Keyword only)
             Data to send a the body of the request.
         
-        params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
+        query : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
                 Optional (Keyword only)
             Query string parameters.
         
@@ -1029,7 +1056,7 @@ class HTTPClient(RichAttributeErrorBaseType):
         data : `None | object`, Optional (Keyword only)
             Data to send a the body of the request.
         
-        params : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
+        query : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`, \
                 Optional (Keyword only)
             Query string parameters.
         
@@ -1064,7 +1091,7 @@ class HTTPClient(RichAttributeErrorBaseType):
                 f'Please use `.connect_web_socket` instead.'
             ),
             FutureWarning,
-            stacklevel = 2,
+            stacklevel = 3,
         )
         return self.connect_web_socket(url, **keyword_parameters)
     

@@ -106,7 +106,7 @@ def test__create_host(input_value, encoded):
         Value to create host from.
     
     encoded : `bool`
-        Whether teh value is already encoded.
+        Whether the value is already encoded.
     
     Returns
     -------

@@ -3,6 +3,7 @@ from .url import *
 from .basic_authorization import *
 from .compressors import *
 from .constants import *
+from .content_type import *
 from .cookiejar import *
 from .exceptions import *
 from .form_data import *
@@ -13,7 +14,6 @@ from .http_message import *
 from .http_protocol import *
 from .http_stream_writer import *
 from .keep_alive_info import *
-from .mime_type import *
 from .multipart import *
 from .quoting import *
 from .web_socket_frame import *
@@ -27,6 +27,7 @@ __all__ = (
     *basic_authorization.__all__,
     *compressors.__all__,
     *constants.__all__,
+    *content_type.__all__,
     *cookiejar.__all__,
     *exceptions.__all__,
     *form_data.__all__,
@@ -37,7 +38,6 @@ __all__ = (
     *http_protocol.__all__,
     *http_stream_writer.__all__,
     *keep_alive_info.__all__,
-    *mime_type.__all__,
     *multipart.__all__,
     *quoting.__all__,
     *web_socket_frame.__all__,

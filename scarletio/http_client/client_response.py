@@ -6,8 +6,8 @@ from http.cookies import CookieError, SimpleCookie
 from warnings import warn
 
 from ..utils import RichAttributeErrorBaseType, from_json
+from ..web_common import parse_content_type
 from ..web_common.headers import CONTENT_TYPE, METHOD_CONNECT, METHOD_HEAD, SET_COOKIE
-from ..web_common.multipart import MimeType
 
 from .constants import JSON_RE
 
@@ -326,11 +326,11 @@ class ClientResponse(RichAttributeErrorBaseType):
         if headers is None:
             return 'utf-8'
         
-        content_type = headers.get(CONTENT_TYPE, '').casefold()
-        mime_type = MimeType(content_type)
+        content_type, content_type_parsing_error = parse_content_type(headers.get(CONTENT_TYPE, ''))
         
-        encoding = mime_type.parameters.get('charset', None)
+        encoding = content_type.get_parameter('charset', None)
         if (encoding is not None):
+            encoding = encoding.casefold()
             try:
                 lookup_encoding(encoding)
             except LookupError:
@@ -339,7 +339,7 @@ class ClientResponse(RichAttributeErrorBaseType):
                 return encoding
         
         # RFC 7159 states that the default encoding is utf-8.
-        if (mime_type.type == 'application' and mime_type.sub_type in ('json', 'rdap')):
+        if (content_type.type == 'application' and content_type.sub_type in ('json', 'rdap')):
             return 'utf-8'
         
         # If we cannot detect encoding leave
@@ -355,7 +355,7 @@ class ClientResponse(RichAttributeErrorBaseType):
         if encoding is None:
             encoding = 'utf-8'
         
-        return encoding
+        return encoding.casefold()
     
     
     async def text(self, *deprecated, encoding = None, errors = 'strict'):

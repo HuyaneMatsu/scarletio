@@ -972,7 +972,7 @@ class ReuAsyncIO(AsyncIO):
             The file's path to open.
         mode : `str`
             The mode to open with the file. Defaults to `'rb'`.
-        *positional_parameters : parameters
+        *positional_parameters : Positional parameters
             Parameters to use when opening the respective file.
         **keyword_parameters : keyword parameters
             Keyword parameters to use when opening the respective file.
@@ -1070,7 +1070,7 @@ class ReuAsyncIO(AsyncIO):
             The respective asynchronous io instance.
         func : `callable`
             The callable to call after seeking.
-        *positional_parameters : Parameters
+        *positional_parameters : Positional parameters
             Additional parameters to call the given `func` with.
         
         Returns
