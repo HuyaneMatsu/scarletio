@@ -1,3 +1,9 @@
+# 1.0.85 *\[2025-02-08\]*
+
+#### Bug fixes
+
+- Fix executor staggered releasing was not working as intended.
+
 # 1.0.84 *\[2025-01-28\]*
 
 #### Improvements

@@ -102,7 +102,7 @@ class Future:
     
     def __repr__(self):
         """Returns the future's representation."""
-        repr_parts = ['<', self.__class__.__name__]
+        repr_parts = ['<', type(self).__name__]
         
         state = self._state
         repr_parts, field_added = render_state_into(repr_parts, False, state)
@@ -157,7 +157,7 @@ class Future:
             
             if isinstance(exception, StopIteration):
                 raise TypeError(
-                    f'{exception!r} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
+                    f'{exception!r} cannot be raised to a(n) `{type(self).__name__}`; {self!r}.'
                 )
             
             state |= FUTURE_STATE_CANCELLED | FUTURE_STATE_RESULT_RAISE
@@ -460,7 +460,7 @@ class Future:
         
         if isinstance(exception, StopIteration):
             raise TypeError(
-                f'{exception!r} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
+                f'{exception!r} cannot be raised to a(n) `{type(self).__name__}`; {self!r}.'
             )
         
         self._result = exception
@@ -497,7 +497,7 @@ class Future:
         
         if isinstance(exception, StopIteration):
             raise TypeError(
-                f'{exception!r} cannot be raised to a(n) {self.__class__.__name__}; {self!r}.'
+                f'{exception!r} cannot be raised to a(n) {type(self).__name__}; {self!r}.'
             )
         
         self._result = exception
@@ -556,7 +556,7 @@ class Future:
         if not (state & FUTURE_STATE_MASK_DONE):
             if self._callbacks:
                 sys.stderr.write(
-                    f'{self.__class__.__name__} is not finished, but still pending: {self!r}\n',
+                    f'{type(self).__name__} is not finished, but still pending: {self!r}\n',
                 )
                 sys.stderr.flush()
             
@@ -566,7 +566,7 @@ class Future:
         if state & FUTURE_STATE_RESULT_RAISE:
             write_exception_maybe_async(
                 self._result,
-                f'{self.__class__.__name__} exception was never retrieved: {self!r}\n',
+                f'{type(self).__name__} exception was never retrieved: {self!r}\n',
             )
             return
     

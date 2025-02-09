@@ -23,7 +23,6 @@ ignore_frame(__spec__.origin, 'run', 'result = func()',)
 
 
 EXECUTOR_RELEASE_INTERVAL = 0.6
-EXECUTOR_RELEASE_MULTIPLIER = 2.5
 
 
 class SyncWait:
@@ -830,7 +829,7 @@ class ExecutionEndedCallback:
     def __call__(self, future):
         """calls the parent executor's ``._execution_ended`` method, giving the executor thread back to it."""
         parent = self.parent
-        future._loop.call_soon_thread_safe(parent.__class__._execution_ended, parent, self.executor)
+        future._loop.call_soon_thread_safe(type(parent)._execution_ended, parent, self.executor)
     
     def __eq__(self, other):
         """Returns whether the two execution ended callbacks are the same."""
@@ -1093,7 +1092,7 @@ class Executor:
         return executor
     
     
-    def call_at(self, *args):
+    def call_at(self, *positional_parameters):
         """
         Placeholder method.
         
@@ -1101,14 +1100,14 @@ class Executor:
         
         Parameters
         ----------
-        *args : parameters
+        *positional_parameters : Positional parameters
             The forwarded parameters.
         
         Returns
         -------
-        handle : `None`, ``TimerHandle``
+        handle : `None | TimerHandle`
         """
-        return get_event_loop().call_at(*args)
+        return get_event_loop().call_at(*positional_parameters)
     
     
     def _sync_keep(self, executor):
@@ -1122,23 +1121,29 @@ class Executor:
         """
         self.free_executors.append(executor)
         
-        previously_used_executor_count = len(self.running_executors) + 1
-        if previously_used_executor_count < self._kept_executor_count:
+        handle = self._kept_executor_release_handle
+        if (handle is not None):
             return
         
-        self._kept_executor_count = previously_used_executor_count
+        kept_executor_count = self._kept_executor_count
+        
+        interval = EXECUTOR_RELEASE_INTERVAL
+        previously_used_executor_count = len(self.running_executors) + 1
+        
+        if (kept_executor_count > 0) and (kept_executor_count > previously_used_executor_count):
+            interval *= 2.0
+        else:
+            self._kept_executor_count = previously_used_executor_count
+        
         current_time = LOOP_TIME()
         self._kept_executor_last_schedule = current_time
-        
-        handle = self._kept_executor_release_handle
-        if (handle is None):
-            self._kept_executor_release_handle = self.call_at(
-                current_time + EXECUTOR_RELEASE_INTERVAL,
-                type(self)._release_executor_step,
-                self,
-                current_time,
-                EXECUTOR_RELEASE_INTERVAL,
-            )
+        self._kept_executor_release_handle = self.call_at(
+            current_time + EXECUTOR_RELEASE_INTERVAL,
+            type(self)._release_executor_step,
+            self,
+            current_time,
+            EXECUTOR_RELEASE_INTERVAL,
+        )
     
     
     def _release_executor_step(self, schedule_time, schedule_interval):
@@ -1149,44 +1154,43 @@ class Executor:
         ----------
         schedule_time : `bool`
             When the step was scheduled.
+        
         schedule_interval : `float`
             The interval between the new and the last scheduling.
         """
         last_schedule = self._kept_executor_last_schedule
-        if last_schedule <= schedule_time:
-            free_executors = self.free_executors
-            if free_executors:
-                executor = free_executors.pop()
-                executor.release()
-                
-                kept_executor_count = self._kept_executor_count
-                if kept_executor_count <= 0:
-                    self._kept_executor_release_handle = None
-                    return
-                    
-                self._kept_executor_count = kept_executor_count - 1
-                current_time = LOOP_TIME()
-                self._kept_executor_last_schedule = current_time
-                
-                self._kept_executor_release_handle = self.call_at(
-                    current_time + EXECUTOR_RELEASE_INTERVAL,
-                    type(self)._release_executor_step,
-                    self,
-                    current_time,
-                    EXECUTOR_RELEASE_INTERVAL,
-                )
-            return
-            
+        current_time = LOOP_TIME()
+        
+        if last_schedule > schedule_time:
             # should not happen
-            last_schedule = LOOP_TIME()
             self._kept_executor_last_schedule = last_schedule
+            schedule_interval += EXECUTOR_RELEASE_INTERVAL
         
         else:
-            schedule_interval *= EXECUTOR_RELEASE_MULTIPLIER
+            free_executors = self.free_executors
+            if not free_executors:
+                self._kept_executor_release_handle = None
+                return
+            
+            kept_executor_count = self._kept_executor_count
+            
+            previously_used_executor_count = len(self.running_executors) + 1
+            if (kept_executor_count > 0) and (previously_used_executor_count > kept_executor_count):
+                schedule_interval += EXECUTOR_RELEASE_INTERVAL
+            
+            else:
+                executor = free_executors.pop()
+                executor.release()
+            
+                if (kept_executor_count > 0):
+                    self._kept_executor_count = kept_executor_count - 1
+                    schedule_interval = EXECUTOR_RELEASE_INTERVAL
+                
+            self._kept_executor_last_schedule = current_time
         
         # Reschedule on the same way
         self._kept_executor_release_handle = self.call_at(
-            last_schedule + schedule_interval,
+            current_time + schedule_interval,
             type(self)._release_executor_step,
             self,
             last_schedule,

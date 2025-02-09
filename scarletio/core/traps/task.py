@@ -3,7 +3,6 @@ __all__ = ('Task',)
 import sys
 from threading import current_thread
 from types import AsyncGeneratorType as CoroutineGeneratorType, CoroutineType, GeneratorType
-from warnings import warn
 
 from ...utils import (
     DEFAULT_ANSI_HIGHLIGHTER, alchemy_incendiary, copy_docs, export, ignore_frame, include, render_frames_into
@@ -100,7 +99,7 @@ class Task(Future):
     
     def __repr__(self):
         """Returns the task's representation."""
-        repr_parts = ['<', self.__class__.__name__]
+        repr_parts = ['<', type(self).__name__]
         
         state = self._state
         repr_parts, field_added = render_state_into(repr_parts, False, state)
@@ -144,7 +143,7 @@ class Task(Future):
             
             if isinstance(exception, StopIteration):
                 raise TypeError(
-                    f'{exception} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
+                    f'{exception} cannot be raised to a(n) `{type(self).__name__}`; {self!r}.'
                 )
             
             waited_future = self._waited_future
@@ -182,7 +181,7 @@ class Task(Future):
             Tasks do not support `.set_result` operation.
         """
         raise RuntimeError(
-            f'`{self.__class__.__name__}` does not support `.set_result` operation.'
+            f'`{type(self).__name__}` does not support `.set_result` operation.'
         )
     
     
@@ -201,7 +200,7 @@ class Task(Future):
             Tasks do not support `.set_result_if_pending` operation.
         """
         raise RuntimeError(
-            f'`{self.__class__.__name__}` does not support `.set_result_if_pending` operation.'
+            f'`{type(self).__name__}` does not support `.set_result_if_pending` operation.'
         )
     
     
@@ -221,7 +220,7 @@ class Task(Future):
             Tasks do not support `.set_exception` operation.
         """
         raise RuntimeError(
-            f'`{self.__class__.__name__}` does not support `.set_exception` operation.'
+            f'`{type(self).__name__}` does not support `.set_exception` operation.'
         )
     
     
@@ -241,7 +240,7 @@ class Task(Future):
             Tasks do not support `.set_exception_if_pending` operation.
         """
         raise RuntimeError(
-            f'`{self.__class__.__name__}` does not support `.set_exception_if_pending` operation.'
+            f'`{type(self).__name__}` does not support `.set_exception_if_pending` operation.'
         )
     
     
@@ -265,7 +264,7 @@ class Task(Future):
             raise InvalidStateError(
                 self,
                 '_step',
-                message = f'`{self.__class__.__name__}._step` already done of {self!r}.',
+                message = f'`{type(self).__name__}._step` already done of {self!r}.',
             )
         
         self._loop.current_task = self
@@ -365,7 +364,7 @@ class Task(Future):
         try:
             return coroutine.__name__
         except AttributeError:
-            return coroutine.__class__.__name__
+            return type(coroutine).__name__
     
     
     @property
@@ -381,7 +380,7 @@ class Task(Future):
         try:
             return coroutine.__qualname__
         except AttributeError:
-            return coroutine.__class__.__qualname__
+            return type(coroutine).__qualname__
     
     # Stack related | will need a rewrite # TODO
     
