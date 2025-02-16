@@ -2,10 +2,12 @@ __all__ = ('TransportLayerBase', 'SocketTransportLayer', 'SocketTransportLayerBa
 
 import reprlib
 from collections import deque as Deque
+from itertools import islice
+from os import sysconf as get_system_configuration
 from selectors import EVENT_READ, EVENT_WRITE
 from socket import (
     AF_INET as SOCKET_FAMILY_INET, AF_INET6 as SOCKET_FAMILY_INET6, IPPROTO_TCP as SOCKET_PROTOL_TCP,
-    SHUT_WR as SOCKET_SHUTDOWN_WR, SOCK_STREAM as SOCKET_TYPE_STREAM, socket as SocketError
+    SHUT_WR as SOCKET_SHUTDOWN_WR, SOCK_STREAM as SOCKET_TYPE_STREAM, error as SocketError, socket as SocketType
 )
 
 from ...utils import copy_docs, include
@@ -41,14 +43,26 @@ else:
 
 MAX_SIZE = 262144
 
+
+if not hasattr(SocketType, 'sendmsg'):
+    MAX_SENT_MESSAGES = 0
+
+else:
+    try:
+        MAX_SENT_MESSAGES = get_system_configuration('SC_IOV_MAX')
+    except OSError:
+        MAX_SENT_MESSAGES = 0
+
+
 class TransportLayerBase(AbstractTransportLayerBase):
     """
     Defines basic transport layer functionality.
     
     Attributes
     ----------
-    _extra : `None`, `dict` of (`str`, `object`) items
+    _extra : `None | dict<str, object>`
         Optional transport information.
+    
     _loop : ``EventThread``
         The event loop to what the transport is bound to.
     """
@@ -62,7 +76,7 @@ class TransportLayerBase(AbstractTransportLayerBase):
         ----------
         loop : ``EventThread``
             The event loop to what the transport is bound to.
-        extra : `None`, `dict` of (`str`, `object`) items
+        extra : `None | dict<str, object>`
             Optional transport information.
         """
         self = object.__new__(cls)
@@ -106,28 +120,39 @@ class SocketTransportLayerBase(TransportLayerBase):
     
     Attributes
     ----------
-    _buffer : `bytearray`
+    _buffer : `Deque`
         Transport's buffer.
+    
     _closing : `bool`
         Whether the transport ic closing. Set when ``.close`` is called.
+    
     _connection_lost : `bool`
         Set as `True`, when ``._call_connection_lost`` is scheduled.
+    
     _extra : `dict<str, object>`
         Optional transport information.
-    _file_descriptor : `int`
-        The transport's socket's file descriptor identifier.
-    _loop : ``EventThread``
-        The event loop to what the transport is bound to.
+    
     _high_water : `int`
         The ``.protocol`` is paused writing when the buffer size passes the high water mark. Defaults to `65536`.
+    
+    _file_descriptor : `int`
+        The transport's socket's file descriptor identifier.
+    
+    _loop : ``EventThread``
+        The event loop to what the transport is bound to.
+    
     _low_water : `int`
         The ``.protocol`` is resumed writing when the buffer size goes under the low water mark. Defaults to `16384`.
+    
     _paused : `bool`
         Whether the transport's reading is paused by the protocol.
+    
     _protocol : `None`, ``SSLBidirectionalTransportLayer, ``ReadProtocolBase``, `object`
         Asynchronous protocol implementation used by the transport. After closing is set to `None`.
+    
     _protocol_paused : `bool`
         Whether ``.protocol`` is paused writing.
+    
     _socket : `SocketType`
         The socket used by the transport.
     """
@@ -178,7 +203,7 @@ class SocketTransportLayerBase(TransportLayerBase):
         self._socket = socket
         self._file_descriptor = socket.fileno()
         self._protocol = protocol
-        self._buffer = bytearray()
+        self._buffer = Deque()
         self._connection_lost = False
         self._closing = False
         self._paused = False
@@ -472,34 +497,47 @@ class SocketTransportLayer(SocketTransportLayerBase):
     
     Attributes
     ----------
-    _extra : `dict` of (`str`, `object`) items
-        Optional transport information.
-    _loop : ``EventThread``
-        The event loop to what the transport is bound to.
+    _buffer : `Deque`
+        Transport's buffer.
+    
     _closing : `bool`
         Whether the transport ic closing.
+    
     _connection_lost : `bool`
         Set as `True`, when ``._call_connection_lost`` is scheduled.
+    
+    _extra : `None | dict<str, object>`
+        Optional transport information.
+    
     _high_water : `int`
         The ``.protocol`` is paused writing when the buffer size passes the high water mark. Defaults to `65536`.
+    
+    _loop : ``EventThread``
+        The event loop to what the transport is bound to.
+    
     _low_water : `int`
         The ``.protocol`` is resumed writing when the buffer size goes under the low water mark. Defaults to `16384`.
+    
     _paused : `bool`
         Whether the transport's reading is paused by the protocol.
+    
     _protocol : `None`, ``SSLBidirectionalTransportLayer, ``ReadProtocolBase``, `object`
         Asynchronous protocol implementation used by the transport.
         
         After closing the transport is set to `None`.
+    
     _protocol_paused : `bool`
         Whether ``.protocol`` is paused writing.
+    
     _socket : `SocketType`
         The socket used by the transport.
+    
     _file_descriptor : `int`
         The transport's socket's file descriptor identifier.
+    
     _at_eof : `bool`
         Whether ``.write_eof`` was called.
-    _buffer : `bytearray`
-        Transport's buffer.
+    
     _server : `None`, ``Server``
         If the transport is server side, it's server is set as this attribute.
     """
@@ -513,7 +551,7 @@ class SocketTransportLayer(SocketTransportLayerBase):
         ----------
         loop : ``EventThread``
             The event loop to what the transport is bound to.
-        extra : `None`, `dict` of (`str`, `object`) items
+        extra : `None | dict<str, object>`
             Optional transport information.
         socket : `SocketType`
             The socket used by the transport.
@@ -563,10 +601,11 @@ class SocketTransportLayer(SocketTransportLayerBase):
         if self._connection_lost:
             return
         
-        if not self._buffer:
+        buffer = self._buffer
+        if not buffer:
             # Optimization: try to send now.
             try:
-                n = self._socket.send(data)
+                bytes_sent = self._socket.send(data)
             except (BlockingIOError, InterruptedError):
                 pass
             
@@ -575,15 +614,16 @@ class SocketTransportLayer(SocketTransportLayerBase):
                 return
             
             else:
-                data = data[n:]
-                if not data:
+                if bytes_sent >= len(data):
                     return
+                
+                data = memoryview(data)[bytes_sent:]
             
             # Not all was written; register write handler.
             self._loop.add_writer(self._file_descriptor, self._write_ready)
         
         # Add it to the buffer.
-        self._buffer.extend(data)
+        buffer.append(data)
         self._maybe_pause_protocol()
     
     # `.writelines` same as `SocketTransportLayerBase`'s.
@@ -606,8 +646,12 @@ class SocketTransportLayer(SocketTransportLayerBase):
     
     @copy_docs(SocketTransportLayerBase.get_write_buffer_size)
     def get_write_buffer_size(self):
-        return len(self._buffer)
-    
+        size = 0
+        for data in self._buffer:
+            size += len(data)
+        
+        return size
+        
     
     @copy_docs(SocketTransportLayerBase.pause_reading)
     def pause_reading(self):
@@ -674,29 +718,88 @@ class SocketTransportLayer(SocketTransportLayerBase):
             else:
                 self.close()
     
-    
-    def _write_ready(self):
-        """
-        Added as a write callback on the respective event loop when the transport has unsent data. Called when the
-        respective socket becomes writable.
-        """
-        if self._connection_lost:
-            return
-        
-        try:
-            bytes_sent = self._socket.send(self._buffer)
-        except (BlockingIOError, InterruptedError):
-            pass
-        except BaseException as err:
-            self._loop.remove_writer(self._file_descriptor)
-            self._buffer.clear()
-            self._fatal_error(err, 'Fatal write error on socket transport')
-        else:
-            if bytes_sent:
-                del self._buffer[:bytes_sent]
+    if MAX_SENT_MESSAGES <= 0:
+        def _write_ready(self):
+            """
+            Added as a write callback on the respective event loop when the transport has unsent data. Called when the
+            respective socket becomes writable.
+            """
+            if self._connection_lost:
+                return
             
-            self._maybe_resume_protocol()  # May append to buffer.
-            if not self._buffer:
+            buffer = self._buffer
+            data = buffer[0]
+            try:
+                bytes_sent = self._socket.send(data)
+            except (BlockingIOError, InterruptedError):
+                return
+            
+            except BaseException as err:
+                self._loop.remove_writer(self._file_descriptor)
+                self._buffer.clear()
+                self._fatal_error(err, 'Fatal write error on socket transport')
+                return
+            
+            if bytes_sent > 0:
+                if bytes_sent >= len(data):
+                    del buffer[0]
+                else:
+                    buffer[0] = memoryview(data)[bytes_sent:]
+            
+            self._maybe_resume_protocol()
+            
+            if not buffer:
+                self._loop.remove_writer(self._file_descriptor)
+                
+                if self._closing:
+                    self._call_connection_lost(None)
+                
+                elif self._at_eof:
+                    self._socket.shutdown(SOCKET_SHUTDOWN_WR)
+    
+    else:
+        def _write_ready(self):
+            """
+            Added as a write callback on the respective event loop when the transport has unsent data. Called when the
+            respective socket becomes writable.
+            """
+            if self._connection_lost:
+                return
+            
+            buffer = self._buffer
+            try:
+                bytes_sent = self._socket.sendmsg(islice(buffer, MAX_SENT_MESSAGES))
+            except (BlockingIOError, InterruptedError):
+                return
+            
+            except BaseException as err:
+                self._loop.remove_writer(self._file_descriptor)
+                self._buffer.clear()
+                self._fatal_error(err, 'Fatal write error on socket transport')
+                return
+            
+            if bytes_sent > 0:
+                while True:
+                    data = buffer[0]
+                    data_length = len(data)
+                    
+                    if data_length > bytes_sent:
+                        buffer[0] = memoryview(data)[bytes_sent:]
+                        break
+                    
+                    del buffer[0]
+                    if (not buffer):
+                        break
+                    
+                    if (data_length == bytes_sent):
+                        break
+                    
+                    bytes_sent -= data_length
+                    continue
+            
+            self._maybe_resume_protocol()
+            
+            if not buffer:
                 self._loop.remove_writer(self._file_descriptor)
                 
                 if self._closing:
@@ -712,33 +815,47 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
     
     Attributes
     ----------
-    _extra : `dict` of (`str`, `object`) items
-        Optional transport information.
-    _loop : ``EventThread``
-        The event loop to what the transport is bound to.
+    _address : `None | (str, int)`
+        The last address, where the transport sent data. Defaults to `None`. The send target address should not differ
+        from the last, where the transport sent data.
+    
+    _buffer : `Deque`
+        Transport's buffer.
+    
     _closing : `bool`
-        Whether the transport ic closing.
+        Whether the transport ic closing. Set when ``.close`` is called.
+    
     _connection_lost : `bool`
         Set as `True`, when ``._call_connection_lost`` is scheduled.
+    
+    _extra : `None | dict<str, object>`
+        Optional transport information.
+    
     _high_water : `int`
         The ``.protocol`` is paused writing when the buffer size passes the high water mark. Defaults to `65536`.
+    
+    _loop : ``EventThread``
+        The event loop to what the transport is bound to.
+    
     _low_water : `int`
         The ``.protocol`` is resumed writing when the buffer size goes under the low water mark. Defaults to `16384`.
+    
     _paused : `bool`
         Whether the transport's reading is paused by the protocol.
+    
     _protocol : `None`, ``SSLBidirectionalTransportLayer, ``ReadProtocolBase``, `object`
         Asynchronous protocol implementation used by the transport.
         
         After closing the transport is set to `None`.
+    
     _protocol_paused : `bool`
         Whether ``.protocol`` is paused writing.
+    
     _socket : `SocketType`
         The socket used by the transport.
+    
     _file_descriptor : `int`
         The transport's socket's file descriptor identifier.
-    _address : `None` or (`str`, `int`)
-        The last address, where the transport sent data. Defaults to `None`. The send target address should not differ
-        from the last, where the transport sent data.
     """
     __slots__ = ('_address', )
     
@@ -750,7 +867,7 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
         ----------
         loop : ``EventThread``
             The event loop to what the transport is bound to.
-        extra : `None`, `dict` of (`str`, `object`) items
+        extra : `None | dict<str, object>`
             Optional transport information.
         socket : `SocketType`
             The socket used by the transport.
@@ -764,7 +881,6 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
         """
         self = SocketTransportLayerBase.__new__(cls, loop, extra, socket, protocol, waiter)
         
-        self._buffer = Deque()
         self._address = address
         
         loop.call_soon(self._protocol.connection_made, self)

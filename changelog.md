@@ -1,3 +1,9 @@
+# 1.0.86 *\[2025-02-16\]*
+
+#### Improvements
+
+- Use `SocketType.sendmsg` when available.
+
 # 1.0.85 *\[2025-02-08\]*
 
 #### Bug fixes

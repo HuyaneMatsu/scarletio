@@ -7,7 +7,8 @@ class PayloadError(Exception):
     """
     Raised when http payload processing fails.
     """
-    pass
+    __slots__ = ()
+    __init__ = object.__init__
 
 
 class HttpErrorBase(Exception):

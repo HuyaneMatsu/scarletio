@@ -24,7 +24,7 @@ def get_extra_info(extra, name, default):
     
     Parameters
     ----------
-    extra : `None`, `dict` of (`str`, `object`) items
+    extra : `None | dict<str, object>`
         Optional transform information.
     name : `str`
         The extra information's name to get.
@@ -57,7 +57,7 @@ def set_extra_info(extra, name, value):
     
     Parameters
     ----------
-    extra : `None`, `dict` of (`str`, `object`) items
+    extra : `None | dict<str, object>`
         Optional transform information.
     name : `str`
         The extra info's name.
@@ -66,7 +66,7 @@ def set_extra_info(extra, name, value):
     
     Returns
     -------
-    extra : `dict` of (`str`, `object`) items
+    extra : `None | dict<str, object>`
         The new transform information.
     """
     if extra is None:
@@ -83,7 +83,7 @@ def has_extra_info(extra, name):
     
     Parameters
     ----------
-    extra : `None`, `dict` of (`str`, `object`) items
+    extra : `None | dict<str, object>`
         Optional transform information.
     name : `str`
         The extra info's name.
@@ -115,7 +115,7 @@ def get_has_extra_info(extra, name):
     
     Parameters
     ----------
-    extra : `None`, `dict` of (`str`, `object`) items
+    extra : `None | dict<str, object>`
         Optional transform information.
     name : `str`
         The extra information's name to get.

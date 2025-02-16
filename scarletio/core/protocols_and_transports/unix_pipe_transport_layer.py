@@ -1,6 +1,7 @@
 __all__ = ('UnixReadPipeTransportLayer', 'UnixWritePipeTransportLayer')
 
 import errno, os, sys
+from collections import deque as Deque
 from stat import S_ISCHR, S_ISFIFO, S_ISSOCK
 
 from ...utils import copy_docs, include
@@ -23,20 +24,25 @@ class UnixReadPipeTransportLayer(TransportLayerBase):
     
     Attributes
     ----------
-    _extra : `dict` of (`str`, `object`) items
+    _extra : `None | dict<str, object>`
         Optional transport information.
-    _loop : ``EventThread``
-        The respective event loop of the transport.
+    
     _closing : `bool`
         Whether the transport ic closing.
+    
+    _loop : ``EventThread``
+        The respective event loop of the transport.
+    
     _file_descriptor : `int`
         The used socket's file descriptor number.
+    
     _pipe : `None`, `file-like`
         The pipe to connect to on read end.
         
         Is set to non-blocking mode.
         
         After closing the transport is set to `None`.
+    
     _protocol : `None`, ``SubprocessReadPipeProtocol``
         Asynchronous protocol implementation used by the transport.
         
@@ -54,11 +60,14 @@ class UnixReadPipeTransportLayer(TransportLayerBase):
         ----------
         loop : ``EventThread``
             The respective event loop of the transport.
+        
         pipe : `file-like`
             The pipe to connect to on read end.
+        
         protocol : ``SubprocessReadPipeProtocol``, `object`
             Asynchronous protocol implementation used by the transport.
-        extra : `None`, `dict` of (`str`, `object`) items
+        
+        extra : `None`, `None | dict<str, object>`
             Optional transport information.
         
         Raises
@@ -71,7 +80,7 @@ class UnixReadPipeTransportLayer(TransportLayerBase):
         if not (S_ISFIFO(mode) or S_ISSOCK(mode) or S_ISCHR(mode)):
             raise ValueError(
                 f'`{cls.__name__}` is only for pipes, sockets and character devices, got '
-                f'{pipe.__class__.__name__}; {pipe!r}.'
+                f'{type(pipe).__name__}; {pipe!r}.'
             )
         
         extra = set_extra_info(extra, EXTRA_INFO_NAME_PIPE, pipe)
@@ -99,7 +108,7 @@ class UnixReadPipeTransportLayer(TransportLayerBase):
     
     def __repr__(self):
         """Returns the transport layer's representation."""
-        return f'<{self.__class__.__name__} file_descriptor={self._file_descriptor}>'
+        return f'<{type(self).__name__} file_descriptor = {self._file_descriptor}>'
     
     
     def _read_ready(self):
@@ -109,19 +118,21 @@ class UnixReadPipeTransportLayer(TransportLayerBase):
         try:
             data = os.read(self._file_descriptor, MAX_READ_SIZE)
         except (BlockingIOError, InterruptedError):
-            pass
+            return
+    
         except OSError as err:
             self._fatal_error(err, 'Fatal read error on pipe transport')
+            return
+        
+        if data:
+            self._protocol.data_received(data)
         else:
-            if data:
-                self._protocol.data_received(data)
-            else:
-                self._closing = True
-                loop = self._loop
-                loop.remove_reader(self._file_descriptor)
-                protocol = self._protocol
-                loop.call_soon(protocol.__class__.eof_received, protocol)
-                loop.call_soon(self.__class__._call_connection_lost, self, None)
+            self._closing = True
+            loop = self._loop
+            loop.remove_reader(self._file_descriptor)
+            protocol = self._protocol
+            loop.call_soon(type(protocol).eof_received, protocol)
+            loop.call_soon(type(self)._call_connection_lost, self, None)
     
     
     @copy_docs(TransportLayerBase.pause_reading)
@@ -216,7 +227,7 @@ class UnixReadPipeTransportLayer(TransportLayerBase):
         self._closing = True
         loop = self._loop
         loop.remove_reader(self._file_descriptor)
-        loop.call_soon(self.__class__._call_connection_lost, self, exception)
+        loop.call_soon(type(self)._call_connection_lost, self, exception)
     
     
     def _call_connection_lost(self, exception):
@@ -257,28 +268,38 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
     ----------
     _buffer : `bytearray`
         Data ensured to be written on the wrapped pipe as it becomes readable again.
-    _extra : `dict` of (`str`, `object`) items
-        Optional transport information.
-    _high_water : `int`
-        The ``.protocol`` is paused writing when the buffer size passes the high water mark. Defaults to `65536`.
-    _low_water : `int`
-        The ``.protocol`` is resumed writing when the buffer size goes under the low water mark. Defaults to `16384`.
+    
     _closing : `bool`
         Whether the transport ic closing.
+    
+    _extra : `None | dict<str, object>`
+        Optional transport information.
+    
+    _high_water : `int`
+        The ``.protocol`` is paused writing when the buffer size passes the high water mark. Defaults to `65536`.
+    
+    _low_water : `int`
+        The ``.protocol`` is resumed writing when the buffer size goes under the low water mark. Defaults to `16384`.
+    
+    
     _file_descriptor : `int`
         The used socket's file descriptor number.
+    
     _loop : ``EventThread``
         The respective event loop of the transport.
+    
     _pipe : `None`, `file-like`
         The pipe to connect to on read end.
         
         Is set to non-blocking mode.
         
         After closing the transport is set to `None`.
+    
     _protocol : `None`, ``SubprocessWritePipeProtocol``, `object`
         Asynchronous protocol implementation used by the transport.
         
         After closing the transport is set to `None`.
+    
     _protocol_paused : `bool`
         Whether ``.protocol`` is paused writing.
     """
@@ -297,11 +318,14 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
         ----------
         loop : ``EventThread``
             The respective event loop of the transport.
+        
         pipe `: file-like` object
             The pipe to connect to on read end.
+        
         protocol : ``SubprocessWritePipeProtocol``, `object`
             Asynchronous protocol implementation used by the transport.
-        extra : `None`, `dict` of (`str`, `object`) items = `None`, Optional
+        
+        extra : `None`, `None | dict<str, object>` = `None`, Optional
             Optional transport information.
 
         Raises
@@ -317,7 +341,7 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
         if not (is_char or is_fifo or is_socket):
             raise ValueError(
                 f'{cls.__name__} is only for pipes, sockets and character devices, got '
-                f'{pipe.__class__.__name__}; {pipe!r}.'
+                f'{type(pipe).__name__}; {pipe!r}.'
             )
         
 
@@ -355,7 +379,7 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
     
     def __repr__(self):
         """Returns the transport layer's representation."""
-        return f'<{self.__class__.__name__} file_descriptor={self._file_descriptor}>'
+        return f'<{type(self).__name__} file_descriptor = {self._file_descriptor}>'
     
     
     @copy_docs(TransportLayerBase.get_write_buffer_size)
@@ -383,27 +407,25 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
         if not data:
             return
         
-        if isinstance(data, bytearray):
-            data = memoryview(data)
-        
         if self._closing:
             return
         
         buffer = self._buffer
         if not buffer:
             try:
-                n = os.write(self._file_descriptor, data)
+                bytes_sent = os.write(self._file_descriptor, data)
             except (BlockingIOError, InterruptedError):
-                n = 0
+                pass
+            
             except BaseException as err:
                 self._fatal_error(err, 'Fatal write error on pipe transport')
                 return
             
-            if n == len(data):
-                return
-            
-            if n > 0:
-                data = memoryview(data)[n:]
+            else:
+                if bytes_sent >= len(data):
+                    return
+                
+                data = memoryview(data)[bytes_sent:]
             
             self._loop.add_writer(self._file_descriptor, self._write_ready)
         
@@ -419,26 +441,27 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
         buffer = self._buffer
         
         try:
-            n = os.write(self._file_descriptor, buffer)
+            bytes_sent = os.write(self._file_descriptor, buffer)
         except (BlockingIOError, InterruptedError):
-            pass
+            return
         
         except BaseException as err:
             buffer.clear()
             self._loop.remove_writer(self._file_descriptor)
             self._fatal_error(err, 'Fatal write error on pipe transport')
-        else:
-            if n == len(buffer):
-                buffer.clear()
-                self._loop.remove_writer(self._file_descriptor)
-                self._maybe_resume_protocol()  # May append to buffer.
-                if self._closing:
-                    self._loop.remove_reader(self._file_descriptor)
-                    self._call_connection_lost(None)
-                return
+            return
+        
+        if bytes_sent > 0:
+            del self._buffer[:bytes_sent]
+        
+        self._maybe_resume_protocol()
+        
+        if not buffer:
+            self._loop.remove_writer(self._file_descriptor)
             
-            if n > 0:
-                del buffer[:n]
+            if self._closing:
+                self._loop.remove_reader(self._file_descriptor)
+                self._call_connection_lost(None)
     
     
     @copy_docs(TransportLayerBase.can_write_eof)
@@ -455,7 +478,7 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
         if not self._buffer:
             loop = self._loop
             loop.remove_reader(self._file_descriptor)
-            loop.call_soon(self.__class__._call_connection_lost, self, None)
+            loop.call_soon(type(self)._call_connection_lost, self, None)
     
     
     @copy_docs(TransportLayerBase.set_protocol)
@@ -530,7 +553,7 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
             buffer.clear()
         
         loop.remove_reader(self._file_descriptor)
-        loop.call_soon(self.__class__._call_connection_lost, self, exception)
+        loop.call_soon(type(self)._call_connection_lost, self, exception)
     
     
     def _call_connection_lost(self, exception):
@@ -631,10 +654,11 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
         ----------
         low : None`, `int` = `None`, Optional
             The ``.protocol`` is paused writing when the buffer size passes the high water mark. Defaults to `65536`.
+        
         high : `None`, `int` = `None`, Optional
             The ``.protocol`` is resumed writing when the buffer size goes under the low water mark. Defaults to
             `16384`.
-
+        
         Raises
         ------
         ValueError
