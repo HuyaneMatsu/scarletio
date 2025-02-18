@@ -177,7 +177,7 @@ class HighlightFormatterContext:
         """
         if (ansi_code is not None) and (not isinstance(ansi_code, str)):
             raise TypeError(
-                f'`ansi_code` can be `None`, `str`, got {ansi_code.__class__.__name__}; {ansi_code!r}.'
+                f'`ansi_code` can be `None`, `str`, got {type(ansi_code).__name__}; {ansi_code!r}.'
             )
         
         self.set_highlight_detail(
@@ -208,7 +208,7 @@ class HighlightFormatterContext:
         if not isinstance(token_type_identifier, int):
             raise TypeError(
                 f'`token_type_identifier` can be `int`, got '
-                f'{token_type_identifier.__class__.__name__}; {token_type_identifier!r}.'
+                f'{type(token_type_identifier).__name__}; {token_type_identifier!r}.'
             )
         
         try:

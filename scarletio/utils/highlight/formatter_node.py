@@ -45,7 +45,7 @@ class FormatterNode:
     
     def __repr__(self):
         """Returns the token type node's representation."""
-        result = ['<', self.__class__.__name__, ' id = ', repr(self.id)]
+        result = ['<', type(self).__name__, ' id = ', repr(self.id)]
         
         if self.direct:
             result.append(', detail = ')

@@ -1,3 +1,9 @@
+# 1.0.87 *\[2025-02-18\]*
+
+#### Bug fixes
+
+- Fix `os.sysconf` not available on non-unix operation systems. (Since last update)
+
 # 1.0.86 *\[2025-02-16\]*
 
 #### Improvements

@@ -3,7 +3,6 @@ __all__ = ('TransportLayerBase', 'SocketTransportLayer', 'SocketTransportLayerBa
 import reprlib
 from collections import deque as Deque
 from itertools import islice
-from os import sysconf as get_system_configuration
 from selectors import EVENT_READ, EVENT_WRITE
 from socket import (
     AF_INET as SOCKET_FAMILY_INET, AF_INET6 as SOCKET_FAMILY_INET6, IPPROTO_TCP as SOCKET_PROTOL_TCP,
@@ -24,6 +23,10 @@ try:
 except ImportError:
     SOCKET_OPTION_TCP_NODELAY = 0
 
+try:
+    from os import sysconf as get_system_configuration
+except ImportError:
+    get_system_configuration = None
 
 write_exception_async = include('write_exception_async')
 
@@ -44,7 +47,7 @@ else:
 MAX_SIZE = 262144
 
 
-if not hasattr(SocketType, 'sendmsg'):
+if (get_system_configuration is None) or (not hasattr(SocketType, 'sendmsg')):
     MAX_SENT_MESSAGES = 0
 
 else:

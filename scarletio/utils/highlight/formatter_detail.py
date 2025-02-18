@@ -37,7 +37,7 @@ class FormatterDetail:
     
     def __repr__(self):
         """Returns the formatter detail's representation."""
-        return f'{self.__class__.__name__}({self.formatter_generator_function!r}, {self.details!r})'
+        return f'{type(self).__name__}({self.formatter_generator_function!r}, {self.details!r})'
     
     
     def __call__(self, token):

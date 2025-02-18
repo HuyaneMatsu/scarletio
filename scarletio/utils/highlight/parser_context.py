@@ -2,6 +2,7 @@ __all__ = ()
 
 from ..docs import copy_docs
 from ..export_include import export
+from ..rich_attribute_error import RichAttributeErrorBaseType
 
 from .matching import PYTHON_PARSERS, PYTHON_PARSERS_FORMAT_STRING, _try_match_till_format_string_expression
 from .token import Token, _merge_tokens
@@ -12,7 +13,7 @@ from .token_types import (
 )
 
 
-class HighlightParserContextBase:
+class HighlightParserContextBase(RichAttributeErrorBaseType):
     """
     Base class for highlighting.
     
@@ -20,16 +21,20 @@ class HighlightParserContextBase:
     ----------
     done : `bool`
         Whether processing is done.
-    tokens : `list` of ``Token``
+    
+    tokens : `list<Token>`
         The generated tokens.
     """
     __slots__ = ('done', 'tokens',)
     
     def __new__(cls):
         """
-        Creates a new ``HighlightParserContextBase``.
+        Creates a new highlight context.
         """
-        return object.__new__(cls)
+        self = object.__new__(cls)
+        self.done = False
+        self.tokens = []
+        return self
     
     
     def get_line_index(self):
@@ -87,7 +92,8 @@ class HighlightParserContextBase:
         ----------
         token_type : `int`
             The token's identifier.
-        token_value : `None`, `str`
+        
+        token_value : `None | str`
             The token's value.
         """
         token = Token(token_type, token_value)
@@ -191,40 +197,37 @@ class HighlightParserContext(HighlightParserContextBase):
     ----------
     done : `bool`
         Whether processing is done.
-    tokens : `list` of ``Token``
-        The generated tokens.
+    
     line_character_index : `int`
         The index of the character of the processed line.
+    
     line_index : `int`
         The index of the line which is processed at the moment.
+    
     lines : `list` of `str`
         The lines to highlight.
+    
+    tokens : `list` of ``Token``
+        The generated tokens.
     """
     __slots__ = ('line_character_index', 'line_index', 'lines')
     
     def __new__(cls, lines):
         """
-        Creates a new ``HighlightParserContext``.
+        Creates a new highlight parser context.
         
         Parameters
         ----------
-        lines : `list` of `str`
+        lines : `list<str>`
             The lines what the highlight context should match.
         """
-        lines = [line for line in lines if line]
-        
-        if len(lines) == 0:
-            done = True
-        else:
-            done = False
-        
-        self = object.__new__(cls)
-        
+        self = HighlightParserContextBase.__new__(cls)
         self.lines = lines
         self.line_index = 0
         self.line_character_index = 0
-        self.done = done
-        self.tokens = []
+        
+        if not lines:
+            self.done = True
         
         return self
     
@@ -336,41 +339,41 @@ class FormatStringParserContext(HighlightParserContextBase):
     ----------
     done : `bool`
         Whether processing is done.
-    tokens : `list` of ``Token``
-        The generated tokens.
+    
     brace_level : `int`
         The internal brace level to un-match before entering a string.
+    
     in_code : `bool`
         Whether we are parsing format code.
+    
     line : `str`
         The internal content of the format string.
+    
     line_character_index : `int`
         The index of the character of the processed line.
+    
+    tokens : `list` of ``Token``
+        The generated tokens.
     """
     __slots__ = ('brace_level', 'in_code', 'line', 'line_character_index', )
     
     def __new__(cls, line):
         """
-        Creates a new ``FormatStringParserContext``.
+        Creates a new highlight parser context.
         
         Parameters
         ----------
         line : `str`
             A format string's internal content to highlight.
         """
-        if len(line) == 0:
-            done = True
-        else:
-            done = False
-        
-        self = object.__new__(cls)
-        
+        self = HighlightParserContextBase.__new__(cls)
         self.line = line
-        self.done = done
-        self.tokens = []
         self.line_character_index = 0
         self.brace_level = 0
         self.in_code = False
+        
+        if len(line) == 0:
+            self.done = True
         
         return self
     
