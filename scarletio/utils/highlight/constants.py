@@ -107,14 +107,8 @@ OPERATORS = {
 }
 
 STRING_STARTER_RP = re_compile('(r[fb]?|[fb]r?|b|f)?(\'{3}|\"{3}|\'|\")')
-STRING_END_SINGLE_RP = re_compile('(.*?)(?<!\\\\)\'|\'')
-STRING_END_DOUBLE_RP = re_compile('(.*?)(?<!\\\\)\"|\'')
-STRING_MULTI_LINE_END_SINGLE_RP = re_compile('(.*?)(?<!\\\\)\'\'\'|\'\'\'')
-STRING_MULTI_LINE_END_DOUBLE_RP = re_compile('(.*?)(?<!\\\\)\"\"\"|\"\"\"')
 
 SPACE_MATCH_RP = re_compile('([ \t]+)')
-
-FORMAT_STRING_MATCH_STRING = re_compile('(.*?)(\\{\\{?|\\}\\}?|\n)')
 
 CONSOLE_PREFIX_RP = re_compile('(>>>>?|\\.\\.\\.\\.?| *\\.\\.\\.\\:|In \\[\\d+\\]\\:)( [ \t]*)')
 

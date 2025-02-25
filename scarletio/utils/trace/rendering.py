@@ -221,7 +221,7 @@ def _produce_file_location(file_name, line_index, name, line_count):
         yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LOCATION, ', in '
         yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LOCATION_NAME, name
     
-    yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINEBREAK, '\n'
+    yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK, '\n'
 
 
 def add_trace_title_into(title, highlighter, into):

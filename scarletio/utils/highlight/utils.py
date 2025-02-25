@@ -4,6 +4,7 @@ __all__ = (
 )
 
 from .constants import BUILTIN_CONSTANTS, BUILTIN_EXCEPTIONS, BUILTIN_VARIABLES
+from .flags import HIGHLIGHT_PARSER_MASK_DEFAULT
 from .parser_context import HighlightParserContext
 from .token import Token
 from .token_types import (
@@ -30,7 +31,7 @@ def iter_highlight_code_lines(lines, formatter_context):
     ------
     content : `str`
     """
-    context = HighlightParserContext(lines)
+    context = HighlightParserContext(lines, HIGHLIGHT_PARSER_MASK_DEFAULT)
     context.match()
     yield from context.generate_highlighted(formatter_context)
 

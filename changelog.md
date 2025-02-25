@@ -1,3 +1,9 @@
+# 1.0.88 *\[2025-02-25\]*
+
+#### Improvements
+
+- Support python 3.12 format string syntax when highlighting.
+
 # 1.0.87 *\[2025-02-18\]*
 
 #### Bug fixes

@@ -2,7 +2,7 @@ __all__ = ()
 
 from html import escape as html_escape
 
-from .token_types import TOKEN_TYPE_LINEBREAK
+from .token_types import TOKEN_TYPE_LINE_BREAK
 
 
 class FormatterDetail:
@@ -88,7 +88,7 @@ def formatter_html(html_class, token):
     content : `str`
     """
     token_type = token.type
-    if (token_type == TOKEN_TYPE_LINEBREAK):
+    if (token_type == TOKEN_TYPE_LINE_BREAK):
         yield '<br>'
         return
     

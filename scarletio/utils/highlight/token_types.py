@@ -8,7 +8,7 @@ The token types for coloring are the following:
 +-----------------------------------------------------------+-------+-----------------------------------------------+
 | TOKEN_TYPE_SPACE                                          |   1   | TOKEN_TYPE_ALL                                |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
-| TOKEN_TYPE_LINEBREAK                                      |   2   | TOKEN_TYPE_ALL                                |
+| TOKEN_TYPE_LINE_BREAK                                      |   2   | TOKEN_TYPE_ALL                                |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
 | TOKEN_TYPE_NON_SPACE                                      |   3   | TOKEN_TYPE_ALL                                |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
@@ -16,7 +16,7 @@ The token types for coloring are the following:
 +-----------------------------------------------------------+-------+-----------------------------------------------+
 | TOKEN_TYPE_COMMENT                                        |   5   | TOKEN_TYPE_ALL                                |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
-| TOKEN_TYPE_LINEBREAK_ESCAPED                              |   6   | TOKEN_TYPE_LINEBREAK                          |
+| TOKEN_TYPE_LINE_BREAK_ESCAPED                              |   6   | TOKEN_TYPE_LINE_BREAK                          |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
 | TOKEN_TYPE_CONSTANT                                       | 100   | TOKEN_TYPE_NON_SPACE                          |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
@@ -162,11 +162,11 @@ __all__ = ()
 
 TOKEN_TYPE_ALL = 0
 TOKEN_TYPE_SPACE = 1
-TOKEN_TYPE_LINEBREAK = 2
+TOKEN_TYPE_LINE_BREAK = 2
 TOKEN_TYPE_NON_SPACE = 3
 TOKEN_TYPE_NON_SPACE_UNIDENTIFIED = 4
 TOKEN_TYPE_COMMENT = 5
-TOKEN_TYPE_LINEBREAK_ESCAPED = 6
+TOKEN_TYPE_LINE_BREAK_ESCAPED = 6
 
 TOKEN_TYPE_CONSTANT = 100
 TOKEN_TYPE_NUMERIC = 110
@@ -261,8 +261,8 @@ TOKEN_TYPE_TEXT_TITLE = 3005
 TOKEN_STRUCTURE = {
     TOKEN_TYPE_ALL: {
         TOKEN_TYPE_SPACE : None,
-        TOKEN_TYPE_LINEBREAK : {
-            TOKEN_TYPE_LINEBREAK_ESCAPED : None,
+        TOKEN_TYPE_LINE_BREAK : {
+            TOKEN_TYPE_LINE_BREAK_ESCAPED : None,
         },
         TOKEN_TYPE_NON_SPACE : {
             TOKEN_TYPE_NON_SPACE_UNIDENTIFIED : None,

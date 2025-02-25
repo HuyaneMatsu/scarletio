@@ -68,7 +68,7 @@ class HighlightFormatterContext:
 
     def __repr__(self):
         """Returns the formatter's representation."""
-        return f'<{self.__class__.__name__} nodes: {len(self.formatter_nodes)}>'
+        return f'<{type(self).__name__} nodes: {len(self.formatter_nodes)}>'
     
     
     def highlight_as(self, content, token_type):

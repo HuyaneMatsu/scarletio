@@ -1,39 +1,69 @@
 __all__ = ()
 
-from ..docs import copy_docs
-from ..export_include import export
 from ..rich_attribute_error import RichAttributeErrorBaseType
 
-from .matching import PYTHON_PARSERS, PYTHON_PARSERS_FORMAT_STRING, _try_match_till_format_string_expression
+from .flags import HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING
+from .matching import _keep_python_parsing
 from .token import Token, _merge_tokens
 from .token_types import (
-    MERGE_TOKEN_TYPES, TOKEN_TYPE_ALL, TOKEN_TYPE_COMMENT, TOKEN_TYPE_LINEBREAK, TOKEN_TYPE_LINEBREAK_ESCAPED,
-    TOKEN_TYPE_SPACE, TOKEN_TYPE_SPECIAL_OPERATOR, TOKEN_TYPE_SPECIAL_PUNCTUATION, TOKEN_TYPE_STRING_UNICODE_FORMAT,
-    TOKEN_TYPE_STRING_UNICODE_FORMAT_CODE, TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK
+    MERGE_TOKEN_TYPES, TOKEN_TYPE_ALL, TOKEN_TYPE_COMMENT, TOKEN_TYPE_LINE_BREAK, TOKEN_TYPE_LINE_BREAK_ESCAPED,
+    TOKEN_TYPE_SPACE, TOKEN_TYPE_SPECIAL_OPERATOR, TOKEN_TYPE_SPECIAL_PUNCTUATION
 )
 
 
-class HighlightParserContextBase(RichAttributeErrorBaseType):
+class HighlightParserContext(RichAttributeErrorBaseType):
     """
-    Base class for highlighting.
+    Represents a context of highlighting any content.
     
     Attributes
     ----------
+    brace_nesting : `None | list<str>`
+        How the braces are nested.
+    
     done : `bool`
         Whether processing is done.
     
-    tokens : `list<Token>`
+    flags : `int`
+        Flags used to determine how to parse.
+    
+    line_character_index : `int`
+        The index of the character of the processed line.
+    
+    line_index : `int`
+        The index of the line which is processed at the moment.
+    
+    lines : `list` of `str`
+        The lines to highlight.
+    
+    tokens : `list` of ``Token``
         The generated tokens.
     """
-    __slots__ = ('done', 'tokens',)
+    __slots__ = ('brace_nesting', 'done', 'flags', 'line_character_index', 'line_index', 'lines', 'tokens')
     
-    def __new__(cls):
+    def __new__(cls, lines, flags):
         """
-        Creates a new highlight context.
+        Creates a new highlight parser context.
+        
+        Parameters
+        ----------
+        lines : `list<str>`
+            The lines what the highlight context should match.
+        
+        flags : `int`
+            Flags used to determine how to parse.
         """
         self = object.__new__(cls)
+        self.brace_nesting = None
         self.done = False
+        self.flags = flags
         self.tokens = []
+        self.lines = lines
+        self.line_index = 0
+        self.line_character_index = 0
+        
+        if not lines:
+            self.done = True
+        
         return self
     
     
@@ -45,7 +75,7 @@ class HighlightParserContextBase(RichAttributeErrorBaseType):
         -------
         line_index : `int`
         """
-        return 0
+        return self.line_index
     
     
     def get_line(self):
@@ -56,7 +86,14 @@ class HighlightParserContextBase(RichAttributeErrorBaseType):
         -------
         line : `str`
         """
-        return ''
+        lines = self.lines
+        line_index = self.line_index
+        if len(lines) <= line_index:
+            line = ''
+        else:
+            line = lines[line_index]
+        
+        return line
     
     
     def get_line_character_index(self):
@@ -67,7 +104,7 @@ class HighlightParserContextBase(RichAttributeErrorBaseType):
         -------
         line_character_index : `int`
         """
-        return 0
+        return self.line_character_index
     
     
     def set_line_character_index(self, line_character_index):
@@ -81,7 +118,34 @@ class HighlightParserContextBase(RichAttributeErrorBaseType):
             
             Pass it as `-1` to force end the line with linebreak or as `-2` to force it without linebreak.
         """
-        pass
+        lines = self.lines
+        line_index = self.line_index
+        
+        if line_index >= len(lines):
+            line = ''
+        else:
+            line = lines[line_index]
+        
+        if (line_character_index < 0) or (len(line) <= line_character_index):
+            line_index += 1
+            
+            self.line_index = line_index
+            if len(lines) <= line_index:
+                self.done = True
+            
+            self._end_of_line()
+            
+            line_character_index = 0
+        
+        self.line_character_index = line_character_index
+    
+    
+    def recheck_done(self):
+        """
+        Rechecks whether the context is done. Used after exiting a nesting.
+        """
+        if len(self.lines) <= self.line_index:
+            self.done = True
     
     
     def add_token(self, token_type, token_value):
@@ -98,18 +162,54 @@ class HighlightParserContextBase(RichAttributeErrorBaseType):
         """
         token = Token(token_type, token_value)
         self.tokens.append(token)
-    
-    
-    def add_tokens(self, tokens):
-        """
-        Adds tokens to the context.
         
+        if (token_type == TOKEN_TYPE_SPECIAL_PUNCTUATION) and (self.flags & HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING):
+            self._track_brace_nesting(token_value)
+    
+    
+    def _track_brace_nesting(self, token_value):
+        """
         Parameters
         ----------
-        tokens : `list` of ``Token``
-            The tokens to add.
+        token_value : `None | str`
+            The token's value.
         """
-        self.tokens.extend(tokens)
+        if token_value in ('(', '[', '{'):
+            brace_nesting = self.brace_nesting
+            if brace_nesting is None:
+                brace_nesting = []
+                self.brace_nesting = brace_nesting
+            
+            brace_nesting.append(token_value)
+            return
+        
+        if token_value in (')', ']', '}'):
+            brace_nesting = self.brace_nesting
+            # Nothing to remove from?
+            if brace_nesting is None:
+                return
+            
+            # Find the brace's pair from backwards and remove everything including it
+            if token_value == ')':
+                token_value = '('
+            elif token_value == ']':
+                token_value = '['
+            else:
+                token_value = '{'
+            
+            for index in reversed(range(len(brace_nesting))):
+                if brace_nesting[index] == token_value:
+                    break
+            
+            del brace_nesting[index:]
+            
+            if not brace_nesting:
+                self.brace_nesting = None
+            
+            return
+        
+        # no more cases
+        return
     
     
     def get_last_related_token(self):
@@ -126,7 +226,7 @@ class HighlightParserContextBase(RichAttributeErrorBaseType):
         for token in reversed(tokens):
             token_type = token.type
             
-            if token_type == TOKEN_TYPE_LINEBREAK_ESCAPED:
+            if token_type == TOKEN_TYPE_LINE_BREAK_ESCAPED:
                 continue
             
             if token_type == TOKEN_TYPE_SPACE:
@@ -146,146 +246,11 @@ class HighlightParserContextBase(RichAttributeErrorBaseType):
         """
         Matches the content of the context.
         """
-        pass
+        _keep_python_parsing(self)
+        self._optimize_tokens()
     
     
-    def generate_highlighted(self, formatter):
-        """
-        Generates highlighted content.
-        
-        This method is an iterable generator.
-        
-        Parameters
-        ----------
-        formatter : ``Formatter``
-            Formatter to use for formatting content.
-        
-        Yields
-        ------
-        content : `str`
-            The generated content.
-        """
-        return
-        yield
-    
-    
-    def _end_of_line(self):
-        """
-        Adds a linebreak token to the context.
-        """
-        tokens = self.tokens
-        
-        for token in reversed(tokens):
-            token_type = token.type
-            if token_type == TOKEN_TYPE_SPACE:
-                continue
-            
-            if token_type == TOKEN_TYPE_COMMENT:
-                continue
-            
-            if (token_type == TOKEN_TYPE_SPECIAL_OPERATOR) and (token.value == '\\'):
-                token.type = TOKEN_TYPE_LINEBREAK_ESCAPED
-            
-            break
-
-
-class HighlightParserContext(HighlightParserContextBase):
-    """
-    Represents a context of highlighting any content.
-    
-    Attributes
-    ----------
-    done : `bool`
-        Whether processing is done.
-    
-    line_character_index : `int`
-        The index of the character of the processed line.
-    
-    line_index : `int`
-        The index of the line which is processed at the moment.
-    
-    lines : `list` of `str`
-        The lines to highlight.
-    
-    tokens : `list` of ``Token``
-        The generated tokens.
-    """
-    __slots__ = ('line_character_index', 'line_index', 'lines')
-    
-    def __new__(cls, lines):
-        """
-        Creates a new highlight parser context.
-        
-        Parameters
-        ----------
-        lines : `list<str>`
-            The lines what the highlight context should match.
-        """
-        self = HighlightParserContextBase.__new__(cls)
-        self.lines = lines
-        self.line_index = 0
-        self.line_character_index = 0
-        
-        if not lines:
-            self.done = True
-        
-        return self
-    
-    
-    @copy_docs(HighlightParserContextBase.get_line_index)
-    def get_line_index(self):
-        return self.line_index
-    
-    
-    @copy_docs(HighlightParserContextBase.get_line)
-    def get_line(self):
-        lines = self.lines
-        line_index = self.line_index
-        if len(lines) <= line_index:
-            line = ''
-        else:
-            line = lines[line_index]
-        
-        return line
-    
-    
-    @copy_docs(HighlightParserContextBase.get_line_character_index)
-    def get_line_character_index(self):
-        return self.line_character_index
-    
-    
-    @copy_docs(HighlightParserContextBase.set_line_character_index)
-    def set_line_character_index(self, line_character_index):
-        lines = self.lines
-        line_index = self.line_index
-        
-        if line_index >= len(lines):
-            line = ''
-        else:
-            line = lines[line_index]
-        
-        if (line_character_index < 0) or (len(line) <= line_character_index):
-            line_index += 1
-            
-            self.line_index = line_index
-            if len(lines) <= line_index:
-                self.done = True
-            
-            if line_character_index != -2:
-                self._end_of_line()
-            
-            line_character_index = 0
-        
-        self.line_character_index = line_character_index
-    
-    
-    @copy_docs(HighlightParserContextBase.match)
-    def match(self):
-        while not self.done:
-            for parser in PYTHON_PARSERS:
-                if parser(self):
-                    break
-        
+    def _optimize_tokens(self):
         tokens = self.tokens
         # Optimize tokens with merging sames into each other if applicable
         same_count = 0
@@ -323,141 +288,151 @@ class HighlightParserContext(HighlightParserContextBase):
             continue
     
     
-    @copy_docs(HighlightParserContextBase.generate_highlighted)
     def generate_highlighted(self, formatter):
-        for token in self.tokens:
-            yield from formatter.generate_highlighted(token)
-
-
-
-@export
-class FormatStringParserContext(HighlightParserContextBase):
-    """
-    Highlighter used to highlight format strings.
-    
-    Attributes
-    ----------
-    done : `bool`
-        Whether processing is done.
-    
-    brace_level : `int`
-        The internal brace level to un-match before entering a string.
-    
-    in_code : `bool`
-        Whether we are parsing format code.
-    
-    line : `str`
-        The internal content of the format string.
-    
-    line_character_index : `int`
-        The index of the character of the processed line.
-    
-    tokens : `list` of ``Token``
-        The generated tokens.
-    """
-    __slots__ = ('brace_level', 'in_code', 'line', 'line_character_index', )
-    
-    def __new__(cls, line):
         """
-        Creates a new highlight parser context.
+        Generates highlighted content.
+        
+        This method is an iterable generator.
         
         Parameters
         ----------
-        line : `str`
-            A format string's internal content to highlight.
+        formatter : ``Formatter``
+            Formatter to use for formatting content.
+        
+        Yields
+        ------
+        content : `str`
+            The generated content.
         """
-        self = HighlightParserContextBase.__new__(cls)
-        self.line = line
-        self.line_character_index = 0
-        self.brace_level = 0
-        self.in_code = False
+        for token in self.tokens:
+            yield from formatter.generate_highlighted(token)
+    
+    
+    def _end_of_line(self):
+        """
+        Adds a linebreak token to the context.
+        """
+        tokens = self.tokens
+        if not tokens:
+            return
         
-        if len(line) == 0:
-            self.done = True
+        # Turns out there is no reversed i-slice
+        for index in range(len(tokens) - (1 + (tokens[-1].type == TOKEN_TYPE_LINE_BREAK)), -1, -1):
+            token = tokens[index]
+            token_type = token.type
+            if token_type == TOKEN_TYPE_LINE_BREAK:
+                continue
+            
+            if token_type == TOKEN_TYPE_SPACE:
+                continue
+            
+            if token_type == TOKEN_TYPE_COMMENT:
+                continue
+            
+            if (token_type == TOKEN_TYPE_SPECIAL_OPERATOR) and (token.value == '\\'):
+                token.type = TOKEN_TYPE_LINE_BREAK_ESCAPED
+            
+            break
+    
+    
+    def enter(self, flags):
+        """
+        Enters the context manager nesting it.
         
+        flags : `int`
+            New flags to use.
+        
+        Returns
+        -------
+        nester : ``ParserContextNester``
+        """
+        nester = ParserContextNester(self, self.flags, self.brace_nesting, self.done)
+        self.brace_nesting = None
+        self.flags = flags
+        return nester
+
+
+class ParserContextNester(RichAttributeErrorBaseType):
+    """
+    Nester of a parser context that stores its previous configurations and on exit reverts them.
+    Allowing the user to start a new context with different flags without actually starting a new context.
+    
+    Attributes
+    ----------
+    context : ``HighlightParserContext``
+        The context to use.
+    
+    previous_brace_nesting : `None | list<str>`
+        How the braces are nested.
+    
+    previous_done : `bool`
+        Whether processing is done.
+    
+    previous_flags : `int`
+        Flags used to determine how to parse.
+    """
+    __slots__ = ('context', 'previous_brace_nesting', 'previous_flags', 'previous_done')
+    
+    def __new__(cls, context, previous_flags, previous_brace_nesting, previous_done):
+        """
+        Creates a new parser context nester.
+        
+        Parameters
+        ----------
+        context : ``HighlightParserContext``
+            The context to use.
+        
+        previous_flags : `int`
+            Flags used to determine how to parse.
+        
+        previous_brace_nesting : `None | list<str>`
+            How the braces are nested.
+        
+        previous_done : `bool`
+            Whether processing is done.
+        """
+        self = object.__new__(cls)
+        self.context = context
+        self.previous_brace_nesting = previous_brace_nesting
+        self.previous_done = previous_done
+        self.previous_flags = previous_flags
         return self
     
     
-    @copy_docs(HighlightParserContextBase.get_line)
-    def get_line(self):
-        return self.line
-    
-    
-    @copy_docs(HighlightParserContextBase.get_line_character_index)
-    def get_line_character_index(self):
-        return self.line_character_index
-    
-    
-    @copy_docs(HighlightParserContextBase.set_line_character_index)
-    def set_line_character_index(self, line_character_index):
-        line = self.line
+    def __enter__(self):
+        """
+        Enters the context manager.
         
-        if (line_character_index < 0) or (len(line) <= line_character_index):
-            line_character_index = 0
-            self.done = True
-        
-        self.line_character_index = line_character_index
+        Returns
+        -------
+        self : `self`
+        """
+        return self
     
     
-    @copy_docs(HighlightParserContextBase.add_token)
-    def add_token(self, token_type, token_value):
-        if token_type == TOKEN_TYPE_LINEBREAK:
-            self._end_of_line()
+    def __exit__(self, exception_type, exception_value, exception_traceback):
+        """
+        Exits the context manager.
         
-        # Check braces and such ~ Nya!
-        elif token_type == TOKEN_TYPE_STRING_UNICODE_FORMAT:
-            if self.in_code:
-                token_type = TOKEN_TYPE_STRING_UNICODE_FORMAT_CODE
+        Parameters
+        ----------
+        exception_type : `None | type<BaseException>`
+            The occurred exception's type if any.
         
-        elif token_type == TOKEN_TYPE_SPECIAL_PUNCTUATION and (token_value is not None):
-            brace_level = self.brace_level
-            if token_value == '{':
-                if brace_level == self.in_code:
-                    token_type = TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK
-                
-                brace_level += 1
-                self.brace_level = brace_level
-            
-            elif token_value == '}':
-                if brace_level == 0:
-                    # Random `}`- may be added as well, so if we are outside of f string internal, leave it alone.
-                    token_type = TOKEN_TYPE_STRING_UNICODE_FORMAT
-                else:
-                    in_code = self.in_code
-                    if brace_level <= in_code + 1:
-                        token_type = TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK
-                        if (brace_level == 1) and in_code:
-                            self.in_code = False
-                    
-                    brace_level -= 1
-                    self.brace_level = brace_level
-            
-            elif token_value == ':':
-                if (self.brace_level == 1) and (not self.in_code):
-                    self.in_code = True
-                    token_type = TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK
+        exception_value : `None | BaseException`
+            The occurred exception if any.
         
-        HighlightParserContextBase.add_token(self, token_type, token_value)
-    
-    
-    @copy_docs(HighlightParserContextBase.match)
-    def match(self):
-        while True:
-            if self.done:
-                break
-            
-            if (self.brace_level == self.in_code):
-                _try_match_till_format_string_expression(self)
-            else:
-                while True:
-                    for parser in PYTHON_PARSERS_FORMAT_STRING:
-                        if parser(self):
-                            break
-                    
-                    # Need goto!
-                    if self.done:
-                        break
-                    
-                    # Need goto!
-                    if self.brace_level == self.in_code:
-                        break
+        exception_traceback : `None | TracebackType`
+            the exception's traceback if any.
+        
+        Returns
+        -------
+        captured : `bool`
+            Whether the exception was captured.
+        """
+        context = self.context
+        context.brace_nesting = self.previous_brace_nesting
+        context.flags = self.previous_flags
+        context.done = self.previous_done
+        context.recheck_done()
+        return False

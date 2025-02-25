@@ -1,6 +1,7 @@
 from .ansi import *
 from .constants import *
 from .default import *
+from .flags import *
 from .formatter_context import *
 from .formatter_detail import *
 from .formatter_node import *
@@ -20,6 +21,7 @@ __all__ = (
     *ansi.__all__,
     *constants.__all__,
     *default.__all__,
+    *flags.__all__,
     *formatter_context.__all__,
     *formatter_detail.__all__,
     *formatter_node.__all__,
