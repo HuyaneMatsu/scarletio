@@ -9,7 +9,7 @@ def _iter_options():
     # increment
     yield (
         ['orin/miau.png', 'orin/miau.png', 'orin/miau.png'],
-        ['orin/miau.png', 'orin/miau (1).png', 'orin/miau (1).png'],
+        ['orin/miau.png', 'orin/miau (1).png', 'orin/miau (2).png'],
     )
     
     # dodge

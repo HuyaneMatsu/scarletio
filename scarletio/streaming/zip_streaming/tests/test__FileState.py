@@ -81,16 +81,19 @@ def test__ZipStreamFileState__name_deduplicator_check():
     name = 'koishi'
     modified_at = DateTime(2016, 5, 14, 5, 4, 23, tzinfo = TimeZone.utc)
     
-    name_deduplicator_function = name_deduplicator_function()
-    name_deduplicator_function.send(None)
     file = ZipStreamFile(name, async_generator, modified_at = modified_at)
-    name_deduplicator_function.close()
-    name_deduplicator_function = None
     
-    file_state = ZipStreamFileState(file, None)
-    _assert_fields_set(file_state)
+    name_deduplicator = name_deduplicator_function()
+    name_deduplicator.send(None)
+    try:
+        file_state = ZipStreamFileState(file, name_deduplicator)
+        _assert_fields_set(file_state)
     
-    vampytest.assert_eq(file_state.name_binary, b'koishi (0)')
+    finally:
+        name_deduplicator.close()
+        name_deduplicator = None
+    
+    vampytest.assert_eq(file_state.name_binary, b'koishi (1)')
 
 
 def test__ZipStreamFileState__repr():

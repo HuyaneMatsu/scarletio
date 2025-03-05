@@ -109,3 +109,98 @@ def test__ResourceStream__repr():
     
     for key, value in keyword_parameters.items():
         vampytest.assert_in(f'{key!s} = {value!r}', output)
+
+
+def _iter_options__eq():
+    async def function_0(positional, *, keyword):
+        return
+        yield
+    
+    async def function_1(positional, *, keyword):
+        return
+        yield
+    
+    
+    yield (
+        function_0,
+        (12,),
+        {'keyword': 24},
+        function_0,
+        (12,),
+        {'keyword': 24},
+        True,
+    )
+    
+    yield (
+        function_0,
+        (12,),
+        {'keyword': 24},
+        function_1,
+        (12,),
+        {'keyword': 24},
+        False,
+    )
+    
+    yield (
+        function_0,
+        (12,),
+        {'keyword': 24},
+        function_0,
+        (13,),
+        {'keyword': 24},
+        False,
+    )
+    
+    yield (
+        function_0,
+        (12,),
+        {'keyword': 24},
+        function_0,
+        (12,),
+        {'keyword': 25},
+        False,
+    )
+
+
+@vampytest._(vampytest.call_from(_iter_options__eq()).returning_last())
+def test__ResourceStream__eq(
+    function_0,
+    positional_parameters_0,
+    keyword_parameters_0,
+    function_1,
+    positional_parameters_1,
+    keyword_parameters_1,
+):
+    """
+    Tests whether ``ResourceStream.__eq__`` works as intended.
+    
+    Parameters
+    ----------
+    function_0 : `CoroutineGeneratorFunctionType`
+        Coroutine generator function to create instance with.
+    
+    positional_parameters_0 : `tuple<object>`
+        Positional parameters to create instance with.
+    
+    keyword_parameters_0 : `dict<str, object>`
+        Keyword parameters to create instance with.
+    
+    function_1 : `CoroutineGeneratorFunctionType`
+        Coroutine generator function to create instance with.
+    
+    positional_parameters_1 : `tuple<object>`
+        Positional parameters to create instance with.
+    
+    keyword_parameters_1 : `dict<str, object>`
+        Keyword parameters to create instance with.
+    
+    Returns
+    -------
+    output : `bool`
+    """
+    resource_stream_0 = ResourceStream(function_0, *positional_parameters_0, **keyword_parameters_0)
+    resource_stream_1 = ResourceStream(function_1, *positional_parameters_1, **keyword_parameters_1)
+    
+    output = resource_stream_0 == resource_stream_1
+    vampytest.assert_instance(output, bool)
+    return output

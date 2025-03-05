@@ -115,3 +115,23 @@ class ResourceStream(RichAttributeErrorBaseType):
         
         repr_parts.append(')>')
         return ''.join(repr_parts)
+    
+    
+    def __eq__(self, other):
+        """Returns self == other."""
+        if type(self) is not type(other):
+            return NotImplemented
+        
+        # function
+        if self.function != other.function:
+            return False
+        
+        # positional_parameters
+        if self.positional_parameters != other.positional_parameters:
+            return False
+        
+        # keyword_parameters
+        if self.keyword_parameters != other.keyword_parameters:
+            return False
+        
+        return True

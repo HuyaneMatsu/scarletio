@@ -71,3 +71,27 @@ class ZipStreamFile(RichAttributeErrorBaseType):
     def __repr__(self):
         """Returns repr(self)."""
         return f'<{type(self).__name__} name = {self.name!r}>'
+    
+    
+    def __eq__(self, other):
+        """Returns self == other."""
+        if type(self) is not type(other):
+            return NotImplemented
+        
+        # async_generator
+        if self.async_generator != other.async_generator:
+            return False
+        
+        # compression_method
+        if self.compression_method != other.compression_method:
+            return False
+        
+        # modified_at
+        if self.modified_at != other.modified_at:
+            return False
+        
+        # name
+        if self.name != other.name:
+            return False
+        
+        return True

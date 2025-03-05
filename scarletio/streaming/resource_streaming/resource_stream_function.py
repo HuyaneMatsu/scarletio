@@ -82,3 +82,15 @@ class ResourceStreamFunction(RichAttributeErrorBaseType, MethodLike):
         docstring : `None | str`
         """
         return self.__func__.__doc__
+    
+    
+    def __eq__(self, other):
+        """Returns self == other."""
+        if type(self) is not type(other):
+            return NotImplemented
+        
+        # __func__
+        if self.__func__ != other.__func__:
+            return False
+        
+        return True
