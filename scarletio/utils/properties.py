@@ -21,7 +21,10 @@ class docs_property:
     
     def __get__(self, obj, type_):
         if obj is None:
-            return type_.__class_doc__
+            try:
+                return type_.__type_doc__
+            except AttributeError:
+                return type_.__class_doc__
         else:
             return obj.__instance_doc__
     
@@ -123,7 +126,7 @@ class module_property:
 class class_property:
     __doc__ = docs_property()
     
-    __class_doc__ = ("""
+    __type_doc__ = ("""
     Class level property.
     
     Attributes

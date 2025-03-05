@@ -22,12 +22,12 @@ class BaseMethodType(MethodLike):
     
     Class Attributes
     ----------------
-    __reserved_argcount__ : `int` = `2`
+    __reserved_parameter_count__ : `int` = `2`
         The amount of reserved parameters by BaseMethodTypes.
     """
     __slots__ = ('__base__', '__func__', '__self__', )
     
-    __reserved_argcount__ = 2
+    __reserved_parameter_count__ = 2
     
     @has_docs
     def __init__(self, func, cls, base):
@@ -46,6 +46,7 @@ class BaseMethodType(MethodLike):
         self.__base__ = base
         self.__func__ = func
         self.__self__ = cls
+    
     
     @has_docs
     def __call__(self, *args, **kwargs):
@@ -71,14 +72,17 @@ class BaseMethodType(MethodLike):
         """
         return self.__func__(self.__self__, self.__base__, *args, **kwargs)
     
+    
     def __getattr__(self,name):
         return getattr(self.__func__, name)
     
-    __class_doc__ = None
+    
+    __type_doc__ = None
+    
     
     @property
     @has_docs
-    def __instance__doc__(self):
+    def __instance_doc__(self):
         """
         Returns the ``BaseMethodType``'s internal function's docstring.
         
@@ -88,7 +92,9 @@ class BaseMethodType(MethodLike):
         """
         return self.__func__.__doc__
     
+    
     __doc__ = docs_property()
+
 
 @has_docs
 class BaseMethodDescriptor:

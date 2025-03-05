@@ -8,18 +8,18 @@ from .docs import has_docs
 @has_docs
 class SubCheckType(type):
     """
-    Metaclass, which can be used for subclass checks. It's type instances should implement a `.__subclasses__`
-    class attribute, which contains all of it's "subclasses".
+    A meta-type that can be used for sub-type checks. It's type instances should implement a `.__sub_types__`
+    type attribute that contains all of it's "sub-types".
     """
     @has_docs
     def __instancecheck__(cls, instance):
-        """Returns whether the given instance's type is a subclass of the respective type."""
-        return (type(instance) in cls.__subclasses__)
+        """Returns whether the given instance's type is a sub-type of the respective type."""
+        return (type(instance) in cls.__sub_types__)
     
     @has_docs
     def __subclasscheck__(cls, klass):
-        """Returns whether the given type is a subclass of the respective type."""
-        return (klass in cls.__subclasses__)
+        """Returns whether the given type is a sub-type of the respective type."""
+        return (klass in cls.__sub_types__)
 
 
 @has_docs
@@ -27,17 +27,19 @@ class MethodLike(metaclass = SubCheckType):
     """
     Base class for methods.
     
-    Class Attributes
-    ----------------
-    __subclasses__ : `set` of `type`
+    Type Attributes
+    ---------------
+    __sub_types__ : `set<type>`
         Registered method types.
+    
     __reserved_parameter_count__ : `int` = `1`
         The amount of reserved parameters by a method subclass.
     """
-    __subclasses__ = {MethodType}
+    __sub_types__ = {MethodType}
     __slots__ = ()
+    
     def __init_subclass__(cls):
-        cls.__subclasses__.add(cls)
+        cls.__sub_types__.add(cls)
     
     __reserved_parameter_count__ = 1
     
@@ -62,12 +64,12 @@ class MethodLike(metaclass = SubCheckType):
         TypeError
             If `instance` is not given as a `method-like`.
         """
-        instance_type = instance.__class__
+        instance_type = type(instance)
         reserved_parameter = getattr(instance_type, '__reserved_parameter_count__', -1)
         if reserved_parameter != -1:
             return reserved_parameter
         
-        if instance_type in cls.__subclasses__:
+        if instance_type in cls.__sub_types__:
             return cls.__reserved_parameter_count__
         
         raise TypeError(

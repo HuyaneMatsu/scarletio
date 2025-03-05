@@ -208,7 +208,7 @@ sys.set_asyncgen_hooks(firstiter = _async_generator_first_iteration_hook, finali
 
 class EventThreadRunDescriptor:
     if DOCS_ENABLED:
-        __class_doc__ = ("""
+        __type_doc__ = ("""
         Descriptor which decides, exactly which function of the ``EventThread`` is called, when using it's `.run`
         method.
         

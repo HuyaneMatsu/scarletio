@@ -238,12 +238,12 @@ class weak_method(WeakReferer, MethodLike):
     
     Class Attributes
     ----------------
-    __reserved_argcount__ : `int` = `1`
+    __reserved_parameter_count__ : `int` = `1`
         The amount of reserved parameters by weak_method.
     """
     __slots__ = ('__func__',)
     
-    __reserved_argcount__ = 1
+    __reserved_parameter_count__ = 1
     
     @has_docs
     def __new__(cls, obj, func, callback = None):

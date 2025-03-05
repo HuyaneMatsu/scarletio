@@ -675,7 +675,7 @@ class AsyncIterablePayload(PayloadBase):
             Http writer to write the payload's data to.
         """
         iterator = self._iterator
-        anext = iterator.__class__.__anext__
+        anext = type(iterator).__anext__
         try:
             while True:
                 chunk = await anext(iterator)

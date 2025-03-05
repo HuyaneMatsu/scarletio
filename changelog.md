@@ -1,3 +1,16 @@
+# 1.0.89 *\[2025-03-??\]*
+
+#### Improvements
+
+- Add helpers for streaming: `ResourceStream` & `ResourceStreamFunction` for reusable coroutine generators.
+- Add support for zip streaming: `ZipStreamFile`, `name_deduplicator_default`, `create_zip_stream_resource`,
+    `zip_stream`.
+- Add some streaming documentation. Its currently located under `scarletio/streaming/README.md`.
+
+#### Renames, Deprecation & Removals
+
+- Rename `__class_doc__` to `__type_doc__`.
+
 # 1.0.88 *\[2025-02-25\]*
 
 #### Improvements
