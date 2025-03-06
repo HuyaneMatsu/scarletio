@@ -21,7 +21,7 @@ class ZipStreamFile(RichAttributeErrorBaseType):
         Compression method to use.
     
     modified_at : `DateTime`
-        Whe the file was last modified.
+        When the file was last modified.
     
     name : `str`
         The name of the file.
@@ -48,7 +48,7 @@ class ZipStreamFile(RichAttributeErrorBaseType):
             Compression method to use. Defaults to no compression.
         
         modified_at : `None | DateTime` = `None`, Optional (Keyword only)
-            Whe the file was last modified.
+            When the file was last modified.
         
         Raises
         ------

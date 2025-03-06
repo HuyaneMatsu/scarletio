@@ -28,13 +28,13 @@ class ZipStreamFileState(RichAttributeErrorBaseType):
         The name of the file in binary.
     
     offset : `int`
-        Offset of the file from the start. Set when the file is begin to be serialized.
+        Offset of the file from the start. Set just before serialization of the file begins..
     
     size_compressed : `int`
-        The compressed size of the file. Its incremented as data is passed through the compressor.
+        The compressed size of the file. It's incremented as data is passed through the compressor.
     
     size_uncompressed : `int`
-        The un-compressed size of the file. Its incremented as data is passed through the compressor.
+        The un-compressed size of the file. It's incremented as data is passed through the compressor.
     """
     __slots__ = (
         'crc', 'flags', 'modification_date', 'modification_time', 'name_binary', 'offset', 'size_compressed',

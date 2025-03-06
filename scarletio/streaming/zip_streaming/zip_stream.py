@@ -268,7 +268,7 @@ async def stream_zip(files, *, name_deduplicator = ...):
                 yield chunk
         
         finally:
-            # unallocate the compressor
+            # deallocate the compressor
             compressor = None
         
         yield _create_data_descriptor(file_state)

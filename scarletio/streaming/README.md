@@ -65,7 +65,7 @@ await http.post('post_url', data = stream_data_from_get_request(http, 'get_url')
 ### Reusable streams
 
 Http requests are commonly retried, either by you, or on redirect.
-At these cases an already started coroutine generator would fall flat since it cannot be restarted.
+In these cases an already started coroutine generator would fail since it cannot be restarted.
 To solve this you can use the `ResourceStreamFunction` wrapper that starts the wrapped coroutine generator function
 each time it is tried to be async iterated.
 
@@ -97,8 +97,8 @@ for retry in range(5):
 
 ### Streaming form-data
 
-`form-data`-s can be used to send an http request that is built up from multiple parts.
-These are multiple files / attachments usually, but can be anything.
+`form-data`-s can be used to send an http request that is built from multiple parts.
+These are usually multiple files / attachments, but can be anything else.
 
 Each "field" in a formdata has a "name" and its "value" (and other various things), where the "value" can be a stream.
 A form-data is reusable if all of its "values" are reusable.
@@ -147,14 +147,13 @@ for retry in range(5):
 ### Streaming zips
 
 Sometimes you want to stream multiple files as one, for these cases zip streaming is an acceptable solution.
-Scarletio provides support for single time streaming with the `stream_zip` coroutine generator function,
+Scarletio provides support for a single time stream with the `stream_zip` coroutine generator function,
 and reusable streaming using `stream_zip`'s wrapped version `create_zip_stream_resource`.
 
 ```py
 from scarletio import get_event_loop
 from scarletio.http_client import HTTPClient
 from scarletio.streaming import ResourceStreamFunction, ZipStreamFile, create_zip_stream_resource
-from scarletio.web_common import FormData
 
 
 @ResourceStreamFunction
@@ -189,7 +188,7 @@ for retry in range(5):
 
 ##### Zip name deduplication
 
-The names in a zip archive are deduplicated using a `path (index).extension` format on duplicates.
+The duplicate names in a zip archive are deduplicated using a `path (index).extension` format.
 This logic can be modified by using the `name_deduplicator` keyword parameter.
 
 Passing it as `None` completely disables name deduplication.
@@ -198,7 +197,7 @@ Passing it as `None` completely disables name deduplication.
 zip_stream = create_zip_stream_resource(files, name_deduplicator = None)
 ```
 
-The default name deduplicator can also be passed in with different configuration.
+The default name deduplicator can also use different configuration.
 Here is an example modifying it from `path (index).extension` to `path~index.extension` by providing a different regex
 and name reconstructor.
 
@@ -229,9 +228,7 @@ zip_stream = create_zip_stream_resource(
 
 ```
 
-Completely custom name deduplicators are also viable, just have to get the generator format right,
-because yes, name deduplicators are generators.
-
+Completely custom name deduplicator is also viable.
 Here is a deduplicator that postfixes every file (even non-duplicates) in a `path_index.extension` format.
 
 ```py

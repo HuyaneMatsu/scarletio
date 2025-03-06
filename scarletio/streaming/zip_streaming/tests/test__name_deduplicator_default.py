@@ -26,7 +26,7 @@ def _iter_options():
 
 
 @vampytest._(vampytest.call_from(_iter_options()).returning_last())
-def test__name_deduplicator_default(inout_names):
+def test__name_deduplicator_default(input_names):
     """
     Tests whether ``name_deduplicator_default`` works as intended.
     
@@ -46,7 +46,7 @@ def test__name_deduplicator_default(inout_names):
     
     output_names = []
     
-    for name in inout_names:
+    for name in input_names:
         output_name = name_deduplicator.send(name)
         vampytest.assert_instance(output_name, str)
         output_names.append(output_name)
