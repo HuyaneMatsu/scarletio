@@ -43,7 +43,7 @@ def name_deduplicator_default(regex_pattern, name_reconstructor):
     """
     Regular name deduplicator. When calling `.send(name)` it produces a deduplicated version of the name.
     
-    This function is a generator
+    This function is a generator.
     
     Parameters
     ----------

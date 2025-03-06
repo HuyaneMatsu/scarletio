@@ -10,7 +10,7 @@ from .resources import AsyncGenerator
 
 def _assert_fields_set(file):
     """
-    Asserts whether every fields are set.
+    Asserts whether every field is set.
     
     Parameters
     ----------

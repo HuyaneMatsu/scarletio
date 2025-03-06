@@ -11,7 +11,7 @@ from .resources import AsyncGenerator
 
 def _assert_fields_set(file_state):
     """
-    Asserts whether every fields are set.
+    Asserts whether every field is set.
     
     Parameters
     ----------
@@ -52,7 +52,7 @@ def test__ZipStreamFileState__new__unicode_name():
     """
     Tests whether ``ZipStreamFileState.__new__`` works as intended.
     
-    Case: unicode name.
+    Case: Unicode name.
     """
     async_generator = AsyncGenerator([b'aya'])
     name = 'bűn'
