@@ -53,7 +53,7 @@ async def stream_data_from_get_request(http, url):
     payload_stream = response.payload_stream
     if (payload_stream is not None):
         async for chunk in payload_stream:
-            print(chunk)
+            yield chunk
 
 
 http = HTTPClient(get_event_loop())
@@ -81,7 +81,7 @@ async def create_get_request_stream_resource(http, url):
     payload_stream = response.payload_stream
     if (payload_stream is not None):
         async for chunk in payload_stream:
-            print(chunk)
+            yield chunk
 
 
 http = HTTPClient(get_event_loop())
@@ -116,7 +116,7 @@ async def create_get_request_stream_resource(http, url):
     payload_stream = response.payload_stream
     if (payload_stream is not None):
         async for chunk in payload_stream:
-            print(chunk)
+            yield chunk
 
 
 http = HTTPClient(get_event_loop())
@@ -162,7 +162,7 @@ async def create_get_request_stream_resource(http, url):
     payload_stream = response.payload_stream
     if (payload_stream is not None):
         async for chunk in payload_stream:
-            print(chunk)
+            yield chunk
 
 
 http = HTTPClient(get_event_loop())
