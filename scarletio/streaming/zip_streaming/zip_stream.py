@@ -231,10 +231,12 @@ async def stream_zip(files, *, name_deduplicator = ...):
             name_deduplicator = name_deduplicator_default(
                 NAME_DEDUPLICATOR_REGEX_PATTERN_DEFAULT, name_deduplicator_name_reconstructor_default
             )
-        else:
+            
+        elif name_deduplicator is None:
             break
         
         name_deduplicator.send(None)
+        break
     
     try:
         files_with_states = [(file, ZipStreamFileState(file, name_deduplicator)) for file in files]

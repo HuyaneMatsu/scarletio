@@ -240,7 +240,7 @@ NAME_REGEX = re_compile('((?:.*/)?.*?)(?:\\.(.*?))?')
 
 
 def name_reconstructor(path, index, extension):
-    name_parts = [path '_', str(index).rjust(4, '0')]
+    name_parts = [path, '_', str(index).rjust(4, '0')]
     
     if (extension is not None):
         name_parts.append('.')
@@ -258,7 +258,7 @@ def name_deduplicator_postfixed():
             path = name
             extension = None
         else:
-            path, extension = mmatch.group()
+            path, extension = match.groups()
         
         name = yield name_reconstructor(path, index, extension)
 

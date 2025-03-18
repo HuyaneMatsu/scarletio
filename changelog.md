@@ -1,3 +1,9 @@
+# 1.0.90 *\[2025-03-18\]*
+
+#### Bug fixes
+
+- `stream_zip` did not handle custom name deduplicators correctly.
+
 # 1.0.89 *\[2025-03-09\]*
 
 #### Improvements
