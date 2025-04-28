@@ -1,6 +1,7 @@
 __all__ = ('render_exception_into', 'render_frames_into',)
 
 from ..cause_group import CauseGroup
+from ..highlight import HIGHLIGHT_TOKEN_TYPES, get_highlight_streamer
 
 from .exception_proxy import ExceptionProxyRich
 from .frame_grouping import group_frames
@@ -32,18 +33,46 @@ def render_frames_into(frames, extend = None, *, filter = None, highlighter = No
     extend : `list<str>`
         The rendered frames as a `list` of it's string parts.
     """
-    frames = convert_frames_to_frame_proxies(frames)
-    populate_frame_proxies(frames)
-    
     if extend is None:
         extend = []
     
+    highlight_streamer = get_highlight_streamer(highlighter)
+    extend = _render_frames_into(frames, filter, highlight_streamer, extend)
+    extend.extend(highlight_streamer.asend(None))
+    
+    return extend
+
+
+def _render_frames_into(frames, filter, highlight_streamer, into):
+    """
+    Renders the given frames into a list of strings.
+    
+    Parameters
+    ----------
+    frames : `list<FrameProxyBase | FrameType | TraceBack>`
+        The frames to render.
+    
+    filter : `None | callable`
+        Additional filter to check whether a frame should be shown.
+    
+    highlight_streamer : `CoroutineGenerator`
+        Highlight streamer to highlight the produced tokens.
+    
+    into : `list<str>`
+        The list of strings to render the representation into.
+    
+    Returns
+    -------
+    into : `list<str>`
+    """
+    frames = convert_frames_to_frame_proxies(frames)
+    populate_frame_proxies(frames)
     frames = [frame for frame in frames if should_keep_frame(frame, filter = filter)]
     frame_groups = group_frames(frames)
     
-    render_frame_groups_into(frame_groups, highlighter, extend)
+    render_frame_groups_into(frame_groups, highlight_streamer, into)
     
-    return extend
+    return into
 
 
 REASON_TYPE_NONE = 0
@@ -78,6 +107,78 @@ def render_exception_into(exception, extend = None, *, filter = None, highlighte
     if extend is None:
         extend = []
     
+    highlight_streamer = get_highlight_streamer(highlighter)
+    extend = _render_exception_into(exception, filter, highlight_streamer, extend)
+    extend.extend(highlight_streamer.asend(None))
+    
+    return extend
+
+
+def _render_exception_into(exception, filter, highlight_streamer, into):
+    """
+    Renders the given exception's frames into a list of strings.
+    
+    This function is generator.
+    
+    Parameters
+    ----------
+    exception : `None | BaseException`
+        The exception to render.
+    
+    filter : `None | callable`
+        Additional filter to check whether a frame should be shown.
+    
+    highlight_streamer : `CoroutineGenerator`
+        Highlight streamer to highlight the produced tokens.
+    
+    into : `list<str>`
+        The list of strings to render the representation into.
+    
+    Returns
+    -------
+    into : `list<str>`
+    """
+    renderer_queue = []
+    renderer_queue.append(_render_exception_into_step(exception, filter, highlight_streamer, into))
+    
+    while renderer_queue:
+        renderer = renderer_queue[-1]
+        exception = next(renderer, None)
+        if exception is None:
+            del renderer_queue[-1]
+            continue
+        
+        renderer_queue.append(_render_exception_into_step(exception, filter, highlight_streamer, into))
+        continue
+    
+    return into
+
+
+def _render_exception_into_step(exception, filter, highlight_streamer, into):
+    """
+    Renders the given exception's frames into a list of strings.
+    When meets a nested exception to render (in a cause group), yields it back.
+    
+    This function is generator.
+    
+    Parameters
+    ----------
+    exception : `None | BaseException`
+        The exception to render.
+    
+    filter : `None | callable`
+        Additional filter to check whether a frame should be shown.
+    
+    highlight_streamer : `CoroutineGenerator`
+        Highlight streamer to highlight the produced tokens.
+    
+    into : `list<str>`
+        The list of strings to render the representation into.
+    
+    Yields
+    ------
+    exception : ``BaseException``
+    """
     exceptions = []
     reason_type = REASON_TYPE_NONE
     while True:
@@ -105,28 +206,35 @@ def render_exception_into(exception, extend = None, *, filter = None, highlighte
     
     for exception, reason_type in reversed(exceptions):
         if reason_type == REASON_TYPE_CAUSE_GROUP:
-            extend = add_trace_title_into(
+            into = add_trace_title_into(
                 f'The following {len(exception)} exceptions where the reason of the exception following them:',
-                highlighter,
-                extend,
+                highlight_streamer,
+                into,
             )
-            extend.append('\n\n')
+            for _ in range(2):
+                into.extend(highlight_streamer.asend((
+                    HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+                    '\n',
+                )))
             
             for index, cause in enumerate(exception, 1):
-                extend = add_trace_title_into(f'[Exception {index}] ', highlighter, extend)
-                extend = render_exception_into(cause, extend = extend, filter = filter, highlighter = highlighter)
+                into = add_trace_title_into(f'[Exception {index}] ', highlight_streamer, into)
+                yield cause
                 
                 if index != len(exception):
-                    extend.append('\n')
+                    into.append('\n')
         
         else:
-            extend = add_trace_title_into('Traceback (most recent call last):', highlighter, extend)
-            extend.append('\n')
+            into = add_trace_title_into('Traceback (most recent call last):', highlight_streamer, into)
+            into.extend(highlight_streamer.asend((
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+                '\n',
+            )))
             
             exception_proxy = ExceptionProxyRich(exception)
             populate_frame_proxies([*exception_proxy.iter_frames_no_repeat()])
             exception_proxy.drop_ignored_frames(filter = filter)
-            extend = render_exception_proxy_into(exception_proxy, highlighter, extend)
+            into = render_exception_proxy_into(exception_proxy, highlight_streamer, into)
             
             if reason_type == REASON_TYPE_NONE:
                 break
@@ -143,11 +251,17 @@ def render_exception_into(exception, extend = None, *, filter = None, highlighte
         else:
             title = None
         
-        extend.append('\n')
+        into.extend(highlight_streamer.asend((
+            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+            '\n',
+        )))
         
         if (title is not None):
-            extend = add_trace_title_into(title, highlighter, extend)
-            extend.append('\n\n')
+            into = add_trace_title_into(title, highlight_streamer, into)
+            for _ in range(2):
+                into.extend(highlight_streamer.asend((
+                    HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+                    '\n',
+                )))
+        
         continue
-    
-    return extend

@@ -2,6 +2,8 @@ from itertools import repeat
 
 import vampytest
 
+from .....utils import iter_produce_ansi_format_code
+
 from ..display_state import CONTINUOUS_LINE_POSTFIX, DisplayState, EMPTY_LINE_PREFIX_CHARACTER
 from ..line_render_intermediate import LineRenderIntermediate
 from ..terminal_control_commands import (
@@ -739,12 +741,15 @@ def test__DisplayState__write(buffer, attributes, new_content_width, prefix_leng
 
 
 def _iter_options__get_line_render_intermediates():
-    color_code = '\x1b[38;2;220;255;255m'
+    color_code_parts = [*iter_produce_ansi_format_code(foreground_color = (220, 255, 255))]
+    format_reset_parts = [*iter_produce_ansi_format_code(reset = True)]
     
     line_0 = LineRenderIntermediate(8, 'In [0]: ')
-    line_0.add_command(color_code)
+    for part in color_code_parts:
+        line_0.add_command(part)
     line_0.add_part('aa')
-    line_0.add_command(COMMAND_FORMAT_RESET)
+    for part in format_reset_parts:
+        line_0.add_command(part)
     
     yield (
         ['aa'],
@@ -761,17 +766,23 @@ def _iter_options__get_line_render_intermediates():
     )
     
     line_0 = LineRenderIntermediate(8, 'In [0]: ')
-    line_0.add_command(color_code)
+    for part in color_code_parts:
+        line_0.add_command(part)
     line_0.add_part('hey')
-    line_0.add_command(COMMAND_FORMAT_RESET)
+    for part in format_reset_parts:
+        line_0.add_command(part)
     line_1 = LineRenderIntermediate(8, '   ...: ')
-    line_1.add_command(color_code)
+    for part in color_code_parts:
+        line_1.add_command(part)
     line_1.add_part('mister')
-    line_1.add_command(COMMAND_FORMAT_RESET)
+    for part in format_reset_parts:
+        line_1.add_command(part)
     line_2 = LineRenderIntermediate(8, '   ...: ')
-    line_2.add_command(color_code)
+    for part in color_code_parts:
+        line_2.add_command(part)
     line_2.add_part('sister')
-    line_2.add_command(COMMAND_FORMAT_RESET)
+    for part in format_reset_parts:
+        line_2.add_command(part)
     
     yield (
         ['hey', 'mister', 'sister'],
@@ -788,17 +799,23 @@ def _iter_options__get_line_render_intermediates():
     )
     
     line_0 = LineRenderIntermediate(8, 'In [0]: ')
-    line_0.add_command(color_code)
+    for part in color_code_parts:
+        line_0.add_command(part)
     line_0.add_part('hey')
-    line_0.add_command(COMMAND_FORMAT_RESET)
+    for part in format_reset_parts:
+        line_0.add_command(part)
     line_1 = LineRenderIntermediate(8, '   ...: ')
-    line_1.add_command(color_code)
+    for part in color_code_parts:
+        line_1.add_command(part)
     line_1.add_part('mister')
-    line_1.add_command(COMMAND_FORMAT_RESET)
+    for part in format_reset_parts:
+        line_1.add_command(part)
     line_2 = LineRenderIntermediate(8, '   ...: ')
-    line_2.add_command(color_code)
+    for part in color_code_parts:
+        line_2.add_command(part)
     line_2.add_part('sister')
-    line_2.add_command(COMMAND_FORMAT_RESET)
+    for part in format_reset_parts:
+        line_2.add_command(part)
     
     yield (
         ['hey', 'mister', 'sister'],
@@ -831,13 +848,16 @@ def _iter_options__get_line_render_intermediates():
     )
 
     line_0 = LineRenderIntermediate(8, 'In [0]: ')
-    line_0.add_command(color_code)
+    for part in color_code_parts:
+        line_0.add_command(part)
     line_0.add_part('a' * (80 - 8 - len(EMPTY_LINE_PREFIX_CHARACTER)))
     line_0.add_part(CONTINUOUS_LINE_POSTFIX)
     line_1 = LineRenderIntermediate(8, EMPTY_LINE_PREFIX_CHARACTER * 8)
-    line_1.add_command(color_code)
+    # The last used command is collected and joined, so add it as one.
+    line_1.add_command(''.join(color_code_parts))
     line_1.add_part('a' * (1 + 8 + len(EMPTY_LINE_PREFIX_CHARACTER)))
-    line_1.add_command(COMMAND_FORMAT_RESET)
+    for part in format_reset_parts:
+        line_1.add_command(part)
     
     yield (
         ['a' * 81],
@@ -998,6 +1018,25 @@ def _iter_options__write_difference():
         'In [0]: ',
         '   ...: ',
         ''.join([COMMAND_START_LINE, create_command_right(10), color_code, 'a', COMMAND_FORMAT_RESET]),
+    )
+    
+    yield (
+        ['de'],
+        {
+            'cursor_index': 2,
+            'cursor_line_index': 0,
+            'content_width': 80,
+        },
+        ['def'],
+        {
+            'cursor_index': 3,
+            'cursor_line_index': 0,
+            'content_width': 80,
+        },
+        8,
+        'In [0]: ',
+        '   ...: ',
+        ''.join([COMMAND_START_LINE, create_command_right(8), '\x1b[38;2;255;109;109m', 'def', COMMAND_FORMAT_RESET]),
     )
 
 

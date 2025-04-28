@@ -1,13 +1,11 @@
 __all__ = ('HighlightFormatterContext',)
 
-from .ansi import create_ansi_format_code
-from .formatter_detail import FormatterDetail, formatter_ansi_code, formatter_html
-from .formatter_node import FormatterNode
+from warnings import warn
 
+from .formatter_detail import FormatterDetailHTML
+from .formatter_node import FormatterNode
 from .token import Token
 from .token_types import TOKEN_STRUCTURE
-
-ANSI_RESET_CODE = create_ansi_format_code()
 
 
 class HighlightFormatterContext:
@@ -16,7 +14,7 @@ class HighlightFormatterContext:
     
     Attributes
     ----------
-    formatter_nodes : `dict` of (`int, ``FormatterNode``) items
+    formatter_nodes : `dict<int, FormatterNodeBase>`
         The registered formatter nodes.
     """
     __slots__ = ('formatter_nodes',)
@@ -39,7 +37,7 @@ class HighlightFormatterContext:
         
         Parameters
         ----------
-        dictionary : `dict` of (`int`, `None` or repeat) items
+        dictionary : `dict<int, None | ...>`
             A dictionary, which describes the node structure.
         """
         for key, value in dictionary.items():
@@ -56,7 +54,7 @@ class HighlightFormatterContext:
         ----------
         parent : ``FormatterNode``
             The parent node.
-        dictionary : `dict` of (`int`, `None` or repeat) items
+        dictionary : `dict<int, None | ...>`
             A dictionary, which describes the node structure.
         """
         for key, value in dictionary.items():
@@ -65,7 +63,7 @@ class HighlightFormatterContext:
             if (value is not None):
                 self._build_type_token_child(node, value)
     
-
+    
     def __repr__(self):
         """Returns the formatter's representation."""
         return f'<{type(self).__name__} nodes: {len(self.formatter_nodes)}>'
@@ -79,15 +77,29 @@ class HighlightFormatterContext:
         -----------
         content : `str`
             The content to highlight.
+        
         token_type : `int`
             The token type to use.
         """
+        warn(
+            (
+                f'`{type(self)}.highlight_as` is deprecated and will be removed 2025 October. '
+                f'Please use `into.extend(highlight_streamer.asend((token_type, content)))` instead accordingly. '
+                f'For more information read `get_highlight_streamer`\'s documentation.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
         detail = self.formatter_nodes[token_type].detail
         if (detail is None):
             return content
         
         else:
-            return ''.join([*detail(Token(token_type, content))])
+            return ''.join([
+                *detail.start(),
+                *detail.transform_content(content),
+                *detail.end(),
+            ])
     
     
     def generate_highlighted(self, token):
@@ -105,24 +117,34 @@ class HighlightFormatterContext:
         ------
         content : `str`
         """
+        warn(
+            (
+                f'`{type(self)}.generate_highlighted` is deprecated and will be removed 2025 October. '
+                f'Please use `into.extend(highlight_streamer.asend((token.type, token.value)))` instead accordingly. '
+                f'For more information read `get_highlight_streamer`\'s documentation.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
+        )
+    
         detail = self.formatter_nodes[token.type].detail
         if (detail is None):
-            value = token.value
-            if (value is not None):
-                yield value
+            yield token.value
         
         else:
-            yield from detail(token)
+            yield from detail.start()
+            yield from detail.transform_content(token.value)
+            yield from detail.end()
     
     
     def set_highlight_html_all(self):
         """
         Sets html formatting for all nodes of the context.
         """
-        detail = FormatterDetail(formatter_html, None)
+        detail = FormatterDetailHTML(None)
         for node in self.formatter_nodes.values():
             node.set_detail(detail, direct = False)
-            
+    
     
     def set_highlight_html_class(self, token_type_identifier, html_class):
         """
@@ -132,7 +154,8 @@ class HighlightFormatterContext:
         ----------
         token_type_identifier : `int`
             The node's identifier.
-        html_class : `None`, `str`
+        
+        html_class : `None | str`
             The html class to set.
         
         Raises
@@ -149,9 +172,14 @@ class HighlightFormatterContext:
                 f'`html_class` can be `None`, `str`, got {html_class.__class__.__name__}; {html_class!r}.'
             )
         
-        self.set_highlight_detail(
-            token_type_identifier,
-            FormatterDetail(formatter_html, html_class)
+        warn(
+            (
+                f'`{type(self).__name__}.set_highlight_ansi_code` is deprecated and is no longer working. '
+                f'Will be removed 2025 October. '
+                f'Please use `.set_highlight_detail` instead.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
         )
     
     
@@ -163,7 +191,8 @@ class HighlightFormatterContext:
         ----------
         token_type_identifier : `int`
             The node's identifier.
-        ansi_code : `None`, `str`
+        
+        ansi_code : `None | str`
             The format code to set.
         
         Raises
@@ -180,9 +209,14 @@ class HighlightFormatterContext:
                 f'`ansi_code` can be `None`, `str`, got {type(ansi_code).__name__}; {ansi_code!r}.'
             )
         
-        self.set_highlight_detail(
-            token_type_identifier,
-            FormatterDetail(formatter_ansi_code, (ansi_code, ANSI_RESET_CODE))
+        warn(
+            (
+                f'`{type(self).__name__}.set_highlight_ansi_code` is deprecated and is no longer working. '
+                f'Will be removed 2025 October. '
+                f'Please use `.set_highlight_detail` instead.'
+            ),
+            FutureWarning,
+            stacklevel = 2,
         )
     
     
@@ -194,7 +228,8 @@ class HighlightFormatterContext:
         ----------
         token_type_identifier : `int`
             The node's identifier.
-        detail : `None`, ``FormatterDetail``
+        
+        detail : `None | FormatterDetailBase`
             The detail to set.
         
         Raises

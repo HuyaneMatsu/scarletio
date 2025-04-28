@@ -1,6 +1,6 @@
 import vampytest
 
-from ...highlight import DEFAULT_ANSI_HIGHLIGHTER
+from ...highlight import DEFAULT_ANSI_HIGHLIGHTER, get_highlight_streamer, iter_split_ansi_format_codes
 
 from ..expression_parsing import ExpressionInfo
 from ..frame_proxy import FrameProxyVirtual
@@ -30,10 +30,11 @@ def test__render_frame_proxy_into__no_highlighter():
     Case: No highlighter.
     """
     frame_proxy = _get_input_frame()
-    output = render_frame_proxy_into(frame_proxy, None, [])
+    highlight_streamer = get_highlight_streamer(None)
+    output = render_frame_proxy_into(frame_proxy, highlight_streamer, [])
+    output.extend(highlight_streamer.asend(None))
     
     vampytest.assert_instance(output, list)
-    
     for element in output:
         vampytest.assert_instance(element, str)
     
@@ -48,14 +49,17 @@ def test__render_frame_proxy_into__with_highlighter():
     Case: With highlighter.
     """
     frame_proxy = _get_input_frame()
-    output = render_frame_proxy_into(frame_proxy, DEFAULT_ANSI_HIGHLIGHTER, [])
+    highlight_streamer = get_highlight_streamer(DEFAULT_ANSI_HIGHLIGHTER)
+    output = render_frame_proxy_into(frame_proxy, highlight_streamer, [])
+    output.extend(highlight_streamer.asend(None))
     
     vampytest.assert_instance(output, list)
-    
     for element in output:
         vampytest.assert_instance(element, str)
     
-    vampytest.assert_true(any('\x1b' in part for part in output))
+    output_string = ''.join(output)
+    split = [*iter_split_ansi_format_codes(output_string)]
+    vampytest.assert_true(any(item[0] for item in split))
     
-    output_string = ''.join(filter(lambda part: '\x1b' not in part, output))
+    output_string = ''.join([item[1] for item in split if not item[0]])
     vampytest.assert_eq(output_string, _get_expected_output_string())

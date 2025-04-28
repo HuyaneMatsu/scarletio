@@ -1,8 +1,6 @@
 __all__ = ()
 
-from ..highlight import (
-    HIGHLIGHT_TOKEN_TYPES, add_highlighted_part_into, add_highlighted_parts_into, iter_highlight_code_lines
-)
+from ..highlight import HIGHLIGHT_TOKEN_TYPES, iter_highlight_code_token_types_and_values
 from ..highlight.constants import (
     BUILTIN_EXCEPTION_NAMES, BUILTIN_VARIABLE_NAMES, MAGIC_FUNCTION_NAMES, MAGIC_VARIABLE_NAMES
 )
@@ -12,7 +10,7 @@ from .exception_representation import (
 )
 
 
-def render_exception_proxy_into(exception, highlighter, into):
+def render_exception_proxy_into(exception, highlight_steamer, into):
     """
     Renders the given frame groups.
     
@@ -21,8 +19,8 @@ def render_exception_proxy_into(exception, highlighter, into):
     exception : ``ExceptionProxyBase``
         The frame groups to render.
     
-    highlighter : `None`, ``HighlightFormatterContext``
-        Stores how the output should be highlighted.
+    highlight_streamer : `CoroutineGenerator`
+        Highlight streamer to highlight the produced tokens.
     
     into : `list<str>`
         The list of strings to render the representation into.
@@ -31,12 +29,12 @@ def render_exception_proxy_into(exception, highlighter, into):
     -------
     into : `list<str>`
     """
-    into = render_frame_groups_into(exception.frame_groups, highlighter, into)
-    into = render_exception_representation_into(exception.exception_representation, highlighter, into)
+    into = render_frame_groups_into(exception.frame_groups, highlight_steamer, into)
+    into = render_exception_representation_into(exception.exception_representation, highlight_steamer, into)
     return into
 
 
-def render_frame_groups_into(frame_groups, highlighter, into):
+def render_frame_groups_into(frame_groups, highlight_streamer, into):
     """
     Renders the given frame groups.
     
@@ -45,8 +43,8 @@ def render_frame_groups_into(frame_groups, highlighter, into):
     frame_groups : `None | list<FrameGroup>`
         The frame groups to render.
     
-    highlighter : `None`, ``HighlightFormatterContext``
-        Stores how the output should be highlighted.
+    highlight_streamer : `CoroutineGenerator`
+        Highlight streamer to highlight the produced tokens.
     
     into : `list<str>`
         The list of strings to render the representation into.
@@ -57,7 +55,7 @@ def render_frame_groups_into(frame_groups, highlighter, into):
     """
     if (frame_groups is not None):
         for frame_group in frame_groups:
-            into = render_frame_group_into(frame_group, highlighter, into)
+            into = render_frame_group_into(frame_group, highlight_streamer, into)
     
     return into
 
@@ -89,7 +87,7 @@ def _build_frames_repeated_line(frame_count, repeat_count):
     return ''.join(parts)
 
 
-def render_frame_group_into(frame_group, highlighter, into):
+def render_frame_group_into(frame_group, highlight_streamer, into):
     """
     Renders the frame group.
     
@@ -98,8 +96,8 @@ def render_frame_group_into(frame_group, highlighter, into):
     frame_group : ``FrameGroup``
         The frame group to render.
     
-    highlighter : `None`, ``HighlightFormatterContext``
-        Stores how the output should be highlighted.
+    highlight_streamer : `CoroutineGenerator`
+        Highlight streamer to highlight the produced tokens.
     
     into : `list<str>`
         The list of strings to render the representation into.
@@ -115,30 +113,36 @@ def render_frame_group_into(frame_group, highlighter, into):
     
     repeat_count = frame_group.repeat_count
     if (repeat_count > 1):
-        into = add_highlighted_part_into(
+        
+        into.extend(highlight_streamer.asend((
             HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_FRAME_REPEAT,
             _build_frames_repeated_line(len(frames), repeat_count),
-            highlighter,
-            into,
-        )
-        into.append('\n')
+        )))
+        
+        into.extend(highlight_streamer.asend((
+            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+            '\n',
+        )))
     
     for frame in frames:
-        into = render_frame_proxy_into(frame, highlighter, into)
+        into = render_frame_proxy_into(frame, highlight_streamer, into)
     
     if (repeat_count > 1):
-        into = add_highlighted_part_into(
+        
+        into.extend(highlight_streamer.asend((
             HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_FRAME_REPEAT,
             '[End of repeated frames]',
-            highlighter,
-            into,
-        )
-        into.append('\n')
+        )))
+        
+        into.extend(highlight_streamer.asend((
+            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+            '\n',
+        )))
     
     return into
 
 
-def render_frame_proxy_into(frame, highlighter, into):
+def render_frame_proxy_into(frame, highlight_streamer, into):
     """
     Produces each part of the frame to render.
     
@@ -149,8 +153,8 @@ def render_frame_proxy_into(frame, highlighter, into):
     frame : ``FrameProxyBase``
         The frame to render.
     
-    highlighter : `None | HighlightFormatterContext`
-        Stores how the output should be highlighted.
+    highlight_streamer : `CoroutineGenerator`
+        Highlight streamer to highlight the produced tokens.
     
     into : `list<str>`
         The list of strings to extend.
@@ -161,21 +165,21 @@ def render_frame_proxy_into(frame, highlighter, into):
     """
     lines = frame.lines
     
-    add_highlighted_parts_into(
-        _produce_file_location(frame.file_name, frame.line_index, frame.name, len(lines)),
-        highlighter,
-        into,
-    )
+    for item in _produce_file_location(frame.file_name, frame.line_index, frame.name, len(lines)):
+        into.extend(highlight_streamer.asend(item))
     
     if lines:
-        if (highlighter is None):
-            for line in lines:
-                into.append('    ')
-                into.append(line)
-                into.append('\n')
+        built_code = []
+        for line in lines:
+            built_code.append('    ')
+            built_code.append(line)
+            built_code.append('\n')
         
-        else:
-            into.extend(iter_highlight_code_lines([f'    {line}\n' for line in lines], highlighter))
+        code = ''.join(built_code)
+        built_code = None
+        
+        for item in iter_highlight_code_token_types_and_values(code):
+            into.extend(highlight_streamer.asend(item))
     
     return into
 
@@ -188,10 +192,13 @@ def _produce_file_location(file_name, line_index, name, line_count):
     ----------
     file_name : `str`
         Path of the respective file.
+    
     line_index : int`
         The respective line's index.
+    
     name : `str`
         The respective functions name.
+    
     line_count : `int`
         How much lines is the expression at the location.
     
@@ -224,7 +231,7 @@ def _produce_file_location(file_name, line_index, name, line_count):
     yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK, '\n'
 
 
-def add_trace_title_into(title, highlighter, into):
+def add_trace_title_into(title, highlight_streamer, into):
     """
     Adds trace title into the given list of strings.
     
@@ -233,8 +240,8 @@ def add_trace_title_into(title, highlighter, into):
     title : `str`
         The title to add.
     
-    highlighter : `None | HighlightFormatterContext`
-        Stores how the output should be highlighted.
+    highlight_streamer : `CoroutineGenerator`
+        Highlight streamer to highlight the produced tokens.
     
     into : `list<str>`
         The list of strings to extend.
@@ -243,10 +250,14 @@ def add_trace_title_into(title, highlighter, into):
     -------
     into : `list<str>`
     """
-    return add_highlighted_part_into(HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE, title, highlighter, into)
+    into.extend(highlight_streamer.asend((
+        HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE,
+        title,
+    )))
+    return into
 
 
-def _render_exception_representation_generic_into(exception_representation, highlighter, into):
+def _render_exception_representation_generic_into(exception_representation, highlight_streamer, into):
     """
     Renders a generic exception's representation.
     
@@ -255,8 +266,8 @@ def _render_exception_representation_generic_into(exception_representation, high
     exception_representation : ``ExceptionRepresentationGeneric``
         The exception representation to render.
     
-    highlighter : `None | HighlightFormatterContext`
-        Stores how the output should be highlighted.
+    highlight_streamer : `CoroutineGenerator`
+        Highlight streamer to highlight the produced tokens.
     
     into : `list<str>`
         The list of strings to extend.
@@ -265,17 +276,18 @@ def _render_exception_representation_generic_into(exception_representation, high
     -------
     into : `list<str>`
     """
-    into = add_highlighted_part_into(
+    into.extend(highlight_streamer.asend((
         HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
         exception_representation.representation,
-        highlighter,
-        into,
-    )
-    into.append('\n')
+    )))
+    into.extend(highlight_streamer.asend((
+        HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+        '\n',
+    )))
     return into
 
 
-def _render_exception_representation_syntax_error_into(exception_representation, highlighter, into):
+def _render_exception_representation_syntax_error_into(exception_representation, highlight_streamer, into):
     """
     Renders a syntax error exception's representation.
     
@@ -284,8 +296,8 @@ def _render_exception_representation_syntax_error_into(exception_representation,
     exception_representation : ``ExceptionRepresentationSyntaxError``
         The exception representation to render.
     
-    highlighter : `None | HighlightFormatterContext`
-        Stores how the output should be highlighted.
+    highlight_streamer : `CoroutineGenerator`
+        Highlight streamer to highlight the produced tokens.
     
     into : `list<str>`
         The list of strings to extend.
@@ -295,30 +307,31 @@ def _render_exception_representation_syntax_error_into(exception_representation,
     into : `list<str>`
     """
     # location
-    into = add_highlighted_parts_into(
-        _produce_file_location(exception_representation.file_name, exception_representation.line_index, '', 1),
-        highlighter,
-        into,
-    )
+    for item in _produce_file_location(exception_representation.file_name, exception_representation.line_index, '', 1):
+        into.extend(highlight_streamer.asend((item)))
     
     line = exception_representation.line
     if line:
         # Add line
-        into.append('    ')
-        if highlighter is None:
-            into.append(line)
-        else:
-            into.extend(iter_highlight_code_lines([line], highlighter))
-        into.append('\n')
+        code = f'    {line}\n'
+        for item in iter_highlight_code_token_types_and_values(code):
+            into.extend(highlight_streamer.asend(item))
         
         # Add pointer
         pointer_length = exception_representation.pointer_length
         if pointer_length:
-            into.append(' ' * (4 + exception_representation.pointer_start_offset))
-            into = add_highlighted_part_into(
-                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR, '^' * pointer_length, highlighter, into
-            )
-            into.append('\n')
+            into.extend(highlight_streamer.asend((
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_SPACE,
+                ' ' * (4 + exception_representation.pointer_start_offset),
+            )))
+            into.extend(highlight_streamer.asend((
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
+                '^' * pointer_length,
+            )))
+            into.extend(highlight_streamer.asend((
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+                '\n',
+            )))
     
     # type & message
     representation = exception_representation.type_name
@@ -326,10 +339,14 @@ def _render_exception_representation_syntax_error_into(exception_representation,
     if message:
         representation = f'{representation!s}: {message!s}'
     
-    into = add_highlighted_part_into(
-        HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR, representation, highlighter, into
-    )
-    into.append('\n')
+    into.extend(highlight_streamer.asend(((
+        HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
+        representation,
+    ))))
+    into.extend(highlight_streamer.asend((
+        HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+        '\n',
+    )))
     return into
 
 
@@ -493,7 +510,7 @@ def _produce_variable_attribute_access(variable_name, attribute_name):
     yield from _produce_grave_wrapped(_produce_variable_attribute_access_only(variable_name, attribute_name))
 
 
-def _render_exception_representation_attribute_error_into(exception_representation, highlighter, into):
+def _render_exception_representation_attribute_error_into(exception_representation, highlight_streamer, into):
     """
     Renders a syntax error exception's representation.
     
@@ -502,8 +519,8 @@ def _render_exception_representation_attribute_error_into(exception_representati
     exception_representation : ``ExceptionRepresentationAttributeError``
         The exception representation to render.
     
-    highlighter : `None | HighlightFormatterContext`
-        Stores how the output should be highlighted.
+    highlight_streamer : `CoroutineGenerator`
+        Highlight streamer to highlight the produced tokens.
     
     into : `list<str>`
         The list of strings to extend.
@@ -519,182 +536,160 @@ def _render_exception_representation_attribute_error_into(exception_representati
     variable_names_with_attribute = exception_representation.suggestion_variable_names_with_attribute
     lines_rendered = 0
     
-    into = add_highlighted_part_into(
+    into.extend(highlight_streamer.asend((
         HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
         exception_representation.type_name,
-        highlighter,
-        into,
-    )
-    into = add_highlighted_part_into(
+    )))
+    into.extend(highlight_streamer.asend((
         HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
         ': ',
-        highlighter,
-        into,
-    )
+    )))
     
-    into = add_highlighted_parts_into(
-        _produce_grave_wrapped([
-            (
-                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_EXCEPTION_REPR_GRAVE_FILLING,
-                exception_representation.instance_type_name,
-            ),
-        ]),
-        highlighter,
-        into,
-    )
+    for item in _produce_grave_wrapped([
+        (
+            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_EXCEPTION_REPR_GRAVE_FILLING,
+            exception_representation.instance_type_name,
+        ),
+    ]):
+        into.extend(highlight_streamer.asend(item))
     
-    into = add_highlighted_part_into(
+    into.extend(highlight_streamer.asend((
         HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
         (' does not have its attribute ' if attribute_unset else ' has no attribute '),
-        highlighter,
-        into,
-    )
-    into = add_highlighted_parts_into(
-        _produce_attribute_name(attribute_name),
-        highlighter,
-        into,
-    )
-    into = add_highlighted_part_into(
+    )))
+    
+    for item in _produce_attribute_name(attribute_name):
+        into.extend(highlight_streamer.asend(item))
+    
+    into.extend(highlight_streamer.asend((
         HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
         ' set.' if attribute_unset else '.',
-        highlighter,
-        into,
-    )
+    )))
     
-    into.append('\n')
+    into.extend(highlight_streamer.asend((
+        HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+        '\n',
+    )))
     lines_rendered += 1
     
     if attribute_unset and matching_variable_exists:
-        into = add_highlighted_part_into(
+        into.extend(highlight_streamer.asend((
             HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
             'Perhaps you meant to use the ',
-            highlighter,
-            into,
-        )
+        )))
         
-        into = add_highlighted_parts_into(
-            _produce_variable_name(attribute_name),
-            highlighter,
-            into,
-        )
-    
-        into = add_highlighted_part_into(
+        for item in _produce_variable_name(attribute_name):
+            into.extend(highlight_streamer.asend(item))
+        
+        into.extend(highlight_streamer.asend((
             HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
             ' variable instead?',
-            highlighter,
-            into,
-        )
-    
-        into.append('\n')
+        )))
+        
+        into.extend(highlight_streamer.asend((
+            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+            '\n',
+        )))
         lines_rendered += 1
     
     if attribute_unset and (not matching_variable_exists):
-        into = add_highlighted_part_into(
+        into.extend(highlight_streamer.asend((
             HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
             'Please review its constructors whether they are omitting setting it.',
-            highlighter,
-            into,
-        )
+        )))
         
-        into.append('\n')
+        into.extend(highlight_streamer.asend((
+            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+            '\n',
+        )))
         lines_rendered += 1
     
     if (not attribute_unset) and matching_variable_exists:
-        into = add_highlighted_part_into(
+        into.extend(highlight_streamer.asend((
             HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
             'Did you mean to use the ',
-            highlighter,
-            into,
-        )
+        )))
         
-        into = add_highlighted_parts_into(
-            _produce_variable_name(exception_representation.attribute_name),
-            highlighter,
-            into,
-        )
-    
-        into = add_highlighted_part_into(
+        for item in _produce_variable_name(exception_representation.attribute_name):
+            into.extend(highlight_streamer.asend(item))
+        
+        into.extend(highlight_streamer.asend((
             HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
             ' variable?',
-            highlighter,
-            into,
-        )
+        )))
         
-        into.append('\n')
+        into.extend(highlight_streamer.asend((
+            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+            '\n',
+        )))
         lines_rendered += 1
     
     if (not attribute_unset) and (familiar_attribute_names is not None):
-        into = add_highlighted_part_into(
+        into.extend(highlight_streamer.asend((
             HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
             ('Or perhaps any of the following attributes: ' if lines_rendered >= 2 else 'Did you mean any of: '),
-            highlighter,
-            into,
-        )
+        )))
         
         index = 0
         length = len(familiar_attribute_names)
         while True:
             name = familiar_attribute_names[index]
-            into = add_highlighted_parts_into(_produce_attribute_name(name), highlighter, into)
+            for item in _produce_attribute_name(name):
+                into.extend(highlight_streamer.asend(item))
             
             index += 1
             if index == length:
                 break
             
-            into = add_highlighted_part_into(
+            into.extend(highlight_streamer.asend((
                 HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
                 ', ',
-                highlighter,
-                into,
-            )
+            )))
             continue
         
-        into = add_highlighted_part_into(
+        into.extend(highlight_streamer.asend((
             HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
             '?',
-            highlighter,
-            into,
-        )
+        )))
         
-        into.append('\n')
+        into.extend(highlight_streamer.asend((
+            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+            '\n',
+        )))
         lines_rendered += 1
 
     if (familiar_attribute_names is None) and  (variable_names_with_attribute is not None):
-        into = add_highlighted_part_into(
+        into.extend(highlight_streamer.asend((
             HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
             ('Or perhaps you meant to do any of: ' if lines_rendered >= 2 else 'Did you mean to do any of: '),
-            highlighter,
-            into,
-        )
+        )))
         
         index = 0
         length = len(variable_names_with_attribute)
         while True:
             name = variable_names_with_attribute[index]
-            into = add_highlighted_parts_into(
-                _produce_variable_attribute_access(name, attribute_name), highlighter, into
-            )
+            for item in _produce_variable_attribute_access(name, attribute_name):
+                into.extend(highlight_streamer.asend(item))
             
             index += 1
             if index == length:
                 break
             
-            into = add_highlighted_part_into(
+            into.extend(highlight_streamer.asend((
                 HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
                 ', ',
-                highlighter,
-                into,
-            )
+            )))
             continue
         
-        into = add_highlighted_part_into(
+        into.extend(highlight_streamer.asend((
             HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR,
             '?',
-            highlighter,
-            into,
-        )
+        )))
         
-        into.append('\n')
+        into.extend(highlight_streamer.asend((
+            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+            '\n',
+        )))
         lines_rendered += 1
     
     return into
@@ -707,7 +702,7 @@ EXCEPTION_REPRESENTATION_RENDERERS = {
 }
 
 
-def render_exception_representation_into(exception_representation, highlighter, into):
+def render_exception_representation_into(exception_representation, highlight_streamer, into):
     """
     Renders an exception's representation.
     
@@ -716,8 +711,8 @@ def render_exception_representation_into(exception_representation, highlighter, 
     exception_representation : `None | ExceptionRepresentationBase`
         The exception representation to render.
     
-    highlighter : `None | HighlightFormatterContext`
-        Stores how the output should be highlighted.
+    highlight_streamer : `CoroutineGenerator`
+        Highlight streamer to highlight the produced tokens.
     
     into : `list<str>`
         The list of strings to extend.
@@ -728,6 +723,6 @@ def render_exception_representation_into(exception_representation, highlighter, 
     """
     renderer = EXCEPTION_REPRESENTATION_RENDERERS.get(type(exception_representation), None)
     if (renderer is not None):
-        into = renderer(exception_representation, highlighter, into)
+        into = renderer(exception_representation, highlight_streamer, into)
     
     return into

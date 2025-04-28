@@ -1,6 +1,6 @@
 import vampytest
 
-from ...highlight import DEFAULT_ANSI_HIGHLIGHTER
+from ...highlight import DEFAULT_ANSI_HIGHLIGHTER, get_highlight_streamer, iter_split_ansi_format_codes
 
 from ..expression_parsing import ExpressionInfo
 from ..frame_group import FrameGroup
@@ -69,9 +69,11 @@ def test__render_frame_group_into__no_repeat_no_highlight():
     Case: No repeat & no highlight.
     """
     frame_group = _get_input_frame_group()
-    output = render_frame_group_into(frame_group, None, [])
-    vampytest.assert_instance(output, list)
+    highlight_streamer = get_highlight_streamer(None)
+    output = render_frame_group_into(frame_group, highlight_streamer, [])
+    output.extend(highlight_streamer.asend(None))
     
+    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
@@ -89,15 +91,19 @@ def test__render_frame_group_into__no_repeat_with_highlight():
     Case: No repeat & with highlight.
     """
     frame_group = _get_input_frame_group()
-    output = render_frame_group_into(frame_group, DEFAULT_ANSI_HIGHLIGHTER, [])
-    vampytest.assert_instance(output, list)
+    highlight_streamer = get_highlight_streamer(DEFAULT_ANSI_HIGHLIGHTER)
+    output = render_frame_group_into(frame_group, highlight_streamer, [])
+    output.extend(highlight_streamer.asend(None))
     
+    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
-    vampytest.assert_true(any('\x1b' in part for part in output))
+    output_string = ''.join(output)
+    split = [*iter_split_ansi_format_codes(output_string)]
+    vampytest.assert_true(any(item[0] for item in split))
     
-    output_string = ''.join(filter(lambda part: '\x1b' not in part, output))
+    output_string = ''.join([item[1] for item in split if not item[0]])
     vampytest.assert_eq(
         output_string,
         _get_expected_output_string(),
@@ -127,9 +133,11 @@ def test__render_frame_group_into__with_repeat_no_highlight():
     frame_group.try_add_frame(frame_proxy_1)
     frame_group.repeat_count = 3
     
-    output = render_frame_group_into(frame_group, None, [])
-    vampytest.assert_instance(output, list)
+    highlight_streamer = get_highlight_streamer(None)
+    output = render_frame_group_into(frame_group, highlight_streamer, [])
+    output.extend(highlight_streamer.asend(None))
     
+    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     

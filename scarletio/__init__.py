@@ -15,3 +15,5 @@ __all__ = (
 
 from .utils.export_include import check_satisfaction
 check_satisfaction()
+
+AnsiTextDecoration = ANSITextDecoration

@@ -98,7 +98,7 @@ class LineRenderIntermediate(RichAttributeErrorBaseType):
         
         Yields
         ------
-        length, part : (int, str)
+        length_and_part : `(int, str)`
         """
         yield from self.parts
     

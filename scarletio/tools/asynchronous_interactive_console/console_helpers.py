@@ -4,7 +4,7 @@ __all__ = ('collect_module_variables', 'create_banner', 'create_exit_message')
 import sys
 
 from ... import __package__ as PACKAGE_NAME
-from ...utils import HIGHLIGHT_TOKEN_TYPES, add_highlighted_parts_into
+from ...utils import HIGHLIGHT_TOKEN_TYPES, add_highlighted_parts_into, get_highlight_streamer
 
 from .editors.compilation import PYTHON_COMPILE_FLAG_ALLOW_TOP_LEVEL_AWAIT
 
@@ -110,7 +110,14 @@ def create_banner(package = None, logo = None, *, highlighter = None):
     banner : `str`
         Console banner.
     """
-    return ''.join(add_highlighted_parts_into(_produce_banner(package, logo), highlighter, []))
+    highlight_streamer = get_highlight_streamer(highlighter)
+    
+    parts = []
+    for item in _produce_banner(package, logo):
+        parts.extend(highlight_streamer.asend(item))
+    
+    parts.extend(highlight_streamer.asend(None))
+    return ''.join(parts)
 
 
 def create_exit_message(package = None):

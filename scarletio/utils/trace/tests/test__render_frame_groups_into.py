@@ -1,6 +1,6 @@
 import vampytest
 
-from ...highlight import DEFAULT_ANSI_HIGHLIGHTER
+from ...highlight import DEFAULT_ANSI_HIGHLIGHTER, get_highlight_streamer, iter_split_ansi_format_codes
 
 from ..expression_parsing import ExpressionInfo
 from ..frame_group import FrameGroup
@@ -67,9 +67,11 @@ def test__render_frame_groups_into__no_highlight():
     Case: No highlight.
     """
     frame_groups = _get_input_frame_groups()
-    output = render_frame_groups_into(frame_groups, None, [])
-    vampytest.assert_instance(output, list)
+    highlight_streamer = get_highlight_streamer(None)
+    output = render_frame_groups_into(frame_groups, highlight_streamer, [])
+    output.extend(highlight_streamer.asend(None))
     
+    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
@@ -87,15 +89,19 @@ def test__render_frame_groups_into__with_highlight():
     Case: With highlight.
     """
     frame_groups = _get_input_frame_groups()
-    output = render_frame_groups_into(frame_groups, DEFAULT_ANSI_HIGHLIGHTER, [])
-    vampytest.assert_instance(output, list)
+    highlight_streamer = get_highlight_streamer(DEFAULT_ANSI_HIGHLIGHTER)
+    output = render_frame_groups_into(frame_groups, highlight_streamer, [])
+    output.extend(highlight_streamer.asend(None))
     
+    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
-    vampytest.assert_true(any('\x1b' in part for part in output))
+    output_string = ''.join(output)
+    split = [*iter_split_ansi_format_codes(output_string)]
+    vampytest.assert_true(any(item[0] for item in split))
     
-    output_string = ''.join(filter(lambda part: '\x1b' not in part, output))
+    output_string = ''.join([item[1] for item in split if not item[0]])
     vampytest.assert_eq(
         output_string,
         _get_expected_output_string(),
@@ -108,9 +114,11 @@ def test__render_frame_groups_into__no_frame_groups():
     
     Case: No frame groups.
     """
-    output = render_frame_groups_into(None, None, [])
-    vampytest.assert_instance(output, list)
+    highlight_streamer = get_highlight_streamer(None)
+    output = render_frame_groups_into(None, highlight_streamer, [])
+    output.extend(highlight_streamer.asend(None))
     
+    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     

@@ -10,9 +10,10 @@ from sys import _getframe as get_frame, platform as PLATFORM
 from threading import current_thread, get_ident
 
 from ...utils import (
-    DEFAULT_ANSI_HIGHLIGHTER, HIGHLIGHT_TOKEN_TYPES, HighlightFormatterContext, add_highlighted_part_into,
-    alchemy_incendiary, call, export, include, render_exception_into, render_frames_into
+    DEFAULT_ANSI_HIGHLIGHTER, HIGHLIGHT_TOKEN_TYPES, HighlightFormatterContext, alchemy_incendiary, call, export,
+    get_highlight_streamer, include, render_exception_into, render_frames_into
 )
+from ...utils.trace.trace import _render_exception_into
 
 from .event_loop import get_event_loop
 
@@ -110,36 +111,36 @@ async def render_exception_into_async(exception, extend = None, *, filter = None
     )
 
 
-def _build_additional_title(title):
+def _build_additional_title_lines(title):
     """
     Builds additional title represented by `before` and `after` parameters of ``write_exception_sync``.
     
     Parameters
     ----------
-    title : `str`, `list` of `str`
+    title : `None | str | object | list<object>` 
         The title to put before or after an exception traceback.
     
     Returns
     -------
-    built_title : `None`, `str`
+    built_title_lines : `None | list<str>`
     """
     if title is None:
         return None
     
     if isinstance(title, str):
-        return _build_additional_title_str(title)
+        return _build_additional_title_lines_str(title)
     
     if isinstance(title, list):
-        return _build_additional_title_list(title)
+        return _build_additional_title_lines_list(title)
     
-    return _build_additional_title_object(title)
+    return _build_additional_title_lines_object(title)
 
 
-def _build_additional_title_str(title):
+def _build_additional_title_lines_str(title):
     """
     Builds additional title represented by `before` and `after` parameters of ``write_exception_sync``.
     
-    > This function is a type specific version called by ``_build_additional_title``.
+    > This function is a type specific version called by ``_build_additional_title_lines``.
     
     Parameters
     ----------
@@ -148,22 +149,29 @@ def _build_additional_title_str(title):
     
     Returns
     -------
-    built_title : `None`, `str`
+    built_title_lines : `None | list<str>`
     """
     if not title:
         return None
     
-    if title.endswith('\n'):
-        return title
+    lines = title.splitlines()
+    while lines:
+        if lines[-1]:
+            break
         
-    return title + '\n'
+        del lines[-1]
+    
+    else:
+        lines = None
+    
+    return lines
 
 
-def _build_additional_title_list(title_parts):
+def _build_additional_title_lines_list(title_parts):
     """
     Builds additional title represented by `before` and `after` parameters of ``write_exception_sync``.
     
-    > This function is a type specific version called by ``_build_additional_title``.
+    > This function is a type specific version called by ``_build_additional_title_lines``.
     
     Parameters
     ----------
@@ -172,7 +180,7 @@ def _build_additional_title_list(title_parts):
     
     Returns
     -------
-    built_title : `None`, `str`
+    built_title_lines : `None | list<str>`
     """
     title_elements = []
     
@@ -186,17 +194,14 @@ def _build_additional_title_list(title_parts):
     if not title_elements:
         return None
     
-    if not title_elements[-1].endswith('\n'):
-        title_elements.append('\n')
-    
-    return ''.join(title_elements)
+    return _build_additional_title_lines_str(''.join(title_elements))
 
 
-def _build_additional_title_object(title_object):
+def _build_additional_title_lines_object(title_object):
     """
     Builds additional title represented by `before` and `after` parameters of ``write_exception_sync``.
     
-    > This function is a type specific version called by ``_build_additional_title``.
+    > This function is a type specific version called by ``_build_additional_title_lines``.
     
     Parameters
     ----------
@@ -205,9 +210,9 @@ def _build_additional_title_object(title_object):
     
     Returns
     -------
-    built_title : `None`, `str`
+    built_title_lines : `None | list<str>`
     """
-    return _build_additional_title_str(repr(title_object))
+    return _build_additional_title_lines_str(repr(title_object))
 
 
 def write_exception_sync(exception, before = None, after = None, file = None, *, filter = None, highlighter = None):
@@ -238,31 +243,43 @@ def write_exception_sync(exception, before = None, after = None, file = None, *,
     highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
         Formatter storing highlighting details.
     """
-    before = _build_additional_title(before)
-    after = _build_additional_title(after)
+    before_lines = _build_additional_title_lines(before)
+    after_lines = _build_additional_title_lines(after)
     
     if (file is None) and (highlighter is None):
         highlighter = get_default_trace_writer_highlighter()
     
+    highlight_streamer = get_highlight_streamer(highlighter)
+    
     extend = []
     
-    if (before is not None):
-        add_highlighted_part_into(
-            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_ADDITIONAL_BEFORE,
-            before,
-            highlighter,
-            extend,
-        )
+    if (before_lines is not None):
+        for line in before_lines:
+            extend.extend(highlight_streamer.asend((
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_ADDITIONAL_BEFORE,
+                line,
+            )))
+            extend.extend(highlight_streamer.asend((
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+                '\n',
+            )))
+        
+    _render_exception_into(exception, filter, highlight_streamer, extend)
     
     render_exception_into(exception, extend, filter = filter, highlighter = highlighter)
     
-    if (after is not None):
-        add_highlighted_part_into(
-            HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_ADDITIONAL_AFTER,
-            after,
-            highlighter,
-            extend,
-        )
+    if (after_lines is not None):
+        for line in after_lines:
+            extend.extend(highlight_streamer.asend((
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_ADDITIONAL_AFTER,
+                line,
+            )))
+            extend.extend(highlight_streamer.asend((
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+                '\n',
+            )))
+    
+    extend.extend(highlight_streamer.asend(None))
     
     if file is None:
         # ignore exception cases
@@ -424,7 +441,7 @@ def set_trace_writer_highlighter(highlighter):
     if (highlighter is not None) and (not isinstance(highlighter, HighlightFormatterContext)):
         raise TypeError(
             f'`highlighter` can be `None`, `{HighlightFormatterContext.__name__}, got '
-            f'{highlighter.__class__.__name__}; {highlighter!r}'
+            f'{type(highlighter).__name__}; {highlighter!r}'
         )
     
     _DEFAULT_TRACE_WRITER_HIGHLIGHTER = highlighter

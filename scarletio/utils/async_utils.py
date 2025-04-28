@@ -6,7 +6,7 @@ __all__ = (
 import sys
 from types import AsyncGeneratorType, CoroutineType, FunctionType, GeneratorType, MethodType
 
-from .code import CO_ASYNC_GENERATOR, CO_COROUTINE_ALL, CO_GENERATOR, CO_ITERABLE_COROUTINE
+from .code import CODE_FLAG_COROUTINE_GENERATOR, CODE_FLAG_COROUTINE_ALL, CODE_FLAG_GENERATOR, CODE_FLAG_ITERABLE_COROUTINE
 from .docs import has_docs, set_docs
 
 
@@ -26,7 +26,7 @@ def is_coroutine_function(func):
     -------
     is_coroutine_function : `bool`
     """
-    if isinstance(func, FUNCTION_TYPES) and func.__code__.co_flags & CO_COROUTINE_ALL:
+    if isinstance(func, FUNCTION_TYPES) and func.__code__.co_flags & CODE_FLAG_COROUTINE_ALL:
         return True
     else:
         return False
@@ -46,7 +46,7 @@ def is_coroutine_generator_function(func):
     -------
     is_coroutine_function_generator : `bool`
     """
-    if isinstance(func, FUNCTION_TYPES) and func.__code__.co_flags & CO_ASYNC_GENERATOR:
+    if isinstance(func, FUNCTION_TYPES) and func.__code__.co_flags & CODE_FLAG_COROUTINE_GENERATOR:
         return True
     else:
         return False
@@ -65,7 +65,7 @@ def is_generator_function(func):
     -------
     is_generator_function : `bool`
     """
-    if isinstance(func, FUNCTION_TYPES) and func.__code__.co_flags & CO_GENERATOR:
+    if isinstance(func, FUNCTION_TYPES) and func.__code__.co_flags & CODE_FLAG_GENERATOR:
         return True
     else:
         return False
@@ -88,7 +88,7 @@ def is_coroutine(obj):
         return True
 
     if isinstance(obj, GeneratorType):
-        if obj.gi_code.co_flags & CO_ITERABLE_COROUTINE:
+        if obj.gi_code.co_flags & CODE_FLAG_ITERABLE_COROUTINE:
             return True
         else:
             return False
@@ -141,7 +141,7 @@ def is_coroutine_generator(obj):
     else:
         return False
     
-    if code.co_flags & CO_ASYNC_GENERATOR:
+    if code.co_flags & CODE_FLAG_COROUTINE_GENERATOR:
         return True
     
     return False
@@ -168,19 +168,19 @@ if sys.version_info >= (3, 11, 0):
     def to_coroutine(function):
         if not isinstance(function, FunctionType):
             raise TypeError(
-                f'`function` can only be `{FunctionType.__name__}`, got {function.__class__.__name__}; '
+                f'`function` can only be `{FunctionType.__name__}`, got {type(function).__name__}; '
                 f'{function!r}.'
             )
         
         code_object = function.__code__
         code_flags = code_object.co_flags
-        if code_flags & CO_COROUTINE_ALL:
+        if code_flags & CODE_FLAG_COROUTINE_ALL:
             return function
         
-        if not code_flags & CO_GENERATOR:
+        if not code_flags & CODE_FLAG_GENERATOR:
             raise TypeError(
                 f'`function` can only be given as generator or as coroutine type, got {function!r}, '
-                f'co_flags={code_flags!r}.'
+                f'co_flags = {code_flags!r}.'
             )
         
         function.__code__ = type(code_object)(
@@ -189,7 +189,7 @@ if sys.version_info >= (3, 11, 0):
             code_object.co_kwonlyargcount,
             code_object.co_nlocals,
             code_object.co_stacksize,
-            code_flags | CO_ITERABLE_COROUTINE,
+            code_flags | CODE_FLAG_ITERABLE_COROUTINE,
             code_object.co_code,
             code_object.co_consts,
             code_object.co_names,
@@ -210,19 +210,19 @@ elif sys.version_info >= (3, 8, 0):
     def to_coroutine(function):
         if not isinstance(function, FunctionType):
             raise TypeError(
-                f'`function` can only be `{FunctionType.__name__}`, got {function.__class__.__name__}; '
+                f'`function` can only be `{FunctionType.__name__}`, got {type(function).__name__}; '
                 f'{function!r}.'
             )
         
         code_object = function.__code__
         code_flags = code_object.co_flags
-        if code_flags & CO_COROUTINE_ALL:
+        if code_flags & CODE_FLAG_COROUTINE_ALL:
             return function
         
-        if not code_flags & CO_GENERATOR:
+        if not code_flags & CODE_FLAG_GENERATOR:
             raise TypeError(
                 f'`function` can only be given as generator or as coroutine type, got {function!r}, '
-                f'co_flags={code_flags!r}.'
+                f'co_flags = {code_flags!r}.'
             )
         
         function.__code__ = type(code_object)(
@@ -231,7 +231,7 @@ elif sys.version_info >= (3, 8, 0):
             code_object.co_kwonlyargcount,
             code_object.co_nlocals,
             code_object.co_stacksize,
-            code_flags | CO_ITERABLE_COROUTINE,
+            code_flags | CODE_FLAG_ITERABLE_COROUTINE,
             code_object.co_code,
             code_object.co_consts,
             code_object.co_names,
@@ -249,19 +249,19 @@ else:
     def to_coroutine(function):
         if not isinstance(function, FunctionType):
             raise TypeError(
-                f'`function` can only be `{FunctionType.__name__}`, got {function.__class__.__name__}; '
+                f'`function` can only be `{FunctionType.__name__}`, got {type(function).__name__}; '
                 f'{function!r}.'
             )
         
         code_object = function.__code__
         code_flags = code_object.co_flags
-        if code_flags & CO_COROUTINE_ALL:
+        if code_flags & CODE_FLAG_COROUTINE_ALL:
             return function
         
-        if not code_flags & CO_GENERATOR:
+        if not code_flags & CODE_FLAG_GENERATOR:
             raise TypeError(
                 f'`function` can only be given as generator or as coroutine type, got {function!r}, '
-                f'co_flags={code_flags!r}.'
+                f'co_flags = {code_flags!r}.'
             )
         
         function.__code__ = type(code_object)(
@@ -269,7 +269,7 @@ else:
             code_object.co_kwonlyargcount,
             code_object.co_nlocals,
             code_object.co_stacksize,
-            code_flags | CO_ITERABLE_COROUTINE,
+            code_flags | CODE_FLAG_ITERABLE_COROUTINE,
             code_object.co_code,
             code_object.co_consts,
             code_object.co_names,

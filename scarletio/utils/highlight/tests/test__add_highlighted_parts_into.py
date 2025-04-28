@@ -1,5 +1,6 @@
 import vampytest
 
+from ..ansi import iter_split_ansi_format_codes
 from ..default import DEFAULT_ANSI_HIGHLIGHTER
 from ..token_types import TOKEN_TYPE_NUMERIC_FLOAT
 from ..utils import add_highlighted_parts_into
@@ -19,15 +20,11 @@ def test__add_highlighted_parts_into__no_highlighter():
     output = add_highlighted_parts_into(input_value, None, [])
     
     vampytest.assert_instance(output, list)
-    vampytest.assert_eq(len(output), 2)
+    for element in output:
+        vampytest.assert_instance(element, str)
     
-    part = output[0]
-    vampytest.assert_instance(part, str)
-    vampytest.assert_eq(part, input_value[0][1])
-    
-    part = output[1]
-    vampytest.assert_instance(part, str)
-    vampytest.assert_eq(part, input_value[1][1])
+    output_string = ''.join(output)
+    vampytest.assert_eq(output_string, 'koishisatori')
 
 
 def test__add_highlighted_parts_into__with_highlighter():
@@ -44,24 +41,9 @@ def test__add_highlighted_parts_into__with_highlighter():
     output = add_highlighted_parts_into(input_value, DEFAULT_ANSI_HIGHLIGHTER, [])
     
     vampytest.assert_instance(output, list)
-    vampytest.assert_eq(len(output), 6)
+    for element in output:
+        vampytest.assert_instance(element, str)
     
-    part = output[0]
-    vampytest.assert_instance(part, str)
-    
-    part = output[1]
-    vampytest.assert_instance(part, str)
-    vampytest.assert_eq(part, input_value[0][1])
-    
-    part = output[2]
-    vampytest.assert_instance(part, str)
-    
-    part = output[3]
-    vampytest.assert_instance(part, str)
-    
-    part = output[4]
-    vampytest.assert_instance(part, str)
-    vampytest.assert_eq(part, input_value[1][1])
-
-    part = output[5]
-    vampytest.assert_instance(part, str)
+    output_string = ''.join(output)
+    output_string = ''.join([item[1] for item in iter_split_ansi_format_codes(output_string) if not item[0]])
+    vampytest.assert_eq(output_string, 'koishisatori')

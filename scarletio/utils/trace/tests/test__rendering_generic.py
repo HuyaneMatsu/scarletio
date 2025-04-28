@@ -1,6 +1,6 @@
 import vampytest
 
-from ...highlight import DEFAULT_ANSI_HIGHLIGHTER, HIGHLIGHT_TOKEN_TYPES
+from ...highlight import DEFAULT_ANSI_HIGHLIGHTER, get_highlight_streamer, iter_split_ansi_format_codes
 
 from ..rendering import (
     _produce_attribute_name, _produce_attribute_name_only, _produce_file_location, _produce_grave_wrapped,
@@ -17,7 +17,9 @@ def test__add_trace_title_into__no_highlighter():
     """
     input_value = 'koishi'
     
-    output = add_trace_title_into(input_value, None, [])
+    highlight_streamer = get_highlight_streamer(None)
+    output = add_trace_title_into(input_value, highlight_streamer, [])
+    output.extend(highlight_streamer.asend(None))
     
     vampytest.assert_instance(output, list)
     vampytest.assert_eq(len(output), 1)
@@ -25,7 +27,6 @@ def test__add_trace_title_into__no_highlighter():
     part = output[0]
     vampytest.assert_instance(part, str)
     vampytest.assert_eq(part, input_value)
-
 
 
 def test__add_trace_title_into__with_highlighter():
@@ -36,20 +37,17 @@ def test__add_trace_title_into__with_highlighter():
     """
     input_value = 'koishi'
     
-    output = add_trace_title_into(input_value, DEFAULT_ANSI_HIGHLIGHTER, [])
+    highlight_streamer = get_highlight_streamer(DEFAULT_ANSI_HIGHLIGHTER)
+    output = add_trace_title_into(input_value, highlight_streamer, [])
+    output.extend(highlight_streamer.asend(None))
     
     vampytest.assert_instance(output, list)
-    vampytest.assert_eq(len(output), 3)
+    for element in output:
+        vampytest.assert_instance(element, str)
     
-    part = output[0]
-    vampytest.assert_instance(part, str)
-    
-    part = output[1]
-    vampytest.assert_instance(part, str)
-    vampytest.assert_eq(part, input_value)
-
-    part = output[2]
-    vampytest.assert_instance(part, str)
+    output_string = ''.join(output)
+    output_string = ''.join([item[1] for item in iter_split_ansi_format_codes(output_string) if not item[0]])
+    vampytest.assert_eq(output_string, input_value)
 
 
 def _iter_options__produce_file_location():

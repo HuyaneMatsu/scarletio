@@ -1,6 +1,6 @@
 import vampytest
 
-from .....utils.highlight import DEFAULT_ANSI_HIGHLIGHTER
+from .....utils.highlight import DEFAULT_ANSI_HIGHLIGHTER, iter_split_ansi_format_codes
 
 from ..display_state import iter_highlighted_buffer_parts
 
@@ -31,7 +31,10 @@ def test__iter_highlighted_buffer_parts(buffer, highlighter):
     for element in output:
         vampytest.assert_instance(element, str)
     
+    output_string = ''.join(output)
+    split = [*iter_split_ansi_format_codes(output_string)]
+    
     return (
-        ''.join([part for part in output if '\x1b' not in part]),
-        any('\x1b' in part for part in output),
+        ''.join([item[1] for item in split if not item[0]]),
+        any(item[0] for item in split),
     )

@@ -4,10 +4,10 @@ from ..rich_attribute_error import RichAttributeErrorBaseType
 
 from .flags import HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING
 from .matching import _keep_python_parsing
-from .token import Token, _merge_tokens
+from .token import Token
 from .token_types import (
-    MERGE_TOKEN_TYPES, TOKEN_TYPE_ALL, TOKEN_TYPE_COMMENT, TOKEN_TYPE_LINE_BREAK, TOKEN_TYPE_LINE_BREAK_ESCAPED,
-    TOKEN_TYPE_SPACE, TOKEN_TYPE_SPECIAL_OPERATOR, TOKEN_TYPE_SPECIAL_PUNCTUATION
+    TOKEN_TYPE_COMMENT, TOKEN_TYPE_LINE_BREAK, TOKEN_TYPE_LINE_BREAK_ESCAPED, TOKEN_TYPE_SPACE,
+    TOKEN_TYPE_SPECIAL_OPERATOR, TOKEN_TYPE_SPECIAL_PUNCTUATION
 )
 
 
@@ -157,7 +157,7 @@ class HighlightParserContext(RichAttributeErrorBaseType):
         token_type : `int`
             The token's identifier.
         
-        token_value : `None | str`
+        token_value : `str`
             The token's value.
         """
         token = Token(token_type, token_value)
@@ -247,65 +247,6 @@ class HighlightParserContext(RichAttributeErrorBaseType):
         Matches the content of the context.
         """
         _keep_python_parsing(self)
-        self._optimize_tokens()
-    
-    
-    def _optimize_tokens(self):
-        tokens = self.tokens
-        # Optimize tokens with merging sames into each other if applicable
-        same_count = 0
-        last_type = TOKEN_TYPE_ALL
-        token_index = len(tokens) - 1
-        
-        while True:
-            if token_index < 0:
-                if same_count > 1:
-                    # Merge tokens
-                    _merge_tokens(tokens, 0, same_count)
-                break
-            
-            token = tokens[token_index]
-            token_type = token.type
-            
-            if (token_type not in MERGE_TOKEN_TYPES):
-                last_type = token_type
-                same_count = 0
-                token_index -= 1
-                continue
-            
-            if (last_type == token_type):
-                token_index -= 1
-                same_count += 1
-                continue
-            
-            if same_count > 1:
-                # Merge tokens
-                _merge_tokens(tokens, token_index + 1, token_index + same_count + 1)
-            
-            same_count = 1
-            last_type = token_type
-            token_index -= 1
-            continue
-    
-    
-    def generate_highlighted(self, formatter):
-        """
-        Generates highlighted content.
-        
-        This method is an iterable generator.
-        
-        Parameters
-        ----------
-        formatter : ``Formatter``
-            Formatter to use for formatting content.
-        
-        Yields
-        ------
-        content : `str`
-            The generated content.
-        """
-        for token in self.tokens:
-            yield from formatter.generate_highlighted(token)
     
     
     def _end_of_line(self):

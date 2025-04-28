@@ -1,6 +1,6 @@
 import vampytest
 
-from ...highlight import DEFAULT_ANSI_HIGHLIGHTER
+from ...highlight import DEFAULT_ANSI_HIGHLIGHTER, get_highlight_streamer, iter_split_ansi_format_codes
 
 from ..exception_representation import (
     ExceptionRepresentationAttributeError, ExceptionRepresentationGeneric, ExceptionRepresentationSyntaxError
@@ -24,9 +24,11 @@ def test__render_exception_representation_generic_into__no_highlight():
         representation = representation
     )
     
-    output = _render_exception_representation_generic_into(exception_representation, None, [])
-    vampytest.assert_instance(output, list)
+    highlight_streamer = get_highlight_streamer(None)
+    output = _render_exception_representation_generic_into(exception_representation, highlight_streamer, [])
+    output.extend(highlight_streamer.asend(None))
     
+    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
@@ -47,15 +49,19 @@ def test__render_exception_representation_generic_into__with_highlight():
         representation = representation
     )
     
-    output = _render_exception_representation_generic_into(exception_representation, DEFAULT_ANSI_HIGHLIGHTER, [])
-    vampytest.assert_instance(output, list)
+    highlight_streamer = get_highlight_streamer(DEFAULT_ANSI_HIGHLIGHTER)
+    output = _render_exception_representation_generic_into(exception_representation, highlight_streamer, [])
+    output.extend(highlight_streamer.asend(None))
     
+    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
-    vampytest.assert_true(any('\x1b' in part for part in output))
+    output_string = ''.join(output)
+    split = [*iter_split_ansi_format_codes(output_string)]
+    vampytest.assert_true(any(item[0] for item in split))
     
-    output_string = ''.join(filter(lambda part: '\x1b' not in part, output))
+    output_string = ''.join([item[1] for item in split if not item[0]])
     vampytest.assert_eq(output_string, expected_output)
 
 
@@ -82,9 +88,11 @@ def test__render_exception_representation_attribute_error_into__no_highlight():
         suggestion_familiar_attribute_names = suggestion_familiar_attribute_names,
     )
     
-    output = _render_exception_representation_attribute_error_into(exception_representation, None, [])
-    vampytest.assert_instance(output, list)
+    highlight_streamer = get_highlight_streamer(None)
+    output = _render_exception_representation_attribute_error_into(exception_representation, highlight_streamer, [])
+    output.extend(highlight_streamer.asend(None))
     
+    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
@@ -115,17 +123,19 @@ def test__render_exception_representation_attribute_error_into__with_highlight()
         suggestion_familiar_attribute_names = suggestion_familiar_attribute_names,
     )
     
-    output = _render_exception_representation_attribute_error_into(
-        exception_representation, DEFAULT_ANSI_HIGHLIGHTER, []
-    )
-    vampytest.assert_instance(output, list)
+    highlight_streamer = get_highlight_streamer(DEFAULT_ANSI_HIGHLIGHTER)
+    output = _render_exception_representation_attribute_error_into(exception_representation, highlight_streamer, [])
+    output.extend(highlight_streamer.asend(None))
     
+    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
-    vampytest.assert_true(any('\x1b' in part for part in output))
+    output_string = ''.join(output)
+    split = [*iter_split_ansi_format_codes(output_string)]
+    vampytest.assert_true(any(item[0] for item in split))
     
-    output_string = ''.join(filter(lambda part: '\x1b' not in part, output))
+    output_string = ''.join([item[1] for item in split if not item[0]])
     vampytest.assert_eq(output_string, expected_output)
 
 
@@ -155,15 +165,16 @@ def test__render_exception_representation_attribute_error_into__frame_with_same_
         suggestion_matching_variable_exists = suggestion_matching_variable_exists,
     )
     
-    output = _render_exception_representation_attribute_error_into(exception_representation, None, [])
-    vampytest.assert_instance(output, list)
+    highlight_streamer = get_highlight_streamer(None)
+    output = _render_exception_representation_attribute_error_into(exception_representation, highlight_streamer, [])
+    output.extend(highlight_streamer.asend(None))
     
+    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
     output_string = ''.join(output)
     vampytest.assert_eq(output_string, expected_output)
-
 
 
 def test__render_exception_representation_attribute_error_into__unset_attribute():
@@ -191,9 +202,11 @@ def test__render_exception_representation_attribute_error_into__unset_attribute(
         suggestion_attribute_unset = suggestion_attribute_unset,
     )
     
-    output = _render_exception_representation_attribute_error_into(exception_representation, None, [])
-    vampytest.assert_instance(output, list)
+    highlight_streamer = get_highlight_streamer(None)
+    output = _render_exception_representation_attribute_error_into(exception_representation, highlight_streamer, [])
+    output.extend(highlight_streamer.asend(None))
     
+    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
@@ -226,9 +239,11 @@ def test__render_exception_representation_attribute_error_into__other_variable_w
         suggestion_variable_names_with_attribute = suggestion_variable_names_with_attribute,
     )
     
-    output = _render_exception_representation_attribute_error_into(exception_representation, None, [])
-    vampytest.assert_instance(output, list)
+    highlight_streamer = get_highlight_streamer(None)
+    output = _render_exception_representation_attribute_error_into(exception_representation, highlight_streamer, [])
+    output.extend(highlight_streamer.asend(None))
     
+    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
@@ -267,9 +282,11 @@ def test__render_exception_representation_syntax_error_into__no_highlight():
         type_name = type_name,
     )
     
-    output = _render_exception_representation_syntax_error_into(exception_representation, None, [])
-    vampytest.assert_instance(output, list)
+    highlight_streamer = get_highlight_streamer(None)
+    output = _render_exception_representation_syntax_error_into(exception_representation, highlight_streamer, [])
+    output.extend(highlight_streamer.asend(None))
     
+    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
@@ -309,16 +326,19 @@ def test__render_exception_representation_syntax_error_into__with_highlight():
         type_name = type_name,
     )
     
-    output = _render_exception_representation_syntax_error_into(exception_representation, DEFAULT_ANSI_HIGHLIGHTER, [])
-    vampytest.assert_instance(output, list)
+    highlight_streamer = get_highlight_streamer(DEFAULT_ANSI_HIGHLIGHTER)
+    output = _render_exception_representation_syntax_error_into(exception_representation, highlight_streamer, [])
+    output.extend(highlight_streamer.asend(None))
     
+    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
+    output_string = ''.join(output)
+    split = [*iter_split_ansi_format_codes(output_string)]
+    vampytest.assert_true(any(item[0] for item in split))
     
-    vampytest.assert_true(any('\x1b' in part for part in output))
-    
-    output_string = ''.join(filter(lambda part: '\x1b' not in part, output))
+    output_string = ''.join([item[1] for item in split if not item[0]])
     vampytest.assert_eq(output_string, expected_output)
 
 
@@ -330,7 +350,7 @@ def test__render_exception_representation_into__hit():
     """
     hit = False
     
-    def _renderer(exception_representation, highlighter, into):
+    def _renderer(exception_representation, highlight_streamer, into):
         nonlocal hit
         hit = True
         return into
@@ -349,9 +369,11 @@ def test__render_exception_representation_into__hit():
         representation = 'hey mister'
     )
     
-    output = mocked(exception_representation, None, [])
-    vampytest.assert_instance(output, list)
+    highlight_streamer = get_highlight_streamer(None)
+    output = mocked(exception_representation, highlight_streamer, [])
+    output.extend(highlight_streamer.asend(None))
     
+    vampytest.assert_instance(output, list)
     vampytest.assert_true(hit)
 
 
@@ -363,7 +385,7 @@ def test__render_exception_representation_into__miss():
     """
     hit = False
     
-    def _renderer(exception_representation, highlighter, into):
+    def _renderer(exception_representation, highlight_streamer, into):
         nonlocal hit
         hit = True
         return into
@@ -380,7 +402,9 @@ def test__render_exception_representation_into__miss():
     
     exception_representation = None
     
-    output = mocked(exception_representation, None, [])
-    vampytest.assert_instance(output, list)
+    highlight_streamer = get_highlight_streamer(None)
+    output = mocked(exception_representation, highlight_streamer, [])
+    output.extend(highlight_streamer.asend(None))
     
+    vampytest.assert_instance(output, list)
     vampytest.assert_false(hit)

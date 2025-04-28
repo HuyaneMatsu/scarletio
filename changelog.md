@@ -1,3 +1,9 @@
+
+- Added spaces and linebreaks in trace rendering are now also affected by the highlighter.
+- When highlighting the tokens are not highlighted separately, but a stream, removing most reset codes and reducing
+    produced string size.
+- Cause group rendering is not recursive anymore.
+
 # 1.0.90 *\[2025-03-18\]*
 
 #### Bug fixes

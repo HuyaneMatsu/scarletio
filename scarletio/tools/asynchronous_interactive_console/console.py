@@ -8,7 +8,7 @@ from types import FunctionType
 from ...core import (
     Future, get_default_trace_writer_highlighter, get_event_loop, get_or_create_event_loop, write_exception_sync
 )
-from ...utils import HIGHLIGHT_TOKEN_TYPES, is_awaitable, render_exception_into
+from ...utils import HIGHLIGHT_TOKEN_TYPES, get_highlight_streamer, is_awaitable, render_exception_into
 from ...utils.trace.exception_representation import ExceptionRepresentationSyntaxError
 from ...utils.trace.exception_representation.syntax_error_helpers import (
     fixup_syntax_error_line_from_buffer, is_syntax_error
@@ -522,9 +522,11 @@ class AsynchronousInteractiveConsole:
             if (editor is not None):
                 fixup_syntax_error_line_from_buffer(syntax_error, editor.get_buffer())
             
+            highlighter_stream = get_highlight_streamer(self.highlighter)
             _render_exception_representation_syntax_error_into(
-                ExceptionRepresentationSyntaxError(syntax_error, None), self.highlighter, into
+                ExceptionRepresentationSyntaxError(syntax_error, None), highlighter_stream, into
             )
+            into.extend(highlighter_stream.asend(None))
         else:
             render_exception_into(syntax_error, into, filter = _ignore_console_frames, highlighter = self.highlighter)
         

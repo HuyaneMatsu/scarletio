@@ -1,10 +1,13 @@
 __all__ = (
     'add_highlighted_part_into', 'add_highlighted_parts_into', 'get_token_type_and_repr_mode_for_variable',
-    'iter_highlight_code_lines',
+    'iter_highlight_code_lines', 'iter_highlight_code_token_types_and_values'
 )
+
+from warnings import warn
 
 from .constants import BUILTIN_CONSTANTS, BUILTIN_EXCEPTIONS, BUILTIN_VARIABLES
 from .flags import HIGHLIGHT_PARSER_MASK_DEFAULT
+from .highlight_streamer import get_highlight_streamer
 from .parser_context import HighlightParserContext
 from .token import Token
 from .token_types import (
@@ -24,6 +27,7 @@ def iter_highlight_code_lines(lines, formatter_context):
     ----------
     lines : `list` of `str`
         Lines to format.
+    
     formatter_context : ``HighlightFormatterContext``
         Context to use for highlighting.
     
@@ -31,9 +35,45 @@ def iter_highlight_code_lines(lines, formatter_context):
     ------
     content : `str`
     """
+    warn(
+        (
+            f'`iter_highlight_code_lines` is deprecated and will be removed 2025 October. '
+            f'Please use `iter_highlight_code_token_types_and_values` paired with `get_highlight_streamer` '
+            f'instead accordingly. '
+        ),
+        FutureWarning,
+        stacklevel = 2,
+    )
+    
     context = HighlightParserContext(lines, HIGHLIGHT_PARSER_MASK_DEFAULT)
     context.match()
-    yield from context.generate_highlighted(formatter_context)
+    highlight_streamer = get_highlight_streamer(formatter_context)
+    for token in context.tokens:
+        yield from highlight_streamer.asend((token.type, token.value))
+    
+    yield from highlight_streamer.asend(None)
+
+
+def iter_highlight_code_token_types_and_values(code):
+    """
+    Parses the given code and iterates over its token types and values.
+    
+    This function is an iterable coroutine.
+    
+    Parameters
+    ----------
+    code : `str`
+        Code to parse.
+    
+    Yields
+    ------
+    token_type_and_value : `(int, str)`
+    """
+    # Note: Parsing line by line will be replaced with global parsing.
+    context = HighlightParserContext(code.splitlines(True), HIGHLIGHT_PARSER_MASK_DEFAULT)
+    context.match()
+    for token in context.tokens:
+        yield token.type, token.value
 
 
 def add_highlighted_part_into(token_type, part, highlighter, into):
@@ -58,10 +98,27 @@ def add_highlighted_part_into(token_type, part, highlighter, into):
     -------
     into : `list<str>`
     """
+    warn(
+        (
+            f'`add_highlighted_part_into` is deprecated and will be removed 2025 October. '
+            f'Please use `into.extend(highlight_streamer.asend((token_type, part)))` instead accordingly. '
+            f'For more information read `get_highlight_streamer`\'s documentation.'
+        ),
+        FutureWarning,
+        stacklevel = 2,
+    )
+
     if (highlighter is None):
         into.append(part)
     else:
-        into.extend(highlighter.generate_highlighted(Token(token_type, part)))
+        detail = highlighter.formatter_nodes[token_type].detail
+        if (detail is None):
+            into.append(part)
+        
+        else:
+            into.extend(detail.start())
+            into.extend(detail.transform_content(part))
+            into.extend(detail.end())
     
     return into
     
@@ -86,8 +143,28 @@ def add_highlighted_parts_into(producer, highlighter, into):
     ------
     into : `list<str>`
     """
+    warn(
+        (
+            f'`add_highlighted_parts_into` is deprecated and will be removed 2025 October. '
+            f'Please use `for item in producer: into.extend(highlight_streamer.asend(item))` instead accordingly. '
+            f'For more information read `get_highlight_streamer`\'s documentation.'
+        ),
+        FutureWarning,
+        stacklevel = 2,
+    )
+    
     for token_type, part in producer:
-        into = add_highlighted_part_into(token_type, part, highlighter, into)
+        if (highlighter is None):
+            into.append(part)
+        else:
+            detail = highlighter.formatter_nodes[token_type].detail
+            if (detail is None):
+                into.append(part)
+            
+            else:
+                into.extend(detail.start())
+                into.extend(detail.transform_content(part))
+                into.extend(detail.end())
     
     return into
 

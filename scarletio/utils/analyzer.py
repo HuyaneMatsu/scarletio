@@ -4,7 +4,7 @@ from itertools import zip_longest
 from types import FunctionType
 
 from .async_utils import is_coroutine_function, is_coroutine_generator_function
-from .code import CO_VARARGS, CO_VARKEYWORDS
+from .code import CODE_FLAG_VARARGS, CODE_FLAG_VARKEYWORDS
 from .method_like import MethodLike
 
 
@@ -499,9 +499,9 @@ class CallableAnalyzer:
         parameters = []
         if (real_function is not None):
             parameter_count = real_function.__code__.co_argcount
-            accepts_args = real_function.__code__.co_flags & CO_VARARGS
+            accepts_args = real_function.__code__.co_flags & CODE_FLAG_VARARGS
             keyword_only_parameter_count = real_function.__code__.co_kwonlyargcount
-            accepts_kwargs = real_function.__code__.co_flags & CO_VARKEYWORDS
+            accepts_kwargs = real_function.__code__.co_flags & CODE_FLAG_VARKEYWORDS
             positional_only_parameter_count = getattr(real_function.__code__, 'co_posonlyargcount', 0)
             default_parameter_values = real_function.__defaults__
             default_keyword_only_parameter_values = real_function.__kwdefaults__

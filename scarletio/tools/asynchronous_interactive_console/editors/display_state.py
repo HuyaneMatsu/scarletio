@@ -3,13 +3,16 @@ __all__ = ()
 from itertools import islice, zip_longest
 from os import get_terminal_size
 
-from ....utils import DEFAULT_ANSI_HIGHLIGHTER, RichAttributeErrorBaseType, iter_highlight_code_lines
+from ....utils import (
+    DEFAULT_ANSI_HIGHLIGHTER, RichAttributeErrorBaseType, get_highlight_streamer, iter_highlight_code_token_types_and_values,
+    stream_split_ansi_format_codes
+)
 
 from .editor_base import _validate_buffer
 from .line_render_intermediate import LineRenderIntermediate
 from .terminal_control_commands import (
-    COMMAND_CLEAR_LINE_FROM_CURSOR, COMMAND_CLEAR_LINE_WHOLE, COMMAND_FORMAT_RESET, COMMAND_DOWN, COMMAND_UP, COMMAND_START_LINE,
-    create_command_down, create_command_left, create_command_right, create_command_up, is_command
+    COMMAND_CLEAR_LINE_FROM_CURSOR, COMMAND_CLEAR_LINE_WHOLE, COMMAND_FORMAT_RESET, COMMAND_DOWN, COMMAND_UP,
+    COMMAND_START_LINE, create_command_down, create_command_left, create_command_right, create_command_up
 )
 
 EMPTY_LINE_PREFIX_CHARACTER = ' '
@@ -293,13 +296,11 @@ def iter_highlighted_buffer_parts(buffer, highlighter):
     ------
     part : `str`
     """
-    buffer = _add_linebreaks_between(buffer)
+    highlight_streamer = get_highlight_streamer(highlighter)
+    for item in iter_highlight_code_token_types_and_values('\n'.join(buffer)):
+        yield from highlight_streamer.asend(item)
     
-    if highlighter is None:
-        yield from buffer
-    
-    else:
-        yield from iter_highlight_code_lines(buffer, highlighter)
+    yield from highlight_streamer.asend(None)
 
 
 class DisplayState(RichAttributeErrorBaseType):
@@ -688,6 +689,7 @@ class DisplayState(RichAttributeErrorBaseType):
             write_buffer.append(COMMAND_START_LINE)
             
             last_command = None
+            last_command_parts = None
             to_clear = 0
             jump_to = 0
             write_difference = False
@@ -702,14 +704,34 @@ class DisplayState(RichAttributeErrorBaseType):
                 self_item = self_items[item_index]
                 other_item = other_items[item_index]
                 
+                length = self_item[0]
                 if self_item != other_item:
+                    if (last_command_parts is not None):
+                        if length:
+                            last_command = ''.join(last_command_parts)
+                        else:
+                            item_index -= len(last_command_parts)
+                            self_item = self_items[item_index]
+                            other_item = other_items[item_index]
+                        last_command_parts = None
+                    
                     write_difference = True
                     break
                 
-                length = self_item[0]
                 jump_to += length
-                if not length:
-                    last_command = self_item[1]
+                if length:
+                    if (last_command_parts is not None):
+                        last_command = ''.join(last_command_parts)
+                        last_command_parts = None
+                else:
+                    if (last_command_parts is None):
+                        last_command_parts = []
+                    
+                    else:
+                        if '\033' in self_item[1]:
+                            last_command_parts.clear()
+                    
+                    last_command_parts.append(self_item[1])
                 
                 continue
             
@@ -741,7 +763,6 @@ class DisplayState(RichAttributeErrorBaseType):
                         write_buffer.append(last_command)
                     elif (last_written_line is None):
                         write_buffer.append(COMMAND_FORMAT_RESET)
-                        
                 
                 write_buffer.append(self_part)
                 command_written = True
@@ -822,11 +843,29 @@ class DisplayState(RichAttributeErrorBaseType):
         line_count = len(buffer)
         leftover_line_length = content_width
         last_command = COMMAND_FORMAT_RESET
+        last_command_parts = None
         
         line = LineRenderIntermediate(prefix_length, prefix_initial)
         lines.append(line)
         
-        for part in iter_highlighted_buffer_parts(buffer, DEFAULT_ANSI_HIGHLIGHTER):
+        for format_code, part in stream_split_ansi_format_codes(iter_highlighted_buffer_parts(buffer, DEFAULT_ANSI_HIGHLIGHTER)):
+            if format_code:
+                # write line if any. If the part is a command, it will have 0 visible length, so ignore it
+                line.add_command(part)
+                
+                if last_command_parts is None:
+                    last_command_parts = []
+                else:
+                    if '\033' in part:
+                        last_command_parts.clear()
+                
+                last_command_parts.append(part)
+                continue
+            
+            if (last_command_parts is not None):
+                last_command = ''.join(last_command_parts)
+                last_command_parts = None
+            
             # if the part ends with `\n`, remove it and remember it for later
             if part.endswith('\n'):
                 is_line_break = True
@@ -834,30 +873,24 @@ class DisplayState(RichAttributeErrorBaseType):
             else:
                 is_line_break = False
             
-            # write line if any. If the part is a command, it will have 0 visible length, so ignore it
             # else only write as much as we can, then break line and continue. 
             if part:
-                if is_command(part):
-                    line.add_command(part)
-                    last_command = part
-                
-                else:
-                    while True:
-                        leftover_line_length -= len(part)
-                        if leftover_line_length >= 0:
-                            line.add_part(part)
-                            break
-                        
-                        line.add_part(part[:leftover_line_length])
-                        line.add_part(CONTINUOUS_LINE_POSTFIX)
-                        part = part[leftover_line_length:]
-                        
-                        # Create new line
-                        line = LineRenderIntermediate(prefix_length, EMPTY_LINE_PREFIX_CHARACTER * prefix_length)
-                        lines.append(line)
-                        leftover_line_length = content_width
-                        line.add_command(last_command)
-                        continue
+                while True:
+                    leftover_line_length -= len(part)
+                    if leftover_line_length >= 0:
+                        line.add_part(part)
+                        break
+                    
+                    line.add_part(part[:leftover_line_length])
+                    line.add_part(CONTINUOUS_LINE_POSTFIX)
+                    part = part[leftover_line_length:]
+                    
+                    # Create new line
+                    line = LineRenderIntermediate(prefix_length, EMPTY_LINE_PREFIX_CHARACTER * prefix_length)
+                    lines.append(line)
+                    leftover_line_length = content_width
+                    line.add_command(last_command)
+                    continue
             
             # If we wrote a line break:
             # - quit if last

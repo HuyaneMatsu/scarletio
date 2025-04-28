@@ -7,7 +7,7 @@ COMMAND_DOWN = '\n'
 COMMAND_UP = '\u001b[F'
 # COMMAND_START_LINE = '\u001b[1000D'
 COMMAND_START_LINE = '\r'
-COMMAND_FORMAT_RESET = create_ansi_format_code()
+COMMAND_FORMAT_RESET = create_ansi_format_code(reset = True)
 
 
 COMMAND_CLEAR_SCREEN_FROM_CURSOR = '\u001b[0J'
@@ -17,23 +17,6 @@ COMMAND_CLEAR_SCREEN_WHOLE = '\u001b[2J'
 COMMAND_CLEAR_LINE_FROM_CURSOR = '\u001b[0K'
 COMMAND_CLEAR_LINE_TILL_CURSOR = '\u001b[1K'
 COMMAND_CLEAR_LINE_WHOLE = '\u001b[2K'
-
-
-def is_command(part):
-    """
-    Returns whether the given part is an ansi command.
-    Designed for general color commands and not for various.
-    
-    Parameters
-    ----------
-    part : `str`
-        the part to check.
-    
-    Returns
-    -------
-    is_ansi_command : `bool`
-    """
-    return part.startswith('\u001b[')
 
 
 def create_command_up(amount):
