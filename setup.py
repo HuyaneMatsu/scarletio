@@ -37,6 +37,7 @@ setup(
         'scarletio.tools.asynchronous_interactive_console.editors',
         'scarletio.utils',
         'scarletio.utils.highlight',
+        'scarletio.utils.highlight.formatter_detail',
         'scarletio.utils.trace',
         'scarletio.utils.trace.exception_proxy',
         'scarletio.utils.trace.exception_representation',

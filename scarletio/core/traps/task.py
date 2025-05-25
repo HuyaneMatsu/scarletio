@@ -5,10 +5,10 @@ from threading import current_thread
 from types import AsyncGeneratorType as CoroutineGeneratorType, CoroutineType, GeneratorType
 
 from ...utils import (
-    DEFAULT_ANSI_HIGHLIGHTER, alchemy_incendiary, copy_docs, export, ignore_frame, include, render_frames_into
+    DEFAULT_ANSI_HIGHLIGHTER, HIGHLIGHT_TOKEN_TYPES, alchemy_incendiary, copy_docs, export, get_highlight_streamer,
+    ignore_frame, include
 )
-from ...utils.trace import render_exception_into
-from ...utils.trace.rendering import add_trace_title_into
+from ...utils.trace.trace import _produce_exception, _produce_frames
 
 from ..exceptions import CancelledError, InvalidStateError
 
@@ -486,7 +486,7 @@ class Task(Future):
         file : `None`, `I/O stream` = `None`, Optional
             The file to print the stack to. Defaults to `sys.stderr`.
     
-        highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
+        highlighter : ``None | HighlightFormatterContext`` = `None`, Optional (Keyword only)
             Formatter storing highlighting details.
         
         Notes
@@ -514,7 +514,7 @@ class Task(Future):
         file : `None`, `I/O stream`
             The file to print the stack to. Defaults to `sys.stderr`.
         
-        highlighter : `None`, ``HighlightFormatterContext``
+        highlighter : ``None | HighlightFormatterContext``
             Formatter storing highlighting details.
         
         Notes
@@ -531,14 +531,24 @@ class Task(Future):
         else:
             exception = None
         
-        extend = []
+        highlight_streamer = get_highlight_streamer(highlighter)
+        into = []
         
         if exception is None:
             frames = self.get_stack(limit)
             if not frames:
-                extend.append('No stack for ')
-                extend.append(repr(self))
-                extend.append('\n')
+                into.extend(highlight_streamer.asend((
+                    HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE,
+                    'No stack for '
+                )))
+                into.extend(highlight_streamer.asend((
+                    HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE,
+                    repr(self)
+                )))
+                into.extend(highlight_streamer.asend((
+                    HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+                    '\n'
+                )))
             
             else:
                 if frames[-1] is None:
@@ -547,27 +557,51 @@ class Task(Future):
                 else:
                     recursive = False
                 
-                extend.append('Stack for ')
-                extend.append(repr(self))
-                extend.append('\n')
-                extend = add_trace_title_into('(Most recent call last):', highlighter, extend)
-                extend.append('\n')
-                extend = render_frames_into(frames, extend = extend, highlighter = highlighter)
+                into.extend(highlight_streamer.asend((
+                    HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE,
+                    'Stack for '
+                )))
+                into.extend(highlight_streamer.asend((
+                    HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE,
+                    repr(self)
+                )))
+                into.extend(highlight_streamer.asend((
+                    HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+                    '\n'
+                )))
+                into.extend(highlight_streamer.asend((
+                    HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE,
+                    '(Most recent call last):'
+                )))
+                into.extend(highlight_streamer.asend((
+                    HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+                    '\n'
+                )))
+                for item in _produce_frames(frames, None):
+                    into.extend(highlight_streamer.asend(item))
                 
                 if recursive:
-                    extend = add_trace_title_into(
+                    into.extend(highlight_streamer.asend((
+                        HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE,
                         'Last frame is a repeat from a frame above. Rest of the recursive part is not rendered.',
-                        highlighter,
-                        extend,
-                    )
+                    )))
         else:
-            extend.append('Traceback for ')
-            extend.append(repr(self))
-            extend.append('\n')
-            
-            extend = render_exception_into(exception, extend = extend, highlighter = highlighter)
+            into.extend(highlight_streamer.asend((
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE,
+                'Traceback for '
+            )))
+            into.extend(highlight_streamer.asend((
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE,
+                repr(self)
+            )))
+            into.extend(highlight_streamer.asend((
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+                '\n'
+            )))
+            for item in _produce_exception(exception, None):
+                into.extend(highlight_streamer.asend(item))
         
         if file is None:
             file = sys.stderr
         
-        file.write(''.join(extend))
+        file.write(''.join(into))

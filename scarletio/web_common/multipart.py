@@ -91,9 +91,9 @@ class PayloadBase:
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : `IgnoreCaseMultiValueDictionary<str, str>`
+    headers : ``IgnoreCaseMultiValueDictionary<str, str>``
         Payload specific headers.
-    size : `None`, `int`
+    size : `None | int`
         The payload's size if applicable.
     """
     __slots__ = ('content_type', 'data', 'encoding', 'file_name', 'headers', 'size', )
@@ -108,7 +108,7 @@ class PayloadBase:
                 `BytesIO`, `StringIO`, `TextIOBase`, `BufferedReader`, `BufferedRandom`, `IOBase`, ``AsyncIO``, \
                 `async-iterable`
             The payload's data.
-        keyword_parameters : `dict` of (`str`, `object`) items
+        keyword_parameters : `dict<str, object>`
             Additional keyword parameters.
         """
         self.data = data
@@ -217,9 +217,9 @@ class BytesPayload(PayloadBase):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : `IgnoreCaseMultiValueDictionary<str, str>`
+    headers : ``IgnoreCaseMultiValueDictionary<str, str>``
         Payload specific headers.
-    size : `None`, `int`
+    size : `None | int`
         The payload's size if applicable.
     """
     __slots__ = ()
@@ -232,7 +232,7 @@ class BytesPayload(PayloadBase):
         ----------
         data : `bytes`, `bytearray`, `memoryview`
             The payload's data.
-        keyword_parameters : `dict` of (`str`, `object`) items
+        keyword_parameters : `dict<str, object>`
             Additional keyword parameters.
         """
         keyword_parameters.setdefault('content_type', DEFAULT_CONTENT_TYPE)
@@ -269,9 +269,9 @@ class StringPayload(BytesPayload):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : `IgnoreCaseMultiValueDictionary<str, str>`
+    headers : ``IgnoreCaseMultiValueDictionary<str, str>``
         Payload specific headers.
-    size : `None`, `int`
+    size : `None | int`
         The payload's size if applicable.
     """
     __slots__ = ()
@@ -284,7 +284,7 @@ class StringPayload(BytesPayload):
         ----------
         data : `str`
             The payload's data.
-        keyword_parameters : `dict` of (`str`, `object`) items
+        keyword_parameters : `dict<str, object>`
             Additional keyword parameters.
         """
         encoding = keyword_parameters.get('encoding', None)
@@ -325,9 +325,9 @@ class StringIOPayload(StringPayload):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : `IgnoreCaseMultiValueDictionary<str, str>`
+    headers : ``IgnoreCaseMultiValueDictionary<str, str>``
         Payload specific headers.
-    size : `None`, `int`
+    size : `None | int`
         The payload's size if applicable.
     """
     __slots__ = ()
@@ -340,7 +340,7 @@ class StringIOPayload(StringPayload):
         ----------
         data : `StringIO`
             The payload's data.
-        keyword_parameters : `dict` of (`str`, `object`) items
+        keyword_parameters : `dict<str, object>`
             Additional keyword parameters.
         """
         data = data.read()
@@ -361,9 +361,9 @@ class IOBasePayload(PayloadBase):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : `IgnoreCaseMultiValueDictionary<str, str>`
+    headers : ``IgnoreCaseMultiValueDictionary<str, str>``
         Payload specific headers.
-    size : `None`, `int`
+    size : `None | int`
         The payload's size if applicable.
     """
     __slots__ = ()
@@ -375,7 +375,7 @@ class IOBasePayload(PayloadBase):
         ----------
         data : `IOBase`
             The payload's data.
-        keyword_parameters : `dict` of (`str`, `object`) items
+        keyword_parameters : `dict<str, object>`
             Additional keyword parameters.
         """
         if 'file_name' not in keyword_parameters:
@@ -431,9 +431,9 @@ class TextIOPayload(IOBasePayload):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : `IgnoreCaseMultiValueDictionary<str, str>`
+    headers : ``IgnoreCaseMultiValueDictionary<str, str>``
         Payload specific headers.
-    size : `None`, `int`
+    size : `None | int`
         The payload's size if applicable.
     """
     __slots__ = ()
@@ -446,7 +446,7 @@ class TextIOPayload(IOBasePayload):
         ----------
         data : `TextIOBase`
             The payload's data.
-        keyword_parameters : `dict` of (`str`, `object`) items
+        keyword_parameters : `dict<str, object>`
             Additional keyword parameters.
         """
         encoding = keyword_parameters.get('encoding', None)
@@ -515,9 +515,9 @@ class BytesIOPayload(IOBasePayload):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : `IgnoreCaseMultiValueDictionary<str, str>`
+    headers : ``IgnoreCaseMultiValueDictionary<str, str>``
         Payload specific headers.
-    size : `None`, `int`
+    size : `None | int`
         The payload's size if applicable.
     """
     __slots__ = ()
@@ -530,7 +530,7 @@ class BytesIOPayload(IOBasePayload):
         ----------
         data : `BytesIO`
             The payload's data.
-        keyword_parameters : `IgnoreCaseMultiValueDictionary<str, str>`
+        keyword_parameters : ``IgnoreCaseMultiValueDictionary<str, str>``
             Additional keyword parameters.
         """
         IOBasePayload.__init__(self, data, keyword_parameters)
@@ -555,9 +555,9 @@ class BufferedReaderPayload(IOBasePayload):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : `IgnoreCaseMultiValueDictionary<str, str>`
+    headers : ``IgnoreCaseMultiValueDictionary<str, str>``
         Payload specific headers.
-    size : `None`, `int`
+    size : `None | int`
         The payload's size if applicable.
     """
     __slots__ = ()
@@ -570,7 +570,7 @@ class BufferedReaderPayload(IOBasePayload):
         ----------
         data : `BufferedReader`, `BufferedRandom`
             The payload's data.
-        keyword_parameters : `dict` of (`str`, `object`) items
+        keyword_parameters : `dict<str, object>`
             Additional keyword parameters.
         """
         IOBasePayload.__init__(self, data, keyword_parameters)
@@ -597,9 +597,9 @@ class JsonPayload(BytesPayload):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : `IgnoreCaseMultiValueDictionary<str, str>`
+    headers : ``IgnoreCaseMultiValueDictionary<str, str>``
         Payload specific headers.
-    size : `None`, `int`
+    size : `None | int`
         The payload's size if applicable.
     """
     __slots__ = ()
@@ -612,7 +612,7 @@ class JsonPayload(BytesPayload):
         ----------
         data : `None`, `str`, `int`, `float`, `list` of repeat, `dict` of (`str`, repeat) items
             The payload's data.
-        keyword_parameters : `dict` of (`str`, `object`) items
+        keyword_parameters : `dict<str, object>`
             Additional keyword parameters.
         """
         encoding = keyword_parameters.get('encoding', None)
@@ -639,9 +639,9 @@ class AsyncIterablePayload(PayloadBase):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : `IgnoreCaseMultiValueDictionary<str, str>`
+    headers : ``IgnoreCaseMultiValueDictionary<str, str>``
         Payload specific headers.
-    size : `None`, `int`
+    size : `None | int`
         The payload's size if applicable.
     """
     __slots__ = ('_iterator',)
@@ -654,7 +654,7 @@ class AsyncIterablePayload(PayloadBase):
         ----------
         data : `async-iterable`
             The payload's data.
-        keyword_parameters : `dict` of (`str`, `object`) items
+        keyword_parameters : `dict<str, object>`
             Additional keyword parameters.
         """
         keyword_parameters.setdefault('content_type', DEFAULT_CONTENT_TYPE)
@@ -703,9 +703,9 @@ class AsyncIOPayload(IOBasePayload):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : `IgnoreCaseMultiValueDictionary<str, str>`
+    headers : ``IgnoreCaseMultiValueDictionary<str, str>``
         Payload specific headers.
-    size : `None`, `int`
+    size : `None | int`
         The payload's size if applicable.
     """
     __slots__ = ()
@@ -746,9 +746,9 @@ class BodyPartReaderPayload(PayloadBase):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : `IgnoreCaseMultiValueDictionary<str, str>`
+    headers : ``IgnoreCaseMultiValueDictionary<str, str>``
         Payload specific headers.
-    size : `None`, `int`
+    size : `None | int`
         The payload's size if applicable.
     """
     __slots__ = ()
@@ -761,7 +761,7 @@ class BodyPartReaderPayload(PayloadBase):
         ----------
         data : ``BodyPartReader``
             The payload's data.
-        keyword_parameters : `dict` of (`str`, `object`) items
+        keyword_parameters : `dict<str, object>`
             Additional keyword parameters.
         """
         PayloadBase.__init__(self, data, keyword_parameters)
@@ -1081,9 +1081,9 @@ class MultipartWriter(PayloadBase):
         The payload's file's name if applicable.
     encoding : `None` or`str`
         Encoding used to encode the payload's data.
-    headers : `IgnoreCaseMultiValueDictionary<str, str>`
+    headers : ``IgnoreCaseMultiValueDictionary<str, str>``
         Payload specific headers.
-    size : `None`, `int`
+    size : `None | int`
         The payload's size if applicable.
     _boundary : `bytes`
         Boundary to mark the payload's start and end.
@@ -1174,7 +1174,7 @@ class MultipartWriter(PayloadBase):
         ----------
         body_part : ``PayloadBase``, ``BodyPartReader``, `bytes`, `bytearray`, `memoryview`, `BytesIO`, `StringIO`, \
             `TextIOBase`, `BufferedReader`, `BufferedRandom`, `IOBase`, ``AsyncIO``, `async-iterable`
-        headers : `None`, `IgnoreCaseMultiValueDictionary<str, str>` = `None`, Optional
+        headers : `None`, ``IgnoreCaseMultiValueDictionary<str, str>`` = `None`, Optional
             Optional headers for the field.
         
         Returns
@@ -1310,7 +1310,7 @@ class MultipartWriter(PayloadBase):
         ----------
         obj : `None`, `str`, `int`, `float`, `list` of repeat, `dict` of (`str`, repeat) items
             The payload's data.
-        headers : `None`, `IgnoreCaseMultiValueDictionary<str, str>` = `None`, Optional
+        headers : `None`, ``IgnoreCaseMultiValueDictionary<str, str>`` = `None`, Optional
             Optional headers for the json field.
 
         Returns
@@ -1341,7 +1341,7 @@ class MultipartWriter(PayloadBase):
         ----------
         obj : `mapping` of (`str`, `object`) items, `sequence` of `tuple` (`str`, `object`) items
             The object, what should be percent encoded for a post request.
-        headers : `None`, `IgnoreCaseMultiValueDictionary<str, str>` = `None`, Optional
+        headers : `None`, ``IgnoreCaseMultiValueDictionary<str, str>`` = `None`, Optional
             Optional headers for the url_encoded field.
         
         Returns

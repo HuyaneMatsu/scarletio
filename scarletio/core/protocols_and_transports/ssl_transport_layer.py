@@ -22,7 +22,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
     
     Attributes
     ----------
-    _extra : `None`, `dict` of (`str`, `object`) items
+    _extra : `None`, `dict<str, object>`
         Optional transport information.
     _loop : ``EventThread``
         The event loop to what the transport is bound to.
@@ -177,7 +177,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
         
         Parameters
         ----------
-        exception : `None`, ``BaseException`` = `None`, Optional
+        exception : `None`, `BaseException` = `None`, Optional
             Exception to throw into ``._connection_made_waiter`` if any.
         """
         connection_made_waiter = self._connection_made_waiter

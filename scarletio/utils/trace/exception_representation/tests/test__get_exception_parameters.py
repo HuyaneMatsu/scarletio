@@ -52,7 +52,7 @@ def test__get_exception_parameters(input_value):
     
     Parameters
     ----------
-    input_value : ``BaseException``
+    input_value : `BaseException`
         Exception to test with.
     
     Returns

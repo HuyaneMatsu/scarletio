@@ -183,9 +183,9 @@ class AbstractTransportLayerBase:
         
         Parameters
         ----------
-        high : `None`, `int` = `None`, Optional
+        high : `None | int` = `None`, Optional
             High limit to stop reading if reached.
-        low : `None`, `int` = `None`, Optional
+        low : `None | int` = `None`, Optional
             Low limit to start reading if reached.
         
         Raises

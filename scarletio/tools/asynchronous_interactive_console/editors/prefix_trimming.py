@@ -41,7 +41,7 @@ class PrefixTrimmer:
             
             > Not compiled.
         
-        excludes  : `None`, `list` of `str`
+        excludes  : `None | list<str>`
             Strings to exclude from matching.
         """
         prefix_continuous_pattern = re_compile(prefix_continuous_pattern)

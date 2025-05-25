@@ -9,7 +9,7 @@ class History:
     ----------
     _cursor_index : `int`
         The position where the cache lookup is at.
-    _elements : `dict` of (`int`, `list` of `str`) items
+    _elements : `dict<int, list<str>>`
         The added elements to the history.
     _line_cache : `dict` of (`str`, `str`) items
         Line cache caching same lines.
@@ -119,7 +119,7 @@ class History:
         
         Returns
         -------
-        element : `None`, `list` of `str`
+        element : `None | list<str>`
         """
         return self._elements.get(index, None)
     
@@ -130,7 +130,7 @@ class History:
         
         Returns
         -------
-        element : `None`, `list` of `str`
+        element : `None | list<str>`
         """
         return self._elements.get(self._cursor_index, None)
     
@@ -141,7 +141,7 @@ class History:
         
         Returns
         -------
-        previous : `None`, `list` of `str`
+        previous : `None | list<str>`
         """
         cursor_index = self._cursor_index
         elements = self._elements
@@ -166,7 +166,7 @@ class History:
         
         Returns
         -------
-        next_ : `None`, `list` of `str`
+        next_ : `None | list<str>`
         """
         cursor_index = self._cursor_index
         elements = self._elements

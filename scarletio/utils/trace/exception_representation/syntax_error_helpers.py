@@ -75,7 +75,7 @@ def is_syntax_error(exception):
     
     Parameters
     ----------
-    exception : ``BaseException``
+    exception : `BaseException`
         The exception to check.
     
     Returns

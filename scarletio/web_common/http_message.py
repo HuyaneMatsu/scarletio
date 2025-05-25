@@ -35,7 +35,7 @@ class RawMessage(RichAttributeErrorBaseType):
     _cache_keep_alive : `None | KeepAliveInfo`.
         cache field for ``.keep_alive`` property.
     
-    headers : `IgnoreCaseMultiValueDictionary<str, str>`
+    headers : ``IgnoreCaseMultiValueDictionary<str, str>``
         The headers of the http message.
     
     version : ``HttpVersion``
@@ -52,7 +52,7 @@ class RawMessage(RichAttributeErrorBaseType):
         version : ``HttpVersion``
             The http version of the response.
         
-        headers : `IgnoreCaseMultiValueDictionary<str, str>`
+        headers : ``IgnoreCaseMultiValueDictionary<str, str>``
             The headers of the http message.
         """
         self = object.__new__(cls)
@@ -315,7 +315,7 @@ class RawResponseMessage(RawMessage):
     _cache_keep_alive : `None | KeepAliveInfo`.
         cache field for ``.keep_alive`` property.
     
-    headers : `IgnoreCaseMultiValueDictionary<str, str>`
+    headers : ``IgnoreCaseMultiValueDictionary<str, str>``
         The headers of the http message.
     
     reason : `None | str`
@@ -344,7 +344,7 @@ class RawResponseMessage(RawMessage):
         reason : `None | str`
             Reason included with the response.
         
-        headers : `IgnoreCaseMultiValueDictionary<str, str>`
+        headers : ``IgnoreCaseMultiValueDictionary<str, str>``
             The headers of the http message.
         """
         self = RawMessage.__new__(cls, version, headers)
@@ -398,7 +398,7 @@ class RawRequestMessage(RawMessage):
     _cache_keep_alive : `None | KeepAliveInfo`.
         cache field for ``.keep_alive`` property.
     
-    headers : `IgnoreCaseMultiValueDictionary<str, str>`
+    headers : ``IgnoreCaseMultiValueDictionary<str, str>``
         The headers of the http message.
     
     method : `str`
@@ -427,7 +427,7 @@ class RawRequestMessage(RawMessage):
         path : `str`
             The requested path.
         
-        headers : `IgnoreCaseMultiValueDictionary<str, str>`
+        headers : ``IgnoreCaseMultiValueDictionary<str, str>``
             The headers of the http message.
         """
         self = RawMessage.__new__(cls, version, headers)

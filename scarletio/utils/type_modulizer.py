@@ -36,7 +36,7 @@ def _modulize_function(old, globals_, source_module, module_name, module_path):
     ----------
     old : `function`
         A function present inside of a modulized class.
-    globals_ : `dict` of (`str`, `object`)
+    globals_ : `dict<str, object>`
         Global variables of the respective module.
     source_module : `module`
         The module, where the modulized class was defined.
@@ -71,7 +71,7 @@ def _modulize_type(klass, globals_, source_module, module_name, module_path):
     ----------
     klass : `type`
         A class present inside of a modulized class.
-    globals_ : `dict` of (`str`, `object`)
+    globals_ : `dict<str, object>`
         Global variables of the respective module.
     source_module : `module`
         The module, where the modulized class was defined.

@@ -18,7 +18,7 @@ __all__ = (
     'start_server', 'start_unix_server', 'timeout', 'timeout_at', 'to_thread', 'wait', 'wait_for', 'wrap_future'
 )
 
-import os, signal, sys, warnings
+import os, signal, sys
 import socket as module_socket
 from collections import deque
 from functools import partial, partial as partial_func
@@ -27,6 +27,7 @@ from stat import S_ISSOCK
 from subprocess import DEVNULL, PIPE, STDOUT
 from threading import current_thread, main_thread
 from types import GeneratorType
+from warnings import warn
 
 try:
     import ssl
@@ -1347,7 +1348,7 @@ class Condition:
         if loop is None:
             loop = get_event_loop()
         else:
-            warnings.warn(
+            warn(
                 'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
                 DeprecationWarning,
                 stacklevel = 2,
@@ -1514,7 +1515,7 @@ class Semaphore:
         if loop is None:
             loop = get_event_loop()
         else:
-            warnings.warn(
+            warn(
                 'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
                 DeprecationWarning,
                 stacklevel = 2,
@@ -2289,7 +2290,7 @@ async def open_connection(host = None, port = None, *, loop = None, limit = _DEF
     if loop is None:
         loop = get_event_loop()
     else:
-        warnings.warn(
+        warn(
             'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
             DeprecationWarning,
             stacklevel = 2,
@@ -2321,7 +2322,7 @@ async def start_server(client_connected_cb, host = None, port = None, *, loop = 
     if loop is None:
         loop = get_event_loop()
     else:
-        warnings.warn(
+        warn(
             'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
             DeprecationWarning,
             stacklevel = 2,
@@ -2342,7 +2343,7 @@ async def start_unix_server(client_connected_cb, path = None, *, loop = None, li
     if loop is None:
         loop = get_event_loop()
     else:
-        warnings.warn(
+        warn(
             'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
             DeprecationWarning,
             stacklevel = 2,
@@ -2859,7 +2860,7 @@ if IS_UNIX:
         if loop is None:
             loop = get_event_loop()
         else:
-            warnings.warn(
+            warn(
                 'The loop parameter is deprecated since Python 3.8 and scheduled for removal in Python 3.10.',
                 DeprecationWarning,
                 stacklevel = 2,
@@ -2891,7 +2892,7 @@ if IS_UNIX:
         if loop is None:
             loop = get_event_loop()
         else:
-            warnings.warn(
+            warn(
                 'The loop parameter is deprecated since Python 3.8 and scheduled for removal in Python 3.10.',
                 DeprecationWarning,
                 stacklevel = 2,
@@ -3063,7 +3064,7 @@ async def wait(futures, *, loop = None, timeout = None, return_when = ALL_COMPLE
     if loop is None:
         loop = get_running_loop()
     else:
-        warnings.warn(
+        warn(
             'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
             DeprecationWarning,
             stacklevel = 2,
@@ -3072,7 +3073,7 @@ async def wait(futures, *, loop = None, timeout = None, return_when = ALL_COMPLE
     futures = {*futures}
     
     if any(iscoroutine(future) for future in futures):
-        warnings.warn(
+        warn(
             (
                 'The explicit passing of coroutine objects to asyncio.wait() is deprecated since Python 3.8, '
                 'and scheduled for removal in Python 3.11.'
@@ -3120,7 +3121,7 @@ async def wait_for(future, timeout, *, loop = None):
     if loop is None:
         loop = get_running_loop()
     else:
-        warnings.warn(
+        warn(
             'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
             DeprecationWarning,
             stacklevel = 2,
@@ -3200,7 +3201,7 @@ def as_completed(futures, *, loop = None, timeout = None):
     if loop is None:
         loop = get_running_loop()
     else:
-        warnings.warn(
+        warn(
             'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
             DeprecationWarning,
             stacklevel = 2,
@@ -3236,7 +3237,7 @@ async def sleep(delay, result = None, *, loop = None):
     if loop is None:
         loop = get_running_loop()
     else:
-        warnings.warn(
+        warn(
             'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
             DeprecationWarning,
             stacklevel = 2,
@@ -3259,7 +3260,7 @@ def ensure_future(coroutine_or_future, *, loop = None):
     if loop is None:
         loop = get_running_loop()
     else:
-        warnings.warn(
+        warn(
             'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
             DeprecationWarning,
             stacklevel = 2,
@@ -3411,7 +3412,7 @@ def gather(*coroutines_or_futures, loop = None, return_exceptions = False):
             detected_loops = None
     
     else:
-        warnings.warn(
+        warn(
             'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
             DeprecationWarning,
             stacklevel = 2,
@@ -3474,7 +3475,7 @@ def shield(arg, *, loop = None):
     if loop is None:
         loop = get_running_loop()
     else:
-        warnings.warn(
+        warn(
             'The loop parameter is deprecated since Python 3.8, and scheduled for removal in Python 3.10.',
             DeprecationWarning,
             stacklevel = 2,

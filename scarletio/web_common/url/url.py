@@ -1382,7 +1382,7 @@ class URL(RichAttributeErrorBaseType):
         
         else:
             raise TypeError(
-                f'`port` can be `None`, `int`, got {type(port).__name__}; {port!r}.'
+                f'`port` can be `None | int`, got {type(port).__name__}; {port!r}.'
             )
         
         if not self.is_absolute():

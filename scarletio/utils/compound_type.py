@@ -64,7 +64,7 @@ def _redirect_constructor(cls, type_name, base_types, type_attributes):
         The created type's future name.
     base_types : `tuple` of `type`
         Base types to inherit from.
-    type_attributes : `dict` of (`str`, `object`) items
+    type_attributes : `dict<str, object>`
         Attributes of the created type.
     
     Returns
@@ -156,18 +156,18 @@ def collect_attributes_per_type_from_type_attributes(type_attributes):
     
     Parameters
     ----------
-    type_attributes : `dict` of (`str`, `object`) items
+    type_attributes : `dict<str, object>`
         Type attributes of a class.
     
     Returns
     -------
     instance_attributes : `None` or `set` of `name`
         A set of attribute names mentioned in the type attributes.
-    theoretical_type_attributes : `None`, `dict` of (`str`, `object`) items
+    theoretical_type_attributes : `None`, `dict<str, object>`
         Theoretical defined type attributes.
-    implemented_type_attributes : `None`, `dict` of (`str`, `object`) items
+    implemented_type_attributes : `None`, `dict<str, object>`
         Implemented type attributes.
-    leftover_type_attributes : `dict` of (`str`, `object`) items
+    leftover_type_attributes : `dict<str, object>`
         Additional type attributes which should not be touched.
     """
     instance_attributes = type_attributes.pop('__slots__', None)
@@ -231,7 +231,7 @@ class CompoundMetaType(type):
             The created component's name.
         base_types : `tuple` of `type`
             types from which the type inherits from.
-        type_attributes : `dict` of (`str`, `object`) items
+        type_attributes : `dict<str, object>`
             Attributes defined in the type body.
         build : `bool` = `False`, Optional (Keyword only)
             Whether the type should be built.
@@ -284,9 +284,9 @@ class CompoundMetaType(type):
             The created type's future name.
         base_types : `tuple` of `type`
             The types to inherit from.
-        type_attributes : `dict` of (`str`, `object`) items
+        type_attributes : `dict<str, object>`
             The attributes defined inside of the type body.
-        keyword_parameters : `dict` of (`str`, `object`) items
+        keyword_parameters : `dict<str, object>`
             Additional keyword parameters.
         
         Returns
@@ -332,7 +332,7 @@ class CompoundMetaType(type):
             The created component's name.
         base_types : `tuple` of `type`
             types from which the type inherits from.
-        type_attributes : `dict` of (`str`, `object`) items
+        type_attributes : `dict<str, object>`
             Attributes defined in the type body.
         
         Returns
@@ -509,13 +509,13 @@ class CompoundLayer:
     
     Attributes
     ----------
-    implemented_type_attributes : `None`, `dict` of (`str`, `object`) items
+    implemented_type_attributes : `None`, `dict<str, object>`
         Implemented type attributes by the component.
     instance_attributes : `None`, `set` of `str`
         The instance attributes to implement.
     implemented : `bool`
         Whether the layer is already implemented.
-    theoretical_type_attributes : `None`, `dict` of (`str`, `object`) items
+    theoretical_type_attributes : `None`, `dict<str, object>`
         Theoretical type attributes which an other component should implement.
     type_name : `str`
         The represented type's or the component's name.
@@ -536,9 +536,9 @@ class CompoundLayer:
             The represented type's or the component's name.
         instance_attributes : `None`, `set` of `str`
             The instance attributes to implement.
-        theoretical_type_attributes : `None`, `dict` of (`str`, `object`) items
+        theoretical_type_attributes : `None`, `dict<str, object>`
             Theoretical type attributes which an other component should implement.
-        implemented_type_attributes : `None`, `dict` of (`str`, `object`) items
+        implemented_type_attributes : `None`, `dict<str, object>`
             Implemented type attributes by the component.
         implemented : `bool`
             Whether the layer is already implemented.
@@ -671,7 +671,7 @@ class CompoundLayer:
         ----------
         type_name : `str`
             The created component's name.
-        type_attributes : `dict` of (`str`, `object`) items
+        type_attributes : `dict<str, object>`
             Attributes defined in the type body.
         implemented : `bool` = `False`, Optional (Keyword only)
             Whether the layer is already implemented.
@@ -680,7 +680,7 @@ class CompoundLayer:
         -------
         self : ``ComponentLayer``
             The created component layer.
-        leftover_type_attributes : `dict` of (`str`, `object`) items
+        leftover_type_attributes : `dict<str, object>`
             Additional type attributes which should not be touched.
         """
         (
@@ -1384,14 +1384,14 @@ def build_type_structure(type_name, base_types, type_attributes):
         The created type's future name.
     base_types : `tuple` of `type`
         The types to inherit from.
-    type_attributes : `dict` of (`str`, `object`) items
+    type_attributes : `dict<str, object>`
         The attributes defined inside of the type body.
     
     Returns
     -------
     new_base_types : `tuple` of `type`
         The new base types.
-    new_type_attributes : `dict` of (`str`, `object`) items
+    new_type_attributes : `dict<str, object>`
         The new type attributes.
     
     Raises

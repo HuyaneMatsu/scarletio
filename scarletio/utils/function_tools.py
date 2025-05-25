@@ -37,7 +37,7 @@ class alchemy_incendiary:
         Parameters to call `func` with.
     function : `callable`
         The function to call.
-    keyword_parameters : `None` of `dict` of (`str`, `object`) items
+    keyword_parameters : `None` of `dict<str, object>`
         Keyword parameters to call func with if applicable.
     """
     __slots__ = ('positional_parameters', 'function', 'keyword_parameters',)

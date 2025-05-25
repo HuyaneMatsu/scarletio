@@ -1,8 +1,35 @@
+# 1.0.92 *\[2025-05-25\]*
+
+#### Improvements
+
+- Last update increased trace rendering code length dramatically. Most of this overhead has been removed.
+
+# 1.0.91 *\[2025-04-28\]*
+
+How highlights are produces has been reworked, with 2 goals:
+- Instead of requiring a token, require a `(token_type, content)` pair.
+    In the future tokens may not contain the represented value, only its location.
+- Do not require tokens to be merged, instead let the highlighting process to handle token chaining.
+    This also eliminates most reset format codes.
+
+#### Improvements
 
 - Added spaces and linebreaks in trace rendering are now also affected by the highlighter.
 - When highlighting the tokens are not highlighted separately, but a stream, removing most reset codes and reducing
     produced string size.
 - Cause group rendering is not recursive anymore.
+- Add `FormatterDetailBase`, `FormatterDetailANSI`, `FormatterDetailHTML` to be passed to
+  `HighlightFormatterContext.set_highlight_detail` as the second parameter. (It was previously a ggenerator).
+- Add `get_highlight_streamer` to get a one-to-many stream of `(token_type, content)` to `part`.
+- Add `iter_highlight_code_token_types_and_values` to yield `(token_type, content)` pairs representing the highlighted
+    code (joined code, not line by line).
+
+#### Renames, Deprecation & Removals
+
+- Rename `AnsiTextDecoration` to `ANSITextDecoration`.
+- Deprecate `HighlightFormatterContext.highlight_as`, `.generate_highlighted`, `.set_highlight_html_class`,
+    `.set_highlight_ansi_code`.
+- Deprecate `iter_highlight_code_lines`, `add_highlighted_part_into`, `add_highlighted_parts_into`.
 
 # 1.0.90 *\[2025-03-18\]*
 

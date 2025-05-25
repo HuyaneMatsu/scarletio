@@ -59,7 +59,7 @@ class WordNode:
         
         Attributes
         ----------
-        characters : `list` of `str`
+        characters : `list<str>`
             A list of characters to add as nodes.
         character_index : `int`
             The character's index to use from `characters`.

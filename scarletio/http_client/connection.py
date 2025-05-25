@@ -1,7 +1,5 @@
 __all__ = ()
 
-from warnings import warn
-
 from ..core.top_level import write_exception_async
 from ..utils import RichAttributeErrorBaseType
 from ..web_common.constants import KEEP_ALIVE_MAX_REQUESTS_DEFAULT
@@ -102,23 +100,6 @@ class Connection(RichAttributeErrorBaseType):
         protocol = self.protocol
         if (protocol is not None):    
             return protocol.get_transport()
-    
-    
-    @property
-    def transport(self):
-        """
-        Deprecated and will be removed in 2025 April. Please use ``.get_transport`` instead.
-        """
-        warn(
-            (
-                f'`{type(self).__name__}.transport` is deprecated and will be removed in 2025 April. '
-                f'Please use `.get_transport()` instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        
-        return self.get_transport()
     
     
     def add_callback(self, callback):
@@ -257,20 +238,3 @@ class Connection(RichAttributeErrorBaseType):
             return True
         
         return False
-    
-    
-    @property
-    def closed(self):
-        """
-        Deprecated and will be removed in 2025 April. Please use ``.is_closed`` instead.
-        """
-        warn(
-            (
-                f'`{type(self).__name__}.closed` is deprecated and will be removed in 2025 April. '
-                f'Please use `.is_closed()` instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        
-        return self.is_closed()

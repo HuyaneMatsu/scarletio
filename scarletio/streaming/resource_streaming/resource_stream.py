@@ -75,7 +75,7 @@ class ResourceStream(RichAttributeErrorBaseType):
         
         Returns
         -------
-        coroutine_generator : ``CoroutineGenerator``
+        coroutine_generator : ``CoroutineGeneratorType``
         """
         return self.function(*self.positional_parameters, **self.keyword_parameters)
     

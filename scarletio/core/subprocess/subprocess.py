@@ -45,7 +45,7 @@ class AsyncProcess:
         A future, what is used to block the writing task, till it's writen data is drained.
     _exit_waiters : `None`, `set of ``Future``
         Waiter futures which wait for the subprocess to shutdown.
-    _extra : `dict` of (`str`, `object`) items
+    _extra : `dict<str, object>`
         Optional transport information.
     _loop : ``EventThread``
         the respective event loop of the async subprocess to what is bound to.
@@ -66,7 +66,7 @@ class AsyncProcess:
         The internal blocking subprocess object.
     process_id : `int`
         The subprocess identifier.
-    return_code : `None`, `int`
+    return_code : `None | int`
         The returned exit code of the subprocess. Set as `None` if not yet applicable.
     stderr : ``ReadProtocolBase``
         Asynchronous stderr implementation.
@@ -121,9 +121,9 @@ class AsyncProcess:
             | default       | `< 0`     | use the system default: `io.DEFAULT_BUFFER_SIZE`.                     |
             +---------------+-----------+-----------------------------------------------------------------------+
             
-        extra : `None`, `dict` of (`str`, `object`) items
+        extra : `None`, `dict<str, object>`
             Optional transport information.
-        process_open_kwargs : `dict` of (`str`, `object`) items
+        process_open_kwargs : `dict<str, object>`
             Additional parameters to open the process with.
         
         Raises
@@ -845,7 +845,7 @@ class AsyncProcess:
         
         Returns
         -------
-        return_code : `None`, `int`
+        return_code : `None | int`
         """
         return self.return_code
     

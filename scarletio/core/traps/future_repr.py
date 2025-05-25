@@ -25,7 +25,7 @@ def get_exception_short_representation(exception):
     
     Parameters
     ----------
-    exception : ``BaseException``
+    exception : `BaseException`
         The exception to get representation of.
     
     Returns

@@ -66,7 +66,7 @@ def _propagate_cancellation_sync(future):
     
     Returns
     -------
-    cancellation_exception : `None`, ``BaseException``
+    cancellation_exception : `None`, `BaseException`
     """
     future_loop = future._loop
     if future.cancel():

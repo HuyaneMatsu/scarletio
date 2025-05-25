@@ -38,7 +38,7 @@ class WebSocketServer:
         Contains the following elements:
             - `handler` : `async-callable` Same as ``.handler``.
             - `host` : `None`, `str`, `iterable` of (`None`, `str`). To what network interfaces the server be bound.
-            - `port` :  `None`, `int`. The port used by the `host`(s).
+            - `port` :  `None | int`. The port used by the `host`(s).
             - `is_ssl` : `bool`
                 Whether the server is secure.
             - `origin` : `None`, `str`. Value of the Origin header.
@@ -66,7 +66,7 @@ class WebSocketServer:
                 following parameters:
                 - `parsed_header_subprotocols` : `list` of `str`. The subprotocols supported by the client.
                 - `available_subprotocols` : `list` of `str`. The subprotocols supported by the server.
-            - `web_socket_keyword_parameters` : `dict` of (`str`, `object`).
+            - `web_socket_keyword_parameters` : `dict<str, object>`.
                 Extra parameters for creating the web socket protocol.
                 
                 Can have any of the following items:
@@ -74,7 +74,7 @@ class WebSocketServer:
                     frame is sent. Defaults to `10.0`.
                 - `max_size` : `int`.Max payload size to receive. If a payload exceeds it, ``PayloadError`` is raised.
                     Defaults to `67108864` bytes.
-                - `max_queue` : `None`, `int`.
+                - `max_queue` : `None | int`.
                     Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of
                     it is removed. Defaults to `None`.
     """
@@ -110,7 +110,7 @@ class WebSocketServer:
             The event loop to what the web socket server is bound to.
         host : `None`, `str`, `iterable` of (`None`, `str`)
             To what network interfaces should the server be bound.
-        port : `None`, `int`
+        port : `None | int`
             The port to use by the `host`(s).
         handler : `async-callable`
             An asynchronous callable, what will handle a web socket connection.
@@ -150,14 +150,14 @@ class WebSocketServer:
             User hook to select subprotocols. Should accept the following parameters:
             - `parsed_header_subprotocols` : `list` of `str`. The subprotocols supported by the client.
             - `available_subprotocols` : `list` of `str`. The subprotocols supported by the server.
-        web_socket_keyword_parameters : `None`, `dict` of (`str`, `object`) = `None`, Optional (Keyword only)
+        web_socket_keyword_parameters : `None | dict<str, object>` = `None`, Optional (Keyword only)
             Extra parameters for creating the web socket protocol.
             
             Can have any of the following items:
             - `close_timeout` : `float`. The maximal duration in seconds what is waited for response after close
                 frame is sent.
             - `max_size` : `int`.Max payload size to receive. If a payload exceeds it, ``PayloadError`` is raised.
-            - `max_queue` : `None`, `int`.
+            - `max_queue` : `None | int`.
                 Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of
                 it is removed.
         ssl : `None`, ``SSLContext`` = `None`, Optional (Keyword only)

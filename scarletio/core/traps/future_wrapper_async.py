@@ -73,7 +73,7 @@ async def _propagate_cancellation_async(future, loop):
     
     Returns
     -------
-    cancellation_exception : `None`, ``BaseException``
+    cancellation_exception : `None`, `BaseException`
     """
     future_loop = future._loop
     if future.cancel():

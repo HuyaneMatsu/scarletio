@@ -1131,7 +1131,7 @@ class EditorAdvanced(EditorBase):
         The currently displayed state.
     file_name : `str`
         File name of the code produced by the editor.
-    highlighter : `None`, ``HighlightFormatterContext``
+    highlighter : ``None | HighlightFormatterContext``
         Formatter storing highlighting details.
     history : ``History``
         History used for caching inputs.

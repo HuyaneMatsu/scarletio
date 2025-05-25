@@ -13,7 +13,7 @@ from ...utils.trace.exception_representation import ExceptionRepresentationSynta
 from ...utils.trace.exception_representation.syntax_error_helpers import (
     fixup_syntax_error_line_from_buffer, is_syntax_error
 )
-from ...utils.trace.rendering import _render_exception_representation_syntax_error_into
+from ...utils.trace.rendering import _produce_exception_representation_syntax_error
 
 from .auto_completer import AutoCompleter
 from .console_helpers import create_banner, create_exit_message
@@ -107,11 +107,11 @@ class AsynchronousInteractiveConsole:
         The specific editor type to use when inputting a expression.
     exit_message : `str`
         Message shown when the console is exited.
-    highlighter : `None`, ``HighlightFormatterContext``
+    highlighter : ``None | HighlightFormatterContext``
         Formatter storing highlighting details.
     history : ``History``
         History used for caching inputs.
-    local_variables : `dict` of (`str`, `object`) items
+    local_variables : `dict<str, object>`
         Variables to run the compiled code with.
     loop : ``EventThread``
         The event loop on which the console runs it's code.
@@ -155,10 +155,10 @@ class AsynchronousInteractiveConsole:
         exit_message : `None`, `str` = `None`, Optional (Keyword only)
             Interactive console exit message.
         
-        highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
+        highlighter : ``None | HighlightFormatterContext`` = `None`, Optional (Keyword only)
             Formatter storing highlighting details.
         
-        local_variables : `None`, `dict` of (`str`, `object`) items = `None`, Optional (Keyword only)
+        local_variables : `None`, `dict<str, object>` = `None`, Optional (Keyword only)
             Initial local variables for the executed code inside of the console.
         
         stop_on_interruption : `bool` = `False`, Optional (Keyword only)
@@ -384,18 +384,14 @@ class AsynchronousInteractiveConsole:
         """
         marker = f'In [{self._input_id}]'
         prefix = ':'
+        highlighter_stream = get_highlight_streamer(self.highlighter)
         
-        highlighter = self.highlighter
-        if (highlighter is not None):
-            marker = highlighter.highlight_as(
-                marker, HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_MARKER_IN_INITIAL
-            )
-            
-            prefix = highlighter.highlight_as(
-                prefix, HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_MARKER_PREFIX_INITIAL
-            )
-        
-        return f'{marker}{prefix} '
+        return ''.join([
+            *highlighter_stream.asend((HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_MARKER_IN_INITIAL, marker)),
+            *highlighter_stream.asend((HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_MARKER_PREFIX_INITIAL, prefix)),
+            *highlighter_stream.asend((HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_SPACE, ' ')),
+            *highlighter_stream.asend(None),
+        ])
     
     
     def get_prefix_length(self):
@@ -428,18 +424,15 @@ class AsynchronousInteractiveConsole:
         indention = ' ' * marker_length
         marker = '...'
         prefix = ':'
+        highlighter_stream = get_highlight_streamer(self.highlighter)
         
-        highlighter = self.highlighter
-        if (highlighter is not None):
-            marker = highlighter.highlight_as(
-                marker, HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_MARKER_IN_CONTINUOUS
-            )
-            
-            prefix = highlighter.highlight_as(
-                prefix, HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_MARKER_PREFIX_CONTINUOUS
-            )
-        
-        return f'{indention}{marker}{prefix} '
+        return ''.join([
+            *highlighter_stream.asend((HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_SPACE, indention)),
+            *highlighter_stream.asend((HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_MARKER_IN_INITIAL, marker)),
+            *highlighter_stream.asend((HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_CONSOLE_MARKER_PREFIX_INITIAL, prefix)),
+            *highlighter_stream.asend((HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_SPACE, ' ')),
+            *highlighter_stream.asend(None),
+        ])
     
     
     def interact(self):
@@ -515,7 +508,10 @@ class AsynchronousInteractiveConsole:
         """
         into = []
         
-        if is_syntax_error(syntax_error):
+        if not is_syntax_error(syntax_error):
+            render_exception_into(syntax_error, into, filter = _ignore_console_frames, highlighter = self.highlighter)
+        
+        else:
             # message, (old_file_name, *additional_details) = syntax_error.args
             # syntax_error.args = (message, (self.get_file_name(), *additional_details))
             
@@ -523,12 +519,12 @@ class AsynchronousInteractiveConsole:
                 fixup_syntax_error_line_from_buffer(syntax_error, editor.get_buffer())
             
             highlighter_stream = get_highlight_streamer(self.highlighter)
-            _render_exception_representation_syntax_error_into(
-                ExceptionRepresentationSyntaxError(syntax_error, None), highlighter_stream, into
-            )
+            for item in _produce_exception_representation_syntax_error(
+                ExceptionRepresentationSyntaxError(syntax_error, None)
+            ):
+                into.extend(highlighter_stream.asend(item))
+            
             into.extend(highlighter_stream.asend(None))
-        else:
-            render_exception_into(syntax_error, into, filter = _ignore_console_frames, highlighter = self.highlighter)
         
         sys.stdout.write(''.join(into))
         sys.stdout.flush()
@@ -549,7 +545,7 @@ def run_asynchronous_interactive_console(
     
     Parameters
     ----------
-    local_variables : `None`, `dict` of (`str`, `object`) items = `None`, Optional
+    local_variables : `None`, `dict<str, object>` = `None`, Optional
         Local variables to start the console with.
     
     banner : `None`, `str` = `None`, Optional (Keyword only)
@@ -563,7 +559,7 @@ def run_asynchronous_interactive_console(
     exit_message : `None`, `str` = `None`, Optional (Keyword only)
         Interactive console exit message.
     
-    highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
+    highlighter : ``None | HighlightFormatterContext`` = `None`, Optional (Keyword only)
         Formatter storing highlighting details.
     
     stop_event_loop_when_done : `bool` = `True`, Optional (Keyword only)

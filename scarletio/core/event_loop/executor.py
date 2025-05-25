@@ -5,9 +5,11 @@ from collections import deque
 from sys import _current_frames as get_current_frames
 from threading import Event as SyncEvent, Lock as SyncLock, Thread, current_thread
 
-from ...utils import DEFAULT_ANSI_HIGHLIGHTER, alchemy_incendiary, ignore_frame, include, render_frames_into
+from ...utils import (
+    DEFAULT_ANSI_HIGHLIGHTER, HIGHLIGHT_TOKEN_TYPES, alchemy_incendiary, get_highlight_streamer, ignore_frame, include,
+)
 from ...utils.trace import render_exception_into
-from ...utils.trace.rendering import add_trace_title_into
+from ...utils.trace.trace import _produce_frames
 
 from ..exceptions import CancelledError
 from ..time import LOOP_TIME
@@ -102,7 +104,7 @@ class SyncQueue:
         ----------
         iterable : `None`, `iterable` of `object` = `None`, Optional
             Iterable to set the queue's results initially from.
-        max_length : `None`, `int` = `None`, Optional
+        max_length : `None | int` = `None`, Optional
             Maximal length of the queue. If the queue would pass it's maximal length, it's oldest results are popped.
         cancelled : `bool` = `False`, Optional
             Whether the queue should be initially cancelled.
@@ -259,7 +261,7 @@ class SyncQueue:
         
         Returns
         -------
-        max_length : `None`, `int`
+        max_length : `None | int`
         """
         return self._results.maxlen
 
@@ -536,7 +538,7 @@ class ExecutorThread(Thread):
         file : `None`, `I/O stream` = `None`, Optional
             The file to print the stack to. Defaults to `sys.stderr`.
         
-        highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
+        highlighter : ``None | HighlightFormatterContext`` = `None`, Optional (Keyword only)
             Formatter storing highlighting details.
         """
         local_thread = current_thread()
@@ -560,7 +562,7 @@ class ExecutorThread(Thread):
         file : `None`, `I/O stream`
             The file to print the stack to. Defaults to `sys.stderr`.
         
-        highlighter : `None`, ``HighlightFormatterContext``
+        highlighter : ``None | HighlightFormatterContext``
             Formatter storing highlighting details.
         
         Notes
@@ -571,25 +573,53 @@ class ExecutorThread(Thread):
             highlighter = DEFAULT_ANSI_HIGHLIGHTER
         
         frames = self.get_stack(limit)
-        extend = []
+        highlight_streamer = get_highlight_streamer(highlighter)
+        into = []
         
         if not frames:
-            extend.append('No stack for ')
-            extend.append(repr(self))
-            extend.append('\n')
+            into.extend(highlight_streamer.asend((
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE,
+                'No stack for '
+            )))
+            into.extend(highlight_streamer.asend((
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE,
+                repr(self)
+            )))
+            into.extend(highlight_streamer.asend((
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+                '\n'
+            )))
         
         else:
-            extend.append('Stack for ')
-            extend.append(repr(self))
-            extend.append('\n')
-            extend = add_trace_title_into('(Most recent call last):', highlighter, extend)
-            extend.append('\n')
-            extend = render_frames_into(frames, extend = extend, highlighter = highlighter)
+            into.extend(highlight_streamer.asend((
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE,
+                'Stack for '
+            )))
+            into.extend(highlight_streamer.asend((
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE,
+                repr(self)
+            )))
+            into.extend(highlight_streamer.asend((
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+                '\n'
+            )))
+            into.extend(highlight_streamer.asend((
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE,
+                '(Most recent call last):'
+            )))
+            into.extend(highlight_streamer.asend((
+                HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK,
+                '\n'
+            )))
+            for item in _produce_frames(frames, None):
+                into.extend(highlight_streamer.asend(item))
+        
+        into.extend(highlight_streamer.asend(None))
         
         if (file is None):
             file = sys.stderr
         
-        file.write(''.join(extend))
+        file.write(''.join(into))
 
 
     def __repr__(self):

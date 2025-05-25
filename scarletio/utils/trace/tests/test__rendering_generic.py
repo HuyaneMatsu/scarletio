@@ -5,49 +5,8 @@ from ...highlight import DEFAULT_ANSI_HIGHLIGHTER, get_highlight_streamer, iter_
 from ..rendering import (
     _produce_attribute_name, _produce_attribute_name_only, _produce_file_location, _produce_grave_wrapped,
     _produce_variable_attribute_access, _produce_variable_attribute_access_only, _produce_variable_name,
-    _produce_variable_name_only, add_trace_title_into
+    _produce_variable_name_only
 )
-
-
-def test__add_trace_title_into__no_highlighter():
-    """
-    Tests whether ``add_trace_title_into`` works as intended.
-    
-    Case: no highlighter.
-    """
-    input_value = 'koishi'
-    
-    highlight_streamer = get_highlight_streamer(None)
-    output = add_trace_title_into(input_value, highlight_streamer, [])
-    output.extend(highlight_streamer.asend(None))
-    
-    vampytest.assert_instance(output, list)
-    vampytest.assert_eq(len(output), 1)
-    
-    part = output[0]
-    vampytest.assert_instance(part, str)
-    vampytest.assert_eq(part, input_value)
-
-
-def test__add_trace_title_into__with_highlighter():
-    """
-    Tests whether ``add_trace_title_into`` works as intended.
-    
-    Case: with highlighter.
-    """
-    input_value = 'koishi'
-    
-    highlight_streamer = get_highlight_streamer(DEFAULT_ANSI_HIGHLIGHTER)
-    output = add_trace_title_into(input_value, highlight_streamer, [])
-    output.extend(highlight_streamer.asend(None))
-    
-    vampytest.assert_instance(output, list)
-    for element in output:
-        vampytest.assert_instance(element, str)
-    
-    output_string = ''.join(output)
-    output_string = ''.join([item[1] for item in iter_split_ansi_format_codes(output_string) if not item[0]])
-    vampytest.assert_eq(output_string, input_value)
 
 
 def _iter_options__produce_file_location():

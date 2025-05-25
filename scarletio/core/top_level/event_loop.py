@@ -165,7 +165,7 @@ def create_event_loop(**keyword_parameters):
     ----------------
     daemon : `bool` = `False`, Optional (Keyword only)
         Whether the event loop should be daemon.
-    name : `None`, `str` = `None`, Optional (Keyword only)
+    name : `None | str` = `None`, Optional (Keyword only)
         The event loop's name.
     start_later : `bool` = `True`, Optional (Keyword only)
         Whether the event loop should be started only later.
@@ -192,7 +192,7 @@ def get_or_create_event_loop(**keyword_parameters):
     ----------------
     daemon : `bool` = `False`, Optional (Keyword only)
         Whether the event loop should be daemon.
-    name : `None`, `str` = `None`, Optional (Keyword only)
+    name : `None | str` = `None`, Optional (Keyword only)
         The event loop's name.
     start_later : `bool` = `True`, Optional (Keyword only)
         Whether the event loop should be started only later.

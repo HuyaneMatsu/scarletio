@@ -1142,7 +1142,7 @@ class HTTPClient(RichAttributeErrorBaseType):
             Max payload size to receive. If a payload exceeds it, ``PayloadError`` is raised.
             Defaults to `67108864` bytes.
         
-        max_queue : `None`, `int`, Optional (Keyword only)
+        max_queue : `None | int`, Optional (Keyword only)
             Max queue size of ``.messages``.
             If a new payload is added to a full queue, the oldest element of it is removed.
         

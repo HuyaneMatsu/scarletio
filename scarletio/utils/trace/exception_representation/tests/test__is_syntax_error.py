@@ -118,7 +118,7 @@ def test__is_syntax_error(input_value):
     
     Parameters
     ----------
-    input_value : ``BaseException``
+    input_value : `BaseException`
         Exception instance to check.
     
     Returns

@@ -84,7 +84,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         WebSocket extensions. Defaults to `None`, if there is not any.
     host : `str`
         The respective server's address to connect to.
-    max_queue : `None`, `int`
+    max_queue : `None | int`
         Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of it is removed.
          Defaults to `None`.
     max_size : `int`
@@ -154,7 +154,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             The maximal duration in seconds what is waited for response after close frame is sent
         max_size : `int` = `67108864`, Optional (Keyword only)
             Max payload size to receive. If a payload exceeds it, ``PayloadError`` is raised.
-        max_queue : `None`, `int` = `None`, Optional (Keyword only)
+        max_queue : `None | int` = `None`, Optional (Keyword only)
             Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of it is
             removed.
         """
@@ -182,7 +182,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         max_size : `int` = `67108864`, Optional
             Max payload size to receive. If a payload exceeds it, ``PayloadError`` is raised.
             bytes.
-        max_queue : `None`, `int` = `None`, Optional
+        max_queue : `None | int` = `None`, Optional
             Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of it is
             removed.
         """

@@ -9,7 +9,7 @@ class ProxyBase(RichAttributeErrorBaseType):
     
     Attributes
     ----------
-    _overwrites : `None`, `dict` of (`str`, `object`) items
+    _overwrites : `None`, `dict<str, object>`
         Field overwrites.
     _proxied : `object`
         The proxied object.

@@ -78,7 +78,7 @@ class ReuBytesIO(BytesIO):
         
         Parameters
         ----------
-        amount : `None`, `int` = `None`, Optional
+        amount : `None | int` = `None`, Optional
             The amount of data to read from the buffer. If given as `None`, so by the default, then reads all the data
             out from it.
         
@@ -755,7 +755,7 @@ class AsyncIO:
         
         Parameters
         ----------
-        size : `None`, `int` = `None`, Optional
+        size : `None | int` = `None`, Optional
             The stream's new size in bytes.
         
         Returns

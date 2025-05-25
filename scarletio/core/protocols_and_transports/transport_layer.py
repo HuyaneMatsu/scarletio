@@ -341,7 +341,7 @@ class SocketTransportLayerBase(TransportLayerBase):
         
         Parameters
         ----------
-        exception : `None`, ``BaseException``
+        exception : `None`, `BaseException`
             Defines whether the connection is closed, or an exception was received.
             
             If the connection was closed, then `exception` is given as `None`. This can happen at the case, when eof is
@@ -402,7 +402,7 @@ class SocketTransportLayerBase(TransportLayerBase):
         ----------
         low : None`, `int` = `None`, Optional
             The ``.protocol`` is paused writing when the buffer size passes the high water mark. Defaults to `65536`.
-        high : `None`, `int` = `None`, Optional
+        high : `None | int` = `None`, Optional
             The ``.protocol`` is resumed writing when the buffer size goes under the low water mark. Defaults to
             `16384`.
 
@@ -439,7 +439,7 @@ class SocketTransportLayerBase(TransportLayerBase):
         
         Parameters
         ----------
-        exception : `None`, ``BaseException``
+        exception : `None`, `BaseException`
             Defines whether the connection is closed, or an exception was received.
             
             If the connection was closed, then `exception` is given as `None`. This can happen at the case, when eof is

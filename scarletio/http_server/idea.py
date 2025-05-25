@@ -26,7 +26,7 @@ class TaskLocal:
     
     Attributes
     ----------
-    _keyword_parameters : `dict` of (`str`, `object`) items
+    _keyword_parameters : `dict<str, object>`
         `name` - `object` pairs to add as task local.
     _task : `None`, ``Task``
         The entered task.
@@ -302,7 +302,7 @@ class HTTPServer:
             The event loop to what the http server server is bound to.
         host : `None`, `str`, `iterable` of (`None`, `str`)
             To what network interfaces should the server be bound.
-        port : `None`, `int`
+        port : `None | int`
             The port to use by the `host`(s).
         ssl : `None`, ``SSLContext`` = `None`, Optional (Keyword only)
             Whether and what ssl is enabled for the connections.
@@ -626,7 +626,7 @@ def validate_int(value):
     
     Returns
     -------
-    value : `None`, `int`
+    value : `None | int`
     """
     if value.isdigit:
         return int(value)
@@ -1311,7 +1311,7 @@ class _RouteAdder:
     ----------
     endpoint  : `None`, `str`
         The internal endpoint of the url. Defaults to the name of the added function.
-    options : `dict` of (`str`, `object`) items.
+    options : `dict<str, object>`.
         Additional options to be forward to the underlying ``Rule`` object.
     parent : ``AppBase``
         The parent webapp.
@@ -1332,7 +1332,7 @@ class _RouteAdder:
             The url rule as string.
         endpoint  : `None`, `str`
             The internal endpoint of the url. Defaults to the name of the added function.
-        options : `dict` of (`str`, `object`) items.
+        options : `dict<str, object>`.
             Additional options to be forward to the underlying ``Rule`` object.
         """
         self = object.__new__(cls)
@@ -1453,7 +1453,7 @@ def _validate_parameters(parameters, parameters_name):
     
     Parameters
     ----------
-    parameters : `None`, `dict` of (`str`, `object`) items or (`set`, `tuple`, `list`) of `tuple` (`str`, `object`)
+    parameters : `None`, `dict<str, object>` or (`set`, `tuple`, `list`) of `tuple` (`str`, `object`)
         Initial parameters to add to the route.
     
     Returns
@@ -1645,7 +1645,7 @@ def _validate_options(options):
     
     Parameters
     ----------
-    options : `dict` of (`str`, `object`) items.
+    options : `dict<str, object>`.
         Additional options forward to the underlying ``Rule`` object.
     
     Returns
@@ -2654,7 +2654,7 @@ class AppBase:
         The name of the package or module that this app belongs to.
     root_path : `str`
         Absolute path to the package on the filesystem.
-    rules : `dict` of (`str`, `object`)
+    rules : `dict<str, object>`
         The added rules to the application or blueprint. The keys are their endpoint name.
     static_directory : `None`, `str`
         Absolute path to the static file's directory.
@@ -2695,7 +2695,7 @@ class AppBase:
         +===================+===========================+=======================================================+
         | endpoint          | `None`, `str`           | The endpoint what matched the request url.            |
         +-------------------+---------------------------+-------------------------------------------------------+
-        | keyword_parameters            | `dict` of (`str`, `object`)  | Additional keyword parameters passed to ``url_for``.  |
+        | keyword_parameters            | `dict<str, object>`  | Additional keyword parameters passed to ``url_for``.  |
         +-------------------+---------------------------+-------------------------------------------------------+
     
     url_value_preprocessors : `None`, `list` of `async-callable`
@@ -2710,7 +2710,7 @@ class AppBase:
         | endpoint          | `None`, `str`           | The endpoint what matched the request url.    |
         |                   |                           | Set as `None` if exception occurred.          |
         +-------------------+---------------------------+-----------------------------------------------+
-        | parameters        | `dict` of (`str`, `object`)  | Parameters parsed from the request url.       |
+        | parameters        | `dict<str, object>`  | Parameters parsed from the request url.       |
         +-------------------+---------------------------+-----------------------------------------------+
     """
     __slots__ = (
@@ -3174,7 +3174,7 @@ class AppBase:
             +===================+===========================+=======================================================+
             | endpoint          | `None`, `str`           | The endpoint what matched the request url.            |
             +-------------------+---------------------------+-------------------------------------------------------+
-            | keyword_parameters            | `dict` of (`str`, `object`)  | Additional keyword parameters passed to ``url_for``.  |
+            | keyword_parameters            | `dict<str, object>`  | Additional keyword parameters passed to ``url_for``.  |
             +-------------------+---------------------------+-------------------------------------------------------+
         
         Returns
@@ -3211,7 +3211,7 @@ class AppBase:
             | endpoint          | `None`, `str`           | The endpoint what matched the request url.    |
             |                   |                           | Set as `None` if exception occurred.          |
             +-------------------+---------------------------+-----------------------------------------------+
-            | parameters        | `dict` of (`str`, `object`)  | Parameters parsed from the request url.       |
+            | parameters        | `dict<str, object>`  | Parameters parsed from the request url.       |
             +-------------------+---------------------------+-----------------------------------------------+
         
         Returns
@@ -3251,7 +3251,7 @@ class AppBase:
             Url prefix for a blueprint.
         subdomain : `None`, `str`
             Subdomain for the blueprint.
-        url_defaults : `None`, `dict` of (`str`, `object`) items or (`set`, `list`, `tuple`) of (`str`, `object`) items
+        url_defaults : `None`, `dict<str, object>` or (`set`, `list`, `tuple`) of (`str`, `object`) items
             Parameters which the routes of the blueprint will get by default.
         
         Raises
@@ -3301,7 +3301,7 @@ class BlueprintState:
         ----------
         blueprint : ``AppBase``
             The blueprint create overwrite state from.
-        options : `None`, `dict` of (`str`, `object`) items
+        options : `None`, `dict<str, object>`
             Extra options
         
         Raises
@@ -3398,7 +3398,7 @@ class Blueprint(AppBase):
         The name of the package or module that this app belongs to.
     root_path : `str`
         Absolute path to the package on the filesystem.
-    rules : `dict` of (`str`, `object`)
+    rules : `dict<str, object>`
         The added rules to the application or blueprint. The keys are their endpoint name.
     static_directory : `None`, `str`
         Absolute path to the static file's directory.
@@ -3439,7 +3439,7 @@ class Blueprint(AppBase):
         +===================+===========================+=======================================================+
         | endpoint          | `None`, `str`           | The endpoint what matched the request url.            |
         +-------------------+---------------------------+-------------------------------------------------------+
-        | keyword_parameters            | `dict` of (`str`, `object`)  | Additional keyword parameters passed to ``url_for``.  |
+        | keyword_parameters            | `dict<str, object>`  | Additional keyword parameters passed to ``url_for``.  |
         +-------------------+---------------------------+-------------------------------------------------------+
     
     url_value_preprocessors : `None`, `list` of `async-callable`
@@ -3454,7 +3454,7 @@ class Blueprint(AppBase):
         | endpoint          | `None`, `str`           | The endpoint what matched the request url.    |
         |                   |                           | Set as `None` if exception occurred.          |
         +-------------------+---------------------------+-----------------------------------------------+
-        | parameters        | `dict` of (`str`, `object`)  | Parameters parsed from the request url.       |
+        | parameters        | `dict<str, object>`  | Parameters parsed from the request url.       |
         +-------------------+---------------------------+-----------------------------------------------+
     
     url_prefix : `None`, `tuple` of `tuple` (`str`, `int`)
@@ -3498,7 +3498,7 @@ class Blueprint(AppBase):
             Url prefix for all the routes registered to the blueprint.
         subdomain : `None`, `str` = `None`, Optional (Keyword only)
             Subdomain, what the routes of the blueprint gonna match.
-        url_defaults : `None`, `dict` of (`str`, `object`) items or (`set`, `list`, `tuple`) of (`str`, `object`) items \
+        url_defaults : `None`, `dict<str, object>` or (`set`, `list`, `tuple`) of (`str`, `object`) items \
                 = `None` , Optional (Keyword only)
             Parameters which the routes of the blueprint will get by default.
         
@@ -3580,7 +3580,7 @@ class WebApp(AppBase):
         The name of the package or module that this app belongs to.
     root_path : `str`
         Absolute path to the package on the filesystem.
-    rules : `dict` of (`str`, `object`)
+    rules : `dict<str, object>`
         The added rules to the application or blueprint. The keys are their endpoint name.
     static_directory : `None`, `str`
         Absolute path to the static file's directory.
@@ -3621,7 +3621,7 @@ class WebApp(AppBase):
         +===================+===========================+=======================================================+
         | endpoint          | `None`, `str`           | The endpoint what matched the request url.            |
         +-------------------+---------------------------+-------------------------------------------------------+
-        | keyword_parameters            | `dict` of (`str`, `object`)  | Additional keyword parameters passed to ``url_for``.  |
+        | keyword_parameters            | `dict<str, object>`  | Additional keyword parameters passed to ``url_for``.  |
         +-------------------+---------------------------+-------------------------------------------------------+
     
     url_value_preprocessors : `None`, `list` of `async-callable`
@@ -3636,7 +3636,7 @@ class WebApp(AppBase):
         | endpoint          | `None`, `str`           | The endpoint what matched the request url.    |
         |                   |                           | Set as `None` if exception occurred.          |
         +-------------------+---------------------------+-----------------------------------------------+
-        | parameters        | `dict` of (`str`, `object`)  | Parameters parsed from the request url.       |
+        | parameters        | `dict<str, object>`  | Parameters parsed from the request url.       |
         +-------------------+---------------------------+-----------------------------------------------+
     
     _server : `None`, ``WebServer``

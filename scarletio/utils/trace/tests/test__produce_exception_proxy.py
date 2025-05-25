@@ -7,7 +7,7 @@ from ..exception_proxy import ExceptionProxyVirtual
 from ..exception_representation import ExceptionRepresentationGeneric
 from ..frame_group import FrameGroup
 from ..frame_proxy import FrameProxyVirtual
-from ..rendering import render_exception_proxy_into
+from ..rendering import produce_exception_proxy
 
 
 def _get_input_exception_proxy():
@@ -47,18 +47,20 @@ def _get_expected_output_string():
     )
 
 
-def test__render_exception_proxy_into__no_highlight():
+def test__produce_exception_proxy__no_highlight():
     """
-    Tests whether ``render_exception_proxy_into`` works as intended.
+    Tests whether ``produce_exception_proxy`` works as intended.
     
     Case: No highlight.
     """
     exception_proxy = _get_input_exception_proxy()
     highlight_streamer = get_highlight_streamer(None)
-    output = render_exception_proxy_into(exception_proxy, highlight_streamer, [])
+    output = []
+    for item in produce_exception_proxy(exception_proxy):
+        output.extend(highlight_streamer.asend(item))
+    
     output.extend(highlight_streamer.asend(None))
     
-    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
@@ -69,18 +71,20 @@ def test__render_exception_proxy_into__no_highlight():
     )
 
 
-def test__render_exception_proxy_into__with_highlight():
+def test__produce_exception_proxy__with_highlight():
     """
-    Tests whether ``render_exception_proxy_into`` works as intended.
+    Tests whether ``produce_exception_proxy`` works as intended.
     
     Case: With highlight.
     """
     exception_proxy = _get_input_exception_proxy()
     highlight_streamer = get_highlight_streamer(DEFAULT_ANSI_HIGHLIGHTER)
-    output = render_exception_proxy_into(exception_proxy, highlight_streamer, [])
+    output = []
+    for item in produce_exception_proxy(exception_proxy):
+        output.extend(highlight_streamer.asend(item))
+    
     output.extend(highlight_streamer.asend(None))
     
-    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     

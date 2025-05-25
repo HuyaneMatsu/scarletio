@@ -71,7 +71,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
         Web socket extensions. Defaults to `None`, if there is not any.
     host : `str`
         The respective server's address to connect to.
-    max_queue : `None`, `int`
+    max_queue : `None | int`
         Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of it is removed.
          Defaults to `None`.
     max_size : `int`

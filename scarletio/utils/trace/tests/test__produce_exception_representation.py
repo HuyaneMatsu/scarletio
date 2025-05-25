@@ -6,14 +6,14 @@ from ..exception_representation import (
     ExceptionRepresentationAttributeError, ExceptionRepresentationGeneric, ExceptionRepresentationSyntaxError
 )
 from ..rendering import (
-    _render_exception_representation_attribute_error_into, _render_exception_representation_generic_into,
-    _render_exception_representation_syntax_error_into, render_exception_representation_into
+    _produce_exception_representation_attribute_error, _produce_exception_representation_generic,
+    _produce_exception_representation_syntax_error, produce_exception_representation
 )
 
 
-def test__render_exception_representation_generic_into__no_highlight():
+def test__produce_exception_representation_generic__no_highlight():
     """
-    Tests whether ``_render_exception_representation_generic_into`` works as intended.
+    Tests whether ``_produce_exception_representation_generic`` works as intended.
     
     Case: No highlight.
     """
@@ -25,10 +25,12 @@ def test__render_exception_representation_generic_into__no_highlight():
     )
     
     highlight_streamer = get_highlight_streamer(None)
-    output = _render_exception_representation_generic_into(exception_representation, highlight_streamer, [])
+    output = []
+    for item in _produce_exception_representation_generic(exception_representation):
+        output.extend(highlight_streamer.asend(item))
+    
     output.extend(highlight_streamer.asend(None))
     
-    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
@@ -36,9 +38,9 @@ def test__render_exception_representation_generic_into__no_highlight():
     vampytest.assert_eq(output_string, expected_output)
 
 
-def test__render_exception_representation_generic_into__with_highlight():
+def test__produce_exception_representation_generic__with_highlight():
     """
-    Tests whether ``_render_exception_representation_generic_into`` works as intended.
+    Tests whether ``_produce_exception_representation_generic`` works as intended.
     
     Case: With highlight.
     """
@@ -50,10 +52,12 @@ def test__render_exception_representation_generic_into__with_highlight():
     )
     
     highlight_streamer = get_highlight_streamer(DEFAULT_ANSI_HIGHLIGHTER)
-    output = _render_exception_representation_generic_into(exception_representation, highlight_streamer, [])
+    output = []
+    for item in _produce_exception_representation_generic(exception_representation):
+        output.extend(highlight_streamer.asend(item))
+    
     output.extend(highlight_streamer.asend(None))
     
-    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
@@ -65,9 +69,9 @@ def test__render_exception_representation_generic_into__with_highlight():
     vampytest.assert_eq(output_string, expected_output)
 
 
-def test__render_exception_representation_attribute_error_into__no_highlight():
+def test__produce_exception_representation_attribute_error__no_highlight():
     """
-    Tests whether ``_render_exception_representation_attribute_error_into`` works as intended.
+    Tests whether ``_produce_exception_representation_attribute_error`` works as intended.
     
     Case: No highlight.
     """
@@ -89,10 +93,12 @@ def test__render_exception_representation_attribute_error_into__no_highlight():
     )
     
     highlight_streamer = get_highlight_streamer(None)
-    output = _render_exception_representation_attribute_error_into(exception_representation, highlight_streamer, [])
+    output = []
+    for item in _produce_exception_representation_attribute_error(exception_representation):
+        output.extend(highlight_streamer.asend(item))
+    
     output.extend(highlight_streamer.asend(None))
     
-    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
@@ -100,9 +106,9 @@ def test__render_exception_representation_attribute_error_into__no_highlight():
     vampytest.assert_eq(output_string, expected_output)
 
 
-def test__render_exception_representation_attribute_error_into__with_highlight():
+def test__produce_exception_representation_attribute_error__with_highlight():
     """
-    Tests whether ``_render_exception_representation_attribute_error_into`` works as intended.
+    Tests whether ``_produce_exception_representation_attribute_error`` works as intended.
     
     Case: With highlight.
     """
@@ -124,10 +130,12 @@ def test__render_exception_representation_attribute_error_into__with_highlight()
     )
     
     highlight_streamer = get_highlight_streamer(DEFAULT_ANSI_HIGHLIGHTER)
-    output = _render_exception_representation_attribute_error_into(exception_representation, highlight_streamer, [])
+    output = []
+    for item in _produce_exception_representation_attribute_error(exception_representation):
+        output.extend(highlight_streamer.asend(item))
+    
     output.extend(highlight_streamer.asend(None))
     
-    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
@@ -139,9 +147,9 @@ def test__render_exception_representation_attribute_error_into__with_highlight()
     vampytest.assert_eq(output_string, expected_output)
 
 
-def test__render_exception_representation_attribute_error_into__frame_with_same_variable():
+def test__produce_exception_representation_attribute_error__frame_with_same_variable():
     """
-    Tests whether ``_render_exception_representation_attribute_error_into`` works as intended.
+    Tests whether ``_produce_exception_representation_attribute_error`` works as intended.
     
     Case: Frame with same variable.
     """
@@ -166,10 +174,12 @@ def test__render_exception_representation_attribute_error_into__frame_with_same_
     )
     
     highlight_streamer = get_highlight_streamer(None)
-    output = _render_exception_representation_attribute_error_into(exception_representation, highlight_streamer, [])
+    output = []
+    for item in _produce_exception_representation_attribute_error(exception_representation):
+        output.extend(highlight_streamer.asend(item))
+    
     output.extend(highlight_streamer.asend(None))
     
-    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
@@ -177,9 +187,9 @@ def test__render_exception_representation_attribute_error_into__frame_with_same_
     vampytest.assert_eq(output_string, expected_output)
 
 
-def test__render_exception_representation_attribute_error_into__unset_attribute():
+def test__produce_exception_representation_attribute_error__unset_attribute():
     """
-    Tests whether ``_render_exception_representation_attribute_error_into`` works as intended.
+    Tests whether ``_produce_exception_representation_attribute_error`` works as intended.
     
     Case: Unset variable.
     """
@@ -203,10 +213,12 @@ def test__render_exception_representation_attribute_error_into__unset_attribute(
     )
     
     highlight_streamer = get_highlight_streamer(None)
-    output = _render_exception_representation_attribute_error_into(exception_representation, highlight_streamer, [])
+    output = []
+    for item in _produce_exception_representation_attribute_error(exception_representation):
+        output.extend(highlight_streamer.asend(item))
+    
     output.extend(highlight_streamer.asend(None))
     
-    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
@@ -214,9 +226,9 @@ def test__render_exception_representation_attribute_error_into__unset_attribute(
     vampytest.assert_eq(output_string, expected_output)
 
 
-def test__render_exception_representation_attribute_error_into__other_variable_with_attribute():
+def test__produce_exception_representation_attribute_error__other_variable_with_attribute():
     """
-    Tests whether ``_render_exception_representation_attribute_error_into`` works as intended.
+    Tests whether ``_produce_exception_representation_attribute_error`` works as intended.
     
     Case: Other variable has the same attribute.
     """
@@ -240,10 +252,12 @@ def test__render_exception_representation_attribute_error_into__other_variable_w
     )
     
     highlight_streamer = get_highlight_streamer(None)
-    output = _render_exception_representation_attribute_error_into(exception_representation, highlight_streamer, [])
+    output = []
+    for item in _produce_exception_representation_attribute_error(exception_representation):
+        output.extend(highlight_streamer.asend(item))
+    
     output.extend(highlight_streamer.asend(None))
     
-    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
@@ -251,9 +265,9 @@ def test__render_exception_representation_attribute_error_into__other_variable_w
     vampytest.assert_eq(output_string, expected_output)
 
 
-def test__render_exception_representation_syntax_error_into__no_highlight():
+def test__produce_exception_representation_syntax_error__no_highlight():
     """
-    Tests whether ``_render_exception_representation_syntax_error_into`` works as intended.
+    Tests whether ``_produce_exception_representation_syntax_error`` works as intended.
     
     Case: No highlight.
     """
@@ -283,10 +297,12 @@ def test__render_exception_representation_syntax_error_into__no_highlight():
     )
     
     highlight_streamer = get_highlight_streamer(None)
-    output = _render_exception_representation_syntax_error_into(exception_representation, highlight_streamer, [])
+    output = []
+    for item in _produce_exception_representation_syntax_error(exception_representation):
+        output.extend(highlight_streamer.asend(item))
+    
     output.extend(highlight_streamer.asend(None))
     
-    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
@@ -295,9 +311,9 @@ def test__render_exception_representation_syntax_error_into__no_highlight():
 
 
 
-def test__render_exception_representation_syntax_error_into__with_highlight():
+def test__produce_exception_representation_syntax_error__with_highlight():
     """
-    Tests whether ``_render_exception_representation_syntax_error_into`` works as intended.
+    Tests whether ``_produce_exception_representation_syntax_error`` works as intended.
     
     Case: No highlight.
     """
@@ -327,10 +343,12 @@ def test__render_exception_representation_syntax_error_into__with_highlight():
     )
     
     highlight_streamer = get_highlight_streamer(DEFAULT_ANSI_HIGHLIGHTER)
-    output = _render_exception_representation_syntax_error_into(exception_representation, highlight_streamer, [])
+    output = []
+    for item in _produce_exception_representation_syntax_error(exception_representation):
+        output.extend(highlight_streamer.asend(item))
+    
     output.extend(highlight_streamer.asend(None))
     
-    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
@@ -342,18 +360,19 @@ def test__render_exception_representation_syntax_error_into__with_highlight():
     vampytest.assert_eq(output_string, expected_output)
 
 
-def test__render_exception_representation_into__hit():
+def test__produce_exception_representation__hit():
     """
-    Tests whether ``render_exception_representation_into`` works as intended.
+    Tests whether ``produce_exception_representation`` works as intended.
     
     Case: renderer hit.
     """
     hit = False
     
-    def _renderer(exception_representation, highlight_streamer, into):
+    def _renderer(exception_representation):
         nonlocal hit
         hit = True
-        return into
+        return
+        yield
     
     
     mock_renderers = {
@@ -361,8 +380,8 @@ def test__render_exception_representation_into__hit():
     }
     
     mocked = vampytest.mock_globals(
-        render_exception_representation_into,
-        EXCEPTION_REPRESENTATION_RENDERERS = mock_renderers
+        produce_exception_representation,
+        EXCEPTION_REPRESENTATION_PRODUCERS = mock_renderers
     )
     
     exception_representation = ExceptionRepresentationGeneric.from_fields(
@@ -370,22 +389,25 @@ def test__render_exception_representation_into__hit():
     )
     
     highlight_streamer = get_highlight_streamer(None)
-    output = mocked(exception_representation, highlight_streamer, [])
+    output = []
+    
+    for item in mocked(exception_representation):
+        output.extend(highlight_streamer.asend(item))
+        
     output.extend(highlight_streamer.asend(None))
     
-    vampytest.assert_instance(output, list)
     vampytest.assert_true(hit)
 
 
-def test__render_exception_representation_into__miss():
+def test__produce_exception_representation__miss():
     """
-    Tests whether ``render_exception_representation_into`` works as intended.
+    Tests whether ``produce_exception_representation`` works as intended.
     
     Case: renderer miss.
     """
     hit = False
     
-    def _renderer(exception_representation, highlight_streamer, into):
+    def _renderer(exception_representation):
         nonlocal hit
         hit = True
         return into
@@ -396,15 +418,17 @@ def test__render_exception_representation_into__miss():
     }
     
     mocked = vampytest.mock_globals(
-        render_exception_representation_into,
-        EXCEPTION_REPRESENTATION_RENDERERS = mock_renderers
+        produce_exception_representation,
+        EXCEPTION_REPRESENTATION_PRODUCERS = mock_renderers
     )
     
     exception_representation = None
     
     highlight_streamer = get_highlight_streamer(None)
-    output = mocked(exception_representation, highlight_streamer, [])
+    output = []
+    for item in mocked(exception_representation):
+        output.extend(highlight_streamer.asend(item))
+        
     output.extend(highlight_streamer.asend(None))
     
-    vampytest.assert_instance(output, list)
     vampytest.assert_false(hit)

@@ -42,7 +42,7 @@ class CauseGroup(BaseException):
     
     Attributes
     ----------
-    causes : `tuple` of ``BaseException``
+    causes : `tuple` of `BaseException`
         Exception causes.
     """
     __slots__ = ('causes',)

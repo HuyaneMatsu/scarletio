@@ -9,7 +9,6 @@ from .constants import BUILTIN_CONSTANTS, BUILTIN_EXCEPTIONS, BUILTIN_VARIABLES
 from .flags import HIGHLIGHT_PARSER_MASK_DEFAULT
 from .highlight_streamer import get_highlight_streamer
 from .parser_context import HighlightParserContext
-from .token import Token
 from .token_types import (
     TOKEN_TYPE_IDENTIFIER_BUILTIN_CONSTANT, TOKEN_TYPE_IDENTIFIER_BUILTIN_EXCEPTION,
     TOKEN_TYPE_IDENTIFIER_BUILTIN_VARIABLE, TOKEN_TYPE_IDENTIFIER_VARIABLE, TOKEN_TYPE_NON_SPACE_UNIDENTIFIED,
@@ -88,7 +87,7 @@ def add_highlighted_part_into(token_type, part, highlighter, into):
     part : `str`
         The part to add.
     
-    highlighter : `None | HighlightFormatterContext`
+    highlighter : ``None | HighlightFormatterContext``
         Stores how the output should be highlighted.
     
     into : `list<str>`
@@ -133,7 +132,7 @@ def add_highlighted_parts_into(producer, highlighter, into):
     producer : `iterable<(int, str)>`
         Iterable to produce token_type - part items.
     
-    highlighter : `None | HighlightFormatterContext`
+    highlighter : ``None | HighlightFormatterContext``
         Stores how the output should be highlighted.
     
     into : `list<str>`

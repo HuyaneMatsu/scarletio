@@ -72,7 +72,7 @@ class WebSocketClient(WebSocketCommonProtocol):
         WebSocket extensions. Defaults to `None`, if there is not any.
     host : `str`
         The respective server's address to connect to.
-    max_queue : `None`, `int`
+    max_queue : `None | int`
         Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of it is removed.
          Defaults to `None`.
     max_size : `int`
@@ -156,7 +156,7 @@ class WebSocketClient(WebSocketCommonProtocol):
                 maximal size of a received frame. If it is passed, ``PayloadError`` is raised.
             - `encode` : `callable`. Encoder method, what processes the web socket frames to send. Should accept `1`
                 parameter, the respective web socket ``WebSocketFrame``.
-        available_subprotocols : `None`, `list` of `str` = `None`, Optional (Keyword only)
+        available_subprotocols : `None | list<str>` = `None`, Optional (Keyword only)
             A list of supported subprotocols in order of decreasing preference.
         headers : `None`, ``IgnoreCaseMultiValueDictionary``, `dict-like` with (`str`, `str`) items = `None`
                 , Optional (Keyword only)
@@ -173,7 +173,7 @@ class WebSocketClient(WebSocketCommonProtocol):
         max_size : `int`, Optional (Keyword only)
             Max payload size to receive. If a payload exceeds it, ``PayloadError`` is raised. Defaults to `67108864`
             bytes.
-        max_queue : `None`, `int`, Optional (Keyword only)
+        max_queue : `None | int`, Optional (Keyword only)
             Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of it is
             removed.
         

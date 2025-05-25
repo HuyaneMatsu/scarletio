@@ -1,12 +1,8 @@
 __all__ = ('ignore_frame',)
 
 import os
-from warnings import warn
 
-from ..analyzer import CallableAnalyzer
 from ..docs import copy_docs
-
-from .formatters import format_builtin
 
 
 DEFAULT_IGNORED_FRAMES = os.environ.get('SCARLETIO_TRACE_DEFAULT_IGNORED_FRAME', '').casefold() not in ('0', 'false')
@@ -79,6 +75,7 @@ def should_keep_frame_from_filter(frame_proxy, filter):
     ----------
     frame_proxy : ``FrameProxyBase``
         Frame proxy to check whether a frame should be ignored.
+    
     filter : `FunctionType`
         Filter to check the frame.
     
@@ -87,18 +84,7 @@ def should_keep_frame_from_filter(frame_proxy, filter):
     should_keep_frame : `bool`
         Whether the frame should be ignored.
     """
-    if CallableAnalyzer(filter).get_non_reserved_positional_parameter_count() == 1:
-        return filter(frame_proxy)
-    
-    warn(
-        (
-            f'`should_keep_frame` now passes `1` parameter to `filter`, but a filter given with different '
-            f'amount. Please update your filter function to accept `1`. Got {format_builtin(filter)!s}. '
-            f'4 parameter version will be removed in 2025 January.'
-        ),
-        FutureWarning,
-    )
-    return filter(frame_proxy.file_name, frame_proxy.name, frame_proxy.line_index, frame_proxy.line)
+    return filter(frame_proxy)
 
 
 def should_keep_frame(frame_proxy, *, filter = None):

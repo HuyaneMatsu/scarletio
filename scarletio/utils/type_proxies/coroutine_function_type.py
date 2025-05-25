@@ -15,7 +15,7 @@ class CoroutineFunctionTypeProxy(ProxyBase):
     
     Attributes
     ----------
-    _overwrites : `None`, `dict` of (`str`, `object`) items
+    _overwrites : `None`, `dict<str, object>`
         Field overwrites.
     _proxied : `CoroutineFunctionType`
         The proxied coroutine function.

@@ -289,7 +289,7 @@ def iter_highlighted_buffer_parts(buffer, highlighter):
     ----------
     buffer : `list` of `str`
         Line buffer.
-    highlighter : `None`, ``HighlightFormatterContext``
+    highlighter : ``None | HighlightFormatterContext``
         The highlighter to use.
     
     Yields
@@ -326,7 +326,7 @@ class DisplayState(RichAttributeErrorBaseType):
         
         Parameters
         ----------
-        buffer : `None`, `list` of `str`
+        buffer : `None | list<str>`
             Line buffer.
         
         Raises

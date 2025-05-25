@@ -5,7 +5,7 @@ from ...highlight import DEFAULT_ANSI_HIGHLIGHTER, get_highlight_streamer, iter_
 from ..expression_parsing import ExpressionInfo
 from ..frame_group import FrameGroup
 from ..frame_proxy import FrameProxyVirtual
-from ..rendering import _build_frames_repeated_line, render_frame_group_into
+from ..rendering import _build_frames_repeated_line, produce_frame_group
 
 
 def _iter_options__build_frames_repeated_line():
@@ -62,18 +62,20 @@ def _get_expected_output_string():
     )
 
 
-def test__render_frame_group_into__no_repeat_no_highlight():
+def test__produce_frame_group__no_repeat_no_highlight():
     """
-    Tests whether ``render_frame_group_into`` works as intended.
+    Tests whether ``produce_frame_group`` works as intended.
     
     Case: No repeat & no highlight.
     """
     frame_group = _get_input_frame_group()
     highlight_streamer = get_highlight_streamer(None)
-    output = render_frame_group_into(frame_group, highlight_streamer, [])
+    output = []
+    for item in produce_frame_group(frame_group):
+        output.extend(highlight_streamer.asend(item))
+        
     output.extend(highlight_streamer.asend(None))
     
-    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
@@ -84,18 +86,20 @@ def test__render_frame_group_into__no_repeat_no_highlight():
     )
 
 
-def test__render_frame_group_into__no_repeat_with_highlight():
+def test__produce_frame_group__no_repeat_with_highlight():
     """
-    Tests whether ``render_frame_group_into`` works as intended.
+    Tests whether ``produce_frame_group`` works as intended.
     
     Case: No repeat & with highlight.
     """
     frame_group = _get_input_frame_group()
     highlight_streamer = get_highlight_streamer(DEFAULT_ANSI_HIGHLIGHTER)
-    output = render_frame_group_into(frame_group, highlight_streamer, [])
+    output = []
+    for item in produce_frame_group(frame_group):
+        output.extend(highlight_streamer.asend(item))
+        
     output.extend(highlight_streamer.asend(None))
     
-    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     
@@ -110,9 +114,9 @@ def test__render_frame_group_into__no_repeat_with_highlight():
     )
 
 
-def test__render_frame_group_into__with_repeat_no_highlight():
+def test__produce_frame_group__with_repeat_no_highlight():
     """
-    Tests whether ``render_frame_group_into`` works as intended.
+    Tests whether ``produce_frame_group`` works as intended.
     
     Case: With repeat & no highlight.
     """
@@ -134,10 +138,12 @@ def test__render_frame_group_into__with_repeat_no_highlight():
     frame_group.repeat_count = 3
     
     highlight_streamer = get_highlight_streamer(None)
-    output = render_frame_group_into(frame_group, highlight_streamer, [])
+    output = []
+    for item in produce_frame_group(frame_group):
+        output.extend(highlight_streamer.asend(item))
+        
     output.extend(highlight_streamer.asend(None))
     
-    vampytest.assert_instance(output, list)
     for element in output:
         vampytest.assert_instance(element, str)
     

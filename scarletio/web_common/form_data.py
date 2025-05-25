@@ -17,7 +17,7 @@ class FormDataField(RichAttributeErrorBaseType):
     """
     Attributes
     ----------
-    headers : `IgnoreCaseMultiValueDictionary<str, str>`
+    headers : ``IgnoreCaseMultiValueDictionary<str, str>``
         The field specific headers.
     type : `int`
         The field's type.
@@ -38,7 +38,7 @@ class FormDataField(RichAttributeErrorBaseType):
             The field's type.
         type_options : `MultiValueDictionary<str, str>`
             Additional information used by the created ``PayloadBase`` when the field is generated.
-        headers : `IgnoreCaseMultiValueDictionary<str, str>`
+        headers : ``IgnoreCaseMultiValueDictionary<str, str>``
             The field specific headers.
         value : `object`
             The field's value.

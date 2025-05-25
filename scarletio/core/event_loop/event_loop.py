@@ -839,7 +839,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             The protocol of the transport.
         waiter : `None`, ``Future`` = `None`, Optional
             Waiter, what's result should be set, when the transport is ready to use.
-        extra : `None`, `dict` of (`str`, `object`) item = `None`, Optional (Keyword only)
+        extra : `None | dict<str, object>` item = `None`, Optional (Keyword only)
             Optional transport information.
         server : `None`, ``Server`` = `None`, Optional (Keyword only)
             The server to what the created socket will be attached to.
@@ -884,7 +884,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             By default the value of the host parameter is used. If host is empty, there is no default and you must pass
             a value for `server_host_name`. If `server_host_name` is an empty string, hostname matching is disabled
             (which is a serious security risk, allowing for potential man-in-the-middle attacks).
-        extra : `None`, `dict` of (`str`, `object`) items = `None`, Optional (Keyword only)
+        extra : `None`, `dict<str, object>` = `None`, Optional (Keyword only)
             Optional transport information.
         server : `None`, ``Server`` = `None`, Optional (Keyword only)
             The server to what the created socket will be attached to.
@@ -1039,7 +1039,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             Factory function for creating an asynchronous compatible protocol.
         connection_socket : `socket.socket`
             The accepted connection.
-        extra : `None`, `dict` of (`str`, `object`) item
+        extra : `None | dict<str, object>` item
             Optional transport information.
         ssl : `None`, `SSLContext`
             The ssl type of the connection if any.
@@ -1347,7 +1347,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             Callable returning an asynchronous protocol implementation.
         host : `None`, `str`, Optional
             To what network interfaces should the connection be bound.
-        port : `None`, `int`, Optional
+        port : `None | int`, Optional
             The port of the `host`.
         ssl : `None`, `bool`, `SSLContext` = `None`, Optional (Keyword only)
             Whether ssl should be enabled.
@@ -1357,7 +1357,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             Can be used to narrow host resolution. Is passed to ``.get_address_info``.
         socket_flags : `int` = `0`, Optional (Keyword only)
             Can be used to narrow host resolution. Is passed to ``.get_address_info``.
-        local_address : `tuple` of (`None`, `str`, `None`, `int`) = `None`, Optional (Keyword only)
+        local_address : `(None | str, None | int)` = `None`, Optional (Keyword only)
             Can be given as a `tuple` (`local_host`, `local_port`) to bind the socket locally. The `local_host` and
             `local_port` are looked up by ``.get_address_info``.
         server_host_name : `None`, `str` = `None`, Optional (Keyword only)
@@ -1952,7 +1952,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         ----------
         host : `None`, `str`
             To respective network interface.
-        port : `None`, `int`
+        port : `None | int`
             The port of the `host`.
         family :  `AddressFamily`, `int` = `0`, Optional (Keyword only)
             The address family.
@@ -2005,7 +2005,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         
         Parameters
         ----------
-        address : `tuple` ((`None`, `str`), (`None`, `int`))
+        address : `(None | str, None | int)`
             Address as a tuple of `host` and `port`.
         family :  `AddressFamily`, `int` = `0`, Optional (Keyword only)
             The address family.
@@ -2478,12 +2478,12 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         protocol_factory : `callable`
             Factory function for creating a protocols.
         
-        local_address : `None`, `tuple` of (`None`, `str`, `None`, `int`), `str`
+        local_address : `None | (None | str, None | int) | str`
             Can be given as a `tuple` (`local_host`, `local_port`) to bind the socket locally. The `local_host` and
             `local_port` are looked up by ``.get_address_info``.
             
             If `socket_family` is given as `AF_UNIX`, then also can be path of a file or a file descriptor.
-        remote_address : `None`, `tuple` of (`None`, `str`, `None`, `int`), `str`
+        remote_address : `None | (None | str, None | int) | str`
             Can be given as a `tuple` (`remote_host`, `remote_port`) to connect the socket to remove address. The
             `remote_host` and `remote_port` are looked up by ``.get_address_info``.
             
@@ -2696,7 +2696,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         ----------
         host : `None`, `str`, (`None`, `str`)
             Network interfaces should the server be bound.
-        port : `None`, `int`
+        port : `None | int`
             The port to use by the `host`.
         socket_family : `AddressFamily`, `int`
             The family of the address.
@@ -2757,7 +2757,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             Factory function for creating a protocols.
         host : `None`, `str`, `iterable` of (`None`, `str`)
             To what network interfaces should the server be bound.
-        port : `None`, `int`
+        port : `None | int`
             The port to use by the `host`(s).
         socket_family : `AddressFamily`, `int` = `module_socket.AF_UNSPEC`, Optional (Keyword only)
             Can be given either as `socket.AF_INET`, `socket.AF_INET6` to force the socket to use `IPv4`, `IPv6`.
@@ -3045,7 +3045,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             Standard output for the created shell.
         stderr : `file-like`, `subprocess.PIPE`, `subprocess.DEVNULL`, `subprocess.STDOUT` = `subprocess.PIPE`, Optional
             Standard error for the created shell
-        extra : `None`, `dict` of (`str`, `object`) items = `None`, Optional (Keyword only)
+        extra : `None`, `dict<str, object>` = `None`, Optional (Keyword only)
             Optional transport information.
         preexecution_function : `None`, `callable` = `None`, Optional (Keyword only)
             This object is called in the child process just before the child is executed. POSIX only, defaults to
@@ -3158,7 +3158,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         stderr : `file-like`, `subprocess.PIPE`, `subprocess.DEVNULL`, `subprocess.STDOUT` = `subprocess.PIPE`
                 , Optional (Keyword only)
             Standard error for the created shell.
-        extra : `None`, `dict` of (`str`, `object`) items = `None`, Optional (Keyword only)
+        extra : `None`, `dict<str, object>` = `None`, Optional (Keyword only)
             Optional transport information.
         preexecution_function : `None`, `callable` = `None`, Optional (Keyword only)
             This object is called in the child process just before the child is executed. POSIX only, defaults to

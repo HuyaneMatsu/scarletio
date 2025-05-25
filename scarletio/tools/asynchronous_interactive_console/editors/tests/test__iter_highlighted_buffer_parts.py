@@ -18,7 +18,7 @@ def test__iter_highlighted_buffer_parts(buffer, highlighter):
     ----------
     buffer : `list` of `str`
         Line buffer.
-    highlighter : `None`, ``HighlightFormatterContext``
+    highlighter : ``None | HighlightFormatterContext``
         The highlighter to use.
     
     Returns

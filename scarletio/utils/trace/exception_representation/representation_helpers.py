@@ -63,7 +63,7 @@ def _get_exception_parameters(exception):
     
     Parameters
     ----------
-    exception : ``BaseException``
+    exception : `BaseException`
         Exception to get its parameters of.
     
     Returns
@@ -133,7 +133,7 @@ def _get_exception_representation_fallback(exception):
     
     Parameters
     ----------
-    exception : ``BaseException``
+    exception : `BaseException`
         The respective exception instance.
     
     Returns
@@ -206,7 +206,7 @@ def get_exception_representation_generic(exception):
     
     Parameters
     ----------
-    exception : ``BaseException``
+    exception : `BaseException`
         The respective exception instance.
     
     Returns

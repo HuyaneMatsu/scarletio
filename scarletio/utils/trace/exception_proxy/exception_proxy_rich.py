@@ -26,7 +26,7 @@ class ExceptionProxyRich(ExceptionProxyBase):
         
         Parameters
         ----------
-        exception : ``BaseException``
+        exception : `BaseException`
             The exception to proxy.
         """
         frames = get_exception_frames(exception)

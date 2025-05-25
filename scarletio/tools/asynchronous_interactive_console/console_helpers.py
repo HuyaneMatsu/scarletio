@@ -102,7 +102,7 @@ def create_banner(package = None, logo = None, *, highlighter = None):
     logo : `None`, `str` = `None`, Optional
         The logo of the package if any.
     
-    highlighter : `None`, ``HighlightFormatterContext`` = `None`, Optional (Keyword only)
+    highlighter : ``None | HighlightFormatterContext`` = `None`, Optional (Keyword only)
         Formatter storing highlighting details.
     
     Returns
@@ -151,7 +151,7 @@ def collect_module_variables(module):
     
     Returns
     -------
-    interactive_console_locals : `dict` of (`str`, `object`) items
+    interactive_console_locals : `dict<str, object>`
     """
     interactive_console_locals = {}
     

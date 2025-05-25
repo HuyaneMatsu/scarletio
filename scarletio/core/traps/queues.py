@@ -49,7 +49,7 @@ class AsyncQueue:
             The loop to what the created queue will be bound to.
         iterable : `None`, `iterable` = `None`, Optional
             A preset iterable to extend the queue with.
-        max_length : `None`, `int` = `None`, Optional
+        max_length : `None | int` = `None`, Optional
             The maximal length of the queue.
         exception : `None`, `BaseException` = `None`, Optional
             Exception to raise when the queue is empty.
