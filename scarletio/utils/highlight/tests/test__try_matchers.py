@@ -1,15 +1,15 @@
 import vampytest
 
 from ..flags import (
-    HIGHLIGHT_PARSER_FLAG_ALLOW_RELAXED_FORMAT_STRINGS, HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING,
-    HIGHLIGHT_PARSER_FLAG_HIT_DISABLED_QUOTE, HIGHLIGHT_PARSER_FLAG_HIT_MULTI_LINE_CODE,
-    HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT, HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE,
-    HIGHLIGHT_PARSER_FLAG_NO_DOUBLE_QUOTE_STRINGS, HIGHLIGHT_PARSER_FLAG_NO_MULTI_LINE_CODE,
-    HIGHLIGHT_PARSER_FLAG_NO_SINGLE_QUOTE_STRINGS
+    HIGHLIGHT_PARSER_FLAG_ALLOW_RELAXED_FORMAT_STRINGS, HIGHLIGHT_PARSER_FLAG_HIT_DISABLED_QUOTE,
+    HIGHLIGHT_PARSER_FLAG_HIT_MULTI_LINE_CODE, HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
+    HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE, HIGHLIGHT_PARSER_FLAG_NO_DOUBLE_QUOTE_STRINGS,
+    HIGHLIGHT_PARSER_FLAG_NO_MULTI_LINE_CODE, HIGHLIGHT_PARSER_FLAG_NO_SINGLE_QUOTE_STRINGS
 )
+from ..location import Location
 from ..matching import (
-    _try_match_anything, _try_match_comment, _try_match_complex, _try_match_console_prefix, _try_match_empty_line,
-    _try_match_float, _try_match_format_string_code, _try_match_format_string_end, _try_match_format_string_postfix,
+    _try_match_anything, _try_match_comment, _try_match_complex, _try_match_console_prefix, _try_match_float,
+    _try_match_format_string_code, _try_match_format_string_end, _try_match_format_string_postfix,
     _try_match_identifier, _try_match_integer_binary, _try_match_integer_decimal, _try_match_integer_hexadecimal,
     _try_match_integer_octal, _try_match_line_break, _try_match_operator, _try_match_punctuation, _try_match_space,
     _try_match_string
@@ -24,18 +24,26 @@ from ..token_types import (
     TOKEN_TYPE_NUMERIC_FLOAT_COMPLEX, TOKEN_TYPE_NUMERIC_INTEGER_BINARY, TOKEN_TYPE_NUMERIC_INTEGER_DECIMAL,
     TOKEN_TYPE_NUMERIC_INTEGER_HEXADECIMAL, TOKEN_TYPE_NUMERIC_INTEGER_OCTAL, TOKEN_TYPE_SPACE,
     TOKEN_TYPE_SPECIAL_CONSOLE_PREFIX, TOKEN_TYPE_SPECIAL_OPERATOR, TOKEN_TYPE_SPECIAL_OPERATOR_ATTRIBUTE,
-    TOKEN_TYPE_SPECIAL_OPERATOR_WORD, TOKEN_TYPE_SPECIAL_PUNCTUATION, TOKEN_TYPE_STRING_BINARY,
-    TOKEN_TYPE_STRING_UNICODE, TOKEN_TYPE_STRING_UNICODE_FORMAT, TOKEN_TYPE_STRING_UNICODE_FORMAT_CODE,
-    TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, TOKEN_TYPE_STRING_UNICODE_FORMAT_POSTFIX
+    TOKEN_TYPE_SPECIAL_OPERATOR_WORD, TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_CLOSE,
+    TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_OPEN, TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND_OPEN,
+    TOKEN_TYPE_SPECIAL_PUNCTUATION_SEMI_COLON, TOKEN_TYPE_STRING_BINARY, TOKEN_TYPE_STRING_BINARY_SPECIAL_PREFIX,
+    TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_CLOSE, TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_OPEN,
+    TOKEN_TYPE_STRING_FORMAT_CODE, TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN,
+    TOKEN_TYPE_STRING_FORMAT_MARK_CODE_BEGIN, TOKEN_TYPE_STRING_FORMAT_POSTFIX, TOKEN_TYPE_STRING_UNICODE,
+    TOKEN_TYPE_STRING_UNICODE_SPECIAL_PREFIX, TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE,
+    TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN
 )
 
 
 def _iter_options():
     # ---- complex ----
     
-    # complex -> empty
     yield (
-        [],
+        'complex -> empty',
+        (
+            ''
+        ),
+        0,
         0,
         0,
         0,
@@ -43,6 +51,7 @@ def _iter_options():
         None,
         _try_match_complex,
         (
+            0,
             0,
             0,
             0,
@@ -53,11 +62,12 @@ def _iter_options():
         ),
     )
     
-    # complex -> actual
     yield (
-        [
-            '2.3j ',
-        ],
+        'complex -> actual',
+        (
+            '2.3j '
+        ),
+        0,
         0,
         0,
         0,
@@ -65,24 +75,26 @@ def _iter_options():
         None,
         _try_match_complex,
         (
+            4,
             0,
             4,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_NUMERIC_FLOAT_COMPLEX, '2.3j'),
+                Token(TOKEN_TYPE_NUMERIC_FLOAT_COMPLEX, Location(0, 0, 0, 4)),
             ],
             True,
         ),
     )
     
-    # complex -> start in middle
     yield (
-        [
-            '\n',
-            '    2.3j ',
-        ],
+        'complex -> start in middle',
+        (
+            '\n'
+            '    2.3j '
+        ),
+        5,
         1,
         4,
         0,
@@ -90,13 +102,14 @@ def _iter_options():
         None,
         _try_match_complex,
         (
+            9,
             1,
             8,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_NUMERIC_FLOAT_COMPLEX, '2.3j'),
+                Token(TOKEN_TYPE_NUMERIC_FLOAT_COMPLEX, Location(5, 1, 4, 4)),
             ],
             True,
         ),
@@ -104,9 +117,12 @@ def _iter_options():
     
     # ---- float ----
     
-    # float -> empty
     yield (
-        [],
+        'float -> empty',
+        (
+            ''
+        ),
+        0,
         0,
         0,
         0,
@@ -114,6 +130,7 @@ def _iter_options():
         None,
         _try_match_float,
         (
+            0,
             0,
             0,
             0,
@@ -124,11 +141,12 @@ def _iter_options():
         ),
     )
     
-    # float -> actual
     yield (
-        [
-            '2.3 ',
-        ],
+        'float -> actual',
+        (
+            '2.3 '
+        ),
+        0,
         0,
         0,
         0,
@@ -136,24 +154,26 @@ def _iter_options():
         None,
         _try_match_float,
         (
+            3,
             0,
             3,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_NUMERIC_FLOAT, '2.3'),
+                Token(TOKEN_TYPE_NUMERIC_FLOAT, Location(0, 0, 0, 3)),
             ],
             True,
         ),
     )
     
-    # float -> start in middle
     yield (
-        [
-            '\n',
-            '    2.3 ',
-        ],
+        'float -> start in middle',
+        (
+            '\n'
+            '    2.3 '
+        ),
+        5,
         1,
         4,
         0,
@@ -161,13 +181,14 @@ def _iter_options():
         None,
         _try_match_float,
         (
+            8,
             1,
             7,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_NUMERIC_FLOAT, '2.3'),
+                Token(TOKEN_TYPE_NUMERIC_FLOAT, Location(5, 1, 4, 3)),
             ],
             True,
         ),
@@ -175,9 +196,12 @@ def _iter_options():
     
     # ---- integer ~ hexadecimal ----
     
-    # integer ~ hexadecimal -> empty
     yield (
-        [],
+        'integer ~ hexadecimal -> empty',
+        (
+            ''
+        ),
+        0,
         0,
         0,
         0,
@@ -185,6 +209,7 @@ def _iter_options():
         None,
         _try_match_integer_hexadecimal,
         (
+            0,
             0,
             0,
             0,
@@ -195,11 +220,12 @@ def _iter_options():
         ),
     )
     
-    # integer ~ hexadecimal -> actual
     yield (
-        [
-            '0xa2 ',
-        ],
+        'integer ~ hexadecimal -> actual',
+        (
+            '0xa2 '
+        ),
+        0,
         0,
         0,
         0,
@@ -207,24 +233,26 @@ def _iter_options():
         None,
         _try_match_integer_hexadecimal,
         (
+            4,
             0,
             4,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_NUMERIC_INTEGER_HEXADECIMAL, '0xa2'),
+                Token(TOKEN_TYPE_NUMERIC_INTEGER_HEXADECIMAL, Location(0, 0, 0, 4)),
             ],
             True,
         ),
     )
     
-    # integer ~ hexadecimal -> start in middle
     yield (
-        [
-            '\n',
-            '    0xa2 ',
-        ],
+        'integer ~ hexadecimal -> start in middle',
+        (
+            '\n'
+            '    0xa2 '
+        ),
+        5,
         1,
         4,
         0,
@@ -232,13 +260,14 @@ def _iter_options():
         None,
         _try_match_integer_hexadecimal,
         (
+            9,
             1,
             8,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_NUMERIC_INTEGER_HEXADECIMAL, '0xa2'),
+                Token(TOKEN_TYPE_NUMERIC_INTEGER_HEXADECIMAL, Location(5, 1, 4, 4)),
             ],
             True,
         ),
@@ -246,9 +275,12 @@ def _iter_options():
     
     # ---- integer ~ decimal ----
     
-    # integer ~ decimal -> empty
     yield (
-        [],
+        'integer ~ decimal -> empty',
+        (
+            ''
+        ),
+        0,
         0,
         0,
         0,
@@ -256,6 +288,7 @@ def _iter_options():
         None,
         _try_match_integer_decimal,
         (
+            0,
             0,
             0,
             0,
@@ -266,11 +299,12 @@ def _iter_options():
         ),
     )
     
-    # integer ~ decimal -> actual
     yield (
-        [
-            '2_345 ',
-        ],
+        'integer ~ decimal -> actual',
+        (
+            '2_345 '
+        ),
+        0,
         0,
         0,
         0,
@@ -278,24 +312,26 @@ def _iter_options():
         None,
         _try_match_integer_decimal,
         (
+            5,
             0,
             5,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_NUMERIC_INTEGER_DECIMAL, '2_345'),
+                Token(TOKEN_TYPE_NUMERIC_INTEGER_DECIMAL, Location(0, 0, 0, 5)),
             ],
             True,
         ),
     )
     
-    # integer ~ decimal -> start in middle
     yield (
-        [
-            '\n',
-            '    2_345 ',
-        ],
+        'integer ~ decimal -> start in middle',
+        (
+            '\n'
+            '    2_345 '
+        ),
+        5,
         1,
         4,
         0,
@@ -303,13 +339,14 @@ def _iter_options():
         None,
         _try_match_integer_decimal,
         (
+            10,
             1,
             9,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_NUMERIC_INTEGER_DECIMAL, '2_345'),
+                Token(TOKEN_TYPE_NUMERIC_INTEGER_DECIMAL, Location(5, 1, 4, 5)),
             ],
             True,
         ),
@@ -317,9 +354,12 @@ def _iter_options():
     
     # ---- integer ~ octal ----
     
-    # integer ~ octal -> empty
     yield (
-        [],
+        'integer ~ octal -> empty',
+        (
+            ''
+        ),
+        0,
         0,
         0,
         0,
@@ -327,6 +367,7 @@ def _iter_options():
         None,
         _try_match_integer_octal,
         (
+            0,
             0,
             0,
             0,
@@ -337,11 +378,12 @@ def _iter_options():
         ),
     )
     
-    # integer ~ octal -> actual
     yield (
-        [
-            '0o17 ',
-        ],
+        'integer ~ octal -> actual',
+        (
+            '0o17 '
+        ),
+        0,
         0,
         0,
         0,
@@ -349,24 +391,26 @@ def _iter_options():
         None,
         _try_match_integer_octal,
         (
+            4,
             0,
             4,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_NUMERIC_INTEGER_OCTAL, '0o17'),
+                Token(TOKEN_TYPE_NUMERIC_INTEGER_OCTAL, Location(0, 0, 0, 4)),
             ],
             True,
         ),
     )
     
-    # integer ~ octal -> start in middle
     yield (
-        [
-            '\n',
-            '    0o17 ',
-        ],
+        'integer ~ octal -> start in middle',
+        (
+            '\n'
+            '    0o17 '
+        ),
+        5,
         1,
         4,
         0,
@@ -374,13 +418,14 @@ def _iter_options():
         None,
         _try_match_integer_octal,
         (
+            9,
             1,
             8,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_NUMERIC_INTEGER_OCTAL, '0o17'),
+                Token(TOKEN_TYPE_NUMERIC_INTEGER_OCTAL, Location(5, 1, 4, 4)),
             ],
             True,
         ),
@@ -388,9 +433,12 @@ def _iter_options():
     
     # ---- integer ~ binary ----
     
-    # integer ~ binary -> empty
     yield (
-        [],
+        'integer ~ binary -> empty',
+        (
+            ''
+        ),
+        0,
         0,
         0,
         0,
@@ -398,6 +446,7 @@ def _iter_options():
         None,
         _try_match_integer_binary,
         (
+            0,
             0,
             0,
             0,
@@ -408,11 +457,12 @@ def _iter_options():
         ),
     )
     
-    # integer ~ binary -> actual
     yield (
-        [
-            '0b01 ',
-        ],
+        'integer ~ binary -> actual',
+        (
+            '0b01 '
+        ),
+        0,
         0,
         0,
         0,
@@ -420,24 +470,26 @@ def _iter_options():
         None,
         _try_match_integer_binary,
         (
+            4,
             0,
             4,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_NUMERIC_INTEGER_BINARY, '0b01'),
+                Token(TOKEN_TYPE_NUMERIC_INTEGER_BINARY, Location(0, 0, 0, 4)),
             ],
             True,
         ),
     )
     
-    # integer ~ binary -> start in middle
     yield (
-        [
-            '\n',
-            '    0b01 ',
-        ],
+        'integer ~ binary -> start in middle',
+        (
+            '\n'
+            '    0b01 '
+        ),
+        5,
         1,
         4,
         0,
@@ -445,13 +497,14 @@ def _iter_options():
         None,
         _try_match_integer_binary,
         (
+            9,
             1,
             8,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_NUMERIC_INTEGER_BINARY, '0b01'),
+                Token(TOKEN_TYPE_NUMERIC_INTEGER_BINARY, Location(5, 1, 4, 4)),
             ],
             True,
         ),
@@ -459,9 +512,12 @@ def _iter_options():
     
     # ---- identifier ----
     
-    # identifier -> empty
     yield (
-        [],
+        'identifier -> empty',
+        (
+            ''
+        ),
+        0,
         0,
         0,
         0,
@@ -469,6 +525,7 @@ def _iter_options():
         None,
         _try_match_identifier,
         (
+            0,
             0,
             0,
             0,
@@ -479,11 +536,12 @@ def _iter_options():
         ),
     )
     
-    # identifier ~ constant -> actual
     yield (
-        [
-            'None ',
-        ],
+        'identifier ~ constant -> actual',
+        (
+            'None '
+        ),
+        0,
         0,
         0,
         0,
@@ -491,23 +549,25 @@ def _iter_options():
         None,
         _try_match_identifier,
         (
+            4,
             0,
             4,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_IDENTIFIER_BUILTIN_CONSTANT, 'None'),
+                Token(TOKEN_TYPE_IDENTIFIER_BUILTIN_CONSTANT, Location(0, 0, 0, 4)),
             ],
             True,
         ),
     )
     
-    # identifier ~ keyword -> actual
     yield (
-        [
-            'import ',
-        ],
+        'identifier ~ keyword -> actual',
+        (
+            'import '
+        ),
+        0,
         0,
         0,
         0,
@@ -515,23 +575,25 @@ def _iter_options():
         None,
         _try_match_identifier,
         (
+            6,
             0,
             6,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_IDENTIFIER_KEYWORD, 'import'),
+                Token(TOKEN_TYPE_IDENTIFIER_KEYWORD, Location(0, 0, 0, 6)),
             ],
             True,
         ),
     )
     
-    # identifier ~ operator word -> actual
     yield (
-        [
-            'and ',
-        ],
+        'identifier ~ operator word -> actual',
+        (
+            'and '
+        ),
+        0,
         0,
         0,
         0,
@@ -539,107 +601,113 @@ def _iter_options():
         None,
         _try_match_identifier,
         (
+            3,
             0,
             3,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_SPECIAL_OPERATOR_WORD, 'and'),
+                Token(TOKEN_TYPE_SPECIAL_OPERATOR_WORD, Location(0, 0, 0, 3)),
             ],
             True,
         ),
     )
     
-    # identifier ~ magic function -> actual
     yield (
-        [
-            'pudding.__add__ ',
-        ],
+        'identifier ~ magic function -> actual',
+        (
+            'pudding.__add__ '
+        ),
+        8,
         0,
         8,
         0,
         None,
         [
-                Token(TOKEN_TYPE_IDENTIFIER_VARIABLE, 'pudding'),
-                Token(TOKEN_TYPE_SPECIAL_OPERATOR_ATTRIBUTE, '.'),
-            
+            Token(TOKEN_TYPE_IDENTIFIER_VARIABLE, Location(0, 0, 0, 7)),
+            Token(TOKEN_TYPE_SPECIAL_OPERATOR_ATTRIBUTE, Location(7, 0, 7, 1)),
         ],
         _try_match_identifier,
         (
+            15,
             0,
             15,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_IDENTIFIER_MAGIC_FUNCTION, '__add__'),
+                Token(TOKEN_TYPE_IDENTIFIER_MAGIC_FUNCTION, Location(8, 0, 8, 7)),
             ],
             True,
         ),
     )
     
-    # identifier ~ magic attribute -> actual
     yield (
-        [
-            'pudding.__mro__ ',
-        ],
+        'identifier ~ magic attribute -> actual',
+        (
+            'pudding.__mro__ '
+        ),
+        8,
         0,
         8,
         0,
         None,
         [
-                Token(TOKEN_TYPE_IDENTIFIER_VARIABLE, 'pudding'),
-                Token(TOKEN_TYPE_SPECIAL_OPERATOR_ATTRIBUTE, '.'),
+            Token(TOKEN_TYPE_IDENTIFIER_VARIABLE, Location(0, 0, 0, 7)),
+            Token(TOKEN_TYPE_SPECIAL_OPERATOR_ATTRIBUTE, Location(7, 0, 7, 1)),
             
         ],
         _try_match_identifier,
         (
+            15,
             0,
             15,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_IDENTIFIER_MAGIC_VARIABLE, '__mro__'),
+                Token(TOKEN_TYPE_IDENTIFIER_MAGIC_VARIABLE, Location(8, 0, 8, 7)),
             ],
             True,
         ),
     )
     
-    # identifier ~ attribute -> actual
     yield (
-        [
-            'pudding.flandre ',
-        ],
+        'identifier ~ attribute -> actual',
+        (
+            'pudding.flandre '
+        ),
+        8,
         0,
         8,
         0,
         None,
         [
-                Token(TOKEN_TYPE_IDENTIFIER_VARIABLE, 'pudding'),
-                Token(TOKEN_TYPE_SPECIAL_OPERATOR_ATTRIBUTE, '.'),
-            
+            Token(TOKEN_TYPE_IDENTIFIER_VARIABLE, Location(0, 0, 0, 7)),
+            Token(TOKEN_TYPE_SPECIAL_OPERATOR_ATTRIBUTE, Location(7, 0, 7, 1)),
         ],
         _try_match_identifier,
         (
+            15,
             0,
             15,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_IDENTIFIER_ATTRIBUTE, 'flandre'),
+                Token(TOKEN_TYPE_IDENTIFIER_ATTRIBUTE, Location(8, 0, 8, 7)),
             ],
             True,
         ),
     )
     
-    # identifier ~ builtin variable -> actual
     yield (
-        [
-            'max ',
-        ],
+        'identifier ~ builtin variable -> actual',
+        (
+            'max '
+        ),
+        0,
         0,
         0,
         0,
@@ -647,23 +715,25 @@ def _iter_options():
         None,
         _try_match_identifier,
         (
+            3,
             0,
             3,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_IDENTIFIER_BUILTIN_VARIABLE, 'max'),
+                Token(TOKEN_TYPE_IDENTIFIER_BUILTIN_VARIABLE, Location(0, 0, 0, 3)),
             ],
             True,
         ),
     )
     
-    # identifier ~ builtin exception -> actual
     yield (
-        [
-            'ImportError ',
-        ],
+        'identifier ~ builtin exception -> actual',
+        (
+            'ImportError '
+        ),
+        0,
         0,
         0,
         0,
@@ -671,23 +741,25 @@ def _iter_options():
         None,
         _try_match_identifier,
         (
+            11,
             0,
             11,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_IDENTIFIER_BUILTIN_EXCEPTION, 'ImportError'),
+                Token(TOKEN_TYPE_IDENTIFIER_BUILTIN_EXCEPTION, Location(0, 0, 0, 11)),
             ],
             True,
         ),
     )
     
-    # identifier ~ variable -> actual
     yield (
-        [
-            'pudding ',
-        ],
+        'identifier ~ variable -> actual',
+        (
+            'pudding '
+        ),
+        0,
         0,
         0,
         0,
@@ -695,24 +767,26 @@ def _iter_options():
         None,
         _try_match_identifier,
         (
+            7,
             0,
             7,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_IDENTIFIER_VARIABLE, 'pudding'),
+                Token(TOKEN_TYPE_IDENTIFIER_VARIABLE, Location(0, 0, 0, 7)),
             ],
             True,
         ),
     )
     
-    # identifier -> start in middle
     yield (
-        [
-            '\n',
-            '    pudding ',
-        ],
+        'identifier -> start in middle',
+        (
+            '\n'
+            '    pudding '
+        ),
+        5,
         1,
         4,
         0,
@@ -720,13 +794,14 @@ def _iter_options():
         None,
         _try_match_identifier,
         (
+            12,
             1,
             11,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_IDENTIFIER_VARIABLE, 'pudding'),
+                Token(TOKEN_TYPE_IDENTIFIER_VARIABLE, Location(5, 1, 4, 7)),
             ],
             True,
         ),
@@ -734,9 +809,12 @@ def _iter_options():
     
     # ---- punctuation  ----
     
-    # punctuation -> empty
     yield (
-        [],
+        'punctuation -> empty',
+        (
+            ''
+        ),
+        0,
         0,
         0,
         0,
@@ -744,6 +822,7 @@ def _iter_options():
         None,
         _try_match_punctuation,
         (
+            0,
             0,
             0,
             0,
@@ -754,11 +833,12 @@ def _iter_options():
         ),
     )
     
-    # punctuation -> actual
     yield (
-        [
-            '; ',
-        ],
+        'punctuation -> actual (semi colon)',
+        (
+            '; '
+        ),
+        0,
         0,
         0,
         0,
@@ -766,23 +846,25 @@ def _iter_options():
         None,
         _try_match_punctuation,
         (
+            1,
             0,
             1,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_SPECIAL_PUNCTUATION, ';'),
+                Token(TOKEN_TYPE_SPECIAL_PUNCTUATION_SEMI_COLON, Location(0, 0, 0, 1)),
             ],
             True,
         ),
     )
     
-    # punctuation -> brace, no tracking
     yield (
-        [
-            '{ ',
-        ],
+        'punctuation -> brace (curly open), tracking',
+        (
+            '{ '
+        ),
+        0,
         0,
         0,
         0,
@@ -790,81 +872,62 @@ def _iter_options():
         None,
         _try_match_punctuation,
         (
+            1,
             0,
             1,
             0,
-            None,
+            [
+                TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_OPEN,
+            ],
             False,
             [
-                Token(TOKEN_TYPE_SPECIAL_PUNCTUATION, '{'),
+                Token(TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_OPEN, Location(0, 0, 0, 1)),
             ],
             True,
         ),
     )
     
-    # punctuation -> brace, tracking
     yield (
-        [
-            '{ ',
-        ],
-        0,
-        0,
-        HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING,
-        None,
-        None,
-        _try_match_punctuation,
+        'punctuation -> brace (curly close), tracking',
         (
-            0,
-            1,
-            HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING,
-            [
-                '{',
-            ],
-            False,
-            [
-                Token(TOKEN_TYPE_SPECIAL_PUNCTUATION, '{'),
-            ],
-            True,
+            '({} '
         ),
-    )
-    
-    # punctuation -> brace, tracking (close)
-    yield (
-        [
-            '({} ',
-        ],
+        2,
         0,
         2,
-        HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING,
+        0,
         [
-            '(', '{',
+            TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND_OPEN,
+            TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_OPEN,
         ],
         [
-            Token(TOKEN_TYPE_SPECIAL_PUNCTUATION, '('),
-            Token(TOKEN_TYPE_SPECIAL_PUNCTUATION, '{'),
+            Token(TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND_OPEN, Location(0, 0, 0, 1)),
+            Token(TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_OPEN, Location(1, 0, 1, 1)),
         ],
         _try_match_punctuation,
         (
+            3,
             0,
             3,
-            HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING,
+            0,
             [
-                '(',
+                TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND_OPEN,
             ],
             False,
             [
-                Token(TOKEN_TYPE_SPECIAL_PUNCTUATION, '}'),
+                Token(TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_CLOSE, Location(2, 0, 2, 1)),
             ],
             True,
         ),
     )
     
-    # punctuation -> start in middle
     yield (
-        [
-            '\n',
-            '    ; ',
-        ],
+        'punctuation -> start in middle',
+        (
+            '\n'
+            '    ; '
+        ),
+        5,
         1,
         4,
         0,
@@ -872,13 +935,14 @@ def _iter_options():
         None,
         _try_match_punctuation,
         (
+            6,
             1,
             5,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_SPECIAL_PUNCTUATION, ';'),
+                Token(TOKEN_TYPE_SPECIAL_PUNCTUATION_SEMI_COLON, Location(5, 1, 4, 1)),
             ],
             True,
         ),
@@ -886,9 +950,12 @@ def _iter_options():
     
     # ---- operator  ----
     
-    # operator -> empty
     yield (
-        [],
+        'operator -> empty',
+        (
+            ''
+        ),
+        0,
         0,
         0,
         0,
@@ -896,6 +963,7 @@ def _iter_options():
         None,
         _try_match_operator,
         (
+            0,
             0,
             0,
             0,
@@ -906,11 +974,12 @@ def _iter_options():
         ),
     )
     
-    # operator ~ regular -> actual
     yield (
-        [
-            '<<= ',
-        ],
+        'operator ~ regular -> actual',
+        (
+            '<<= '
+        ),
+        0,
         0,
         0,
         0,
@@ -918,23 +987,25 @@ def _iter_options():
         None,
         _try_match_operator,
         (
+            3,
             0,
             3,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_SPECIAL_OPERATOR, '<<='),
+                Token(TOKEN_TYPE_SPECIAL_OPERATOR, Location(0, 0, 0, 3)),
             ],
             True,
         ),
     )
     
-    # operator ~ attribute -> actual
     yield (
-        [
-            '. ',
-        ],
+        'operator ~ attribute -> actual',
+        (
+            '. '
+        ),
+        0,
         0,
         0,
         0,
@@ -942,23 +1013,25 @@ def _iter_options():
         None,
         _try_match_operator,
         (
+            1,
             0,
             1,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_SPECIAL_OPERATOR_ATTRIBUTE, '.'),
+                Token(TOKEN_TYPE_SPECIAL_OPERATOR_ATTRIBUTE, Location(0, 0, 0, 1)),
             ],
             True,
         ),
     )
     
-    # operator ~ ellipsis -> actual
     yield (
-        [
-            '... ',
-        ],
+        'operator ~ ellipsis -> actual',
+        (
+            '... '
+        ),
+        0,
         0,
         0,
         0,
@@ -966,24 +1039,26 @@ def _iter_options():
         None,
         _try_match_operator,
         (
+            3,
             0,
             3,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_IDENTIFIER_BUILTIN_CONSTANT, '...'),
+                Token(TOKEN_TYPE_IDENTIFIER_BUILTIN_CONSTANT, Location(0, 0, 0, 3)),
             ],
             True,
         ),
     )
     
-    # operator -> start in middle
     yield (
-        [
-            '\n',
-            '    <<= ',
-        ],
+        'operator -> start in middle',
+        (
+            '\n'
+            '    <<= '
+        ),
+        5,
         1,
         4,
         0,
@@ -991,13 +1066,14 @@ def _iter_options():
         None,
         _try_match_operator,
         (
+            8,
             1,
             7,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_SPECIAL_OPERATOR, '<<='),
+                Token(TOKEN_TYPE_SPECIAL_OPERATOR, Location(5, 1, 4, 3)),
             ],
             True,
         ),
@@ -1005,9 +1081,12 @@ def _iter_options():
     
     # ---- space  ----
     
-    # space -> empty
     yield (
-        [],
+        'space -> empty',
+        (
+            ''
+        ),
+        0,
         0,
         0,
         0,
@@ -1015,6 +1094,7 @@ def _iter_options():
         None,
         _try_match_space,
         (
+            0,
             0,
             0,
             0,
@@ -1025,11 +1105,12 @@ def _iter_options():
         ),
     )
     
-    # space -> actual
     yield (
-        [
-            '  = ',
-        ],
+        'space -> actual',
+        (
+            '  = '
+        ),
+        0,
         0,
         0,
         0,
@@ -1037,24 +1118,26 @@ def _iter_options():
         None,
         _try_match_space,
         (
+            2,
             0,
             2,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_SPACE, '  '),
+                Token(TOKEN_TYPE_SPACE, Location(0, 0, 0, 2)),
             ],
             True,
         ),
     )
     
-    # space -> start in middle
     yield (
-        [
-            '\n',
-            '    pudding  =',
-        ],
+        'space -> start in middle',
+        (
+            '\n'
+            '    pudding  ='
+        ),
+        12,
         1,
         11,
         0,
@@ -1062,13 +1145,14 @@ def _iter_options():
         None,
         _try_match_space,
         (
+            14,
             1,
             13,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_SPACE, '  '),
+                Token(TOKEN_TYPE_SPACE, Location(12, 1, 11, 2)),
             ],
             True,
         ),
@@ -1076,9 +1160,12 @@ def _iter_options():
     
     # ---- comment  ----
     
-    # comment -> empty
     yield (
-        [],
+        'comment -> empty',
+        (
+            ''
+        ),
+        0,
         0,
         0,
         0,
@@ -1086,6 +1173,7 @@ def _iter_options():
         None,
         _try_match_comment,
         (
+            0,
             0,
             0,
             0,
@@ -1096,11 +1184,12 @@ def _iter_options():
         ),
     )
     
-    # comment -> actual
     yield (
-        [
-            '# pudding ',
-        ],
+        'comment -> actual',
+        (
+            '# pudding '
+        ),
+        0,
         0,
         0,
         0,
@@ -1108,24 +1197,26 @@ def _iter_options():
         None,
         _try_match_comment,
         (
-            1,
+            10,
             0,
+            10,
             0,
             None,
             True,
             [
-                Token(TOKEN_TYPE_COMMENT, '# pudding '),
+                Token(TOKEN_TYPE_COMMENT, Location(0, 0, 0, 10)),
             ],
             True,
         ),
     )
     
-    # comment -> actual
     yield (
-        [
-            '# pudding \n',
-            '12.6',
-        ],
+        'comment -> actual (has next line)',
+        (
+            '# pudding \n'
+            '12.6'
+        ),
+        0,
         0,
         0,
         0,
@@ -1133,51 +1224,26 @@ def _iter_options():
         None,
         _try_match_comment,
         (
-            1,
+            10,
             0,
+            10,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_COMMENT, '# pudding '),
-                Token(TOKEN_TYPE_LINE_BREAK, '\n'),
+                Token(TOKEN_TYPE_COMMENT, Location(0, 0, 0, 10)),
             ],
             True,
         ),
     )
     
-    # comment -> multi line when disabled
     yield (
-        [
-            '# pudding \n',
-            '',
-        ],
-        0,
-        0,
-        HIGHLIGHT_PARSER_FLAG_NO_MULTI_LINE_CODE,
-        None,
-        None,
-        _try_match_comment,
+        'comment -> start in middle',
         (
-            1,
-            0,
-            HIGHLIGHT_PARSER_FLAG_NO_MULTI_LINE_CODE | HIGHLIGHT_PARSER_FLAG_HIT_MULTI_LINE_CODE,
-            None,
-            True,
-            [
-                Token(TOKEN_TYPE_COMMENT, '# pudding '),
-                Token(TOKEN_TYPE_LINE_BREAK, '\n'),
-            ],
-            True,
+            '\n'
+            '    # pudding'
         ),
-    )
-    
-    # comment -> start in middle
-    yield (
-        [
-            '\n',
-            '    # pudding',
-        ],
+        5,
         1,
         4,
         0,
@@ -1185,13 +1251,14 @@ def _iter_options():
         None,
         _try_match_comment,
         (
-            2,
-            0,
+            14,
+            1,
+            13,
             0,
             None,
             True,
             [
-                Token(TOKEN_TYPE_COMMENT, '# pudding'),
+                Token(TOKEN_TYPE_COMMENT, Location(5, 1, 4, 9)),
             ],
             True,
         ),
@@ -1199,9 +1266,12 @@ def _iter_options():
     
     # ---- anything  ----
     
-    # anything -> empty
     yield (
-        [],
+        'anything -> empty',
+        (
+            ''
+        ),
+        0,
         0,
         0,
         0,
@@ -1209,6 +1279,7 @@ def _iter_options():
         None,
         _try_match_anything,
         (
+            0,
             0,
             0,
             0,
@@ -1219,11 +1290,12 @@ def _iter_options():
         ),
     )
     
-    # anything -> actual
     yield (
-        [
-            '¤ ',
-        ],
+        'anything -> actual',
+        (
+            '¤ '
+        ),
+        0,
         0,
         0,
         0,
@@ -1231,24 +1303,26 @@ def _iter_options():
         None,
         _try_match_anything,
         (
+            1,
             0,
             1,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_NON_SPACE_UNIDENTIFIED, '¤'),
+                Token(TOKEN_TYPE_NON_SPACE_UNIDENTIFIED, Location(0, 0, 0, 1)),
             ],
             True,
         ),
     )
     
-    # anything -> start in middle
     yield (
-        [
-            '\n',
-            '    ¤ ',
-        ],
+        'anything -> start in middle',
+        (
+            '\n'
+            '    ¤ '
+        ),
+        5,
         1,
         4,
         0,
@@ -1256,91 +1330,27 @@ def _iter_options():
         None,
         _try_match_anything,
         (
+            6,
             1,
             5,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_NON_SPACE_UNIDENTIFIED, '¤'),
+                Token(TOKEN_TYPE_NON_SPACE_UNIDENTIFIED, Location(5, 1, 4, 1)),
             ],
             True,
         ),
     )
     
-    # ---- empty line  ----
-    
-    # empty line -> empty
-    yield (
-        [],
-        0,
-        0,
-        0,
-        None,
-        None,
-        _try_match_empty_line,
-        (
-            1,
-            0,
-            0,
-            None,
-            True,
-            [],
-            True,
-        ),
-    )
-    
-    # empty line -> actual
-    yield (
-        [
-            '',
-        ],
-        0,
-        0,
-        0,
-        None,
-        None,
-        _try_match_empty_line,
-        (
-            1,
-            0,
-            0,
-            None,
-            True,
-            [],
-            True,
-        ),
-    )
-    
-    # empty line -> start in middle
-    yield (
-        [
-            '\n',
-            ' \n',
-            '',
-        ],
-        1,
-        1,
-        0,
-        None,
-        None,
-        _try_match_empty_line,
-        (
-            1,
-            1,
-            0,
-            None,
-            False,
-            [],
-            False,
-        ),
-    )
-    
     # ---- console prefix  ----
     
-    # console prefix -> empty
     yield (
-        [],
+        'console prefix -> empty',
+        (
+            ''
+        ),
+        0,
         0,
         0,
         0,
@@ -1348,6 +1358,7 @@ def _iter_options():
         None,
         _try_match_console_prefix,
         (
+            0,
             0,
             0,
             0,
@@ -1358,11 +1369,12 @@ def _iter_options():
         ),
     )
     
-    # console prefix -> actual
     yield (
-        [
-            'In [1]: miau',
-        ],
+        'console prefix -> actual',
+        (
+            'In [1]: miau'
+        ),
+        0,
         0,
         0,
         0,
@@ -1370,25 +1382,27 @@ def _iter_options():
         None,
         _try_match_console_prefix,
         (
+            8,
             0,
             8,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_SPECIAL_CONSOLE_PREFIX, 'In [1]:'),
-                Token(TOKEN_TYPE_SPACE, ' '),
+                Token(TOKEN_TYPE_SPECIAL_CONSOLE_PREFIX, Location(0, 0, 0, 7)),
+                Token(TOKEN_TYPE_SPACE, Location(7, 0, 7, 1)),
             ],
             True,
         ),
     )
     
-    # console prefix -> start in middle
     yield (
-        [
-            '\n',
-            '    In [1]: miau ',
-        ],
+        'console prefix -> start in middle',
+        (
+            '\n'
+            '    In [1]: miau '
+        ),
+        5,
         1,
         4,
         0,
@@ -1396,6 +1410,7 @@ def _iter_options():
         None,
         _try_match_console_prefix,
         (
+            5,
             1,
             4,
             0,
@@ -1408,9 +1423,12 @@ def _iter_options():
     
     # ---- line break  ----
     
-    # line break -> empty
     yield (
-        [],
+        'line break -> empty',
+        (
+            ''
+        ),
+        0,
         0,
         0,
         0,
@@ -1418,6 +1436,7 @@ def _iter_options():
         None,
         _try_match_line_break,
         (
+            0,
             0,
             0,
             0,
@@ -1428,12 +1447,13 @@ def _iter_options():
         ),
     )
     
-    # line break -> actual
     yield (
-        [
-            '\n',
-            '',
-        ],
+        'line break -> actual',
+        (
+            '\n'
+            ' '
+        ),
+        0,
         0,
         0,
         0,
@@ -1442,23 +1462,25 @@ def _iter_options():
         _try_match_line_break,
         (
             1,
+            1,
             0,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_LINE_BREAK, '\n'),
+                Token(TOKEN_TYPE_LINE_BREAK, Location(0, 0, 0, 1)),
             ],
             True,
         ),
     )
     
-    # line break -> line breaks disabled
     yield (
-        [
-            '\n',
-            '',
-        ],
+        'line break -> line breaks disabled',
+        (
+            '\n'
+            ''
+        ),
+        0,
         0,
         0,
         HIGHLIGHT_PARSER_FLAG_NO_MULTI_LINE_CODE,
@@ -1466,25 +1488,25 @@ def _iter_options():
         None,
         _try_match_line_break,
         (
-            1,
+            0,
+            0,
             0,
             HIGHLIGHT_PARSER_FLAG_NO_MULTI_LINE_CODE | HIGHLIGHT_PARSER_FLAG_HIT_MULTI_LINE_CODE,
             None,
             True,
-            [
-                Token(TOKEN_TYPE_LINE_BREAK, '\n'),
-            ],
+            [],
             True,
         ),
     )
     
-    # line break -> start in middle
     yield (
-        [
-            '\n',
-            'miau\n',
-            '',
-        ],
+        'line break -> start in middle',
+        (
+            '\n'
+            'miau\n'
+            ' '
+        ),
+        5,
         1,
         4,
         0,
@@ -1492,13 +1514,14 @@ def _iter_options():
         None,
         _try_match_line_break,
         (
+            6,
             2,
             0,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_LINE_BREAK, '\n'),
+                Token(TOKEN_TYPE_LINE_BREAK, Location(5, 1, 4, 1)),
             ],
             True,
         ),
@@ -1506,25 +1529,23 @@ def _iter_options():
     
     # ---- format string end  ----
     
-    # format string end -> empty
     yield (
-        [],
-        0,
-        0,
+        'format string end -> empty',
         (
-            HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-            HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
+            ''
         ),
+        0,
+        0,
+        0,
+        HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
         None,
         None,
         _try_match_format_string_end,
         (
             0,
             0,
-            (
-                HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-                HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-            ),
+            0,
+            HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
             None,
             True,
             [],
@@ -1532,41 +1553,40 @@ def _iter_options():
         ),
     )
     
-    # format string end -> actual
     yield (
-        [
-            '} ',
-        ],
-        0,
-        0,
+        'format string end -> actual',
         (
-            HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-            HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
+            '} '
         ),
-        None,
+        0,
+        0,
+        0,
+        HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
+        [
+            TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN,
+        ],
         None,
         _try_match_format_string_end,
         (
+            1,
             0,
             1,
-            (
-                HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-                HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-            ),
+            HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
             None,
             True,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '}'),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(0, 0, 0, 1)),
             ],
             True,
         ),
     )
     
-    # format string end -> not in format string
     yield (
-        [
-            '} ',
-        ],
+        'format string end -> not in format string',
+        (
+            '} '
+        ),
+        0,
         0,
         0,
         0,
@@ -1577,6 +1597,7 @@ def _iter_options():
             0,
             0,
             0,
+            0,
             None,
             False,
             [],
@@ -1584,33 +1605,29 @@ def _iter_options():
         ),
     )
     
-    # format string end -> open braces
     yield (
-        [
-            '{} ',
-        ],
+        'format string end -> open braces',
+        (
+            '{} '
+        ),
+        1,
         0,
         1,
-        (
-            HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-            HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-        ),
+        HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
         [
-            '{',
+            TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_OPEN,
         ],
         [
-            Token(TOKEN_TYPE_SPECIAL_PUNCTUATION, '{'),
+            Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN, Location(0, 0, 0, 1)),
         ],
         _try_match_format_string_end,
         (
+            1,
             0,
             1,
-            (
-                HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-                HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-            ),
+            HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
             [
-                '{',
+                TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_OPEN,
             ],
             False,
             [],
@@ -1618,32 +1635,30 @@ def _iter_options():
         ),
     )
     
-    # format string end -> start in middle
     yield (
-        [
-            '\n',
-            '    } ',
-        ],
+        'format string end -> start in middle',
+        (
+            '\n'
+            '    } '
+        ),
+        5,
         1,
         4,
-        (
-            HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-            HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-        ),
-        None,
+        HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
+        [
+            TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN,
+        ],
         None,
         _try_match_format_string_end,
         (
+            6,
             1,
             5,
-            (
-                HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-                HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-            ),
+            HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
             None,
             True,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '}'),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(5, 1, 4, 1)),
             ],
             True,
         ),
@@ -1651,25 +1666,23 @@ def _iter_options():
     
     # ---- format string postfix  ----
     
-    # format string postfix -> empty
     yield (
-        [],
-        0,
-        0,
+        'format string postfix -> empty',
         (
-            HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-            HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
+            ''
         ),
+        0,
+        0,
+        0,
+        HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
         None,
         None,
         _try_match_format_string_postfix,
         (
             0,
             0,
-            (
-                HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-                HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-            ),
+            0,
+            HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
             None,
             True,
             [],
@@ -1677,42 +1690,41 @@ def _iter_options():
         ),
     )
     
-    # format string postfix -> actual
     yield (
-        [
-            '!r} ',
-        ],
-        0,
-        0,
+        'format string postfix -> actual',
         (
-            HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-            HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
+            '!r} '
         ),
-        None,
+        0,
+        0,
+        0,
+        HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
+        [
+            TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN,
+        ],
         None,
         _try_match_format_string_postfix,
         (
+            3,
             0,
             3,
-            (
-                HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-                HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-            ),
+            HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
             None,
             True,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_POSTFIX, '!r'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '}'),
+                Token(TOKEN_TYPE_STRING_FORMAT_POSTFIX, Location(0, 0, 0, 2)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(2, 0, 2, 1)),
             ],
             True,
         ),
     )
     
-    # format string postfix -> not in format string
     yield (
-        [
-            '!r} ',
-        ],
+        'format string postfix -> not in format string',
+        (
+            '!r} '
+        ),
+        0,
         0,
         0,
         0,
@@ -1723,6 +1735,7 @@ def _iter_options():
             0,
             0,
             0,
+            0,
             None,
             False,
             [],
@@ -1730,33 +1743,29 @@ def _iter_options():
         ),
     )
     
-    # format string postfix -> open braces
     yield (
-        [
+        'format string postfix -> open braces',
+        (
             '{!r} ',
-        ],
+        ),
+        1,
         0,
         1,
-        (
-            HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-            HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-        ),
+        HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
         [
-            '{',
+            TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_OPEN,
         ],
         [
-            Token(TOKEN_TYPE_SPECIAL_PUNCTUATION, '{'),
+            Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN, Location(0, 0, 0, 1)),
         ],
         _try_match_format_string_postfix,
         (
+            1,
             0,
             1,
-            (
-                HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-                HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-            ),
+            HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
             [
-                '{',
+                TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_OPEN,
             ],
             False,
             [],
@@ -1764,33 +1773,32 @@ def _iter_options():
         ),
     )
     
-    # format string postfix -> start in middle
     yield (
-        [
-            '\n',
-            '    !r} ',
-        ],
+        'format string postfix -> start in middle',
+        (
+            '\n'
+            '    !r} '
+        ),
+        5,
         1,
         4,
-        (
-            HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-            HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-        ),
-        None,
+        HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
+        [
+            TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN,
+        ],
         None,
         _try_match_format_string_postfix,
         (
+            
+            8,
             1,
             7,
-            (
-                HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-                HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-            ),
+            HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
             None,
             True,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_POSTFIX, '!r'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '}'),
+                Token(TOKEN_TYPE_STRING_FORMAT_POSTFIX, Location(5, 1, 4, 2)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(7, 1, 6, 1)),
             ],
             True,
         ),
@@ -1798,25 +1806,23 @@ def _iter_options():
     
     # ---- format string code  ----
     
-    # format string code -> empty
     yield (
-        [],
-        0,
-        0,
+        'format string code -> empty',
         (
-            HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-            HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
+            ''
         ),
+        0,
+        0,
+        0,
+        HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
         None,
         None,
         _try_match_format_string_code,
         (
             0,
             0,
-            (
-                HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-                HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-            ),
+            0,
+            HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
             None,
             True,
             [],
@@ -1824,314 +1830,323 @@ def _iter_options():
         ),
     )
     
-    # format string code -> actual
     yield (
-        [
-            ':} ',
-        ],
-        0,
-        0,
+        'format string code -> actual',
         (
-            HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-            HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
+            ':} '
         ),
-        None,
+        0,
+        0,
+        0,
+        HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
+        [
+            TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN,
+        ],
         None,
         _try_match_format_string_code,
         (
+            2,
             0,
             2,
-            (
-                HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-                HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-            ),
+            HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
             None,
             True,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, ':'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '}'),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_CODE_BEGIN, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(1, 0, 1, 1)),
             ],
             True,
         ),
     )
     
-    # format string code -> string in it
     yield (
-        [
-            ':pudding} ',
-        ],
-        0,
-        0,
+        'format string code -> string in it',
         (
-            HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-            HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
+            ':pudding} '
         ),
-        None,
+        0,
+        0,
+        0,
+        HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
+        [
+            TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN,
+        ],
         None,
         _try_match_format_string_code,
         (
+            9,
             0,
             9,
-            (
-                HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-                HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-            ),
+            HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
             None,
             True,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, ':'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_CODE, 'pudding'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '}'),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_CODE_BEGIN, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_CODE, Location(1, 0, 1, 7)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(8, 0, 8, 1)),
             ],
             True,
         ),
     )
     
-    # format string code -> double brace in it
     yield (
-        [
-            ':}}{{} ',
-        ],
-        0,
-        0,
+        'format string code -> double brace in it',
         (
-            HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-            HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
+            ':}}{{} '
         ),
-        None,
+        0,
+        0,
+        0,
+        HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
+        [
+            TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN,
+        ],
         None,
         _try_match_format_string_code,
         (
+            6,
             0,
             6,
-            (
-                HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-                HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-            ),
+            HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
             None,
             True,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, ':'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_CODE, '}}{{'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '}'),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_CODE_BEGIN, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_CODE, Location(1, 0, 1, 4)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(5, 0, 5, 1)),
             ],
             True,
         ),
     )
     
-    # format string code -> escaped
     yield (
-        [
-            ':\\n\\n} ',
-        ],
-        0,
-        0,
+        'format string code -> escaped',
         (
-            HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-            HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
+            ':\\n\\n} '
         ),
-        None,
+        0,
+        0,
+        0,
+        HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
+        [
+            TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN,
+        ],
         None,
         _try_match_format_string_code,
         (
+            6,
             0,
             6,
-            (
-                HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-                HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-            ),
+            HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
             None,
             True,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, ':'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_CODE, '\\n\\n'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '}'),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_CODE_BEGIN, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_CODE, Location(1, 0, 1, 4)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(5, 0, 5, 1)),
             ],
             True,
         ),
     )
     
-    # format string code -> escaped
     yield (
-        [
-            ':\n',
-            '} ',
-        ],
-        0,
-        0,
+        'format string code -> escaping',
         (
-            HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-            HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
+            ':\n'
+            '} '
         ),
-        None,
+        0,
+        0,
+        0,
+        HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
+        [
+            TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN,
+            TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN,
+        ],
         None,
         _try_match_format_string_code,
         (
             1,
             0,
-            (
-                HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-                HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT | HIGHLIGHT_PARSER_FLAG_HIT_MULTI_LINE_CODE
-            ),
-            None,
-            True,
-            [
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, ':'),
-                Token(TOKEN_TYPE_LINE_BREAK, '\n'),
-            ],
-            True,
-        ),
-    )
-    
-    # format string code -> escaped
-    yield (
-        [
-            ':{pudding}a} ',
-        ],
-        0,
-        0,
-        (
-            HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-            HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-        ),
-        None,
-        None,
-        _try_match_format_string_code,
-        (
-            0,
-            12,
-            (
-                HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-                HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-            ),
-            None,
-            True,
-            [
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, ':'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '{'),
-                Token(TOKEN_TYPE_IDENTIFIER_VARIABLE, 'pudding'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '}'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_CODE, 'a'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '}'),
-            ],
-            True,
-        ),
-    )
-    
-    # format string code -> nested braces
-    yield (
-        [
-            ':{pudding}a} ',
-        ],
-        0,
-        0,
-        (
-            HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-            HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-        ),
-        None,
-        None,
-        _try_match_format_string_code,
-        (
-            0,
-            12,
-            (
-                HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-                HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-            ),
-            None,
-            True,
-            [
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, ':'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '{'),
-                Token(TOKEN_TYPE_IDENTIFIER_VARIABLE, 'pudding'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '}'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_CODE, 'a'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '}'),
-            ],
-            True,
-        ),
-    )
-    
-    # format string code -> multi-line
-    yield (
-        [
-            ':{\n',
-            '    pudding\n',
-            '}} ',
-        ],
-        0,
-        0,
-        (
-            HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-            HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT | HIGHLIGHT_PARSER_FLAG_ALLOW_RELAXED_FORMAT_STRINGS
-        ),
-        None,
-        None,
-        _try_match_format_string_code,
-        (
-            2,
-            2,
-            (
-                HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-                HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT | HIGHLIGHT_PARSER_FLAG_ALLOW_RELAXED_FORMAT_STRINGS
-            ),
-            None,
-            True,
-            [
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, ':'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '{'),
-                Token(TOKEN_TYPE_LINE_BREAK, '\n'),
-                Token(TOKEN_TYPE_SPACE, '    '),
-                Token(TOKEN_TYPE_IDENTIFIER_VARIABLE, 'pudding'),
-                Token(TOKEN_TYPE_LINE_BREAK, '\n'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '}'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '}'),
-            ],
-            True,
-        ),
-    )
-    
-    # format string code -> multi-line & multi-line disabled
-    yield (
-        [
-            ':{\n',
-            '    pudding\n',
-            '}} ',
-        ],
-        0,
-        0,
-        (
-            HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-            HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT | HIGHLIGHT_PARSER_FLAG_NO_MULTI_LINE_CODE
-        ),
-        None,
-        None,
-        _try_match_format_string_code,
-        (
             1,
-            0,
             (
-                HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-                HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT | HIGHLIGHT_PARSER_FLAG_NO_MULTI_LINE_CODE |
+                HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT |
                 HIGHLIGHT_PARSER_FLAG_HIT_MULTI_LINE_CODE
             ),
             None,
             True,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, ':'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '{'),
-                Token(TOKEN_TYPE_LINE_BREAK, '\n'),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_CODE_BEGIN, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(1, 0, 1, 0)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE, Location(1, 0, 1, 0)),
             ],
             True,
         ),
     )
     
-    # format string code -> not in format string
     yield (
+        'format string code -> nested braces',
+        (
+            ':{pudding}a} '
+        ),
+        0,
+        0,
+        0,
+        HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
         [
-            ':} ',
+            TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN,
         ],
+        None,
+        _try_match_format_string_code,
+        (
+            12,
+            0,
+            12,
+            HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
+            None,
+            True,
+            [
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_CODE_BEGIN, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN, Location(1, 0, 1, 1)),
+                Token(TOKEN_TYPE_IDENTIFIER_VARIABLE, Location(2, 0, 2, 7)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(9, 0, 9, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_CODE, Location(10, 0, 10, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(11, 0, 11, 1)),
+            ],
+            True,
+        ),
+    )
+    
+    yield (
+        'format string code -> multi-line',
+        (
+            ':{\n'
+            '    pudding\n'
+            '}} '
+        ),
+        0,
+        0,
+        0,
+        (
+            HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT |
+            HIGHLIGHT_PARSER_FLAG_ALLOW_RELAXED_FORMAT_STRINGS
+        ),
+        [
+            TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN,
+        ],
+        None,
+        _try_match_format_string_code,
+        (
+            17,
+            2,
+            2,
+            (
+                HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT |
+                HIGHLIGHT_PARSER_FLAG_ALLOW_RELAXED_FORMAT_STRINGS
+            ),
+            None,
+            True,
+            [
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_CODE_BEGIN, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN, Location(1, 0, 1, 1)),
+                Token(TOKEN_TYPE_LINE_BREAK, Location(2, 0, 2, 1)),
+                Token(TOKEN_TYPE_SPACE, Location(3, 1, 0, 4)),
+                Token(TOKEN_TYPE_IDENTIFIER_VARIABLE, Location(7, 1, 4, 7)),
+                Token(TOKEN_TYPE_LINE_BREAK, Location(14, 1, 11, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(15, 2, 0, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(16, 2, 1, 1)),
+            ],
+            True,
+        ),
+    )
+    
+    yield (
+        'format string code -> multi-line (string code)',
+        (
+            ':a\n'
+            'a} '
+        ),
+        0,
+        0,
+        0,
+        (
+            HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT |
+            HIGHLIGHT_PARSER_FLAG_ALLOW_RELAXED_FORMAT_STRINGS
+        ),
+        [
+            TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN,
+            TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN,
+        ],
+        None,
+        _try_match_format_string_code,
+        (
+            5,
+            1,
+            2,
+            (
+                HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT |
+                HIGHLIGHT_PARSER_FLAG_ALLOW_RELAXED_FORMAT_STRINGS
+            ),
+            [
+                TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN,
+            ],
+            True,
+            [
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_CODE_BEGIN, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_CODE, Location(1, 0, 1, 1)),
+                Token(TOKEN_TYPE_LINE_BREAK, Location(2, 0, 2, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_CODE, Location(3, 1, 0, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(4, 1, 1, 1)),
+            ],
+            True,
+        ),
+    )
+    
+    yield (
+        'format string code -> multi-line & multi-line disabled',
+        (
+            ':{\n'
+            '    pudding\n'
+            '}} '
+        ),
+        0,
+        0,
+        0,
+        (
+            HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT |
+            HIGHLIGHT_PARSER_FLAG_NO_MULTI_LINE_CODE
+        ),
+        [
+            TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN
+        ],
+        None,
+        _try_match_format_string_code,
+        (
+            2,
+            0,
+            2,
+            (
+                HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT |
+                HIGHLIGHT_PARSER_FLAG_NO_MULTI_LINE_CODE | HIGHLIGHT_PARSER_FLAG_HIT_MULTI_LINE_CODE
+            ),
+            None,
+            True,
+            [
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_CODE_BEGIN, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN, Location(1, 0, 1, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(2, 0, 2, 0)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(2, 0, 2, 0)),
+            ],
+            True,
+        ),
+    )
+    
+    yield (
+        'format string code -> not in format string',
+        (
+            ':} '
+        ),
+        0,
         0,
         0,
         0,
@@ -2139,6 +2154,7 @@ def _iter_options():
         None,
         _try_match_format_string_code,
         (
+            0,
             0,
             0,
             0,
@@ -2149,33 +2165,29 @@ def _iter_options():
         ),
     )
     
-    # format string postfix -> open braces
     yield (
-        [
-            '{:} ',
-        ],
+        'format string format code -> open braces',
+        (
+            '{:} '
+        ),
+        1,
         0,
         1,
-        (
-            HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-            HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-        ),
+        HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
         [
-            '{',
+            TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_OPEN,
         ],
         [
-            Token(TOKEN_TYPE_SPECIAL_PUNCTUATION, '{'),
+            Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN, Location(0, 0, 0, 1)),
         ],
         _try_match_format_string_code,
         (
+            1,
             0,
             1,
-            (
-                HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-                HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-            ),
+            HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
             [
-                '{',
+                TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_OPEN,
             ],
             False,
             [],
@@ -2183,33 +2195,31 @@ def _iter_options():
         ),
     )
     
-    # format string code -> start in middle
     yield (
-        [
-            '\n',
-            '    :} ',
-        ],
+        'format string code -> start in middle',
+        (
+            '\n'
+            '    :} '
+        ),
+        5,
         1,
         4,
-        (
-            HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-            HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-        ),
-        None,
+        HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
+        [
+            TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN,
+        ],
         None,
         _try_match_format_string_code,
         (
+            7,
             1,
             6,
-            (
-                HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING | HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-                HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
-            ),
+            HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
             None,
             True,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, ':'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '}'),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_CODE_BEGIN, Location(5, 1, 4, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(6, 1, 5, 1)),
             ],
             True,
         ),
@@ -2217,9 +2227,12 @@ def _iter_options():
     
     # ---- string ----
     
-    # string -> empty
     yield (
-        [],
+        'string -> empty',
+        (
+            ''
+        ),
+        0,
         0,
         0,
         0,
@@ -2227,6 +2240,7 @@ def _iter_options():
         None,
         _try_match_string,
         (
+            0,
             0,
             0,
             0,
@@ -2237,11 +2251,12 @@ def _iter_options():
         ),
     )
     
-    # string ~ unicode -> actual
     yield (
-        [
-            '"pudding" ',
-        ],
+        'string ~ unicode -> actual',
+        (
+            '"pudding" '
+        ),
+        0,
         0,
         0,
         0,
@@ -2249,25 +2264,27 @@ def _iter_options():
         None,
         _try_match_string,
         (
+            9,
             0,
             9,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE, '"'),
-                Token(TOKEN_TYPE_STRING_UNICODE, 'pudding'),
-                Token(TOKEN_TYPE_STRING_UNICODE, '"'),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE, Location(1, 0, 1, 7)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE, Location(8, 0, 8, 1)),
             ],
             True,
         ),
     )
     
-    # string ~ unicode ~ single quote -> actual
     yield (
-        [
-            '\'pudding\' ',
-        ],
+        'string ~ unicode ~ single quote -> actual',
+        (
+            '\'pudding\' '
+        ),
+        0,
         0,
         0,
         0,
@@ -2275,25 +2292,27 @@ def _iter_options():
         None,
         _try_match_string,
         (
+            9,
             0,
             9,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE, '\''),
-                Token(TOKEN_TYPE_STRING_UNICODE, 'pudding'),
-                Token(TOKEN_TYPE_STRING_UNICODE, '\''),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE, Location(1, 0, 1, 7)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE, Location(8, 0, 8, 1)),
             ],
             True,
         ),
     )
     
-    # string ~ raw unicode -> actual
     yield (
-        [
-            'r"pudding" ',
-        ],
+        'string ~ raw unicode -> actual',
+        (
+            'r"pudding" '
+        ),
+        0,
         0,
         0,
         0,
@@ -2301,25 +2320,28 @@ def _iter_options():
         None,
         _try_match_string,
         (
+            10,
             0,
             10,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE, 'r"'),
-                Token(TOKEN_TYPE_STRING_UNICODE, 'pudding'),
-                Token(TOKEN_TYPE_STRING_UNICODE, '"'),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_PREFIX, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN, Location(1, 0, 1, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE, Location(2, 0, 2, 7)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE, Location(9, 0, 9, 1)),
             ],
             True,
         ),
     )
     
-    # string ~ binary -> actual
     yield (
-        [
-            'b"pudding" ',
-        ],
+        'string ~ binary -> actual',
+        (
+            'b"pudding" '
+        ),
+        0,
         0,
         0,
         0,
@@ -2327,25 +2349,28 @@ def _iter_options():
         None,
         _try_match_string,
         (
+            10,
             0,
             10,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_STRING_BINARY, 'b"'),
-                Token(TOKEN_TYPE_STRING_BINARY, 'pudding'),
-                Token(TOKEN_TYPE_STRING_BINARY, '"'),
+                Token(TOKEN_TYPE_STRING_BINARY_SPECIAL_PREFIX, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_OPEN, Location(1, 0, 1, 1)),
+                Token(TOKEN_TYPE_STRING_BINARY, Location(2, 0, 2, 7)),
+                Token(TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_CLOSE, Location(9, 0, 9, 1)),
             ],
             True,
         ),
     )
     
-    # string ~ raw binary -> actual
     yield (
-        [
-            'rb"pudding" ',
-        ],
+        'string ~ raw binary -> actual',
+        (
+            'rb"pudding" '
+        ),
+        0,
         0,
         0,
         0,
@@ -2353,25 +2378,28 @@ def _iter_options():
         None,
         _try_match_string,
         (
+            11,
             0,
             11,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_STRING_BINARY, 'rb"'),
-                Token(TOKEN_TYPE_STRING_BINARY, 'pudding'),
-                Token(TOKEN_TYPE_STRING_BINARY, '"'),
+                Token(TOKEN_TYPE_STRING_BINARY_SPECIAL_PREFIX, Location(0, 0, 0, 2)),
+                Token(TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_OPEN, Location(2, 0, 2, 1)),
+                Token(TOKEN_TYPE_STRING_BINARY, Location(3, 0, 3, 7)),
+                Token(TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_CLOSE, Location(10, 0, 10, 1)),
             ],
             True,
         ),
     )
     
-    # string ~ format unicode -> actual
     yield (
-        [
-            'f"pudding" ',
-        ],
+        'string ~ format unicode -> actual',
+        (
+            'f"pudding" '
+        ),
+        0,
         0,
         0,
         0,
@@ -2379,25 +2407,28 @@ def _iter_options():
         None,
         _try_match_string,
         (
+            10,
             0,
             10,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT, 'f"'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT, 'pudding'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT, '"'),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_PREFIX, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN, Location(1, 0, 1, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE, Location(2, 0, 2, 7)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE, Location(9, 0, 9, 1)),
             ],
             True,
         ),
     )
     
-    # string ~ raw format unicode -> actual
     yield (
-        [
-            'rf"pudding" ',
-        ],
+        'string ~ raw format unicode -> actual',
+        (
+            'rf"pudding" '
+        ),
+        0,
         0,
         0,
         0,
@@ -2405,25 +2436,28 @@ def _iter_options():
         None,
         _try_match_string,
         (
+            11,
             0,
             11,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT, 'rf"'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT, 'pudding'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT, '"'),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_PREFIX, Location(0, 0, 0, 2)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN, Location(2, 0, 2, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE, Location(3, 0, 3, 7)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE, Location(10, 0, 10, 1)),
             ],
             True,
         ),
     )
     
-    # string ~ unicode -> other encapsulator in middle
     yield (
-        [
-            '"\'\'" ',
-        ],
+        'string ~ unicode -> other encapsulator in middle',
+        (
+            '"\'\'" '
+        ),
+        0,
         0,
         0,
         0,
@@ -2431,27 +2465,29 @@ def _iter_options():
         None,
         _try_match_string,
         (
+            4,
             0,
             4,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE, '"'),
-                Token(TOKEN_TYPE_STRING_UNICODE, '\'\''),
-                Token(TOKEN_TYPE_STRING_UNICODE, '"'),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE, Location(1, 0, 1, 2)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE, Location(3, 0, 3, 1)),
             ],
             True,
         ),
     )
     
-    # string ~ unicode -> single line
     yield (
-        [
-            '""\n',
-            '""\n',
-            
-        ],
+        'string ~ unicode -> single line',
+        (
+            '""\n'
+            '""\n'
+        
+        ),
+        0,
         0,
         0,
         0,
@@ -2459,27 +2495,29 @@ def _iter_options():
         None,
         _try_match_string,
         (
+            2,
             0,
             2,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE, '"'),
-                Token(TOKEN_TYPE_STRING_UNICODE, '"'),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE, Location(1, 0, 1, 1)),
             ],
             True,
         ),
     )
     
-    # string ~ unicode -> multi line
     yield (
-        [
-            '"""\n',
-            '    pudding"""\n',
-            '',
-            
-        ],
+        'string ~ unicode -> multi line',
+        (
+            '"""\n'
+            '    pudding"""\n'
+            ''
+        
+        ),
+        0,
         0,
         0,
         0,
@@ -2487,29 +2525,30 @@ def _iter_options():
         None,
         _try_match_string,
         (
+            18,
             1,
             14,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE, '"""'),
-                Token(TOKEN_TYPE_LINE_BREAK, '\n'),
-                Token(TOKEN_TYPE_STRING_UNICODE, '    pudding'),
-                Token(TOKEN_TYPE_STRING_UNICODE, '"""'),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN, Location(0, 0, 0, 3)),
+                Token(TOKEN_TYPE_LINE_BREAK, Location(3, 0, 3, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE, Location(4, 1, 0, 11)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE, Location(15, 1, 11, 3)),
             ],
             True,
         ),
     )
     
-    # string ~ unicode -> unclosed
     yield (
-        [
-            '"""\n',
-            '    pudding\n',
-            '',
-            
-        ],
+        'string ~ unicode -> unclosed',
+        (
+            '"""\n'
+            '    pudding\n'
+            ''
+        ),
+        0,
         0,
         0,
         0,
@@ -2517,29 +2556,31 @@ def _iter_options():
         None,
         _try_match_string,
         (
-            3,
+            16,
+            2,
             0,
             0,
             None,
             True,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE, '"""'),
-                Token(TOKEN_TYPE_LINE_BREAK, '\n'),
-                Token(TOKEN_TYPE_STRING_UNICODE, '    pudding'),
-                Token(TOKEN_TYPE_LINE_BREAK, '\n'),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN, Location(0, 0, 0, 3)),
+                Token(TOKEN_TYPE_LINE_BREAK, Location(3, 0, 3, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE, Location(4, 1, 0, 11)),
+                Token(TOKEN_TYPE_LINE_BREAK, Location(15, 1, 11, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE, Location(16, 2, 0, 0)),
             ],
             True,
         ),
     )
     
-    # string ~ unicode -> multi line, multi line code disabled
     yield (
-        [
-            '"""pudding\n',
-            '"""\n',
-            '',
-            
-        ],
+        'string ~ unicode -> multi line, multi line code disabled',
+        (
+            '"""pudding\n'
+            '"""\n'
+            ''
+        ),
+        0,
         0,
         0,
         HIGHLIGHT_PARSER_FLAG_NO_MULTI_LINE_CODE,
@@ -2547,26 +2588,27 @@ def _iter_options():
         None,
         _try_match_string,
         (
-            1,
+            10,
             0,
+            10,
             HIGHLIGHT_PARSER_FLAG_NO_MULTI_LINE_CODE,
             None,
             False,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE, '"""'),
-                Token(TOKEN_TYPE_STRING_UNICODE, 'pudding'),
-                Token(TOKEN_TYPE_LINE_BREAK, '\n'),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN, Location(0, 0, 0, 3)),
+                Token(TOKEN_TYPE_STRING_UNICODE, Location(3, 0, 3, 7)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE, Location(10, 0, 10, 0)),
             ],
             True,
         ),
     )
     
-    # string ~ unicode -> ignore escaped encapsulator
     yield (
-        [
-            '"\\"" ',
-            
-        ],
+        'string ~ unicode -> ignore escaped encapsulator',
+        (
+            '"\\"" '
+        ),
+        0,
         0,
         0,
         0,
@@ -2574,26 +2616,27 @@ def _iter_options():
         None,
         _try_match_string,
         (
+            4,
             0,
             4,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE, '"'),
-                Token(TOKEN_TYPE_STRING_UNICODE, '\\"'),
-                Token(TOKEN_TYPE_STRING_UNICODE, '"'),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE, Location(1, 0, 1, 2)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE, Location(3, 0, 3, 1)),
             ],
             True,
         ),
     )
     
-    # string ~ unicode -> double quote, but disabled
     yield (
-        [
-            '"" ',
-            
-        ],
+        'string ~ unicode -> double quote, but disabled',
+        (
+            '"" '
+        ),
+        0,
         0,
         0,
         HIGHLIGHT_PARSER_FLAG_NO_DOUBLE_QUOTE_STRINGS,
@@ -2601,6 +2644,7 @@ def _iter_options():
         None,
         _try_match_string,
         (
+            0,
             0,
             0,
             HIGHLIGHT_PARSER_FLAG_NO_DOUBLE_QUOTE_STRINGS | HIGHLIGHT_PARSER_FLAG_HIT_DISABLED_QUOTE,
@@ -2611,12 +2655,12 @@ def _iter_options():
         ),
     )
     
-    # string ~ unicode -> single quote, but disabled
     yield (
-        [
-            '\'\' ',
-            
-        ],
+        'string ~ unicode -> single quote, but disabled',
+        (
+            '\'\' '
+        ),
+        0,
         0,
         0,
         HIGHLIGHT_PARSER_FLAG_NO_SINGLE_QUOTE_STRINGS,
@@ -2624,6 +2668,7 @@ def _iter_options():
         None,
         _try_match_string,
         (
+            0,
             0,
             0,
             HIGHLIGHT_PARSER_FLAG_NO_SINGLE_QUOTE_STRINGS | HIGHLIGHT_PARSER_FLAG_HIT_DISABLED_QUOTE,
@@ -2634,12 +2679,12 @@ def _iter_options():
         ),
     )
     
-    # string ~ format unicode -> with code in it
     yield (
-        [
-            'f"{pudding + mister}" ',
-            
-        ],
+        'string ~ format unicode -> with code in it',
+        (
+            'f"{pudding + mister}" '
+        ),
+        0,
         0,
         0,
         0,
@@ -2647,34 +2692,36 @@ def _iter_options():
         None,
         _try_match_string,
         (
+            21,
             0,
             21,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT, 'f"'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '{'),
-                Token(TOKEN_TYPE_IDENTIFIER_VARIABLE, 'pudding'),
-                Token(TOKEN_TYPE_SPACE, ' '),
-                Token(TOKEN_TYPE_SPECIAL_OPERATOR, '+'),
-                Token(TOKEN_TYPE_SPACE, ' '),
-                Token(TOKEN_TYPE_IDENTIFIER_VARIABLE, 'mister'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '}'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT, '"'),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_PREFIX, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN, Location(1, 0, 1, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN, Location(2, 0, 2, 1)),
+                Token(TOKEN_TYPE_IDENTIFIER_VARIABLE, Location(3, 0, 3, 7)),
+                Token(TOKEN_TYPE_SPACE, Location(10, 0, 10, 1)),
+                Token(TOKEN_TYPE_SPECIAL_OPERATOR, Location(11, 0, 11, 1)),
+                Token(TOKEN_TYPE_SPACE, Location(12, 0, 12, 1)),
+                Token(TOKEN_TYPE_IDENTIFIER_VARIABLE, Location(13, 0, 13, 6)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(19, 0, 19, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE, Location(20, 0, 20, 1)),
             ],
             True,
         ),
     )
     
-    # string ~ format unicode -> multi-line code, but not allowed
     yield (
-        [
-            'f"{\n',
-            'pudding\n',
-            '}" ',
-            
-        ],
+        'string ~ format unicode -> multi-line code, but not allowed',
+        (
+            'f"{\n'
+            'pudding\n'
+            '}" '
+        ),
+        0,
         0,
         0,
         0,
@@ -2682,145 +2729,159 @@ def _iter_options():
         None,
         _try_match_string,
         (
-            1,
-            0,
-            0,
-            None,
-            False,
-            [
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT, 'f"'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '{'),
-                Token(TOKEN_TYPE_LINE_BREAK, '\n'),
-            ],
-            True,
-        ),
-    )
-    
-    # string ~ format unicode -> multi-line code, allowed
-    yield (
-        [
-            'f"{\n',
-            'pudding\n',
-            '}" ',
-            
-        ],
-        0,
-        0,
-        HIGHLIGHT_PARSER_FLAG_ALLOW_RELAXED_FORMAT_STRINGS,
-        None,
-        None,
-        _try_match_string,
-        (
-            2,
-            2,
-            HIGHLIGHT_PARSER_FLAG_ALLOW_RELAXED_FORMAT_STRINGS,
-            None,
-            False,
-            [
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT, 'f"'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '{'),
-                Token(TOKEN_TYPE_LINE_BREAK, '\n'),
-                Token(TOKEN_TYPE_IDENTIFIER_VARIABLE, 'pudding'),
-                Token(TOKEN_TYPE_LINE_BREAK, '\n'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '}'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT, '"'),
-            ],
-            True,
-        ),
-    )
-    
-    # string ~ format unicode -> string inside, allow different
-    yield (
-        [
-            'f"{\'\'}" ',
-            
-        ],
-        0,
-        0,
-        0,
-        None,
-        None,
-        _try_match_string,
-        (
-            0,
-            7,
-            0,
-            None,
-            False,
-            [
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT, 'f"'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '{'),
-                Token(TOKEN_TYPE_STRING_UNICODE, '\''),
-                Token(TOKEN_TYPE_STRING_UNICODE, '\''),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '}'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT, '"'),
-            ],
-            True,
-        ),
-    )
-    
-    # string ~ format unicode -> string inside, allow same (relaxed)
-    yield (
-        [
-            'f"{""}" ',
-            
-        ],
-        0,
-        0,
-        HIGHLIGHT_PARSER_FLAG_ALLOW_RELAXED_FORMAT_STRINGS,
-        None,
-        None,
-        _try_match_string,
-        (
-            0,
-            7,
-            HIGHLIGHT_PARSER_FLAG_ALLOW_RELAXED_FORMAT_STRINGS,
-            None,
-            False,
-            [
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT, 'f"'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '{'),
-                Token(TOKEN_TYPE_STRING_UNICODE, '"'),
-                Token(TOKEN_TYPE_STRING_UNICODE, '"'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '}'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT, '"'),
-            ],
-            True,
-        ),
-    )
-    
-    # string ~ format unicode -> string inside, disallow same (strict)
-    yield (
-        [
-            'f"{""}" ',
-            
-        ],
-        0,
-        0,
-        0,
-        None,
-        None,
-        _try_match_string,
-        (
+            3,
             0,
             3,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT, 'f"'),
-                Token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '{'),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_PREFIX, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN, Location(1, 0, 1, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN, Location(2, 0, 2, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(3, 0, 3, 0)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE, Location(3, 0, 3, 0)),
             ],
             True,
         ),
     )
     
-    # string -> start in middle
     yield (
-        [
-            '\n',
-            '    "pudding" ',
-        ],
+        'string ~ format unicode -> multi-line code, allowed',
+        (
+            'f"{\n'
+            'pudding\n'
+            '}" '
+        ),
+        0,
+        0,
+        0,
+        HIGHLIGHT_PARSER_FLAG_ALLOW_RELAXED_FORMAT_STRINGS,
+        None,
+        None,
+        _try_match_string,
+        (
+            14,
+            2,
+            2,
+            HIGHLIGHT_PARSER_FLAG_ALLOW_RELAXED_FORMAT_STRINGS,
+            None,
+            False,
+            [
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_PREFIX, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN, Location(1, 0, 1, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN, Location(2, 0, 2, 1)),
+                Token(TOKEN_TYPE_LINE_BREAK, Location(3, 0, 3, 1)),
+                Token(TOKEN_TYPE_IDENTIFIER_VARIABLE, Location(4, 1, 0, 7)),
+                Token(TOKEN_TYPE_LINE_BREAK, Location(11, 1, 7, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(12, 2, 0, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE, Location(13, 2, 1, 1)),
+            ],
+            True,
+        ),
+    )
+    
+    yield (
+        'string ~ format unicode -> string inside, allow different',
+        (
+            'f"{\'\'}" '
+        ),
+        0,
+        0,
+        0,
+        0,
+        None,
+        None,
+        _try_match_string,
+        (
+            7,
+            0,
+            7,
+            0,
+            None,
+            False,
+            [
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_PREFIX, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN, Location(1, 0, 1, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN, Location(2, 0, 2, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN, Location(3, 0, 3, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE, Location(4, 0, 4, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(5, 0, 5, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE, Location(6, 0, 6, 1)),
+            ],
+            True,
+        ),
+    )
+    
+    yield (
+        'string ~ format unicode -> string inside, allow same (relaxed)',
+        (
+            'f"{""}" '
+        ),
+        0,
+        0,
+        0,
+        HIGHLIGHT_PARSER_FLAG_ALLOW_RELAXED_FORMAT_STRINGS,
+        None,
+        None,
+        _try_match_string,
+        (
+            7,
+            0,
+            7,
+            HIGHLIGHT_PARSER_FLAG_ALLOW_RELAXED_FORMAT_STRINGS,
+            None,
+            False,
+            [
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_PREFIX, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN, Location(1, 0, 1, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN, Location(2, 0, 2, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN, Location(3, 0, 3, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE, Location(4, 0, 4, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(5, 0, 5, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE, Location(6, 0, 6, 1)),
+            ],
+            True,
+        ),
+    )
+    
+    yield (
+        'string ~ format unicode -> string inside, disallow same (strict)',
+        (
+            'f"{""}" '
+        ),
+        0,
+        0,
+        0,
+        0,
+        None,
+        None,
+        _try_match_string,
+        (
+            3,
+            0,
+            3,
+            0,
+            None,
+            False,
+            [
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_PREFIX, Location(0, 0, 0, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN, Location(1, 0, 1, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN, Location(2, 0, 2, 1)),
+                Token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, Location(3, 0, 3, 0)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE, Location(3, 0, 3, 0)),
+            ],
+            True,
+        ),
+    )
+    
+    yield (
+        'string -> start in middle',
+        (
+            '\n'
+            '    "pudding" '
+        ),
+        5,
         1,
         4,
         0,
@@ -2828,31 +2889,36 @@ def _iter_options():
         None,
         _try_match_string,
         (
+            14,
             1,
             13,
             0,
             None,
             False,
             [
-                Token(TOKEN_TYPE_STRING_UNICODE, '"'),
-                Token(TOKEN_TYPE_STRING_UNICODE, 'pudding'),
-                Token(TOKEN_TYPE_STRING_UNICODE, '"'),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN, Location(5, 1, 4, 1)),
+                Token(TOKEN_TYPE_STRING_UNICODE, Location(6, 1, 5, 7)),
+                Token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE, Location(13, 1, 12, 1)),
             ],
             True,
         ),
     )
-    
 
 
-@vampytest._(vampytest.call_from(_iter_options()).returning_last())
-def test__try_matchers(lines, line_index, line_character_index, flags, brace_nesting, tokens, matcher):
+@vampytest._(vampytest.call_from(_iter_options()).named_first().returning_last())
+def test__try_matchers(
+    content, content_character_index, line_index, line_character_index, flags, brace_nesting, tokens, matcher
+):
     """
     Tests whether try matchers work as intended.
     
     Parameters
     ----------
-    lines : `list<str>`
-        Lines to match from.
+    content : `str`
+        Content to match form.
+    
+    content_character_index : `int`
+        Content character index to start matching at.
     
     line_index : `int`
         Line index to start matching at.
@@ -2863,7 +2929,7 @@ def test__try_matchers(lines, line_index, line_character_index, flags, brace_nes
     flags : `int`
         Flags to match with.
     
-    brace_nesting : `None | list<str>`
+    brace_nesting : `None | list<int>`
         How the braces are nested.
     
     tokens : `None | list<Token>`
@@ -2883,7 +2949,7 @@ def test__try_matchers(lines, line_index, line_character_index, flags, brace_nes
     flags : `int`
         Flags to match with.
     
-    brace_nesting : `None | list<str>`
+    brace_nesting : `None | list<int>`
         How the braces are nested.
     
     done : `bool`
@@ -2895,7 +2961,8 @@ def test__try_matchers(lines, line_index, line_character_index, flags, brace_nes
     output : `bool`
         Whether matching was successful.
     """
-    parser_context = HighlightParserContext(lines, flags)
+    parser_context = HighlightParserContext(content, flags)
+    parser_context.content_character_index = content_character_index
     parser_context.line_index = line_index
     parser_context.line_character_index = line_character_index
     
@@ -2909,6 +2976,7 @@ def test__try_matchers(lines, line_index, line_character_index, flags, brace_nes
     vampytest.assert_instance(output, bool)
     
     return (
+        parser_context.content_character_index,
         parser_context.line_index,
         parser_context.line_character_index,
         parser_context.flags,

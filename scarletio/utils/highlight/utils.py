@@ -44,11 +44,20 @@ def iter_highlight_code_lines(lines, formatter_context):
         stacklevel = 2,
     )
     
-    context = HighlightParserContext(lines, HIGHLIGHT_PARSER_MASK_DEFAULT)
+    code = ''.join(lines)
+    context = HighlightParserContext(code, HIGHLIGHT_PARSER_MASK_DEFAULT)
     context.match()
     highlight_streamer = get_highlight_streamer(formatter_context)
     for token in context.tokens:
-        yield from highlight_streamer.asend((token.type, token.value))
+        location = token.location
+        length = location.length
+        if not length:
+            continue
+        
+        content_character_index = location.content_character_index
+        value = code[content_character_index : content_character_index + length]
+        
+        yield from highlight_streamer.asend((token.type, value))
     
     yield from highlight_streamer.asend(None)
 
@@ -69,10 +78,19 @@ def iter_highlight_code_token_types_and_values(code):
     token_type_and_value : `(int, str)`
     """
     # Note: Parsing line by line will be replaced with global parsing.
-    context = HighlightParserContext(code.splitlines(True), HIGHLIGHT_PARSER_MASK_DEFAULT)
+    context = HighlightParserContext(code, HIGHLIGHT_PARSER_MASK_DEFAULT)
     context.match()
+    
     for token in context.tokens:
-        yield token.type, token.value
+        location = token.location
+        length = location.length
+        if not length:
+            continue
+        
+        content_character_index = location.content_character_index
+        value = code[content_character_index : content_character_index + length]
+        
+        yield token.type, value
 
 
 def add_highlighted_part_into(token_type, part, highlighter, into):

@@ -1061,8 +1061,6 @@ class ReadProtocolBase(AbstractProtocolBase):
         ------
         EofError
             Connection lost before boundary hit.
-        CancelledError
-            If the reader task is cancelled not by receiving eof.
         """
         async for chunk in self._read_until_by_chunk(boundary):
             payload_stream.add_received_chunk(chunk)
@@ -1197,7 +1195,7 @@ class ReadWriteProtocolBase(ReadProtocolBase):
     _payload_stream : `None | PayloadStream`
         Payload stream of the protocol.
     
-    _transport : `None`, `object`
+    _transport : `None | object`
         Asynchronous transport implementation. Is set meanwhile the protocol is alive.
     
     _drain_waiter : `None`, ``Future``
@@ -1515,7 +1513,7 @@ class DatagramMergerReadProtocol(ReadProtocolBase):
         Payload waiter of the protocol, what's result is set, when the ``.payload_reader`` generator returns.
         
         If cancelled or marked by done or any other methods, the payload reader will not be cancelled.
-    _transport : `None`, `object`
+    _transport : `None | object`
         Asynchronous transport implementation. Is set meanwhile the protocol is alive.
     """
     __slots__ = ()

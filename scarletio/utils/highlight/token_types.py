@@ -38,17 +38,45 @@ The token types for coloring are the following:
 +-----------------------------------------------------------+-------+-----------------------------------------------+
 | TOKEN_TYPE_STRING                                         | 120   | TOKEN_TYPE_CONSTANT                           |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
-| TOKEN_TYPE_STRING_BINARY                                  | 121   | TOKEN_TYPE_STRING                             |
+| TOKEN_TYPE_STRING_BINARY                                  | 130   | TOKEN_TYPE_STRING                             |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
-| TOKEN_TYPE_STRING_UNICODE                                 | 122   | TOKEN_TYPE_STRING                             |
+| TOKEN_TYPE_STRING_BINARY_SPECIAL                          | 131   | TOKEN_TYPE_STRING_BINARY                      |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
-| TOKEN_TYPE_STRING_UNICODE_FORMAT                          | 123   | TOKEN_TYPE_STRING_UNICODE                     |
+| TOKEN_TYPE_STRING_BINARY_SPECIAL_PREFIX                   | 132   | TOKEN_TYPE_STRING_BINARY_SPECIAL              |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
-| TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK                     | 124   | TOKEN_TYPE_STRING_UNICODE_FORMAT              |
+| TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE                    | 133   | TOKEN_TYPE_STRING_BINARY_SPECIAL              |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
-| TOKEN_TYPE_STRING_UNICODE_FORMAT_CODE                     | 125   | TOKEN_TYPE_STRING_UNICODE_FORMAT              |
+| TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_OPEN               | 134   | TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE        |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
-| TOKEN_TYPE_STRING_UNICODE_FORMAT_POSTFIX                  | 126   | TOKEN_TYPE_STRING_UNICODE_FORMAT              |
+| TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_CLOSE              | 135   | TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE        |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_STRING_UNICODE                                 | 140   | TOKEN_TYPE_STRING                             |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_STRING_UNICODE_SPECIAL                         | 141   | TOKEN_TYPE_STRING_UNICODE                     |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_STRING_UNICODE_SPECIAL_PREFIX                  | 142   | TOKEN_TYPE_STRING_UNICODE_SPECIAL             |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE                   | 143   | TOKEN_TYPE_STRING_UNICODE_SPECIAL             |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN              | 144   | TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE       |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE             | 145   | TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE       |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_STRING_FORMAT                                  | 150   | TOKEN_TYPE_STRING                             |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_STRING_FORMAT_MARK                             | 151   | TOKEN_TYPE_STRING_FORMAT                      |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_STRING_FORMAT_MARK_CODE_BEGIN                  | 152   | TOKEN_TYPE_STRING_FORMAT_MARK                 |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_STRING_FORMAT_MARK_BRACE                       | 153   | TOKEN_TYPE_STRING_FORMAT_MARK                 |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN                  | 154   | TOKEN_TYPE_STRING_FORMAT_MARK_BRACE           |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE                 | 155   | TOKEN_TYPE_STRING_FORMAT_MARK_BRACE           |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_STRING_FORMAT_CODE                             | 156   | TOKEN_TYPE_STRING_FORMAT                      |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_STRING_FORMAT_POSTFIX                          | 157   | TOKEN_TYPE_STRING_FORMAT                      |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
 | TOKEN_TYPE_IDENTIFIER                                     | 200   | TOKEN_TYPE_NON_SPACE                          |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
@@ -74,15 +102,41 @@ The token types for coloring are the following:
 +-----------------------------------------------------------+-------+-----------------------------------------------+
 | TOKEN_TYPE_SPECIAL                                        | 300   | TOKEN_TYPE_NON_SPACE                          |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
-| TOKEN_TYPE_SPECIAL_OPERATOR                               | 301   | TOKEN_TYPE_SPECIAL                            |
+| TOKEN_TYPE_SPECIAL_OPERATOR                               | 310   | TOKEN_TYPE_SPECIAL                            |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
-| TOKEN_TYPE_SPECIAL_OPERATOR_ATTRIBUTE                     | 302   | TOKEN_TYPE_SPECIAL_OPERATOR                   |
+| TOKEN_TYPE_SPECIAL_OPERATOR_ATTRIBUTE                     | 320   | TOKEN_TYPE_SPECIAL_OPERATOR                   |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
-| TOKEN_TYPE_SPECIAL_PUNCTUATION                            | 303   | TOKEN_TYPE_SPECIAL                            |
+| TOKEN_TYPE_SPECIAL_PUNCTUATION                            | 330   | TOKEN_TYPE_SPECIAL                            |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
-| TOKEN_TYPE_SPECIAL_OPERATOR_WORD                          | 304   | TOKEN_TYPE_SPECIAL_OPERATOR                   |
+| TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE                      | 331   | TOKEN_TYPE_SPECIAL_PUNCTUATION                |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
-| TOKEN_TYPE_SPECIAL_CONSOLE_PREFIX                         | 305   | TOKEN_TYPE_SPECIAL                            |
+| TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND                | 332   | TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE          |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND_OPEN           | 333   | TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND    |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND_CLOSE          | 334   | TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND    |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY                | 335   | TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE          |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_OPEN           | 336   | TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY    |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_CLOSE          | 337   | TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY    |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE               | 338   | TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE          |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE_OPEN          | 339   | TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE   |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE_CLOSE         | 340   | TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE   |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_SPECIAL_PUNCTUATION_COMMA                      | 341   | TOKEN_TYPE_SPECIAL_PUNCTUATION                |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_SPECIAL_PUNCTUATION_COLON                      | 342   | TOKEN_TYPE_SPECIAL_PUNCTUATION                |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_SPECIAL_PUNCTUATION_SEMI_COLON                 | 343   | TOKEN_TYPE_SPECIAL_PUNCTUATION                |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_SPECIAL_OPERATOR_WORD                          | 350   | TOKEN_TYPE_SPECIAL_OPERATOR                   |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_SPECIAL_CONSOLE_PREFIX                         | 360   | TOKEN_TYPE_SPECIAL                            |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
 | TOKEN_TYPE_TRACE                                          | 1000  | TOKEN_TYPE_ALL                                |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
@@ -178,12 +232,26 @@ TOKEN_TYPE_NUMERIC_INTEGER_DECIMAL = 115
 TOKEN_TYPE_NUMERIC_INTEGER_OCTAL = 116
 TOKEN_TYPE_NUMERIC_INTEGER_BINARY = 117
 TOKEN_TYPE_STRING = 120
-TOKEN_TYPE_STRING_BINARY = 121
-TOKEN_TYPE_STRING_UNICODE = 122
-TOKEN_TYPE_STRING_UNICODE_FORMAT = 123
-TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK = 124
-TOKEN_TYPE_STRING_UNICODE_FORMAT_CODE = 125
-TOKEN_TYPE_STRING_UNICODE_FORMAT_POSTFIX = 126
+TOKEN_TYPE_STRING_BINARY = 130
+TOKEN_TYPE_STRING_BINARY_SPECIAL = 131
+TOKEN_TYPE_STRING_BINARY_SPECIAL_PREFIX = 132
+TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE = 133
+TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_OPEN = 134
+TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_CLOSE = 135
+TOKEN_TYPE_STRING_UNICODE = 140
+TOKEN_TYPE_STRING_UNICODE_SPECIAL = 141
+TOKEN_TYPE_STRING_UNICODE_SPECIAL_PREFIX = 142
+TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE = 143
+TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN = 144
+TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE = 145
+TOKEN_TYPE_STRING_FORMAT = 150
+TOKEN_TYPE_STRING_FORMAT_MARK = 151
+TOKEN_TYPE_STRING_FORMAT_MARK_CODE_BEGIN = 152
+TOKEN_TYPE_STRING_FORMAT_MARK_BRACE = 153
+TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN = 154
+TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE = 155
+TOKEN_TYPE_STRING_FORMAT_CODE = 156
+TOKEN_TYPE_STRING_FORMAT_POSTFIX = 157
 
 TOKEN_TYPE_IDENTIFIER = 200
 TOKEN_TYPE_IDENTIFIER_VARIABLE = 201
@@ -198,11 +266,24 @@ TOKEN_TYPE_IDENTIFIER_MAGIC_FUNCTION = 231
 TOKEN_TYPE_IDENTIFIER_MAGIC_VARIABLE = 232
 
 TOKEN_TYPE_SPECIAL = 300
-TOKEN_TYPE_SPECIAL_OPERATOR = 301
-TOKEN_TYPE_SPECIAL_OPERATOR_ATTRIBUTE = 302
-TOKEN_TYPE_SPECIAL_PUNCTUATION = 303
-TOKEN_TYPE_SPECIAL_OPERATOR_WORD = 304
-TOKEN_TYPE_SPECIAL_CONSOLE_PREFIX = 305
+TOKEN_TYPE_SPECIAL_OPERATOR = 310
+TOKEN_TYPE_SPECIAL_OPERATOR_ATTRIBUTE = 320
+TOKEN_TYPE_SPECIAL_PUNCTUATION = 330
+TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE = 331
+TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND = 332
+TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND_OPEN = 333
+TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND_CLOSE = 334
+TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY = 335
+TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_OPEN = 336
+TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_CLOSE = 337
+TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE = 338
+TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE_OPEN = 339
+TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE_CLOSE = 340
+TOKEN_TYPE_SPECIAL_PUNCTUATION_COMMA = 341
+TOKEN_TYPE_SPECIAL_PUNCTUATION_COLON = 342
+TOKEN_TYPE_SPECIAL_PUNCTUATION_SEMI_COLON = 343
+TOKEN_TYPE_SPECIAL_OPERATOR_WORD = 350
+TOKEN_TYPE_SPECIAL_CONSOLE_PREFIX = 360
 
 # TRACE TYPES
 
@@ -278,13 +359,34 @@ TOKEN_STRUCTURE = {
                         TOKEN_TYPE_NUMERIC_INTEGER_BINARY : None,
                     },
                     TOKEN_TYPE_STRING : {
-                        TOKEN_TYPE_STRING_BINARY : None,
+                        TOKEN_TYPE_STRING_BINARY : {
+                            TOKEN_TYPE_STRING_BINARY_SPECIAL : {
+                                TOKEN_TYPE_STRING_BINARY_SPECIAL_PREFIX : None,
+                                TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE : {
+                                    TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_OPEN : None,
+                                    TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_CLOSE : None,
+                                },
+                            }
+                        },
                         TOKEN_TYPE_STRING_UNICODE : {
-                            TOKEN_TYPE_STRING_UNICODE_FORMAT : {
-                                TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK : None,
-                                TOKEN_TYPE_STRING_UNICODE_FORMAT_CODE : None,
-                                TOKEN_TYPE_STRING_UNICODE_FORMAT_POSTFIX : None,
+                            TOKEN_TYPE_STRING_UNICODE_SPECIAL : {
+                                TOKEN_TYPE_STRING_UNICODE_SPECIAL_PREFIX : None,
+                                TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE : {
+                                    TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN : None,
+                                    TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE : None,
+                                },
                             },
+                        },
+                        TOKEN_TYPE_STRING_FORMAT : {
+                            TOKEN_TYPE_STRING_FORMAT_MARK : {
+                                TOKEN_TYPE_STRING_FORMAT_MARK_CODE_BEGIN : None,
+                                TOKEN_TYPE_STRING_FORMAT_MARK_BRACE : {
+                                    TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN : None,
+                                    TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE : None,
+                                },
+                            },
+                            TOKEN_TYPE_STRING_FORMAT_CODE : None,
+                            TOKEN_TYPE_STRING_FORMAT_POSTFIX : None,
                         },
                     },
                 },
@@ -308,7 +410,25 @@ TOKEN_STRUCTURE = {
                     TOKEN_TYPE_SPECIAL_OPERATOR_ATTRIBUTE : None,
                     TOKEN_TYPE_SPECIAL_OPERATOR_WORD : None,
                 },
-                TOKEN_TYPE_SPECIAL_PUNCTUATION : None,
+                TOKEN_TYPE_SPECIAL_PUNCTUATION : {
+                    TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE : {
+                        TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND : {
+                            TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND_OPEN : None,
+                            TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND_CLOSE : None,
+                        },
+                        TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY : {
+                            TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_OPEN : None,
+                            TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_CLOSE : None,
+                        },
+                        TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE : {
+                            TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE_OPEN : None,
+                            TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE_CLOSE : None,
+                        },
+                    },
+                    TOKEN_TYPE_SPECIAL_PUNCTUATION_COMMA : None,
+                    TOKEN_TYPE_SPECIAL_PUNCTUATION_COLON : None,
+                    TOKEN_TYPE_SPECIAL_PUNCTUATION_SEMI_COLON : None,
+                },
                 TOKEN_TYPE_SPECIAL_CONSOLE_PREFIX : None,
             },
         },
@@ -368,23 +488,4 @@ TOKEN_STRUCTURE = {
         TOKEN_TYPE_TEXT_UNKNOWN : None,
         TOKEN_TYPE_TEXT_TITLE : None,
     }
-}
-
-
-MERGE_TOKEN_TYPES = {
-    # Strings are usually added as 3 parts, prefix + encapsulator | content | prefix + encapsulator
-    TOKEN_TYPE_STRING,
-    TOKEN_TYPE_STRING_BINARY,
-    TOKEN_TYPE_STRING_UNICODE,
-    TOKEN_TYPE_STRING_UNICODE_FORMAT,
-    TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK,
-    TOKEN_TYPE_STRING_UNICODE_FORMAT_CODE,
-    # At the case of special characters it not really matters
-    TOKEN_TYPE_SPECIAL,
-    TOKEN_TYPE_SPECIAL_OPERATOR,
-    TOKEN_TYPE_SPECIAL_OPERATOR_ATTRIBUTE,
-    TOKEN_TYPE_SPECIAL_PUNCTUATION,
-    TOKEN_TYPE_SPECIAL_OPERATOR_WORD,
-    # Yes, space may be duped as well.
-    TOKEN_TYPE_SPACE,
 }

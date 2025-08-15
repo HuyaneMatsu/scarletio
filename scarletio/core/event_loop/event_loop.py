@@ -3056,7 +3056,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             If `close_fds` is True, all file descriptors except `0`, `1` and `2` will be closed before the child
             process is executed. Otherwise when `close_fds` is False, file descriptors obey their inheritable flag as
             described in Inheritance of File Descriptors.
-        cwd : `None` `str`, `bytes`, `path-like` = `None`, Optional (Keyword only)
+        cwd : `None | str`, `bytes`, `path-like` = `None`, Optional (Keyword only)
             The current working directory.
             
             If `cwd` is not `None`, the function changes the working directory to cwd before executing the child.

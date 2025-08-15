@@ -494,7 +494,7 @@ class WeakItemDictionary(dict):
         ----------
         key : `object`
             A key to match.
-        default : `None`, `object` = `None`, Optional
+        default : `None | object` = `None`, Optional
             Default value to return if the given `key` could not be matched.
         
         Returns

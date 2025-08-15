@@ -60,7 +60,7 @@ class Task(Future):
     _loop : ``EventThread``
         The loop to what the created task is bound.
     
-    _result : `None`, `object`
+    _result : `None | object`
         The result of the task. Defaults to `None`.
     
     _state : `str`

@@ -11,7 +11,7 @@ class History:
         The position where the cache lookup is at.
     _elements : `dict<int, list<str>>`
         The added elements to the history.
-    _line_cache : `dict` of (`str`, `str`) items
+    _line_cache : `dict<str, str>`
         Line cache caching same lines.
     _size : `int`
         The last registered content's index.

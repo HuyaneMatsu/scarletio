@@ -1,3 +1,18 @@
+# 1.0.93 *\[2025-08-15\]*
+
+#### Improvements
+
+- Highlighter now creates value-less tokens. Instead it stores their position.
+    Currently there is no logic sitting on it, but it opens up more possibilities in the future.
+- Each brace in highlighter now has its own type to improve value-less parsing. This also includes string quotes.
+    Note that `TOKEN_TYPE_STRING_UNICODE_FORMAT` has been renamed to `TOKEN_TYPE_STRING_FORMAT`.
+- Fix relaxed format strings did not allow multi-line format code while turned out it is supported.
+- Highlighter now inserts 0 length tokens for missing closing brackets & quotes.
+
+#### Bug fixes
+
+- Fix `Timeout` not converting `CancelledError` to `TimeoutError` as intended.
+
 # 1.0.92 *\[2025-05-25\]*
 
 #### Improvements

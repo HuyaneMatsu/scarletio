@@ -74,7 +74,7 @@ class Future:
     _loop : ``EventThread``
         The loop to what the created future is bound.
     
-    _result : `None`, `object`
+    _result : `None | object`
         The result of the future. Defaults to `None`.
     
     _state : `int`

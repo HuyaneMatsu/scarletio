@@ -1,47 +1,59 @@
 __all__ = ()
 
-class Token:
+from ..rich_attribute_error import RichAttributeErrorBaseType
+
+
+class Token(RichAttributeErrorBaseType):
     """
-    Represents a token parsed by ``HighlightContextBase``.
+    Represents a token parsed by the highlighter.
     
     Attributes
     ----------
+    location : ``Location``
+        The token's value.
+    
     type : `int`
         The token's identifier.
-    value : `str`
-        The token's value.
     """
-    __slots__ = ('type', 'value',)
+    __slots__ = ('location', 'type')
     
-    def __new__(cls, type_, value):
+    def __new__(cls, token_type, location):
         """
-        Creates a new ``Token``.
+        Creates a new token.
         
         Parameters
         ----------
-        type_ : `int`
+        token_type : `int`
             The token's identifier.
-        value : `str`
-            The token's value.
+        
+        location : ``Location``
+            The token's location.
         """
         self = object.__new__(cls)
-        self.type = type_
-        self.value = value
+        self.type = token_type
+        self.location = location
         return self
     
+    
     def __repr__(self):
-        """Returns the token's representation."""
-        return f'{self.__class__.__name__}({self.type}, {self.value!r})'
+        """Returns repr(self)."""
+        return ''.join([
+            type(self).__name__, '(',
+            repr(self.type), ', ',
+            repr(self.location),
+            ')',
+        ])
     
     
     def __eq__(self, other):
+        """Returns self == other."""
         if type(self) is not type(other):
             return NotImplemented
         
         if self.type != other.type:
             return False
         
-        if self.value != other.value:
+        if self.location != other.location:
             return False
         
         return True

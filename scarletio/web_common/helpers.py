@@ -306,7 +306,7 @@ class Timeout:
         
         state = self._state
         self._state = TIMEOUT_STATE_EXITED
-        if (state == TIMEOUT_STATE_TIMED_OUT) and isinstance(exception_type, CancelledError):
+        if (state == TIMEOUT_STATE_TIMED_OUT) and issubclass(exception_type, CancelledError):
             raise TimeoutError from None
         
         return False

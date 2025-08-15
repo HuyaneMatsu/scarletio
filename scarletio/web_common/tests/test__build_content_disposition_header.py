@@ -36,7 +36,7 @@ def test__build_content_disposition_header(disposition_type, parameters, quote_f
     ----------
     disposition_type : `str`
         Disposition type. Can be one of following: `'inline'`, `'attachment'`, '`form-data`'.
-    parameters : `dict` of (`str`, `str`) items
+    parameters : `dict<str, str>`
         Disposition parameters.
     quote_fields : `bool`
         Whether field values should be quoted.

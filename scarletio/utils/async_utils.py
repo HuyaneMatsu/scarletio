@@ -301,5 +301,5 @@ set_docs(to_coroutine,
     ------
     TypeError
         - `function`'s type is incorrect.
-        - `Function` cannot be turned to coroutine.
+        - `FunctionType` cannot be turned to coroutine.
     """)

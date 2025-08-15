@@ -119,22 +119,16 @@ class HighlightFormatterContext:
         """
         warn(
             (
-                f'`{type(self)}.generate_highlighted` is deprecated and will be removed 2025 October. '
-                f'Please use `into.extend(highlight_streamer.asend((token.type, token.value)))` instead accordingly. '
+                f'`{type(self)}.generate_highlighted` is deprecated and is not actually working anymore.'
+                f'Will be removed 2025 October. '
+                f'Please use `into.extend(highlight_streamer.asend((token_type, token_value)))` instead accordingly. '
                 f'For more information read `get_highlight_streamer`\'s documentation.'
             ),
             FutureWarning,
             stacklevel = 2,
         )
-    
-        detail = self.formatter_nodes[token.type].detail
-        if (detail is None):
-            yield token.value
-        
-        else:
-            yield from detail.start()
-            yield from detail.transform_content(token.value)
-            yield from detail.end()
+        return
+        yield
     
     
     def set_highlight_html_all(self):

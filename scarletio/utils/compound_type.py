@@ -794,7 +794,7 @@ class ImplementationDetail:
         Whether the implementation is an instance attribute.
     implemented : `bool`
         Whether the instance attribute is implemented.
-    implementation : `None`, `object`
+    implementation : `None | object`
         The implementation.
     implementation_source : `None`, `str`
         From where the implementation is coming from.
@@ -813,7 +813,7 @@ class ImplementationDetail:
             Whether the implementation is an instance attribute.
         implemented : `bool`
             Whether the instance attribute is implemented.
-        implementation : `None`, `object`
+        implementation : `None | object`
             The implementation.
         implementation_source : `str`
             From where the implementation is coming from.

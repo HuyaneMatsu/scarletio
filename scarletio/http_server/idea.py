@@ -149,7 +149,7 @@ class HTTPRequestHandler(HttpReadWriteProtocol):
         Payload waiter of the protocol, what's result is set, when the ``.payload_reader`` generator returns.
         
         If cancelled or marked by done or any other methods, the payload reader will not be cancelled.
-    _transport : `None`, `object`
+    _transport : `None | object`
         Asynchronous transport implementation. Is set meanwhile the protocol is alive.
     _drain_waiter : `None`, ``Future``
         A future, what is used to block the writing task, till it's writen data is drained.
@@ -443,7 +443,7 @@ class Route:
     ----------
     rule : ``Rule``
         Rule object found by a route.
-    parameters : `None`, `dict` of (`str`, `str`) items
+    parameters : `None | dict<str, str>`
         Dynamic parameter queried from the urls.
     """
     __slots__ = ('parameters', 'rule', )
@@ -2037,11 +2037,11 @@ class RuleDirectory:
     ----------
     endpoint : `str`
         The endpoint's internal name.
-    keyword_parameter_names : `None`, `tuple` of `str`
+    keyword_parameter_names : `None | tuple<str>`
         Keyword only parameter names accepted by `view_func`.
     keyword_parameters_parameter_supported : `bool`
         Whether `view_func` accepts `**keyword_parameters` parameter.
-    positional_parameter_names : `None`, `tuple` of `str`
+    positional_parameter_names : `None | tuple<str>`
         Positional only parameter names accepted by `view_func`.
     rules : `list` of ``Rule``
         Rules added.
@@ -2062,9 +2062,9 @@ class RuleDirectory:
         ----------
         view_func : `async-callable`
             The function to call when serving a request to the provided endpoint.
-        positional_parameter_names : `None`, `tuple` of `str`
+        positional_parameter_names : `None | tuple<str>`
             Positional only parameter names accepted by `view_func`.
-        keyword_parameter_names : `None`, `tuple` of `str`
+        keyword_parameter_names : `None | tuple<str>`
             Keyword only parameter names accepted by `view_func`.
         keyword_parameters_parameter_supported : `bool`
             Whether `view_func` accepts `**keyword_parameters` parameter.
@@ -2231,13 +2231,13 @@ class Rule:
         Only added when the rule is registered.
     endpoint : `str`
         The endpoint's internal name.
-    keyword_parameter_names : `None`, `tuple` of `str`
+    keyword_parameter_names : `None | tuple<str>`
         Keyword only parameter names accepted by `view_func`.
     keyword_parameters_parameter_supported : `bool`
         Whether `view_func` accepts `**keyword_parameters` parameter.
     parameters : `None`, `tuple` of `tuple` (`str`, `object`)
         Default parameters to pass to the `view_func`.
-    positional_parameter_names : `None`, `tuple` of `str`
+    positional_parameter_names : `None | tuple<str>`
         Positional only parameter names accepted by `view_func`.
     request_methods : `None`, `set` of `str`
         Request methods to call `view_func` when received.
@@ -2264,9 +2264,9 @@ class Rule:
             The url rule to register.
         view_func : `async-callable`
             The function to call when serving a request to the provided endpoint.
-        positional_parameter_names : `None`, `tuple` of `str`
+        positional_parameter_names : `None | tuple<str>`
             Positional only parameter names accepted by `view_func`.
-        keyword_parameter_names : `None`, `tuple` of `str`
+        keyword_parameter_names : `None | tuple<str>`
             Keyword only parameter names accepted by `view_func`.
         keyword_parameters_parameter_supported : `bool`
             Whether `view_func` accepts `**keyword_parameters` parameter.

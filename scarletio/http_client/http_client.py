@@ -346,7 +346,7 @@ class HTTPClient(RichAttributeErrorBaseType):
         authorization : `None`, ``BasicAuthorization`` = `None`, Optional (Keyword only)
             Authorization to use.
         
-        data : `None`, `object` = `None`, Optional (Keyword only)
+        data : `None | object` = `None`, Optional (Keyword only)
             Data to send a the body of the request.
         
         proxy : `None | Proxy`, Optional

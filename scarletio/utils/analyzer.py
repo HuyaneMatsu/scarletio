@@ -556,8 +556,8 @@ class CallableAnalyzer:
             if (method_allocation > parameter_count) and (args_name is None):
                 raise TypeError(
                     f'Received a `method-like`, but has not enough positional parameters, got '
-                    f'{real_function.__class__.__name__}; {real_function!r}; '
-                    f'allocated parameter count={method_allocation!r}; total parameter count={parameter_count!r}.'
+                    f'{type(real_function).__name__}; {real_function!r}; '
+                    f'allocated parameter count = {method_allocation!r}; total parameter count = {parameter_count!r}.'
                 )
             
             index = 0

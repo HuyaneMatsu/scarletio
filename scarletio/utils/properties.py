@@ -155,7 +155,7 @@ class class_property:
             Setter method.
         fdel : `None`, `callable` = `None`, Optional
             Deleter method.
-        doc : `None`, `object` = `None`, Optional
+        doc : `None | object` = `None`, Optional
             Documentation for the property.
         """
         if (doc is None) and (fget is not None):

@@ -1,3 +1,5 @@
+from time import sleep as blocking_sleep
+
 import vampytest
 
 from ...time import LOOP_TIME
@@ -145,7 +147,14 @@ def test__FutureWrapperSync__wait__propagate_cancellation__task():
         
         # Callbacks should be removed.
         vampytest.assert_false([*future.iter_callbacks()])
-        vampytest.assert_true(future.is_cancelled())
+        
+        for _ in range(3):
+            blocking_sleep(0.0001)
+            output = future.is_cancelled()
+            if output:
+                break
+        
+        vampytest.assert_true(output)
         
     finally:
         loop.stop()

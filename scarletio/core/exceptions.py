@@ -11,6 +11,9 @@ class CancelledError(BaseException):
     The future or task was cancelled.
     """
     __slots__ = ()
+    
+    def __new__(cls, *a, **kw):
+        return BaseException.__new__(cls, *a, **kw)
 
 
 def _create_invalid_state_error_message(error):

@@ -147,7 +147,7 @@ class PayloadBase:
         ----------
         disposition_type : `str`
             The disposition's type.
-        parameters : `dict` of (`str`, `str`) items
+        parameters : `dict<str, str>`
             Additional parameters.
         quote_fields : `bool`
             Whether field values should be quoted.
@@ -945,7 +945,7 @@ def parse_content_disposition(header):
     -------
     disposition_type : `None`, `str`
         The disposition's type if anything found.
-    parameters : `dict` of (`str`, `str`) items
+    parameters : `dict<str, str>`
         The parsed out parameters.
     """
     if not header:
@@ -1019,7 +1019,7 @@ def get_content_disposition_file_name(parameters, name = 'filename'):
     
     Parameters
     ----------
-    parameters : `dict` of (`str`, `str`) items
+    parameters : `dict<str, str>`
         The content disposition parameters parsed from a header value.
     name : `str` = `'filename'`, Optional
         File name to get.

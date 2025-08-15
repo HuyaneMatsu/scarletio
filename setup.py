@@ -64,7 +64,7 @@ setup(
         
         'Intended Audience :: Developers',
         
-        'Operating System :: OS Independent',
+        'Operating System :: POSIX :: Linux',
         
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.6',
@@ -73,6 +73,7 @@ setup(
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
+        
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy',
         

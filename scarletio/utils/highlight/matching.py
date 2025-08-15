@@ -7,13 +7,12 @@ from .constants import (
     OPERATOR_WORDS, OPERATOR_WP, PUNCTUATION_WP, SPACE_MATCH_RP, STRING_STARTER_RP
 )
 from .flags import (
-    HIGHLIGHT_PARSER_FLAG_ALLOW_RELAXED_FORMAT_STRINGS, HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING,
-    HIGHLIGHT_PARSER_FLAG_HIT_DISABLED_QUOTE, HIGHLIGHT_PARSER_FLAG_HIT_MULTI_LINE_CODE,
-    HIGHLIGHT_PARSER_FLAG_IN_STRING_BINARY, HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT,
-    HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT_CODE, HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE,
-    HIGHLIGHT_PARSER_FLAG_NO_DOUBLE_QUOTE_STRINGS, HIGHLIGHT_PARSER_FLAG_NO_MULTI_LINE_CODE,
-    HIGHLIGHT_PARSER_FLAG_NO_MULTI_LINE_STRING, HIGHLIGHT_PARSER_FLAG_NO_SINGLE_QUOTE_STRINGS,
-    HIGHLIGHT_PARSER_MASK_INHERITABLE
+    HIGHLIGHT_PARSER_FLAG_ALLOW_RELAXED_FORMAT_STRINGS, HIGHLIGHT_PARSER_FLAG_HIT_DISABLED_QUOTE,
+    HIGHLIGHT_PARSER_FLAG_HIT_MULTI_LINE_CODE, HIGHLIGHT_PARSER_FLAG_IN_STRING_BINARY,
+    HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT, HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT_CODE,
+    HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE, HIGHLIGHT_PARSER_FLAG_NO_DOUBLE_QUOTE_STRINGS,
+    HIGHLIGHT_PARSER_FLAG_NO_MULTI_LINE_CODE, HIGHLIGHT_PARSER_FLAG_NO_MULTI_LINE_STRING,
+    HIGHLIGHT_PARSER_FLAG_NO_SINGLE_QUOTE_STRINGS, HIGHLIGHT_PARSER_MASK_INHERITABLE
 )
 from .token_types import (
     TOKEN_TYPE_COMMENT, TOKEN_TYPE_IDENTIFIER_ATTRIBUTE, TOKEN_TYPE_IDENTIFIER_BUILTIN_CONSTANT,
@@ -23,9 +22,17 @@ from .token_types import (
     TOKEN_TYPE_NUMERIC_FLOAT_COMPLEX, TOKEN_TYPE_NUMERIC_INTEGER_BINARY, TOKEN_TYPE_NUMERIC_INTEGER_DECIMAL,
     TOKEN_TYPE_NUMERIC_INTEGER_HEXADECIMAL, TOKEN_TYPE_NUMERIC_INTEGER_OCTAL, TOKEN_TYPE_SPACE,
     TOKEN_TYPE_SPECIAL_CONSOLE_PREFIX, TOKEN_TYPE_SPECIAL_OPERATOR, TOKEN_TYPE_SPECIAL_OPERATOR_ATTRIBUTE,
-    TOKEN_TYPE_SPECIAL_OPERATOR_WORD, TOKEN_TYPE_SPECIAL_PUNCTUATION, TOKEN_TYPE_STRING, TOKEN_TYPE_STRING_BINARY,
-    TOKEN_TYPE_STRING_UNICODE, TOKEN_TYPE_STRING_UNICODE_FORMAT, TOKEN_TYPE_STRING_UNICODE_FORMAT_CODE,
-    TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, TOKEN_TYPE_STRING_UNICODE_FORMAT_POSTFIX
+    TOKEN_TYPE_SPECIAL_OPERATOR_WORD, TOKEN_TYPE_SPECIAL_PUNCTUATION, TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_CLOSE,
+    TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_OPEN, TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND_CLOSE,
+    TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND_OPEN, TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE_CLOSE,
+    TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE_OPEN, TOKEN_TYPE_SPECIAL_PUNCTUATION_COLON,
+    TOKEN_TYPE_SPECIAL_PUNCTUATION_COMMA, TOKEN_TYPE_SPECIAL_PUNCTUATION_SEMI_COLON, TOKEN_TYPE_STRING,
+    TOKEN_TYPE_STRING_BINARY, TOKEN_TYPE_STRING_BINARY_SPECIAL_PREFIX, TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_CLOSE,
+    TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_OPEN, TOKEN_TYPE_STRING_FORMAT_CODE,
+    TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN,
+    TOKEN_TYPE_STRING_FORMAT_MARK_CODE_BEGIN, TOKEN_TYPE_STRING_FORMAT_POSTFIX, TOKEN_TYPE_STRING_UNICODE,
+    TOKEN_TYPE_STRING_UNICODE_SPECIAL_PREFIX, TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE,
+    TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN
 )
 
 
@@ -43,19 +50,11 @@ def _try_match_complex(context):
     success : `bool`
         Whether a complex could be matched.
     """
-    line = context.get_line()
-    index = context.get_line_character_index()
-    
-    matched = COMPLEX_RP.match(line, index)
+    matched = COMPLEX_RP.match(context.content, context.content_character_index)
     if matched is None:
         return False
     
-    content = matched.group(0)
-    
-    context.add_token(TOKEN_TYPE_NUMERIC_FLOAT_COMPLEX, content)
-    
-    end = matched.end()
-    context.set_line_character_index(end)
+    context.add_token(TOKEN_TYPE_NUMERIC_FLOAT_COMPLEX, matched.end() - matched.start())
     return True
 
 
@@ -73,19 +72,11 @@ def _try_match_float(context):
     success : `bool`
         Whether a float could be matched.
     """
-    line = context.get_line()
-    index = context.get_line_character_index()
-    
-    matched = FLOAT_RP.match(line, index)
+    matched = FLOAT_RP.match(context.content, context.content_character_index)
     if matched is None:
         return False
     
-    content = matched.group(0)
-    
-    context.add_token(TOKEN_TYPE_NUMERIC_FLOAT, content)
-    
-    end = matched.end()
-    context.set_line_character_index(end)
+    context.add_token(TOKEN_TYPE_NUMERIC_FLOAT, matched.end() - matched.start())
     return True
 
 
@@ -103,19 +94,11 @@ def _try_match_integer_hexadecimal(context):
     success : `bool`
         Whether a hexadecimal integer could be matched.
     """
-    line = context.get_line()
-    index = context.get_line_character_index()
-    
-    matched = INTEGER_HEXADECIMAL_RP.match(line, index)
+    matched = INTEGER_HEXADECIMAL_RP.match(context.content, context.content_character_index)
     if matched is None:
         return False
     
-    content = matched.group(0)
-    
-    context.add_token(TOKEN_TYPE_NUMERIC_INTEGER_HEXADECIMAL, content)
-    
-    end = matched.end()
-    context.set_line_character_index(end)
+    context.add_token(TOKEN_TYPE_NUMERIC_INTEGER_HEXADECIMAL, matched.end() - matched.start())
     return True
 
 
@@ -133,19 +116,11 @@ def _try_match_integer_decimal(context):
     success : `bool`
         Whether a decimal integer could be matched.
     """
-    line = context.get_line()
-    index = context.get_line_character_index()
-    
-    matched = INTEGER_DECIMAL_RP.match(line, index)
+    matched = INTEGER_DECIMAL_RP.match(context.content, context.content_character_index)
     if matched is None:
         return False
     
-    content = matched.group(0)
-    
-    context.add_token(TOKEN_TYPE_NUMERIC_INTEGER_DECIMAL, content)
-    
-    end = matched.end()
-    context.set_line_character_index(end)
+    context.add_token(TOKEN_TYPE_NUMERIC_INTEGER_DECIMAL, matched.end() - matched.start())
     return True
 
 
@@ -163,19 +138,11 @@ def _try_match_integer_octal(context):
     success : `bool`
         Whether an octal integer could be matched.
     """
-    line = context.get_line()
-    index = context.get_line_character_index()
-    
-    matched = INTEGER_OCTAL_RP.match(line, index)
+    matched = INTEGER_OCTAL_RP.match(context.content, context.content_character_index)
     if matched is None:
         return False
     
-    content = matched.group(0)
-    
-    context.add_token(TOKEN_TYPE_NUMERIC_INTEGER_OCTAL, content)
-    
-    end = matched.end()
-    context.set_line_character_index(end)
+    context.add_token(TOKEN_TYPE_NUMERIC_INTEGER_OCTAL, matched.end() - matched.start())
     return True
 
 
@@ -193,19 +160,11 @@ def _try_match_integer_binary(context):
     success : `bool`
         Whether an octal integer could be matched.
     """
-    line = context.get_line()
-    index = context.get_line_character_index()
-    
-    matched = INTEGER_BINARY_RP.match(line, index)
+    matched = INTEGER_BINARY_RP.match(context.content, context.content_character_index)
     if matched is None:
         return False
     
-    content = matched.group(0)
-    
-    context.add_token(TOKEN_TYPE_NUMERIC_INTEGER_BINARY, content)
-    
-    end = matched.end()
-    context.set_line_character_index(end)
+    context.add_token(TOKEN_TYPE_NUMERIC_INTEGER_BINARY, matched.end() - matched.start())
     return True
 
 
@@ -223,10 +182,7 @@ def _try_match_identifier(context):
     success : `bool`
         Whether an identifier could be matched.
     """
-    line = context.get_line()
-    index = context.get_line_character_index()
-    
-    matched = IDENTIFIER_RP.match(line, index)
+    matched = IDENTIFIER_RP.match(context.content, context.content_character_index)
     if matched is None:
         return False
     
@@ -255,10 +211,7 @@ def _try_match_identifier(context):
             else:
                 token_type = TOKEN_TYPE_IDENTIFIER_VARIABLE
     
-    context.add_token(token_type, content)
-    
-    end = matched.end()
-    context.set_line_character_index(end)
+    context.add_token(token_type, len(content))
     return True
 
 
@@ -276,17 +229,33 @@ def _try_match_punctuation(context):
     success : `bool`
         Whether a punctuation could be matched.
     """
-    line = context.get_line()
-    index = context.get_line_character_index()
-    
-    matched = PUNCTUATION_WP.match(line, index)
-    if matched is None:
+    punctuation = PUNCTUATION_WP.match(context.content, context.content_character_index)
+    if punctuation is None:
         return False
     
-    context.add_token(TOKEN_TYPE_SPECIAL_PUNCTUATION, matched)
+    if punctuation == '(':
+        token_type = TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND_OPEN
+    elif punctuation == '{':
+        token_type = TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_OPEN
+    elif punctuation == '[':
+        token_type = TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE_OPEN
+    elif punctuation == ')':
+        token_type = TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND_CLOSE
+    elif punctuation == '}':
+        token_type = TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_CLOSE
+    elif punctuation == ']':
+        token_type = TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE_CLOSE
+    elif punctuation == ':':
+        token_type = TOKEN_TYPE_SPECIAL_PUNCTUATION_COLON
+    elif punctuation == ',':
+        token_type = TOKEN_TYPE_SPECIAL_PUNCTUATION_COMMA
+    elif punctuation == ';':
+        token_type = TOKEN_TYPE_SPECIAL_PUNCTUATION_SEMI_COLON
+    else:
+        # should not happen
+        token_type = TOKEN_TYPE_SPECIAL_PUNCTUATION
     
-    end = index + len(matched)
-    context.set_line_character_index(end)
+    context.add_token(token_type, len(punctuation))
     return True
 
 
@@ -304,10 +273,7 @@ def _try_match_operator(context):
     success : `bool`
         Whether a operator could be matched.
     """
-    line = context.get_line()
-    index = context.get_line_character_index()
-    
-    matched = OPERATOR_WP.match(line, index)
+    matched = OPERATOR_WP.match(context.content, context.content_character_index)
     if matched is None:
         return False
     
@@ -318,10 +284,7 @@ def _try_match_operator(context):
     else:
         token_type = TOKEN_TYPE_SPECIAL_OPERATOR
     
-    context.add_token(token_type, matched)
-    
-    end = index + len(matched)
-    context.set_line_character_index(end)
+    context.add_token(token_type, len(matched))
     return True
 
 
@@ -339,19 +302,11 @@ def _try_match_space(context):
     success : `bool`
         Whether any space could be matched.
     """
-    line = context.get_line()
-    index = context.get_line_character_index()
-    
-    matched = SPACE_MATCH_RP.match(line, index)
+    matched = SPACE_MATCH_RP.match(context.content, context.content_character_index)
     if matched is None:
         return False
     
-    content = matched.group(0)
-    
-    context.add_token(TOKEN_TYPE_SPACE, content)
-    
-    end = matched.end()
-    context.set_line_character_index(end)
+    context.add_token(TOKEN_TYPE_SPACE, matched.end() - matched.start())
     return True
 
 
@@ -369,26 +324,21 @@ def _try_match_comment(context):
     success : `bool`
         Whether any comment could be matched.
     """
-    line = context.get_line()
-    index = context.get_line_character_index()
+    content = context.content
+    content_character_index = context.content_character_index
+    content_length = context.content_length
     
-    if (index >= len(line)) or (line[index] != '#'):
+    if content_character_index >= content_length or content[content_character_index] != '#':
         return False
     
     # In later joined contents we might meet line break, so check that as well!
-    line_break_index = line.find('\n')
+    line_break_index = content.find('\n', content_character_index)
     if line_break_index == -1:
-        content = line[index:]
-        context.add_token(TOKEN_TYPE_COMMENT, content)
-        context.set_line_character_index(-1)
-    else:
-        content = line[index : line_break_index]
-        context.add_token(TOKEN_TYPE_COMMENT, content)
-        context.add_token(TOKEN_TYPE_LINE_BREAK, '\n')
-        context.set_line_character_index(-1)
+        context.add_token(TOKEN_TYPE_COMMENT, content_length - content_character_index)
     
-    # Mark the context as done if comments are not enabled
-    _end_parsing_if_no_multi_line_code(context)
+    else:
+        context.add_token(TOKEN_TYPE_COMMENT, line_break_index - content_character_index)
+    
     return True
 
 
@@ -406,40 +356,10 @@ def _try_match_anything(context):
     success : `bool`
         Whether anything could be matched, so of course true.
     """
-    line = context.get_line()
-    index = context.get_line_character_index()
-    
-    if (index >= len(line)):
+    if context.content_character_index >= context.content_length:
         return False
     
-    content = line[index]
-    
-    context.add_token(TOKEN_TYPE_NON_SPACE_UNIDENTIFIED, content)
-    context.set_line_character_index(index + 1)
-    return True
-
-
-def _try_match_empty_line(context):
-    """
-    Tries to match an empty line.
-    
-    Parameter
-    ---------
-    context : ``HighlightParserContext``
-        The context to use.
-    
-    Returns
-    -------
-    success : `bool`
-        Whether an empty line could be matched.
-    """
-    line = context.get_line()
-    index = context.get_line_character_index()
-    
-    if index or line:
-        return False
-    
-    context.set_line_character_index(-1)
+    context.add_token(TOKEN_TYPE_NON_SPACE_UNIDENTIFIED, 1)
     return True
 
 
@@ -457,22 +377,16 @@ def _try_match_console_prefix(context):
     success : `bool`
         Whether console prefix could be matched.
     """
-    index = context.get_line_character_index()
-    if index != 0:
+    if context.line_character_index != 0:
         return False
     
-    line = context.get_line()
-    
-    matched = CONSOLE_PREFIX_RP.match(line)
+    matched = CONSOLE_PREFIX_RP.match(context.content, context.content_character_index)
     if matched is None:
         return False
     
     prefix, space = matched.groups()
-    context.add_token(TOKEN_TYPE_SPECIAL_CONSOLE_PREFIX, prefix)
-    context.add_token(TOKEN_TYPE_SPACE, space)
-    
-    end = matched.end()
-    context.set_line_character_index(end)
+    context.add_token(TOKEN_TYPE_SPECIAL_CONSOLE_PREFIX, len(prefix))
+    context.add_token(TOKEN_TYPE_SPACE, len(space))
     return True
 
 
@@ -490,14 +404,15 @@ def _try_match_line_break(context):
     success : `bool`
         Whether a line break was matched.
     """
-    line = context.get_line()
-    index = context.get_line_character_index()
+    content = context.content
+    content_character_index = context.content_character_index
+    content_length = context.content_length
     
-    if (index >= len(line)) or (line[index] != '\n'):
+    if content_character_index >= content_length or content[content_character_index] != '\n':
         return False
     
-    context.add_token(TOKEN_TYPE_LINE_BREAK, '\n')
-    context.set_line_character_index(-1)
+    if not context.flags & HIGHLIGHT_PARSER_FLAG_NO_MULTI_LINE_CODE:
+        context.add_token(TOKEN_TYPE_LINE_BREAK, 1)
     
     # Mark the context as done if multi-line code is not enabled.
     _end_parsing_if_no_multi_line_code(context)
@@ -521,17 +436,18 @@ def _try_match_format_string_end(context):
     if not context.flags & HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT:
         return False
     
-    if (context.brace_nesting is not None):
+    brace_nesting = context.brace_nesting
+    if (brace_nesting is not None) and (brace_nesting[-1] != TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN):
         return False
     
-    line = context.get_line()
-    index = context.get_line_character_index()
+    content = context.content
+    content_character_index = context.content_character_index
+    content_length = context.content_length
     
-    if (index >= len(line)) or (line[index] != '}'):
+    if content_character_index >= content_length or content[content_character_index] != '}':
         return False
     
-    context.add_token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '}')
-    context.set_line_character_index(index + 1)
+    context.add_token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, 1)
     context.done = True
     return True
 
@@ -553,22 +469,16 @@ def _try_match_format_string_postfix(context):
     if not context.flags & HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT:
         return False
     
-    if (context.brace_nesting is not None):
+    brace_nesting = context.brace_nesting
+    if (brace_nesting is not None) and (brace_nesting[-1] != TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN):
         return False
     
-    line = context.get_line()
-    index = context.get_line_character_index()
-    
-    matched = FORMAT_STRING_POSTFIX_RP.match(line, index)
+    matched = FORMAT_STRING_POSTFIX_RP.match(context.content, context.content_character_index)
     if matched is None:
         return False
     
-    postfix = matched.group(1)
-    end = matched.end()
-    
-    context.add_token(TOKEN_TYPE_STRING_UNICODE_FORMAT_POSTFIX, postfix)
-    context.add_token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, '}')
-    context.set_line_character_index(end)
+    context.add_token(TOKEN_TYPE_STRING_FORMAT_POSTFIX, matched.end(1) - matched.start(1))
+    context.add_token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, 1)
     context.done = True
     return True
 
@@ -590,17 +500,18 @@ def _try_match_format_string_code(context):
     if not context.flags & HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT:
         return False
     
-    if (context.brace_nesting is not None):
+    brace_nesting = context.brace_nesting
+    if (brace_nesting is not None) and (brace_nesting[-1] != TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN):
         return False
     
-    line = context.get_line()
-    index = context.get_line_character_index()
+    content = context.content
+    content_character_index = context.content_character_index
+    content_length = context.content_length
     
-    if (index >= len(line)) or (line[index] != ':'):
+    if content_character_index >= content_length or content[content_character_index] != ':':
         return False
     
-    context.add_token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, ':')
-    context.set_line_character_index(index + 1)
+    context.add_token(TOKEN_TYPE_STRING_FORMAT_MARK_CODE_BEGIN, 1)
     with context.enter(
         context.flags & HIGHLIGHT_PARSER_MASK_INHERITABLE |
         HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
@@ -631,14 +542,10 @@ def _try_match_string(context):
     success : `bool`
         Whether a string could be matched.
     """
-    line = context.get_line()
-    index = context.get_line_character_index()
-    
-    matched = STRING_STARTER_RP.match(line, index)
+    matched = STRING_STARTER_RP.match(context.content, context.content_character_index)
     if matched is None:
         return False
     
-    content = matched.group(0)
     prefix, encapsulator = matched.groups()
     
     if context.flags & HIGHLIGHT_PARSER_FLAG_ALLOW_RELAXED_FORMAT_STRINGS:
@@ -657,16 +564,20 @@ def _try_match_string(context):
             return True
     
     if prefix is None:
-        token_type = TOKEN_TYPE_STRING_UNICODE
+        prefix_token_type = TOKEN_TYPE_STRING_UNICODE_SPECIAL_PREFIX
+        encapsulator_token_type = TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN
         string_parsing_flags = HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE
     elif 'b' in prefix:
-        token_type = TOKEN_TYPE_STRING_BINARY
+        prefix_token_type = TOKEN_TYPE_STRING_BINARY_SPECIAL_PREFIX
+        encapsulator_token_type = TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_OPEN
         string_parsing_flags = HIGHLIGHT_PARSER_FLAG_IN_STRING_BINARY
     elif 'f' in prefix:
-        token_type = TOKEN_TYPE_STRING_UNICODE_FORMAT
+        prefix_token_type = TOKEN_TYPE_STRING_UNICODE_SPECIAL_PREFIX
+        encapsulator_token_type = TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN
         string_parsing_flags = HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
     else:
-        token_type = TOKEN_TYPE_STRING_UNICODE
+        prefix_token_type = TOKEN_TYPE_STRING_UNICODE_SPECIAL_PREFIX
+        encapsulator_token_type = TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN
         string_parsing_flags = HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE
     
     string_parsing_flags |= disable_flag
@@ -674,9 +585,9 @@ def _try_match_string(context):
     if len(encapsulator) == 1:
         string_parsing_flags |= HIGHLIGHT_PARSER_FLAG_NO_MULTI_LINE_STRING
     
-    context.add_token(token_type, content)
-    end = matched.end()
-    context.set_line_character_index(end)
+    if (prefix is not None):
+        context.add_token(prefix_token_type, len(prefix))
+    context.add_token(encapsulator_token_type, len(encapsulator))
     
     with context.enter(
         (context.flags & HIGHLIGHT_PARSER_MASK_INHERITABLE) |
@@ -692,7 +603,7 @@ def _try_match_string(context):
     return True
 
 
-def _get_string_token_type(context):
+def _get_string_token_type(context, end_string):
     """
     Gets the current string token type from the given context.
     
@@ -701,24 +612,37 @@ def _get_string_token_type(context):
     context : ``HighlightParserContext``
         The context to use.
     
+    end_string : `None | str`
+        Whether the string is ending and with what.
+    
     Returns
     -------
     token_type : `int`
     """
+    if (end_string is not None) and (end_string == '}'):
+        return TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE
+    
     flags = context.flags
     if flags & HIGHLIGHT_PARSER_FLAG_IN_STRING_BINARY:
-        token_type = TOKEN_TYPE_STRING_BINARY
+        if (end_string is not None):
+            token_type = TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_CLOSE
+        else:
+            token_type = TOKEN_TYPE_STRING_BINARY
     
     elif flags & HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE:
-        # Unicode can be a format string.
-        if flags & HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT_CODE:
-            token_type = TOKEN_TYPE_STRING_UNICODE_FORMAT_CODE
-        
-        elif flags & HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT:
-            token_type = TOKEN_TYPE_STRING_UNICODE_FORMAT
+        if (end_string is not None):
+            token_type = TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE
         
         else:
-            token_type = TOKEN_TYPE_STRING_UNICODE
+            # Unicode can be a format string.
+            if flags & HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT_CODE:
+                token_type = TOKEN_TYPE_STRING_FORMAT_CODE
+            
+            elif flags & HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT:
+                token_type = TOKEN_TYPE_STRING_UNICODE
+            
+            else:
+                token_type = TOKEN_TYPE_STRING_UNICODE
     
     else:
         token_type = TOKEN_TYPE_STRING
@@ -762,7 +686,13 @@ def _end_parsing_if_no_multi_line_string(context):
     end_parsing : `bool`
     """
     flags = context.flags
-    if not flags & (HIGHLIGHT_PARSER_FLAG_NO_MULTI_LINE_STRING | HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT_CODE):
+    if not (
+        (flags & HIGHLIGHT_PARSER_FLAG_NO_MULTI_LINE_STRING) or
+        (
+            (not flags & HIGHLIGHT_PARSER_FLAG_ALLOW_RELAXED_FORMAT_STRINGS) and
+            (flags & HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT_CODE)
+        )
+    ):
         return False
     
     context.flags = flags | HIGHLIGHT_PARSER_FLAG_HIT_MULTI_LINE_CODE
@@ -770,9 +700,9 @@ def _end_parsing_if_no_multi_line_string(context):
     return True
 
 
-def _try_consume_string_end_of_line(context, line, unconsumed_since, index, line_length):
+def _try_consume_string_till_end_of_line(context, unconsumed_since, index, end_string):
     """
-    Tries to consume end of line while in a string.
+    Tries to consume till the end of the line.
     
     Parameter
     ---------
@@ -788,58 +718,41 @@ def _try_consume_string_end_of_line(context, line, unconsumed_since, index, line
     index : `int`
         The current index.
     
-    line_length : `int`
-        The line's total length.
+    end_string : `None | str`
+        Whether the string is ending and with what.
     
     Returns
     -------
-    end_parsing : `bool`
+    action : `0`
     """
-    if index < line_length:
-        return False
+    while True:
+        if index >= context.content_length:
+            add_line_break = False
+            break
+        
+        character = context.content[index]
+        if character == '\n':
+            add_line_break = True
+            break
+        
+        return 0
+    
     
     if index > unconsumed_since:
-        context.add_token(_get_string_token_type(context), line[unconsumed_since : index])
+        context.add_token(_get_string_token_type(context, None), index - unconsumed_since)
     
-    context.set_line_character_index(-1)
-    return True
-
-
-def _try_consume_string_line_break(context, line, unconsumed_since, index, character):
-    """
-    Tries to consume line break while in a string.
+    end_parsing = _end_parsing_if_no_multi_line_code(context) or _end_parsing_if_no_multi_line_string(context)
+    if end_parsing:
+        context.add_token(_get_string_token_type(context, end_string), 0)
+        
+        if (end_string is not None) and end_string == '}' and (context.flags & HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT):
+            context.add_token(TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE, 0)
     
-    Parameter
-    ---------
-    context : ``HighlightParserContext``
-        The context to use.
+    else:
+        if add_line_break:
+            context.add_token(TOKEN_TYPE_LINE_BREAK, 1)
     
-    line : `str`
-        Current line.
-    
-    unconsumed_since : `int`
-        Index where consuming the line started.
-    
-    index : `int`
-        The current index.
-    
-    character : `int`
-        The line's current character.
-    
-    Returns
-    -------
-    end_parsing : `bool`
-    """
-    # end of line (with line break)
-    if character != '\n':
-        return False
-    
-    if index > unconsumed_since:
-        context.add_token(_get_string_token_type(context), line[unconsumed_since : index])
-    
-    context.add_token(TOKEN_TYPE_LINE_BREAK, '\n')
-    context.set_line_character_index(-1)
-    return True
+    return 1 + end_parsing
 
 
 def _consume_string_until(context, end_string):
@@ -856,43 +769,40 @@ def _consume_string_until(context, end_string):
     """
     end_character = end_string[0]
     end_string_length = len(end_string)
-
+    
+    content = context.content
+    content_length = context.content_length
+    
     while True:
-        if context.line_index >= len(context.lines):
+        content_character_index = context.content_character_index
+        
+        if content_character_index >= content_length:
+            context.add_token(_get_string_token_type(context, end_string), 0)
             return
         
-        line = context.get_line()
-        line_length = len(line)
-        index = context.get_line_character_index()
-        unconsumed_since = index
+        unconsumed_since = content_character_index
         
         while True:
-            # end of line (without line break)
-            if _try_consume_string_end_of_line(context, line, unconsumed_since, index, line_length):
-                if _end_parsing_if_no_multi_line_code(context) or _end_parsing_if_no_multi_line_string(context):
-                    return
-                
-                break
+            action = _try_consume_string_till_end_of_line(
+                context, unconsumed_since, content_character_index, end_string
+            )
+            if action != 0:
+                if action == 1:
+                    break
+                return
             
-            character = line[index]
-            
-            # end of line (with line break)
-            if _try_consume_string_line_break(context, line, unconsumed_since, index, character):
-                if _end_parsing_if_no_multi_line_code(context) or _end_parsing_if_no_multi_line_string(context):
-                    return
-                
-                break
+            character = content[content_character_index]
             
             # ignore escaped
             if (
                 (character == '\\') and
                 (
                     
-                    (index + 1 < line_length) and
-                    (line[index + 1] in ('\\', '\'', '"', 'a', 'b', 'f', 'n', 'r', 't', 'v'))
+                    (content_character_index + 1 < content_length) and
+                    (content[content_character_index + 1] in ('\\', '\'', '"', 'a', 'b', 'f', 'n', 'r', 't', 'v'))
                 )
             ):
-                index += 2
+                content_character_index += 2
                 continue
             
             # match end
@@ -901,25 +811,19 @@ def _consume_string_until(context, end_string):
                 (
                     (end_string_length == 1) or
                     (
-                        (index + end_string_length <= line_length) and
-                        (line[index : index + end_string_length] == end_string)
+                        (content_character_index + end_string_length <= content_length) and
+                        (content[content_character_index : content_character_index + end_string_length] == end_string)
                     )
                 )
             ):
-                if index > unconsumed_since:
-                    context.add_token(_get_string_token_type(context), line[unconsumed_since : index])
+                if content_character_index > unconsumed_since:
+                    context.add_token(_get_string_token_type(context, None), content_character_index - unconsumed_since)
                 
-                if end_string == '}':
-                    token_type = TOKEN_TYPE_SPECIAL_PUNCTUATION
-                else:
-                    token_type = _get_string_token_type(context)
-                
-                context.add_token(token_type, end_string)
-                context.set_line_character_index(index + end_string_length)
+                context.add_token(_get_string_token_type(context, end_string), end_string_length)
                 return
             
             # Noting mentionable
-            index += 1
+            content_character_index += 1
             continue
 
 
@@ -938,41 +842,38 @@ def _consume_format_string_until(context, end_string):
     end_character = end_string[0]
     end_string_length = len(end_string)
     
+    content = context.content
+    content_length = context.content_length
+    
     while True:
-        if context.line_index >= len(context.lines):
+        content_character_index = context.content_character_index
+        
+        if content_character_index >= content_length:
+            context.add_token(_get_string_token_type(context, end_string), 0)
             return
         
-        line = context.get_line()
-        line_length = len(line)
-        index = context.get_line_character_index()
-        unconsumed_since = index
+        unconsumed_since = content_character_index
         
         while True:
-            # end of line (without line break)
-            if _try_consume_string_end_of_line(context, line, unconsumed_since, index, line_length):
-                if _end_parsing_if_no_multi_line_code(context) or _end_parsing_if_no_multi_line_string(context):
-                    return
-                
-                break
+            action = _try_consume_string_till_end_of_line(
+                context, unconsumed_since, content_character_index, end_string
+            )
+            if action != 0:
+                if action == 1:
+                    break
+                return
             
-            character = line[index]
-            
-            # end of line (with line break)
-            if _try_consume_string_line_break(context, line, unconsumed_since, index, character):
-                if _end_parsing_if_no_multi_line_code(context) or _end_parsing_if_no_multi_line_string(context):
-                    return
-                
-                break
+            character = content[content_character_index]
             
             # ignore double `{` and `}`
             if (
                 (character in ('{', '}')) and
                 (
-                    (index + 1 < line_length) and
-                    (line[index + 1] == character)
+                    (content_character_index + 1 < content_length) and
+                    (content[content_character_index + 1] == character)
                 )
             ):
-                index += 2
+                content_character_index += 2
                 continue
             
             # ignore escaped
@@ -980,11 +881,11 @@ def _consume_format_string_until(context, end_string):
                 (character == '\\') and
                 (
                     
-                    (index + 1 < line_length) and
-                    (line[index + 1] in ('\\', '\'', '"', 'a', 'b', 'f', 'n', 'r', 't', 'v'))
+                    (content_character_index + 1 < content_length) and
+                    (content[content_character_index + 1] in ('\\', '\'', '"', 'a', 'b', 'f', 'n', 'r', 't', 'v'))
                 )
             ):
-                index += 2
+                content_character_index += 2
                 continue
             
             # match end
@@ -993,30 +894,24 @@ def _consume_format_string_until(context, end_string):
                 (
                     (end_string_length == 1) or
                     (
-                        (index + end_string_length <= line_length) and
-                        (line[index : index + end_string_length] == end_string)
+                        (content_character_index + end_string_length <= content_length) and
+                        (content[content_character_index : content_character_index + end_string_length] == end_string)
                     )
                 )
             ):
-                if index > unconsumed_since:
-                    context.add_token(_get_string_token_type(context), line[unconsumed_since : index])
+                if content_character_index > unconsumed_since:
+                    context.add_token(_get_string_token_type(context, None), content_character_index - unconsumed_since)
                 
-                if end_string == '}':
-                    token_type = TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK
-                else:
-                    token_type = _get_string_token_type(context)
-                
-                context.add_token(token_type, end_string)
-                context.set_line_character_index(index + end_string_length)
+                context.add_token(_get_string_token_type(context, end_string), end_string_length)
                 return
             
             # are we entering a format string?
             if character == '{':
-                if index > unconsumed_since:
-                    context.add_token(_get_string_token_type(context), line[unconsumed_since : index])
+                if content_character_index > unconsumed_since:
+                    context.add_token(_get_string_token_type(context, None), content_character_index - unconsumed_since,
+                    )
                 
-                context.add_token(TOKEN_TYPE_STRING_UNICODE_FORMAT_MARK, character)
-                context.set_line_character_index(index + 1)
+                context.add_token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN, 1)
                 
                 # are we entering a format string?
                 with context.enter(
@@ -1027,30 +922,32 @@ def _consume_format_string_until(context, end_string):
                         else HIGHLIGHT_PARSER_FLAG_NO_MULTI_LINE_CODE
                     ) |
                     HIGHLIGHT_PARSER_FLAG_IN_STRING_UNICODE |
-                    HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT |
-                    HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING
+                    HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT
                 ):
                     _keep_python_parsing(context)
                     nested_flags = context.flags
                 
                 if nested_flags & HIGHLIGHT_PARSER_FLAG_HIT_MULTI_LINE_CODE:
                     _end_parsing_if_no_multi_line_code(context)
+                    context.add_token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, 0)
+                    context.add_token(_get_string_token_type(context, end_string), 0)
                     return
                 
                 # end parsing if disabled flag is hit
                 if nested_flags & HIGHLIGHT_PARSER_FLAG_HIT_DISABLED_QUOTE:
                     context.flags |= HIGHLIGHT_PARSER_FLAG_HIT_DISABLED_QUOTE
+                    context.add_token(TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, 0)
+                    context.add_token(_get_string_token_type(context, end_string), 0)
                     return
                 
                 break
             
             # Noting mentionable
-            index += 1
+            content_character_index += 1
             continue
 
 
 PYTHON_PARSERS = (
-    _try_match_empty_line,
     _try_match_console_prefix,
     _try_match_space,
     _try_match_format_string_end,
@@ -1070,7 +967,6 @@ PYTHON_PARSERS = (
     _try_match_line_break,
     _try_match_anything,
 )
-
 
 
 def _keep_python_parsing(context):

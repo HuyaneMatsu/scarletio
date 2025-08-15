@@ -2,13 +2,146 @@ __all__ = ()
 
 from ..rich_attribute_error import RichAttributeErrorBaseType
 
-from .flags import HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING
+from .location import Location
 from .matching import _keep_python_parsing
 from .token import Token
 from .token_types import (
     TOKEN_TYPE_COMMENT, TOKEN_TYPE_LINE_BREAK, TOKEN_TYPE_LINE_BREAK_ESCAPED, TOKEN_TYPE_SPACE,
-    TOKEN_TYPE_SPECIAL_OPERATOR, TOKEN_TYPE_SPECIAL_PUNCTUATION
+    TOKEN_TYPE_SPECIAL_OPERATOR,
+    TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_OPEN, TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN,
+    TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN, TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND_OPEN,
+    TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_OPEN, TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE_OPEN,
+    TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_CLOSE, TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE,
+    TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE, TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND_CLOSE,
+    TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_CLOSE, TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE_CLOSE
 )
+
+
+def _is_open_brace(token_type):
+    """
+    Returns whether the given token is an open token.
+    
+    Parameters
+    ----------
+    token_type : `int`
+        Token type.
+    
+    Returns
+    -------
+    is_open_token : `bool`
+    """
+    return (
+        (token_type == TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_OPEN) or 
+        (token_type == TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN) or 
+        (token_type == TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN) or 
+        (token_type == TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND_OPEN) or 
+        (token_type == TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_OPEN) or
+        (token_type == TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE_OPEN)
+    )
+
+
+def _is_close_brace(token_type):
+    """
+    Returns whether the given token is an close token.
+    
+    Parameters
+    ----------
+    token_type : `int`
+        Token type.
+    
+    Returns
+    -------
+    is_close_token : `bool`
+    """
+    return (
+        (token_type == TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_CLOSE) or 
+        (token_type == TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE) or 
+        (token_type == TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE) or 
+        (token_type == TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND_CLOSE) or 
+        (token_type == TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_CLOSE) or
+        (token_type == TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE_CLOSE)
+    )
+
+
+def _swap_open_brace_token_type(token_type):
+    """
+    Swaps the given open token to an close token.
+    
+    Parameters
+    ----------
+    token_type : `int`
+        Token type.
+    
+    Returns
+    -------
+    cose_token : `int`
+    """
+    # Find the brace's pair from backwards and remove everything including it
+    if token_type == TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_OPEN:
+        token_type = TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_CLOSE
+    elif token_type == TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN:
+        token_type = TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE
+    elif token_type == TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN:
+        token_type = TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE
+    elif token_type == TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND_OPEN:
+        token_type = TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND_CLOSE
+    elif token_type == TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_OPEN:
+        token_type = TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_CLOSE
+    else:
+        # token_type == TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE_OPEN
+        token_type = TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE_CLOSE
+    
+    return token_type
+
+
+def _swap_close_brace_token_type(token_type):
+    """
+    Swaps the given close token to an open token.
+    
+    Parameters
+    ----------
+    token_type : `int`
+        Token type.
+    
+    Returns
+    -------
+    open_token : `int`
+    """
+    if token_type == TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_CLOSE:
+        token_type = TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_OPEN
+    elif token_type == TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_CLOSE:
+        token_type = TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN
+    elif token_type == TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_CLOSE:
+        token_type = TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN
+    elif token_type == TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND_CLOSE:
+        token_type = TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_ROUND_OPEN
+    elif token_type == TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_CLOSE:
+        token_type = TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_CURLY_OPEN
+    else:
+        # token_type == TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE_CLOSE
+        token_type = TOKEN_TYPE_SPECIAL_PUNCTUATION_BRACE_SQUARE_OPEN
+    
+    return token_type
+
+
+def _is_barrier_token(token_type):
+    """
+    Returns whether the given token type is a barrier token (has its own parser that will close itself).
+    
+    Parameters
+    ----------
+    token_type : `int`
+        Token type.
+    
+    Returns
+    -------
+    is_barrier_token : `bool`
+    """
+    return (
+        (token_type == TOKEN_TYPE_STRING_BINARY_SPECIAL_QUOTE_OPEN) or 
+        (token_type == TOKEN_TYPE_STRING_UNICODE_SPECIAL_QUOTE_OPEN) or 
+        (token_type == TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN)
+    )
 
 
 class HighlightParserContext(RichAttributeErrorBaseType):
@@ -17,8 +150,17 @@ class HighlightParserContext(RichAttributeErrorBaseType):
     
     Attributes
     ----------
-    brace_nesting : `None | list<str>`
+    brace_nesting : `None | list<int>`
         How the braces are nested.
+    
+    content : `str`
+        The content that the higher context should match.
+    
+    content_character_index : `int`
+        The character's index from the start.
+    
+    content_length : `int`
+        The content's length.
     
     done : `bool`
         Whether processing is done.
@@ -32,123 +174,48 @@ class HighlightParserContext(RichAttributeErrorBaseType):
     line_index : `int`
         The index of the line which is processed at the moment.
     
-    lines : `list` of `str`
-        The lines to highlight.
-    
-    tokens : `list` of ``Token``
+    tokens : ``list<Token>``
         The generated tokens.
     """
-    __slots__ = ('brace_nesting', 'done', 'flags', 'line_character_index', 'line_index', 'lines', 'tokens')
+    __slots__ = (
+        'brace_nesting', 'content', 'content_character_index', 'content_length',  'done', 'flags',
+        'line_character_index', 'line_index', 'tokens'
+    )
     
-    def __new__(cls, lines, flags):
+    def __new__(cls, content, flags):
         """
         Creates a new highlight parser context.
         
         Parameters
         ----------
-        lines : `list<str>`
-            The lines what the highlight context should match.
+        content : `str`
+            The content that the higher context should match.
         
         flags : `int`
             Flags used to determine how to parse.
         """
         self = object.__new__(cls)
         self.brace_nesting = None
-        self.done = False
+        self.content = content
+        self.content_character_index = 0
+        self.content_length = content_length = len(content)
+        self.done = False if content_length else True
         self.flags = flags
         self.tokens = []
-        self.lines = lines
         self.line_index = 0
         self.line_character_index = 0
-        
-        if not lines:
-            self.done = True
-        
         return self
-    
-    
-    def get_line_index(self):
-        """
-        Returns the line's index where the context is at.
-        
-        Returns
-        -------
-        line_index : `int`
-        """
-        return self.line_index
-    
-    
-    def get_line(self):
-        """
-        Returns the actual line of the context.
-        
-        Returns
-        -------
-        line : `str`
-        """
-        lines = self.lines
-        line_index = self.line_index
-        if len(lines) <= line_index:
-            line = ''
-        else:
-            line = lines[line_index]
-        
-        return line
-    
-    
-    def get_line_character_index(self):
-        """
-        Returns the character index of the context's actual line.
-        
-        Returns
-        -------
-        line_character_index : `int`
-        """
-        return self.line_character_index
-    
-    
-    def set_line_character_index(self, line_character_index):
-        """
-        Sets the actual line's character index.
-        
-        Parameters
-        ----------
-        line_character_index : `int`
-            The index to set of the actual line.
-            
-            Pass it as `-1` to force end the line with linebreak or as `-2` to force it without linebreak.
-        """
-        lines = self.lines
-        line_index = self.line_index
-        
-        if line_index >= len(lines):
-            line = ''
-        else:
-            line = lines[line_index]
-        
-        if (line_character_index < 0) or (len(line) <= line_character_index):
-            line_index += 1
-            
-            self.line_index = line_index
-            if len(lines) <= line_index:
-                self.done = True
-            
-            self._end_of_line()
-            
-            line_character_index = 0
-        
-        self.line_character_index = line_character_index
     
     
     def recheck_done(self):
         """
         Rechecks whether the context is done. Used after exiting a nesting.
         """
-        if len(self.lines) <= self.line_index:
+        if self.content_character_index >= self.content_length:
             self.done = True
     
     
-    def add_token(self, token_type, token_value):
+    def add_token(self, token_type, token_length):
         """
         Adds a token to the context.
         
@@ -157,59 +224,89 @@ class HighlightParserContext(RichAttributeErrorBaseType):
         token_type : `int`
             The token's identifier.
         
-        token_value : `str`
-            The token's value.
+        token_length : `int`
+            The length of the token.
         """
-        token = Token(token_type, token_value)
-        self.tokens.append(token)
+        content_character_index = self.content_character_index
+        line_index = self.line_index
+        line_character_index = self.line_character_index
         
-        if (token_type == TOKEN_TYPE_SPECIAL_PUNCTUATION) and (self.flags & HIGHLIGHT_PARSER_FLAG_DO_TRACK_BRACE_NESTING):
-            self._track_brace_nesting(token_value)
-    
-    
-    def _track_brace_nesting(self, token_value):
-        """
-        Parameters
-        ----------
-        token_value : `None | str`
-            The token's value.
-        """
-        if token_value in ('(', '[', '{'):
+        if (token_type == TOKEN_TYPE_LINE_BREAK):
+            self.line_index = line_index + 1
+            self.line_character_index = 0
+            self._end_of_line()
+        
+        else:
+            if _is_open_brace(token_type):
+                brace_nesting = self.brace_nesting
+                if brace_nesting is None:
+                    brace_nesting = []
+                    self.brace_nesting = brace_nesting
+                
+                brace_nesting.append(token_type)
+            
+            elif _is_close_brace(token_type):
+                brace_nesting = self.brace_nesting
+                
+                open_brace_token = _swap_close_brace_token_type(token_type)
+                if (brace_nesting is None):
+                    open_found = False
+                else:
+                    while brace_nesting:
+                        last_open_brace_type = brace_nesting[-1]
+                        if (last_open_brace_type == open_brace_token):
+                            del brace_nesting[-1]
+                            open_found = True
+                            break
+                        
+                        if _is_barrier_token(last_open_brace_type):
+                            open_found = True
+                            break
+                            
+                        self.tokens.append(Token(
+                            _swap_open_brace_token_type(last_open_brace_type),
+                            Location(content_character_index, line_index, line_character_index, 0),
+                        ))
+                        del brace_nesting[-1]
+                    
+                    else:
+                        open_found = False
+                
+                if not open_found:
+                    self.tokens.append(Token(
+                        open_brace_token,
+                        Location(content_character_index, line_index, line_character_index, 0),
+                    ))
+                
+                if not brace_nesting:
+                    self.brace_nesting = None
+            
+            self.line_character_index = line_character_index + token_length
+        
+         
+        self.content_character_index = content_character_index + token_length
+        self.tokens.append(Token(
+            token_type,
+            Location(content_character_index, line_index, line_character_index, token_length),
+        ))
+        
+        if self.content_character_index >= self.content_length:
+            self.done = True
             brace_nesting = self.brace_nesting
-            if brace_nesting is None:
-                brace_nesting = []
-                self.brace_nesting = brace_nesting
-            
-            brace_nesting.append(token_value)
-            return
-        
-        if token_value in (')', ']', '}'):
-            brace_nesting = self.brace_nesting
-            # Nothing to remove from?
-            if brace_nesting is None:
-                return
-            
-            # Find the brace's pair from backwards and remove everything including it
-            if token_value == ')':
-                token_value = '('
-            elif token_value == ']':
-                token_value = '['
-            else:
-                token_value = '{'
-            
-            for index in reversed(range(len(brace_nesting))):
-                if brace_nesting[index] == token_value:
-                    break
-            
-            del brace_nesting[index:]
-            
-            if not brace_nesting:
-                self.brace_nesting = None
-            
-            return
-        
-        # no more cases
-        return
+            if (brace_nesting is not None):
+                while brace_nesting:
+                    last_open_brace_type = brace_nesting[-1]
+                    if _is_barrier_token(last_open_brace_type):
+                        break
+                    
+                    self.tokens.append(Token(
+                        _swap_open_brace_token_type(last_open_brace_type),
+                        Location(content_character_index, line_index, line_character_index, 0),
+                    ))
+                    del brace_nesting[-1]
+                
+                if not brace_nesting:
+                    self.brace_nesting = None
     
     
     def get_last_related_token(self):
@@ -270,7 +367,11 @@ class HighlightParserContext(RichAttributeErrorBaseType):
             if token_type == TOKEN_TYPE_COMMENT:
                 continue
             
-            if (token_type == TOKEN_TYPE_SPECIAL_OPERATOR) and (token.value == '\\'):
+            if (
+                (token_type == TOKEN_TYPE_SPECIAL_OPERATOR) and
+                (token.location.length == 1) and
+                (self.content[token.location.content_character_index] == '\\')
+            ):
                 token.type = TOKEN_TYPE_LINE_BREAK_ESCAPED
             
             break
@@ -287,8 +388,7 @@ class HighlightParserContext(RichAttributeErrorBaseType):
         -------
         nester : ``ParserContextNester``
         """
-        nester = ParserContextNester(self, self.flags, self.brace_nesting, self.done)
-        self.brace_nesting = None
+        nester = ParserContextNester(self, self.flags, self.done)
         self.flags = flags
         return nester
 
@@ -303,18 +403,15 @@ class ParserContextNester(RichAttributeErrorBaseType):
     context : ``HighlightParserContext``
         The context to use.
     
-    previous_brace_nesting : `None | list<str>`
-        How the braces are nested.
-    
     previous_done : `bool`
         Whether processing is done.
     
     previous_flags : `int`
         Flags used to determine how to parse.
     """
-    __slots__ = ('context', 'previous_brace_nesting', 'previous_flags', 'previous_done')
+    __slots__ = ('context', 'previous_flags', 'previous_done')
     
-    def __new__(cls, context, previous_flags, previous_brace_nesting, previous_done):
+    def __new__(cls, context, previous_flags, previous_done):
         """
         Creates a new parser context nester.
         
@@ -326,15 +423,11 @@ class ParserContextNester(RichAttributeErrorBaseType):
         previous_flags : `int`
             Flags used to determine how to parse.
         
-        previous_brace_nesting : `None | list<str>`
-            How the braces are nested.
-        
         previous_done : `bool`
             Whether processing is done.
         """
         self = object.__new__(cls)
         self.context = context
-        self.previous_brace_nesting = previous_brace_nesting
         self.previous_done = previous_done
         self.previous_flags = previous_flags
         return self
@@ -372,7 +465,6 @@ class ParserContextNester(RichAttributeErrorBaseType):
             Whether the exception was captured.
         """
         context = self.context
-        context.brace_nesting = self.previous_brace_nesting
         context.flags = self.previous_flags
         context.done = self.previous_done
         context.recheck_done()
