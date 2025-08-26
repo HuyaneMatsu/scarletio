@@ -1650,7 +1650,7 @@ def _validate_options(options):
     
     Returns
     -------
-    request_methods : `set` of `str`
+    request_methods : `set<str>`
         A set of the validated http methods. If none is given, `'GET'` is auto added to it.
     parameters : `None`, `list` of `tuple` (`str`, `object`)
         Defaults parameters to the dispatched router.
@@ -2111,7 +2111,7 @@ class RuleDirectory:
         ----------
         rule : `tuple` of `tuple` (`int`, `str`)
             The url rule to register.
-        request_methods : `None`, `set` of `str`
+        request_methods : `None | set<str>`
             Request methods to call `view_func` when received.
         parameters : `None`, `tuple` of `tuple` (`str`, `object`)
             Default parameters to pass to the `view_func`.
@@ -2239,7 +2239,7 @@ class Rule:
         Default parameters to pass to the `view_func`.
     positional_parameter_names : `None | tuple<str>`
         Positional only parameter names accepted by `view_func`.
-    request_methods : `None`, `set` of `str`
+    request_methods : `None | set<str>`
         Request methods to call `view_func` when received.
     rule : `tuple`, `tuple` of (`int`, `str`)
         The url's path part.
@@ -2272,7 +2272,7 @@ class Rule:
             Whether `view_func` accepts `**keyword_parameters` parameter.
         endpoint : `str`
             The endpoint's internal name.
-        request_methods : `None`, `set` of `str`
+        request_methods : `None | set<str>`
             Request methods to call `view_func` when received.
         parameters : `None`, `tuple` of `tuple` (`str`, `object`)
             Default parameters to pass to the `view_func`.

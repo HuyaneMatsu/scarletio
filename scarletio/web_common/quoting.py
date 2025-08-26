@@ -141,25 +141,6 @@ def quote(value, safe = None, protected = None, query_string = False):
     
     iterator = iter(value)
     for char in iterator:
-        if char == b'%'[0]:
-            try:
-                char_0 = next(iterator)
-                char_1 = next(iterator)
-            except StopIteration:
-                break
-            
-            joined = (_base_16_char_to_int(char_0) << 4) | _base_16_char_to_int(char_1)
-            unquoted = chr(joined)
-            
-            if ((protected is not None) and (unquoted in protected)) or (unquoted not in safe):
-                result.append(b'%'[0])
-                result.append(char_0)
-                result.append(char_1)
-            
-            else:
-                result.append(joined)
-            continue
-        
         if query_string:
             if char == b' '[0]:
                 result.append(b'+'[0])

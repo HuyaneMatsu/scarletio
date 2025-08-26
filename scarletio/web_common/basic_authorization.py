@@ -263,7 +263,7 @@ class BasicAuthorization(RichAttributeErrorBaseType):
         """
         warn(
             (
-                f'`{type(self).__name__}.encode` has been renamed to `to_header`.'
+                f'`{type(self).__name__}.encode` has been renamed to `to_header`. '
                 f'`.encode` will be removed in 2025 August.'
             ),
             FutureWarning,
@@ -280,7 +280,7 @@ class BasicAuthorization(RichAttributeErrorBaseType):
         """
         warn(
             (
-                f'`{type(self).__name__}.username` has been renamed to `user_id`.'
+                f'`{type(self).__name__}.username` has been renamed to `user_id`. '
                 f'`.username` will be removed in 2025 August.'
             ),
             FutureWarning,

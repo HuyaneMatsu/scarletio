@@ -9,7 +9,7 @@ class PrefixTrimmer:
     
     Attributes
     ----------
-    excludes : `None`, `frozenset` of `str`
+    excludes : `None | frozenset<str>`
         Strings to exclude from matching.
     prefix_continuous_pattern : `re.Pattern`
         Prefix pattern matching continuous lines.

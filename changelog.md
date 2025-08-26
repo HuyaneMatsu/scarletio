@@ -1,3 +1,9 @@
+# 1.0.94 *\[2025-08-26\]*
+
+#### Bug fixes
+
+- Fix `quote` interpreted `%` as start of a percentage quoted value instead as `%`. 
+
 # 1.0.93 *\[2025-08-15\]*
 
 #### Improvements

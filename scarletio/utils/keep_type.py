@@ -24,7 +24,7 @@ class KeepType:
     
     Class Attributes
     ----------------
-    _ignored_attr_names : `set` of `str`
+    _ignored_attr_names : `set<str>`
         Attribute names to ignore when extending.
     """
     __slots__ = ('old_class',)

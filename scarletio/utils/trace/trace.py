@@ -20,7 +20,7 @@ def render_frames_into(frames, extend = None, *, filter = None, highlighter = No
     frames : `list<FrameProxyBase | FrameType | TraceBack>`
         The frames to render.
     
-    extend : `None`, `list<str>` = `None`, Optional
+    extend : `None | list<str>` = `None`, Optional
         Whether the frames should be rendered into an already existing list.
     
     filter : `None`, `callable` = `None`, Optional (Keyword only)
@@ -87,7 +87,7 @@ def render_exception_into(exception, extend = None, *, filter = None, highlighte
     exception : `None | BaseException`
         The exception to render.
     
-    extend : `None`, `list<str>` = `None`, Optional
+    extend : `None | list<str>` = `None`, Optional
         Whether the frames should be rendered into an already existing list.
     
     filter : `None`, `callable` = `None`, Optional (Keyword only)

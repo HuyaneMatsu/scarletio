@@ -53,11 +53,11 @@ def _iter_options():
     )
     
     yield (
-        '%20',
+        '100%',
         None,
         None,
         False,
-        '%20',
+        '100%25',
     )
 
 

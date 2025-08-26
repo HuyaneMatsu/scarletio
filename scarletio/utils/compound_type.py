@@ -511,7 +511,7 @@ class CompoundLayer:
     ----------
     implemented_type_attributes : `None`, `dict<str, object>`
         Implemented type attributes by the component.
-    instance_attributes : `None`, `set` of `str`
+    instance_attributes : `None | set<str>`
         The instance attributes to implement.
     implemented : `bool`
         Whether the layer is already implemented.
@@ -534,7 +534,7 @@ class CompoundLayer:
         ----------
         type_name : `str`
             The represented type's or the component's name.
-        instance_attributes : `None`, `set` of `str`
+        instance_attributes : `None | set<str>`
             The instance attributes to implement.
         theoretical_type_attributes : `None`, `dict<str, object>`
             Theoretical type attributes which an other component should implement.
@@ -992,7 +992,7 @@ class CompoundLogicUnit:
     
     Attributes
     ----------
-    attribute_names : `set` of `str`
+    attribute_names : `set<str>`
         The attribute names of the layer to resolve.
     base_layer : ⅞none`, ``ComponentLayer``
         The base type's layer.
