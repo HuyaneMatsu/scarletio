@@ -2,10 +2,10 @@ import vampytest
 
 from ...highlight import DEFAULT_ANSI_HIGHLIGHTER, get_highlight_streamer, iter_split_ansi_format_codes
 
-from ..expression_parsing import ExpressionInfo
 from ..frame_group import FrameGroup
 from ..frame_proxy import FrameProxyVirtual
 from ..rendering import _build_frames_repeated_line, produce_frame_group
+from ..tests.helper_create_dummy_expression_info import create_dummy_expression_info
 
 
 def _iter_options__build_frames_repeated_line():
@@ -38,12 +38,12 @@ def _get_input_frame_group():
     frame_proxy_0 = FrameProxyVirtual.from_fields(
         file_name = 'koishi.py', line_index = 12, name = 'sit', instruction_index = 6
     )
-    frame_proxy_0.expression_info = ExpressionInfo(frame_proxy_0.expression_key, ['hey', 'mister'], 0, True)
+    frame_proxy_0.expression_info = create_dummy_expression_info(frame_proxy_0.expression_key, 'hey\nmister')
 
     frame_proxy_1 = FrameProxyVirtual.from_fields(
         file_name = 'satori.py', line_index = 15, name = 'mind_read', instruction_index = 6
     )
-    frame_proxy_1.expression_info = ExpressionInfo(frame_proxy_1.expression_key, ['i love you'], 0, True)
+    frame_proxy_1.expression_info = create_dummy_expression_info(frame_proxy_1.expression_key, 'i love you')
     
     frame_group = FrameGroup()
     frame_group.try_add_frame(frame_proxy_0)
@@ -123,13 +123,13 @@ def test__produce_frame_group__with_repeat_no_highlight():
     frame_proxy_0 = FrameProxyVirtual.from_fields(
         file_name = 'koishi.py', line_index = 12, name = 'sit', instruction_index = 6
     )
-    frame_proxy_0.expression_info = ExpressionInfo(frame_proxy_0.expression_key, ['hey', 'mister'], 0, True)
+    frame_proxy_0.expression_info = create_dummy_expression_info(frame_proxy_0.expression_key, 'hey\nmister')
     frame_proxy_0.alike_count = 3
 
     frame_proxy_1 = FrameProxyVirtual.from_fields(
         file_name = 'satori.py', line_index = 15, name = 'mind_read', instruction_index = 6
     )
-    frame_proxy_1.expression_info = ExpressionInfo(frame_proxy_1.expression_key, ['i love you'], 0, True)
+    frame_proxy_1.expression_info = create_dummy_expression_info(frame_proxy_1.expression_key, 'i love you')
     frame_proxy_1.alike_count = 3
     
     frame_group = FrameGroup()

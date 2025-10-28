@@ -1,3 +1,11 @@
+# 1.0.95 *\[2025-10-28\]*
+
+#### Improvements
+
+- Highlighter now stores nesting layers.
+      Add a new function `get_highlight_parse_result` to retrieve the generates layers with their tokens.
+- Trace expression parser now uses the highlighter to rely on expression locations.
+
 # 1.0.94 *\[2025-08-26\]*
 
 #### Bug fixes

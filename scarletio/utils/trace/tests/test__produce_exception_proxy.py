@@ -2,24 +2,24 @@ import vampytest
 
 from ...highlight import DEFAULT_ANSI_HIGHLIGHTER, get_highlight_streamer, iter_split_ansi_format_codes
 
-from ..expression_parsing import ExpressionInfo
 from ..exception_proxy import ExceptionProxyVirtual
 from ..exception_representation import ExceptionRepresentationGeneric
 from ..frame_group import FrameGroup
 from ..frame_proxy import FrameProxyVirtual
 from ..rendering import produce_exception_proxy
+from ..tests.helper_create_dummy_expression_info import create_dummy_expression_info
 
 
 def _get_input_exception_proxy():
     frame_proxy_0 = FrameProxyVirtual.from_fields(
         file_name = 'orin.py', line_index = 12, name = 'sit', instruction_index = 6
     )
-    frame_proxy_0.expression_info = ExpressionInfo(frame_proxy_0.expression_key, ['hey', 'sister'], 0, True)
-
+    frame_proxy_0.expression_info = create_dummy_expression_info(frame_proxy_0.expression_key, 'hey\nsister')
+    
     frame_proxy_1 = FrameProxyVirtual.from_fields(
         file_name = 'okuu.py', line_index = 15, name = 'mind_read', instruction_index = 6
     )
-    frame_proxy_1.expression_info = ExpressionInfo(frame_proxy_1.expression_key, ['darling'], 0, True)
+    frame_proxy_1.expression_info = create_dummy_expression_info(frame_proxy_1.expression_key, 'darling')
     
     frame_group_0 = FrameGroup()
     frame_group_0.try_add_frame(frame_proxy_0)

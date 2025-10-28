@@ -5,11 +5,11 @@ from ..expression_key import ExpressionKey
 from ..line_cache_session import LineCacheSession
 
 
-"""
+
 def a(
     koishi = None,
 ):
-"""
+    pass
 
 
 def test__get_expression_info():
@@ -24,6 +24,4 @@ def test__get_expression_info():
     vampytest.assert_instance(expression_info, ExpressionInfo)
     vampytest.assert_eq(expression_info.key, expression_key)
     vampytest.assert_eq(expression_info.line, 'def a(\n    koishi = None,\n):')
-    vampytest.assert_eq(expression_info.lines, ['def a(', '    koishi = None,', '):'])
     vampytest.assert_eq(expression_info.shift, 0)
-    vampytest.assert_eq(expression_info.syntax_valid, True)

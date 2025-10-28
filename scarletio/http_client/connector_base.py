@@ -1,7 +1,6 @@
 __all__ = ()
 
 from http.cookies import SimpleCookie
-from warnings import warn
 
 from ..core import LOOP_TIME
 from ..utils import RichAttributeErrorBaseType
@@ -42,7 +41,7 @@ class ConnectorBase(RichAttributeErrorBaseType):
         '__weakref__', 'clean_up_handle', 'closed', 'cookies', 'force_close', 'loop', 'protocols_by_host'
     )
     
-    def __new__(cls, loop, *deprecated, force_close = False):
+    def __new__(cls, loop, *, force_close = False):
         """
         Creates a new connector bound to the given loop.
         
@@ -54,20 +53,6 @@ class ConnectorBase(RichAttributeErrorBaseType):
         force_close : `bool` = `False`, Optional (Keyword only)
             Whether after each request (and between redirects) the connections should be closed. Defaults to `False`.
         """
-        # deprecated
-        deprecated_length = len(deprecated)
-        if deprecated_length:
-            warn(
-                (
-                    f'The `force_close` parameter in `{cls.__name__}.__new__` is moved ot be keyword only. '
-                    f'Support for positional is deprecated and will be removed in 2025 August.'
-                ),
-                FutureWarning,
-                stacklevel = 2,
-            )
-            
-            force_close = deprecated[0]
-        
         self = object.__new__(cls)
         self.protocols_by_host = {}
         self.clean_up_handle = None

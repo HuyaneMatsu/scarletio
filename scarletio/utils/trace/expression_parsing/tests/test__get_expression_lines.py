@@ -1,125 +1,157 @@
 import vampytest
 
 from ..line_cache_session import LineCacheSession
-from ..parsing import get_expression_lines
-
-
-"""
-
-
-
-hello
-
-
-
-mister = (
-'hey')
+from ..expression_info import get_expression_area
 
 
 
 
-hello(there)
+
+def dummy_0000():
+    hello
+
+
+def dummy_0001():
+    mister = (
+    'hey')
 
 
 
-
-hoy. \
-there()
-
-
-
-hello(
-    there
-)
-
-
-'''
-'''
+def dummy_0002():
+    hello(there)
 
 
 
-'its me'
+def dummy_0003():
+    hoy. \
+    there()
+
+
+def dummy_0004():
+    hello(
+        there
+    )
+def dummy_0005():
+    '''
+    '''
 
 
 
+def dummy_0006():
+    'its me'
 
-koishi = (
-    {
-)
 
-"""
+
+def dummy_0007():
+    koishi = (
+        {
+    })
+
+
 
 def _iter_options():
     yield (
         10,
         (
-            ['hello'],
-            0,
-            True,
+            __file__,
+            10,
+            10,
+            141,
+            151,
+            37,
+            40,
         ),
     )
     yield (
         15,
         (
-            ['mister = (', '\'hey\')'],
-            1,
-            True,
+            __file__,
+            14,
+            15,
+            171,
+            197,
+            49,
+            62,
         ),
     )
     yield (
         20,
         (
-            ['hello(there)'],
-            0,
-            True,
+            __file__,
+            20,
+            20,
+            218,
+            235,
+            72,
+            78,
         ),
     )
     yield (
         25,
         (
-            ['hoy. \\', 'there()'],
-            0,
-            True,
+            __file__,
+            25,
+            25,
+            256,
+            267,
+            88,
+            94,
         ),
     )
     yield (
         30,
         (
-            ['hello(', '    there', ')'],
-            0,
-            True,
+            __file__,
+            30,
+            32,
+            299,
+            330,
+            108,
+            118,
         ),
     )
     yield (
         35,
         (
-            ['\'\'\'', '\'\'\''],
-            0,
-            True,
+            __file__,
+            34,
+            35,
+            348,
+            364,
+            125,
+            131,
         )
     )
     yield (
         40,
         (
-            ['\'its me\''],
-            0,
-            True,
+            __file__,
+            40,
+            40,
+            385,
+            398,
+            141,
+            146,
         )
     )
     yield (
         45,
         (
-            ['koishi = (', '    {', ')'],
-            0,
-            False,
+            __file__,
+            45,
+            47,
+            419,
+            451,
+            156,
+            170,
         ),
     )
 
 
 @vampytest._(vampytest.call_from(_iter_options()).returning_last())
-def test__get_expression_lines(line_index):
+def test__get_expression_area(line_index):
     """
-    Tests whether ``get_expression_lines`` works as intended.
+    Tests whether ``get_expression_area`` works as intended.
     
     Parameters
     ----------
@@ -128,7 +160,10 @@ def test__get_expression_lines(line_index):
     
     Returns
     -------
-    output : `list<str>`
+    output : `(str, int, int, int, int, int, int)`
     """
     with LineCacheSession():
-        return get_expression_lines(__file__, line_index)
+        output = get_expression_area(__file__, line_index)
+    
+    vampytest.assert_instance(output, tuple)
+    return (output[0].file_name, output[1], output[2], output[3], output[4], output[5], output[6])

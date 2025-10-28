@@ -130,24 +130,62 @@ def produce_frame_proxy(frame):
     ------
     token_type_and_part : `(int, str)`
     """
-    lines = frame.lines
+    expression_info = frame.expression_info
+    if expression_info is None:
+        multi_line = False
+    else:
+        multi_line = expression_info.expression_line_start_index != expression_info.expression_line_end_index
     
-    yield from _produce_file_location(frame.file_name, frame.line_index, frame.name, len(lines))
+    yield from _produce_file_location(frame.file_name, frame.line_index, frame.name, multi_line)
     
-    if lines:
-        built_code = []
-        for line in lines:
-            built_code.append('    ')
-            built_code.append(line)
-            built_code.append('\n')
+    if (
+        (expression_info is None) or
+        (expression_info.expression_character_start_index == expression_info.expression_character_end_index)
+    ):
+        return
+    
+    removed_indentation_characters = expression_info.removed_indentation_characters
+    previous_character_line_break = True
+    
+    file_info = expression_info.file_info
+    tokens = file_info.parse_result.tokens
+    content = file_info.content
+    
+    for token_index in range(expression_info.expression_token_start_index, expression_info.expression_token_end_index):
+        token = tokens[token_index]
+        token_type = token.type
         
-        code = ''.join(built_code)
-        built_code = None
+        if token_type == HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK:
+            previous_character_line_break = True
+            yield token_type, '\n'
+            continue
         
-        yield from iter_highlight_code_token_types_and_values(code)
+        token_content_character_index = token.content_character_index
+        length = token.length
+        
+        if (
+            previous_character_line_break and
+            removed_indentation_characters and
+            (token_type == HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_SPACE)
+        ):
+            token_content_character_index += removed_indentation_characters
+            length -= removed_indentation_characters
+        
+        if previous_character_line_break:
+            yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_SPACE, '    '
+            previous_character_line_break = False
+        
+        if length <= 0:
+            continue
+        
+        yield token_type, content[token_content_character_index : token_content_character_index + length]
+        continue
+    
+    if not previous_character_line_break:
+        yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK, '\n'
 
 
-def _produce_file_location(file_name, line_index, name, line_count):
+def _produce_file_location(file_name, line_index, name, multi_line):
     """
     Produces file location part and their tokens.
     
@@ -164,8 +202,8 @@ def _produce_file_location(file_name, line_index, name, line_count):
     name : `str`
         The respective functions name.
     
-    line_count : `int`
-        How much lines is the expression at the location.
+    multi_line : `int`
+        Whether the expression expands over multiple lines.
     
     Yields
     ------
@@ -180,7 +218,7 @@ def _produce_file_location(file_name, line_index, name, line_count):
         yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LOCATION, 'unknown location'
     
     # if its multiple lines add `around` word
-    if line_count > 1:
+    if multi_line:
         yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LOCATION, ', around line '
     else:
         yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LOCATION, ', line '
@@ -228,13 +266,16 @@ def _produce_exception_representation_syntax_error(exception_representation):
     token_type_and_part : `(int, str)`
     """
     # location
-    yield from  _produce_file_location(exception_representation.file_name, exception_representation.line_index, '', 1)
+    yield from  _produce_file_location(
+        exception_representation.file_name, exception_representation.line_index, '', False
+    )
     
     line = exception_representation.line
     if line:
         # Add line
-        code = f'    {line}\n'
-        yield from iter_highlight_code_token_types_and_values(code)
+        yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_SPACE, '    '
+        yield from iter_highlight_code_token_types_and_values(line)
+        yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK, '\n'
         
         # Add pointer
         pointer_length = exception_representation.pointer_length

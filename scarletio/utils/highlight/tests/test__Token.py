@@ -2,7 +2,6 @@ import vampytest
 
 from ..token import Token
 from ..token_types import TOKEN_TYPE_NUMERIC_FLOAT, TOKEN_TYPE_NUMERIC_INTEGER
-from ..location import Location
 
 
 def _assert_fields_set(token):
@@ -10,7 +9,10 @@ def _assert_fields_set(token):
     Asserts whether every fields of the given token are correctly set.
     """
     vampytest.assert_instance(token, Token)
-    vampytest.assert_instance(token.location, Location)
+    vampytest.assert_instance(token.content_character_index, int)
+    vampytest.assert_instance(token.length, int)
+    vampytest.assert_instance(token.line_character_index, int)
+    vampytest.assert_instance(token.line_index, int)
     vampytest.assert_instance(token.type, int)
 
 
@@ -19,16 +21,25 @@ def test__Token__new():
     Tests whether ``Token.__new__`` works as intended.
     """
     token_type = TOKEN_TYPE_NUMERIC_FLOAT
-    location = Location(2, 1, 1, 6)
+    content_character_index = 2
+    line_index = 1
+    line_character_index = 1
+    length = 6
     
     token = Token(
         token_type,
-        location,
+        content_character_index,
+        line_index,
+        line_character_index,
+        length,
     )
     _assert_fields_set(token)
     
     vampytest.assert_eq(token.type, token_type)
-    vampytest.assert_eq(token.location, location)
+    vampytest.assert_eq(token.content_character_index, content_character_index)
+    vampytest.assert_eq(token.length, length)
+    vampytest.assert_eq(token.line_character_index, line_character_index)
+    vampytest.assert_eq(token.line_index, line_index)
 
 
 def test__Token__repr():
@@ -36,11 +47,17 @@ def test__Token__repr():
     Tests whether ``Token.__repr__`` works as intended.
     """
     token_type = TOKEN_TYPE_NUMERIC_FLOAT
-    location = Location(2, 1, 1, 6)
+    content_character_index = 2
+    line_index = 1
+    line_character_index = 1
+    length = 6
     
     token = Token(
         token_type,
-        location,
+        content_character_index,
+        line_index,
+        line_character_index,
+        length,
     )
     
     output = repr(token)
@@ -49,11 +66,17 @@ def test__Token__repr():
 
 def _iter_options__eq():
     token_type = TOKEN_TYPE_NUMERIC_FLOAT
-    location = Location(2, 1, 1, 6)
+    content_character_index = 2
+    line_index = 1
+    line_character_index = 1
+    length = 6
     
     keyword_parameters = {
         'token_type': token_type,
-        'location': location,
+        'content_character_index': content_character_index,
+        'line_index': line_index,
+        'line_character_index': line_character_index,
+        'length': length,
     }
     
     yield (
@@ -75,7 +98,34 @@ def _iter_options__eq():
         keyword_parameters,
         {
             **keyword_parameters,
-            'location': Location(2, 1, 1, 10),
+            'content_character_index': 10,
+        },
+        False,
+    )
+    
+    yield (
+        keyword_parameters,
+        {
+            **keyword_parameters,
+            'line_index': 10,
+        },
+        False,
+    )
+    
+    yield (
+        keyword_parameters,
+        {
+            **keyword_parameters,
+            'line_character_index': 10,
+        },
+        False,
+    )
+    
+    yield (
+        keyword_parameters,
+        {
+            **keyword_parameters,
+            'length': 10,
         },
         False,
     )

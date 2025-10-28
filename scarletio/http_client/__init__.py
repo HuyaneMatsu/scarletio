@@ -34,22 +34,3 @@ __all__ = (
     *ssl_fingerprint.__all__,
     *web_socket_context_manager.__all__,
 )
-
-
-# Deprecations
-
-from warnings import warn
-
-def __getattr__(attribute_name):
-    if attribute_name == 'TCPConnector':
-        warn(
-            (
-                f'`TCPConnector` has been renamed to `ConnectorTCP`.'
-                f'`ConnectorTCP` will be removed in 2025 August.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return ConnectorTCP
-    
-    raise AttributeError(attribute_name)

@@ -2,7 +2,6 @@ __all__ = ('DatagramAddressedReadProtocol', 'DatagramMergerReadProtocol', 'ReadP
 
 from collections import deque as Deque
 from functools import partial as partial_func
-from warnings import warn
 
 from ...utils import copy_docs, to_coroutine
 
@@ -292,18 +291,6 @@ class ReadProtocolBase(AbstractProtocolBase):
         self._payload_stream = None
         self._transport = None
         return self
-    
-    
-    @property
-    def _payload_waiter(self):
-        """
-        Deprecated and will be removed at 2025 September. Please use `._payload_stream` instead.
-        """
-        warn(
-            f'f`{type(self).__name__}._payload_stream` is deprecated and will be removed in 2025 September. '
-            f'Please use `._payload_stream` instead.'
-        )
-        return self._payload_stream
     
     
     def __repr__(self):

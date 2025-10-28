@@ -1,6 +1,5 @@
 __all__ = ('HTTPClient', )
 
-from ssl import SSLContext, create_default_context as create_default_ssl_context
 from warnings import warn
 
 from ..utils import IgnoreCaseMultiValueDictionary, RichAttributeErrorBaseType, export
@@ -17,7 +16,6 @@ from .connector_tcp import ConnectorTCP
 from .constants import REQUEST_TIMEOUT_DEFAULT
 from .proxy import Proxy
 from .request_context_manager import RequestContextManager
-from .ssl_fingerprint import SSLFingerprint
 from .web_socket_context_manager import WebSocketContextManager
 
 
@@ -318,7 +316,6 @@ class HTTPClient(RichAttributeErrorBaseType):
         query = None,
         redirects = 3,
         timeout = REQUEST_TIMEOUT_DEFAULT,
-        ssl = ...,
         ssl_context = None,
         ssl_fingerprint = None,
         # Deprecated ones:
@@ -397,40 +394,6 @@ class HTTPClient(RichAttributeErrorBaseType):
         - ``.request2`` : Executes an http request with extra parameters returning a request context manager.
         - ``._request`` : Internal method for executing an http request without extra parameters.
         """
-        # Deprecations
-        if (ssl is not ...):
-            warn(
-                (
-                    f'`{type(self).__name__}._request2`\'s `ssl` parameter is deprecated '
-                    f'and scheduled for removal in 2025 August. '
-                    f'Please use either the `ssl_context` or the `ssl_fingerprint` parameters depending on your needs.'
-                ),
-                FutureWarning,
-                stacklevel = 3,
-            )
-            
-            if ssl is None:
-                ssl_context = None
-                ssl_fingerprint = None
-            
-            elif isinstance(ssl, SSLContext):
-                ssl_context = ssl
-                ssl_fingerprint = None
-            
-            elif isinstance(ssl, SSLFingerprint):
-                ssl_context = None
-                ssl_fingerprint = ssl
-            
-            elif isinstance(ssl, bool):
-                ssl_context = create_default_ssl_context()
-                ssl_fingerprint = None
-                
-            else:
-                raise TypeError(
-                    f'`ssl` can be `None`, `bool`, `{SSLContext.__name__}`, `{SSLFingerprint.__name__}`. '
-                    f'Got {type(ssl).__name__}; {ssl!r}.'
-                )
-        
         if auth is not ...:
             warn(
                 (
@@ -1079,21 +1042,6 @@ class HTTPClient(RichAttributeErrorBaseType):
         - ``.patch`` : Shortcut for executing a patch request.
         """
         return RequestContextManager(self._request(METHOD_DELETE, url, headers, **keyword_parameters))
-    
-    
-    def connect_websocket(self, url, **keyword_parameters):
-        """
-        Deprecated and will be removed in 2025 august. please use ``.connect_web_socket``.
-        """
-        warn(
-            (
-                f'`{type(self).__name__}.connect_websocket` is deprecated and will be removed in 2025 august. '
-                f'Please use `.connect_web_socket` instead.'
-            ),
-            FutureWarning,
-            stacklevel = 3,
-        )
-        return self.connect_web_socket(url, **keyword_parameters)
     
     
     def connect_web_socket(self, url, **keyword_parameters):

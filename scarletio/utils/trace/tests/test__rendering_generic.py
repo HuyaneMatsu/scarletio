@@ -1,7 +1,5 @@
 import vampytest
 
-from ...highlight import DEFAULT_ANSI_HIGHLIGHTER, get_highlight_streamer, iter_split_ansi_format_codes
-
 from ..rendering import (
     _produce_attribute_name, _produce_attribute_name_only, _produce_file_location, _produce_grave_wrapped,
     _produce_variable_attribute_access, _produce_variable_attribute_access_only, _produce_variable_name,
@@ -11,23 +9,23 @@ from ..rendering import (
 
 def _iter_options__produce_file_location():
     # default
-    yield 'koishi.py', 56, 'watch', 1, '  File "koishi.py", line 57, in watch\n'
+    yield 'koishi.py', 56, 'watch', False, '  File "koishi.py", line 57, in watch\n'
     
     # expression line count > 1
-    yield 'koishi.py', 56, 'watch', 3, '  File "koishi.py", around line 57, in watch\n'
+    yield 'koishi.py', 56, 'watch', True, '  File "koishi.py", around line 57, in watch\n'
     
     # `"` in file name
-    yield 'koi"shi.py', 56, 'watch', 1, '  File "koi\\"shi.py", line 57, in watch\n'
+    yield 'koi"shi.py', 56, 'watch', False, '  File "koi\\"shi.py", line 57, in watch\n'
     
     # no file name
-    yield '', 56, 'watch', 1, '  File unknown location, line 57, in watch\n'
+    yield '', 56, 'watch', False, '  File unknown location, line 57, in watch\n'
     
     # no function name
-    yield 'koishi.py', 56, '', 1, '  File "koishi.py", line 57\n'
+    yield 'koishi.py', 56, '', False, '  File "koishi.py", line 57\n'
 
 
 @vampytest._(vampytest.call_from(_iter_options__produce_file_location()).returning_last())
-def test__produce_file_location(file_name, line_index, name, line_count):
+def test__produce_file_location(file_name, line_index, name, multi_line):
     """
     Tests whether ``_produce_file_location`` works as intended.
     
@@ -35,18 +33,21 @@ def test__produce_file_location(file_name, line_index, name, line_count):
     ----------
     file_name : `str`
         Path of the respective file.
+    
     line_index : int`
         The respective line's index.
+    
     name : `str`
         The respective functions name.
-    line_count : `int`
-        How much lines is the expression at the location.
+    
+    multi_line : `int`
+        Whether the expression expands over multiple lines.
     
     Returns
     -------
     output_string : `str`
     """
-    output = [*_produce_file_location(file_name, line_index, name, line_count)]
+    output = [*_produce_file_location(file_name, line_index, name, multi_line)]
     
     for item in output:
         vampytest.assert_instance(item, tuple)

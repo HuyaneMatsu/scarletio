@@ -2,7 +2,7 @@ __all__ = ()
 
 from ..rich_attribute_error import RichAttributeErrorBaseType
 
-from .location import Location
+from .layer import Layer
 from .matching import _keep_python_parsing
 from .token import Token
 from .token_types import (
@@ -150,9 +150,6 @@ class HighlightParserContext(RichAttributeErrorBaseType):
     
     Attributes
     ----------
-    brace_nesting : `None | list<int>`
-        How the braces are nested.
-    
     content : `str`
         The content that the higher context should match.
     
@@ -168,6 +165,12 @@ class HighlightParserContext(RichAttributeErrorBaseType):
     flags : `int`
         Flags used to determine how to parse.
     
+    layer_inner_index : `int`
+        The inner most layer's index.
+    
+    layers : ``list<Layer>``
+        The generated layers.
+    
     line_character_index : `int`
         The index of the character of the processed line.
     
@@ -178,7 +181,7 @@ class HighlightParserContext(RichAttributeErrorBaseType):
         The generated tokens.
     """
     __slots__ = (
-        'brace_nesting', 'content', 'content_character_index', 'content_length',  'done', 'flags',
+        'content', 'content_character_index', 'content_length', 'done', 'flags', 'layer_inner_index', 'layers',
         'line_character_index', 'line_index', 'tokens'
     )
     
@@ -195,15 +198,16 @@ class HighlightParserContext(RichAttributeErrorBaseType):
             Flags used to determine how to parse.
         """
         self = object.__new__(cls)
-        self.brace_nesting = None
         self.content = content
         self.content_character_index = 0
         self.content_length = content_length = len(content)
         self.done = False if content_length else True
         self.flags = flags
-        self.tokens = []
+        self.layer_inner_index = -1
+        self.layers = []
         self.line_index = 0
         self.line_character_index = 0
+        self.tokens = []
         return self
     
     
@@ -230,6 +234,8 @@ class HighlightParserContext(RichAttributeErrorBaseType):
         content_character_index = self.content_character_index
         line_index = self.line_index
         line_character_index = self.line_character_index
+        layers = self.layers
+        tokens = self.tokens
         
         if (token_type == TOKEN_TYPE_LINE_BREAK):
             self.line_index = line_index + 1
@@ -238,75 +244,83 @@ class HighlightParserContext(RichAttributeErrorBaseType):
         
         else:
             if _is_open_brace(token_type):
-                brace_nesting = self.brace_nesting
-                if brace_nesting is None:
-                    brace_nesting = []
-                    self.brace_nesting = brace_nesting
-                
-                brace_nesting.append(token_type)
+                layer_index = len(layers)
+                layers.append(Layer(
+                    self.layer_inner_index,
+                    len(tokens),
+                    -1,
+                ))
+                self.layer_inner_index = layer_index
             
             elif _is_close_brace(token_type):
-                brace_nesting = self.brace_nesting
-                
+                layer_inner_index = self.layer_inner_index
+                open_found = False
                 open_brace_token = _swap_close_brace_token_type(token_type)
-                if (brace_nesting is None):
-                    open_found = False
-                else:
-                    while brace_nesting:
-                        last_open_brace_type = brace_nesting[-1]
+                if layer_inner_index != -1:
+                    while True:
+                        layer_inner = layers[layer_inner_index]
+                        last_open_brace_type = tokens[layer_inner.token_start_index].type
                         if (last_open_brace_type == open_brace_token):
-                            del brace_nesting[-1]
+                            layer_inner.token_end_index = len(tokens)
+                            layer_inner_index = layer_inner.layer_outer_index
                             open_found = True
                             break
                         
                         if _is_barrier_token(last_open_brace_type):
+                            layer_inner.token_end_index = len(tokens)
                             open_found = True
                             break
-                            
-                        self.tokens.append(Token(
+                        
+                        layer_inner.token_end_index = len(tokens)
+                        tokens.append(Token(
                             _swap_open_brace_token_type(last_open_brace_type),
-                            Location(content_character_index, line_index, line_character_index, 0),
+                            content_character_index,
+                            line_index,
+                            line_character_index,
+                            0,
                         ))
-                        del brace_nesting[-1]
+                        layer_inner_index = layer_inner.layer_outer_index
+                        if layer_inner_index == -1:
+                            break
                     
-                    else:
-                        open_found = False
+                    self.layer_inner_index = layer_inner_index
                 
                 if not open_found:
                     self.tokens.append(Token(
-                        open_brace_token,
-                        Location(content_character_index, line_index, line_character_index, 0),
+                        open_brace_token, content_character_index, line_index, line_character_index, 0
                     ))
-                
-                if not brace_nesting:
-                    self.brace_nesting = None
             
             self.line_character_index = line_character_index + token_length
         
          
         self.content_character_index = content_character_index + token_length
-        self.tokens.append(Token(
-            token_type,
-            Location(content_character_index, line_index, line_character_index, token_length),
+        tokens.append(Token(
+            token_type, content_character_index, line_index, line_character_index, token_length,
         ))
         
         if self.content_character_index >= self.content_length:
             self.done = True
-            brace_nesting = self.brace_nesting
-            if (brace_nesting is not None):
-                while brace_nesting:
-                    last_open_brace_type = brace_nesting[-1]
+            layer_inner_index = self.layer_inner_index
+            if layer_inner_index != -1:
+                while True:
+                    layer_inner = layers[layer_inner_index]
+                    last_open_brace_type = tokens[layer_inner.token_start_index].type
                     if _is_barrier_token(last_open_brace_type):
                         break
                     
-                    self.tokens.append(Token(
+                    layer_inner.token_end_index = len(tokens)
+                    tokens.append(Token(
                         _swap_open_brace_token_type(last_open_brace_type),
-                        Location(content_character_index, line_index, line_character_index, 0),
+                        content_character_index,
+                        line_index,
+                        line_character_index,
+                        0,
                     ))
-                    del brace_nesting[-1]
+                    layer_inner_index = layer_inner.layer_outer_index
+                    if layer_inner_index == -1:
+                        break
                 
-                if not brace_nesting:
-                    self.brace_nesting = None
+                self.layer_inner_index = layer_inner_index
     
     
     def get_last_related_token(self):
@@ -369,8 +383,8 @@ class HighlightParserContext(RichAttributeErrorBaseType):
             
             if (
                 (token_type == TOKEN_TYPE_SPECIAL_OPERATOR) and
-                (token.location.length == 1) and
-                (self.content[token.location.content_character_index] == '\\')
+                (token.length == 1) and
+                (self.content[token.content_character_index] == '\\')
             ):
                 token.type = TOKEN_TYPE_LINE_BREAK_ESCAPED
             

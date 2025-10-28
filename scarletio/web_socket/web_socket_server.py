@@ -1,7 +1,6 @@
 __all__ = ('WebSocketServer', )
 
 from functools import partial as partial_func
-from warnings import warn
 
 from ..core import Task, TaskGroup, skip_poll_cycle
 from ..utils import IgnoreCaseMultiValueDictionary
@@ -96,7 +95,6 @@ class WebSocketServer:
         subprotocol_selector = None,
         web_socket_keyword_parameters = None,
         ssl = None,
-        websocket_kwargs = ...,
         **server_keyword_parameters,
     ):
         """
@@ -202,17 +200,6 @@ class WebSocketServer:
         OsError
             Error while attempting to binding to address.
         """
-        if (websocket_kwargs is not None):
-            warn(
-                (
-                    f'`{cls.__name__}.__new__`\'s `websocket_kwargs` parameter is deprecated and will be removed in '
-                    f'2025 august. Please use `web_socket_keyword_parameters` instead.'
-                ),
-                FutureWarning,
-                stacklevel = 2,
-            )
-            web_socket_keyword_parameters = websocket_kwargs
-        
         if web_socket_keyword_parameters is None:
             web_socket_keyword_parameters = {}
         
@@ -358,19 +345,3 @@ class WebSocketServer:
                 future = TaskGroup(loop, tasks).wait_all()
                 tasks = None
                 await future
-    
-    
-    @property
-    def websockets(self):
-        """
-        Deprecated and will be removed in 2025 august. Please use ``.web_sockets` instead.
-        """
-        warn(
-            (
-                f'`{type(self).__name__}.websockets` is deprecated and will be removed in 2025 august. '
-                f'Please use `web_sockets` instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return self.web_sockets

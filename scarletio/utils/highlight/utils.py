@@ -1,6 +1,8 @@
 __all__ = (
-    'add_highlighted_part_into', 'add_highlighted_parts_into', 'get_token_type_and_repr_mode_for_variable',
-    'iter_highlight_code_lines', 'iter_highlight_code_token_types_and_values'
+    'add_highlighted_part_into', 'add_highlighted_parts_into', 'get_highlight_parse_result',
+    'get_token_type_and_repr_mode_for_variable', 'iter_highlight_code_lines',
+    'iter_highlight_code_token_types_and_values', 'search_layer_index', 'search_line_end_index_in_tokens',
+    'search_line_start_index_in_tokens',
 )
 
 from warnings import warn
@@ -8,6 +10,7 @@ from warnings import warn
 from .constants import BUILTIN_CONSTANTS, BUILTIN_EXCEPTIONS, BUILTIN_VARIABLES
 from .flags import HIGHLIGHT_PARSER_MASK_DEFAULT
 from .highlight_streamer import get_highlight_streamer
+from .parse_result import ParseResult
 from .parser_context import HighlightParserContext
 from .token_types import (
     TOKEN_TYPE_IDENTIFIER_BUILTIN_CONSTANT, TOKEN_TYPE_IDENTIFIER_BUILTIN_EXCEPTION,
@@ -49,12 +52,11 @@ def iter_highlight_code_lines(lines, formatter_context):
     context.match()
     highlight_streamer = get_highlight_streamer(formatter_context)
     for token in context.tokens:
-        location = token.location
-        length = location.length
+        length = token.length
         if not length:
             continue
         
-        content_character_index = location.content_character_index
+        content_character_index = token.content_character_index
         value = code[content_character_index : content_character_index + length]
         
         yield from highlight_streamer.asend((token.type, value))
@@ -82,15 +84,32 @@ def iter_highlight_code_token_types_and_values(code):
     context.match()
     
     for token in context.tokens:
-        location = token.location
-        length = location.length
+        length = token.length
         if not length:
             continue
         
-        content_character_index = location.content_character_index
+        content_character_index = token.content_character_index
         value = code[content_character_index : content_character_index + length]
         
         yield token.type, value
+
+
+def get_highlight_parse_result(content):
+    """
+    Gets highlight parse result for the given code.
+    
+    Parameters
+    ----------
+    content : `str`
+        Code to parse.
+    
+    Returns
+    -------
+    parse_result : ``ParseResult``
+    """
+    context = HighlightParserContext(content, HIGHLIGHT_PARSER_MASK_DEFAULT)
+    context.match()
+    return ParseResult(context.layers, context.tokens)
 
 
 def add_highlighted_part_into(token_type, part, highlighter, into):
@@ -258,3 +277,103 @@ def get_token_type_and_repr_mode_for_variable(variable):
         break
     
     return token_type, use_name
+
+
+def search_line_start_index_in_tokens(tokens, line_index):
+    """
+    Searches line start index in tokens.
+    
+    Parameters
+    ----------
+    tokens : ``list<Token>``
+        Tokens to search in.
+    
+    line_index : `int`
+        Line index to search for.
+    
+    Returns
+    -------
+    index : `int`
+    """
+    low = 0
+    high = len(tokens)
+    
+    while low < high:
+        mid = (low + high) >> 1
+        
+        if tokens[mid].line_index < line_index:
+            low = mid + 1
+        else:
+            high = mid
+    
+    return low
+
+
+def search_line_end_index_in_tokens(tokens, line_index):
+    """
+    Searches line end index in tokens.
+    
+    Parameters
+    ----------
+    tokens : ``list<Token>``
+        Tokens to search in.
+    
+    line_index : `int`
+        Line index to search for.
+    
+    Returns
+    -------
+    index : `int`
+    """
+    low = 0
+    high = len(tokens)
+    
+    while low < high:
+        mid = (low + high) >> 1
+        
+        if line_index < tokens[mid].line_index:
+            high = mid
+        else:
+            low = mid + 1
+    
+    return low
+
+
+def search_layer_index(layers, token_index):
+    """
+    Searches the layer index of a token index.
+    
+    Parameters
+    ----------
+    layers : ``list<Layer>``
+        Layers to search in.
+    
+    token_index : `int`
+        Token index to search for.
+    
+    Returns
+    -------
+    index : `int`
+    """
+    low = 0
+    high = len(layers)
+    
+    while low < high:
+        mid = (low + high) >> 1
+        
+        layer = layers[mid]
+        if token_index < layer.token_start_index:
+            high = mid
+            continue
+        
+        if token_index > layer.token_end_index:
+            low = mid + 1
+            continue
+        
+        index = mid
+        break
+    
+    else:
+        index = -1
+    
+    return index

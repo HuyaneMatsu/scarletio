@@ -2,16 +2,16 @@ import vampytest
 
 from ...highlight import DEFAULT_ANSI_HIGHLIGHTER, get_highlight_streamer, iter_split_ansi_format_codes
 
-from ..expression_parsing import ExpressionInfo
 from ..frame_proxy import FrameProxyVirtual
 from ..rendering import produce_frame_proxy
+from ..tests.helper_create_dummy_expression_info import create_dummy_expression_info
 
 
 def _get_input_frame():
     frame_proxy = FrameProxyVirtual.from_fields(
         file_name = 'koishi.py', line_index = 12, name = 'sit', instruction_index = 6
     )
-    frame_proxy.expression_info = ExpressionInfo(frame_proxy.expression_key, ['hey', 'mister'], 0, True)
+    frame_proxy.expression_info = create_dummy_expression_info(frame_proxy.expression_key, 'hey\nmister')
     return frame_proxy
     
 

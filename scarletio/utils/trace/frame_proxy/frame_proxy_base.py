@@ -14,7 +14,8 @@ class FrameProxyBase:
     ----------
     alike_count : `int`
         How much alike frames are in the same exception.
-    expression_info : `None | ExpressionInfo`
+    
+    expression_info : ``None | ExpressionInfo``
         Additional expression information.
     """
     __slots__ = ('alike_count', 'expression_info')

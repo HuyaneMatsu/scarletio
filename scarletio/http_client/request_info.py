@@ -1,7 +1,5 @@
 __all__ = ()
 
-from warnings import warn
-
 from ..utils import RichAttributeErrorBaseType
 from ..web_common.helpers import freeze_headers
 
@@ -127,19 +125,3 @@ class RequestInfo(RichAttributeErrorBaseType):
             hash_value ^= hash(url)
         
         return hash_value
-    
-    
-    @property
-    def real_url(self):
-        """
-        Deprecated and will be removed in 2025 August.
-        """
-        warn(
-            (
-                f'The `proxy_url` and `proxy_headers` parameters in `{type(self).__name__}.__new__` are moved to be '
-                f'keyword only. Support for positional is deprecated and will be removed in 2025 August.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return self.original_url

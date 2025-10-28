@@ -1,8 +1,8 @@
 import vampytest
 
-from ..expression_parsing import ExpressionInfo
 from ..frame_group import FRAME_GROUP_TYPE_NONE, FRAME_GROUP_TYPE_REPEAT, FRAME_GROUP_TYPE_SINGLES, FrameGroup
 from ..frame_proxy import FrameProxyBase, FrameProxyVirtual
+from ..tests.helper_create_dummy_expression_info import create_dummy_expression_info
 
 
 def _assert_fields_set(frame_group):
@@ -32,15 +32,15 @@ def test__FrameGroup__create_repeated():
     tests whether ``FrameGroup.__create_repeated`` works as intended. 
     """
     repeat_count = 10
-    frames = [
+    frame_proxies = [
         FrameProxyVirtual.from_fields(file_name = 'koishi.py'),
         FrameProxyVirtual.from_fields(file_name = 'satori.py'),
     ]
     
-    frame_group = FrameGroup._create_repeated(frames, repeat_count)
+    frame_group = FrameGroup._create_repeated(frame_proxies, repeat_count)
     _assert_fields_set(frame_group)
     
-    vampytest.assert_eq(frame_group.frames, frames)
+    vampytest.assert_eq(frame_group.frames, frame_proxies)
     vampytest.assert_eq(frame_group.type, FRAME_GROUP_TYPE_REPEAT)
     vampytest.assert_eq(frame_group.repeat_count, repeat_count)
 
@@ -50,22 +50,22 @@ def test__FrameGroup__eq():
     Tests whether ``FrameGroup.__eq__`` works as intended.
     """
     repeat_count = 10
-    frames = [
+    frame_proxies = [
         FrameProxyVirtual.from_fields(file_name = 'koishi.py'),
         FrameProxyVirtual.from_fields(file_name = 'satori.py'),
     ]
     
-    frame_group = FrameGroup._create_repeated(frames, repeat_count)
+    frame_group = FrameGroup._create_repeated(frame_proxies, repeat_count)
     vampytest.assert_eq(frame_group, frame_group)
     vampytest.assert_ne(frame_group, object())
     
     
-    test_frames = [
+    test_fram_proxies = [
         FrameProxyVirtual.from_fields(file_name = 'koishi.py', locals = {'hey': 'mister'}),
         FrameProxyVirtual.from_fields(file_name = 'satori.py'),
     ]
     
-    test_frame_group = FrameGroup._create_repeated(test_frames, repeat_count)
+    test_frame_group = FrameGroup._create_repeated(test_fram_proxies, repeat_count)
     vampytest.assert_ne(frame_group, test_frame_group)
     
 
@@ -75,32 +75,32 @@ def test__FrameGroup__mod():
     Tests whether ``FrameGroup.__mod__`` works as intended.
     """
     repeat_count = 10
-    frames = [
+    frame_proxies = [
         FrameProxyVirtual.from_fields(file_name = 'koishi.py'),
         FrameProxyVirtual.from_fields(file_name = 'satori.py'),
     ]
     
-    frame_group = FrameGroup._create_repeated(frames, repeat_count)
+    frame_group = FrameGroup._create_repeated(frame_proxies, repeat_count)
     vampytest.assert_true(frame_group % frame_group)
     
     with vampytest.assert_raises(TypeError):
         frame_group % object()
     
     
-    test_frames = [
+    test_fram_proxies = [
         FrameProxyVirtual.from_fields(file_name = 'koishi.py', locals = {'hey': 'mister'}),
         FrameProxyVirtual.from_fields(file_name = 'satori.py'),
     ]
     
-    test_frame_group = FrameGroup._create_repeated(test_frames, repeat_count)
+    test_frame_group = FrameGroup._create_repeated(test_fram_proxies, repeat_count)
     vampytest.assert_true(frame_group % test_frame_group)
     
-    test_frames = [
+    test_fram_proxies = [
         FrameProxyVirtual.from_fields(file_name = 'orin.py'),
         FrameProxyVirtual.from_fields(file_name = 'satori.py'),
     ]
     
-    test_frame_group = FrameGroup._create_repeated(test_frames, repeat_count)
+    test_frame_group = FrameGroup._create_repeated(test_fram_proxies, repeat_count)
     vampytest.assert_false(frame_group % test_frame_group)
 
 
@@ -139,12 +139,12 @@ def test__FrameGroup__len__repeated():
     Case: Repeated.
     """
     repeat_count = 10
-    frames = [
+    frame_proxies = [
         FrameProxyVirtual.from_fields(file_name = 'koishi.py'),
         FrameProxyVirtual.from_fields(file_name = 'satori.py'),
     ]
     
-    frame_group = FrameGroup._create_repeated(frames, repeat_count)
+    frame_group = FrameGroup._create_repeated(frame_proxies, repeat_count)
     
     output = len(frame_group)
     vampytest.assert_instance(output, int)
@@ -184,12 +184,12 @@ def test__FrameGroup__bool__repeated():
     Case: Repeated.
     """
     repeat_count = 10
-    frames = [
+    frame_proxies = [
         FrameProxyVirtual.from_fields(file_name = 'koishi.py'),
         FrameProxyVirtual.from_fields(file_name = 'satori.py'),
     ]
     
-    frame_group = FrameGroup._create_repeated(frames, repeat_count)
+    frame_group = FrameGroup._create_repeated(frame_proxies, repeat_count)
     
     output = bool(frame_group)
     vampytest.assert_instance(output, int)
@@ -203,12 +203,12 @@ def test__FrameGroup__repr__repeated():
     Case: Repeated.
     """
     repeat_count = 10
-    frames = [
+    frame_proxies = [
         FrameProxyVirtual.from_fields(file_name = 'koishi.py'),
         FrameProxyVirtual.from_fields(file_name = 'satori.py'),
     ]
     
-    frame_group = FrameGroup._create_repeated(frames, repeat_count)
+    frame_group = FrameGroup._create_repeated(frame_proxies, repeat_count)
     
     output = repr(frame_group)
     vampytest.assert_instance(output, str)
@@ -233,15 +233,15 @@ def test__FrameGroup__iter_frames__non_repeated():
     
     Case: Non-repeated.
     """
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
     frame_group = FrameGroup()
-    frame_group.try_add_frame(frame_0)
-    frame_group.try_add_frame(frame_1)
+    frame_group.try_add_frame(frame_proxy_0)
+    frame_group.try_add_frame(frame_proxy_1)
     
     output = [*frame_group.iter_frames()]
-    vampytest.assert_eq(output, [frame_0, frame_1])
-    vampytest.assert_eq(frame_group.frames, [frame_0, frame_1])
+    vampytest.assert_eq(output, [frame_proxy_0, frame_proxy_1])
+    vampytest.assert_eq(frame_group.frames, [frame_proxy_0, frame_proxy_1])
 
 
 def test__FrameGroup__iter_frames__repeated():
@@ -250,17 +250,17 @@ def test__FrameGroup__iter_frames__repeated():
     
     Case: Repeated.
     """
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
     
     repeat_count = 2
-    frames = [frame_0, frame_1]
+    frame_proxies = [frame_proxy_0, frame_proxy_1]
     
-    frame_group = FrameGroup._create_repeated(frames, repeat_count)
+    frame_group = FrameGroup._create_repeated(frame_proxies, repeat_count)
     
     output = [*frame_group.iter_frames()]
-    vampytest.assert_eq(output, [frame_0, frame_1, frame_0, frame_1])
-    vampytest.assert_eq(frame_group.frames, [frame_0, frame_1])
+    vampytest.assert_eq(output, [frame_proxy_0, frame_proxy_1, frame_proxy_0, frame_proxy_1])
+    vampytest.assert_eq(frame_group.frames, [frame_proxy_0, frame_proxy_1])
 
 
 def test__FrameGroup__iter_exhaust_frames__empty():
@@ -282,14 +282,14 @@ def test__FrameGroup__iter_exhaust_frames__non_repeated():
     
     Case: Non-repeated.
     """
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
     frame_group = FrameGroup()
-    frame_group.try_add_frame(frame_0)
-    frame_group.try_add_frame(frame_1)
+    frame_group.try_add_frame(frame_proxy_0)
+    frame_group.try_add_frame(frame_proxy_1)
     
     output = [*frame_group.iter_exhaust_frames()]
-    vampytest.assert_eq(output, [frame_0, frame_1])
+    vampytest.assert_eq(output, [frame_proxy_0, frame_proxy_1])
     vampytest.assert_is(frame_group.frames, None)
 
 
@@ -299,16 +299,16 @@ def test__FrameGroup__iter_exhaust_frames__repeated():
     
     Case: Repeated.
     """
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
     
     repeat_count = 2
-    frames = [frame_0, frame_1]
+    frame_proxies = [frame_proxy_0, frame_proxy_1]
     
-    frame_group = FrameGroup._create_repeated(frames, repeat_count)
+    frame_group = FrameGroup._create_repeated(frame_proxies, repeat_count)
     
     output = [*frame_group.iter_exhaust_frames()]
-    vampytest.assert_eq(output, [frame_0, frame_1, frame_0, frame_1])
+    vampytest.assert_eq(output, [frame_proxy_0, frame_proxy_1, frame_proxy_0, frame_proxy_1])
     vampytest.assert_is(frame_group.frames, None)
 
 
@@ -356,7 +356,7 @@ def test__FrameGroup__try_add_frame__empty_repeat():
     frame_group = FrameGroup()
     
     frame = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
-    frame.expression_info = ExpressionInfo(frame.expression_key, [], 0, True)
+    frame.expression_info = create_dummy_expression_info(frame.expression_key, '')
     frame.alike_count = 2
     
     output = frame_group.try_add_frame(frame)
@@ -373,17 +373,17 @@ def test__FrameGroup__try_add_frame__singles_non_repeat():
     
     Case: Adding single frame to a single group.
     """
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
     frame_group = FrameGroup()
-    frame_group.try_add_frame(frame_0)
+    frame_group.try_add_frame(frame_proxy_0)
 
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
     
-    output = frame_group.try_add_frame(frame_1)
+    output = frame_group.try_add_frame(frame_proxy_1)
     vampytest.assert_instance(output, bool)
     vampytest.assert_eq(output, True)
     
-    vampytest.assert_eq(frame_group.frames, [frame_0, frame_1])
+    vampytest.assert_eq(frame_group.frames, [frame_proxy_0, frame_proxy_1])
     vampytest.assert_eq(frame_group.type, FRAME_GROUP_TYPE_SINGLES)
 
 
@@ -393,19 +393,19 @@ def test__FrameGroup__try_add_frame__singles_repeat():
     
     Case: Adding repeated frame to a single group.
     """
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
     frame_group = FrameGroup()
-    frame_group.try_add_frame(frame_0)
+    frame_group.try_add_frame(frame_proxy_0)
 
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
-    frame_1.expression_info = ExpressionInfo(frame_1.expression_key, [], 0, True)
-    frame_1.alike_count = 2
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_1.expression_info = create_dummy_expression_info(frame_proxy_1.expression_key, '')
+    frame_proxy_1.alike_count = 2
     
-    output = frame_group.try_add_frame(frame_1)
+    output = frame_group.try_add_frame(frame_proxy_1)
     vampytest.assert_instance(output, bool)
     vampytest.assert_eq(output, False)
     
-    vampytest.assert_eq(frame_group.frames, [frame_0])
+    vampytest.assert_eq(frame_group.frames, [frame_proxy_0])
     vampytest.assert_eq(frame_group.type, FRAME_GROUP_TYPE_SINGLES)
 
 
@@ -415,20 +415,20 @@ def test__FrameGroup__try_add_frame__repeat_non_repeat():
     
     Case: Adding single frame to a repeat group.
     """
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
-    frame_0.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_0.alike_count = 2
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_0.expression_info = create_dummy_expression_info(frame_proxy_0.expression_key, '')
+    frame_proxy_0.alike_count = 2
     
     frame_group = FrameGroup()
-    frame_group.try_add_frame(frame_0)
+    frame_group.try_add_frame(frame_proxy_0)
 
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
     
-    output = frame_group.try_add_frame(frame_1)
+    output = frame_group.try_add_frame(frame_proxy_1)
     vampytest.assert_instance(output, bool)
     vampytest.assert_eq(output, False)
     
-    vampytest.assert_eq(frame_group.frames, [frame_0])
+    vampytest.assert_eq(frame_group.frames, [frame_proxy_0])
     vampytest.assert_eq(frame_group.type, FRAME_GROUP_TYPE_REPEAT)
 
 
@@ -438,22 +438,22 @@ def test__FrameGroup__try_add_frame__repeat_repeat():
     
     Case: Adding a repeat frame to a repeat group.
     """
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
-    frame_0.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_0.alike_count = 2
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_0.expression_info = create_dummy_expression_info(frame_proxy_0.expression_key, '')
+    frame_proxy_0.alike_count = 2
     
     frame_group = FrameGroup()
-    frame_group.try_add_frame(frame_0)
+    frame_group.try_add_frame(frame_proxy_0)
 
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
-    frame_1.expression_info = ExpressionInfo(frame_1.expression_key, [], 0, True)
-    frame_1.alike_count = 2
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_1.expression_info = create_dummy_expression_info(frame_proxy_1.expression_key, '')
+    frame_proxy_1.alike_count = 2
     
-    output = frame_group.try_add_frame(frame_1)
+    output = frame_group.try_add_frame(frame_proxy_1)
     vampytest.assert_instance(output, bool)
     vampytest.assert_eq(output, True)
     
-    vampytest.assert_eq(frame_group.frames, [frame_0, frame_1])
+    vampytest.assert_eq(frame_group.frames, [frame_proxy_0, frame_proxy_1])
     vampytest.assert_eq(frame_group.type, FRAME_GROUP_TYPE_REPEAT)
 
 
@@ -463,23 +463,23 @@ def test__FrameGroup__try_merge__single_with_short_repeat():
     
     Case: Merging single with short repeat.
     """
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
     
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
-    frame_1.expression_info = ExpressionInfo(frame_1.expression_key, [], 0, True)
-    frame_1.alike_count = 2
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_1.expression_info = create_dummy_expression_info(frame_proxy_1.expression_key, '')
+    frame_proxy_1.alike_count = 2
     
     frame_group_0 = FrameGroup()
-    frame_group_0.try_add_frame(frame_0)
+    frame_group_0.try_add_frame(frame_proxy_0)
 
     frame_group_1 = FrameGroup()
-    frame_group_1.try_add_frame(frame_1)
+    frame_group_1.try_add_frame(frame_proxy_1)
     
     output = frame_group_0.try_merge(frame_group_1)
     vampytest.assert_instance(output, bool)
     vampytest.assert_eq(output, True)
     
-    vampytest.assert_eq(frame_group_0.frames, [frame_0, frame_1])
+    vampytest.assert_eq(frame_group_0.frames, [frame_proxy_0, frame_proxy_1])
     vampytest.assert_eq(frame_group_0.type, FRAME_GROUP_TYPE_SINGLES)
     
     vampytest.assert_eq(frame_group_1.frames, None)
@@ -492,21 +492,21 @@ def test__FrameGroup__try_merge__single_with_single():
     
     Case: Merging single with single.
     """
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
     
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
     
     frame_group_0 = FrameGroup()
-    frame_group_0.try_add_frame(frame_0)
+    frame_group_0.try_add_frame(frame_proxy_0)
 
     frame_group_1 = FrameGroup()
-    frame_group_1.try_add_frame(frame_1)
+    frame_group_1.try_add_frame(frame_proxy_1)
     
     output = frame_group_0.try_merge(frame_group_1)
     vampytest.assert_instance(output, bool)
     vampytest.assert_eq(output, True)
     
-    vampytest.assert_eq(frame_group_0.frames, [frame_0, frame_1])
+    vampytest.assert_eq(frame_group_0.frames, [frame_proxy_0, frame_proxy_1])
     vampytest.assert_eq(frame_group_0.type, FRAME_GROUP_TYPE_SINGLES)
     
     vampytest.assert_eq(frame_group_1.frames, None)
@@ -519,23 +519,23 @@ def test__FrameGroup__try_merge__short_repeat_with_singles():
     
     Case: Merging short repeat with single.
     """
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
-    frame_0.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_0.alike_count = 2
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_0.expression_info = create_dummy_expression_info(frame_proxy_0.expression_key, '')
+    frame_proxy_0.alike_count = 2
     
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
     
     frame_group_0 = FrameGroup()
-    frame_group_0.try_add_frame(frame_0)
+    frame_group_0.try_add_frame(frame_proxy_0)
 
     frame_group_1 = FrameGroup()
-    frame_group_1.try_add_frame(frame_1)
+    frame_group_1.try_add_frame(frame_proxy_1)
     
     output = frame_group_0.try_merge(frame_group_1)
     vampytest.assert_instance(output, bool)
     vampytest.assert_eq(output, True)
     
-    vampytest.assert_eq(frame_group_0.frames, [frame_0, frame_1])
+    vampytest.assert_eq(frame_group_0.frames, [frame_proxy_0, frame_proxy_1])
     vampytest.assert_eq(frame_group_0.type, FRAME_GROUP_TYPE_SINGLES)
     
     vampytest.assert_eq(frame_group_1.frames, None)
@@ -548,28 +548,28 @@ def test__FrameGroup__try_merge__single_with_long_repeat():
     
     Case: Merging single with long repeat.
     """
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
     
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
-    frame_1.expression_info = ExpressionInfo(frame_1.expression_key, [], 0, True)
-    frame_1.alike_count = 3
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_1.expression_info = create_dummy_expression_info(frame_proxy_1.expression_key, '')
+    frame_proxy_1.alike_count = 3
     
     frame_group_0 = FrameGroup()
-    frame_group_0.try_add_frame(frame_0)
+    frame_group_0.try_add_frame(frame_proxy_0)
 
     frame_group_1 = FrameGroup()
-    frame_group_1.try_add_frame(frame_1)
-    frame_group_1.try_add_frame(frame_1)
-    frame_group_1.try_add_frame(frame_1)
+    frame_group_1.try_add_frame(frame_proxy_1)
+    frame_group_1.try_add_frame(frame_proxy_1)
+    frame_group_1.try_add_frame(frame_proxy_1)
     
     output = frame_group_0.try_merge(frame_group_1)
     vampytest.assert_instance(output, bool)
     vampytest.assert_eq(output, False)
     
-    vampytest.assert_eq(frame_group_0.frames, [frame_0])
+    vampytest.assert_eq(frame_group_0.frames, [frame_proxy_0])
     vampytest.assert_eq(frame_group_0.type, FRAME_GROUP_TYPE_SINGLES)
     
-    vampytest.assert_eq(frame_group_1.frames, [frame_1, frame_1, frame_1])
+    vampytest.assert_eq(frame_group_1.frames, [frame_proxy_1, frame_proxy_1, frame_proxy_1])
     vampytest.assert_eq(frame_group_1.type, FRAME_GROUP_TYPE_REPEAT)
 
 
@@ -579,28 +579,28 @@ def test__FrameGroup__try_merge__long_repeat_with_singles():
     
     Case: Merging long repeat with single.
     """
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
-    frame_0.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_0.alike_count = 3
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_0.expression_info = create_dummy_expression_info(frame_proxy_0.expression_key, '')
+    frame_proxy_0.alike_count = 3
     
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
     
     frame_group_0 = FrameGroup()
-    frame_group_0.try_add_frame(frame_0)
-    frame_group_0.try_add_frame(frame_0)
-    frame_group_0.try_add_frame(frame_0)
+    frame_group_0.try_add_frame(frame_proxy_0)
+    frame_group_0.try_add_frame(frame_proxy_0)
+    frame_group_0.try_add_frame(frame_proxy_0)
     
     frame_group_1 = FrameGroup()
-    frame_group_1.try_add_frame(frame_1)
+    frame_group_1.try_add_frame(frame_proxy_1)
     
     output = frame_group_0.try_merge(frame_group_1)
     vampytest.assert_instance(output, bool)
     vampytest.assert_eq(output, False)
     
-    vampytest.assert_eq(frame_group_0.frames, [frame_0, frame_0, frame_0])
+    vampytest.assert_eq(frame_group_0.frames, [frame_proxy_0, frame_proxy_0, frame_proxy_0])
     vampytest.assert_eq(frame_group_0.type, FRAME_GROUP_TYPE_REPEAT)
     
-    vampytest.assert_eq(frame_group_1.frames, [frame_1])
+    vampytest.assert_eq(frame_group_1.frames, [frame_proxy_1])
     vampytest.assert_eq(frame_group_1.type, FRAME_GROUP_TYPE_SINGLES)
 
 
@@ -608,14 +608,14 @@ def test__FrameGroup__copy():
     """
     Tests whether ``FrameGroup.copy`` works as intended.
     """
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
-    frame_0.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_0.alike_count = 3
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_0.expression_info = create_dummy_expression_info(frame_proxy_0.expression_key, '')
+    frame_proxy_0.alike_count = 3
     
     frame_group = FrameGroup()
-    frame_group.try_add_frame(frame_0)
-    frame_group.try_add_frame(frame_0)
-    frame_group.try_add_frame(frame_0)
+    frame_group.try_add_frame(frame_proxy_0)
+    frame_group.try_add_frame(frame_proxy_0)
+    frame_group.try_add_frame(frame_proxy_0)
     
     copy = frame_group.copy()
     _assert_fields_set(copy)
@@ -629,12 +629,12 @@ def test__FrameGroup__iter_separate_repeated__single():
     
     Case: Single.
     """
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
 
     frame_group_0 = FrameGroup()
-    frame_group_0.try_add_frame(frame_0)
-    frame_group_0.try_add_frame(frame_1)
+    frame_group_0.try_add_frame(frame_proxy_0)
+    frame_group_0.try_add_frame(frame_proxy_1)
     
     output = [*frame_group_0.copy().iter_separate_repeated()]
     vampytest.assert_eq(len(output), 1)
@@ -650,16 +650,16 @@ def test__FrameGroup__iter_separate_repeated__repeat_no_pattern():
     
     Case: Single.
     """
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
-    frame_0.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_0.alike_count = 2
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
-    frame_1.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_1.alike_count = 2
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_0.expression_info = create_dummy_expression_info(frame_proxy_0.expression_key, '')
+    frame_proxy_0.alike_count = 2
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_1.expression_info = create_dummy_expression_info(frame_proxy_0.expression_key, '')
+    frame_proxy_1.alike_count = 2
 
     frame_group_0 = FrameGroup()
-    frame_group_0.try_add_frame(frame_0)
-    frame_group_0.try_add_frame(frame_1)
+    frame_group_0.try_add_frame(frame_proxy_0)
+    frame_group_0.try_add_frame(frame_proxy_1)
     
     output = [*frame_group_0.copy().iter_separate_repeated()]
     vampytest.assert_eq(len(output), 1)
@@ -675,25 +675,25 @@ def test__FrameGroup__iter_separate_repeated__repeat_with_pattern():
     
     Case: Single.
     """
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
-    frame_0.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_0.alike_count = 2
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
-    frame_1.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_1.alike_count = 2
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_0.expression_info = create_dummy_expression_info(frame_proxy_0.expression_key, '')
+    frame_proxy_0.alike_count = 2
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_1.expression_info = create_dummy_expression_info(frame_proxy_0.expression_key, '')
+    frame_proxy_1.alike_count = 2
 
     frame_group_0 = FrameGroup()
-    frame_group_0.try_add_frame(frame_0)
-    frame_group_0.try_add_frame(frame_1)
-    frame_group_0.try_add_frame(frame_0)
-    frame_group_0.try_add_frame(frame_1)
+    frame_group_0.try_add_frame(frame_proxy_0)
+    frame_group_0.try_add_frame(frame_proxy_1)
+    frame_group_0.try_add_frame(frame_proxy_0)
+    frame_group_0.try_add_frame(frame_proxy_1)
     
     output = [*frame_group_0.copy().iter_separate_repeated()]
     vampytest.assert_eq(len(output), 1)
         
     checked, frame_group = output[0]
     vampytest.assert_eq(checked, True)
-    vampytest.assert_true(frame_group % FrameGroup._create_repeated([frame_0, frame_1], 2))
+    vampytest.assert_true(frame_group % FrameGroup._create_repeated([frame_proxy_0, frame_proxy_1], 2))
 
 
 def test__FrameGroup__iter_separate_repeated__repeat_with_pattern_between():
@@ -702,32 +702,32 @@ def test__FrameGroup__iter_separate_repeated__repeat_with_pattern_between():
     
     Case: Single.
     """
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
-    frame_0.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_0.alike_count = 2
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
-    frame_1.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_1.alike_count = 2
-    frame_2 = FrameProxyVirtual.from_fields(file_name = 'orin.py')
-    frame_2.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_2.alike_count = 2
-    frame_3 = FrameProxyVirtual.from_fields(file_name = 'okuu.py')
-    frame_3.expression_info = ExpressionInfo(frame_0.expression_key, [], 0, True)
-    frame_3.alike_count = 2
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_0.expression_info = create_dummy_expression_info(frame_proxy_0.expression_key, '')
+    frame_proxy_0.alike_count = 2
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_1.expression_info = create_dummy_expression_info(frame_proxy_0.expression_key, '')
+    frame_proxy_1.alike_count = 2
+    frame_proxy_2 = FrameProxyVirtual.from_fields(file_name = 'orin.py')
+    frame_proxy_2.expression_info = create_dummy_expression_info(frame_proxy_0.expression_key, '')
+    frame_proxy_2.alike_count = 2
+    frame_proxy_3 = FrameProxyVirtual.from_fields(file_name = 'okuu.py')
+    frame_proxy_3.expression_info = create_dummy_expression_info(frame_proxy_0.expression_key, '')
+    frame_proxy_3.alike_count = 2
 
     frame_group_0 = FrameGroup()
-    frame_group_0.try_add_frame(frame_2)
-    frame_group_0.try_add_frame(frame_0)
-    frame_group_0.try_add_frame(frame_1)
-    frame_group_0.try_add_frame(frame_0)
-    frame_group_0.try_add_frame(frame_1)
-    frame_group_0.try_add_frame(frame_3)
+    frame_group_0.try_add_frame(frame_proxy_2)
+    frame_group_0.try_add_frame(frame_proxy_0)
+    frame_group_0.try_add_frame(frame_proxy_1)
+    frame_group_0.try_add_frame(frame_proxy_0)
+    frame_group_0.try_add_frame(frame_proxy_1)
+    frame_group_0.try_add_frame(frame_proxy_3)
     
     frame_group_1 = FrameGroup()
-    frame_group_1.try_add_frame(frame_2)
+    frame_group_1.try_add_frame(frame_proxy_2)
     
     frame_group_2 = FrameGroup()
-    frame_group_2.try_add_frame(frame_3)
+    frame_group_2.try_add_frame(frame_proxy_3)
     
     output = [*frame_group_0.copy().iter_separate_repeated()]
     vampytest.assert_eq(len(output), 3)
@@ -738,7 +738,7 @@ def test__FrameGroup__iter_separate_repeated__repeat_with_pattern_between():
 
     checked, frame_group = output[1]
     vampytest.assert_eq(checked, True)
-    vampytest.assert_true(frame_group % FrameGroup._create_repeated([frame_0, frame_1], 2))
+    vampytest.assert_true(frame_group % FrameGroup._create_repeated([frame_proxy_0, frame_proxy_1], 2))
 
     checked, frame_group = output[2]
     vampytest.assert_eq(checked, False)
@@ -764,28 +764,28 @@ def test__FrameGroup__drop_variables__with_frames():
     
     Case: has frames.
     """
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py', locals = {'hey': 'mister'})
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
-    frame_2 = FrameProxyVirtual.from_fields(file_name = 'koishi.py', locals = {'hey': 'mister'})
-    frame_3 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py', locals = {'hey': 'mister'})
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_2 = FrameProxyVirtual.from_fields(file_name = 'koishi.py', locals = {'hey': 'mister'})
+    frame_proxy_3 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
     
     frame_group = FrameGroup()
-    frame_group.try_add_frame(frame_0)
-    frame_group.try_add_frame(frame_2)
+    frame_group.try_add_frame(frame_proxy_0)
+    frame_group.try_add_frame(frame_proxy_2)
     
     frame_group_expected = FrameGroup()
-    frame_group_expected.try_add_frame(frame_1)
-    frame_group_expected.try_add_frame(frame_3)
+    frame_group_expected.try_add_frame(frame_proxy_1)
+    frame_group_expected.try_add_frame(frame_proxy_3)
     
     frame_group.drop_variables()
     vampytest.assert_eq(frame_group, frame_group_expected)
 
 
 def _iter_options__has_variables():
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py', locals = {'hey': 'mister'})
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
-    frame_2 = FrameProxyVirtual.from_fields(file_name = 'koishi.py', locals = {'hey': 'mister'})
-    frame_3 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py', locals = {'hey': 'mister'})
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_2 = FrameProxyVirtual.from_fields(file_name = 'koishi.py', locals = {'hey': 'mister'})
+    frame_proxy_3 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
     
     # no variables (no frames)
     frame_group = FrameGroup()
@@ -793,20 +793,20 @@ def _iter_options__has_variables():
     
     # variables
     frame_group = FrameGroup()
-    frame_group.try_add_frame(frame_0)
-    frame_group.try_add_frame(frame_2)
+    frame_group.try_add_frame(frame_proxy_0)
+    frame_group.try_add_frame(frame_proxy_2)
     yield frame_group, True
     
     # no variables
     frame_group = FrameGroup()
-    frame_group.try_add_frame(frame_1)
-    frame_group.try_add_frame(frame_3)
+    frame_group.try_add_frame(frame_proxy_1)
+    frame_group.try_add_frame(frame_proxy_3)
     yield frame_group, False
     
     # mixed
     frame_group = FrameGroup()
-    frame_group.try_add_frame(frame_0)
-    frame_group.try_add_frame(frame_1)
+    frame_group.try_add_frame(frame_proxy_0)
+    frame_group.try_add_frame(frame_proxy_1)
     yield frame_group, True
 
 
@@ -830,21 +830,21 @@ def test__FrameGroup__has_variables(frame_group):
 
 
 def _iter_options__get_last_frame():
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py', locals = {'hey': 'mister'})
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py', locals = {'hey': 'mister'})
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
     
     frame_group = FrameGroup()
     yield frame_group, None
     
     frame_group = FrameGroup()
-    frame_group.try_add_frame(frame_0)
-    yield frame_group, frame_0
+    frame_group.try_add_frame(frame_proxy_0)
+    yield frame_group, frame_proxy_0
     
     
     frame_group = FrameGroup()
-    frame_group.try_add_frame(frame_0)
-    frame_group.try_add_frame(frame_1)
-    yield frame_group, frame_1
+    frame_group.try_add_frame(frame_proxy_0)
+    frame_group.try_add_frame(frame_proxy_1)
+    yield frame_group, frame_proxy_1
     
 
 @vampytest._(vampytest.call_from(_iter_options__get_last_frame()).returning_last())
@@ -870,18 +870,18 @@ def test__FrameGroup__copy_without_variables():
     """
     Tests whether ``FrameGroup.copy_without_variables`` works as intended.
     """
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py', locals = {'hey': 'mister'})
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
-    frame_2 = FrameProxyVirtual.from_fields(file_name = 'koishi.py', locals = {'hey': 'mister'})
-    frame_3 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py', locals = {'hey': 'mister'})
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_2 = FrameProxyVirtual.from_fields(file_name = 'koishi.py', locals = {'hey': 'mister'})
+    frame_proxy_3 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
     
     frame_group = FrameGroup()
-    frame_group.try_add_frame(frame_0)
-    frame_group.try_add_frame(frame_2)
+    frame_group.try_add_frame(frame_proxy_0)
+    frame_group.try_add_frame(frame_proxy_2)
     
     frame_group_expected = FrameGroup()
-    frame_group_expected.try_add_frame(frame_1)
-    frame_group_expected.try_add_frame(frame_3)
+    frame_group_expected.try_add_frame(frame_proxy_1)
+    frame_group_expected.try_add_frame(frame_proxy_3)
     
     copy = frame_group.copy_without_variables()
     _assert_fields_set(copy)
@@ -912,15 +912,15 @@ def test__FrameGroup__drop_ignored_frames__with_frames():
     def filter(frame):
         return frame.file_name == 'satori.py'
     
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
     
     frame_group = FrameGroup()
-    frame_group.try_add_frame(frame_0)
-    frame_group.try_add_frame(frame_1)
+    frame_group.try_add_frame(frame_proxy_0)
+    frame_group.try_add_frame(frame_proxy_1)
     
     frame_group_expected = FrameGroup()
-    frame_group_expected.try_add_frame(frame_0)
+    frame_group_expected.try_add_frame(frame_proxy_0)
     
     frame_group.drop_ignored_frames(filter = filter)
     vampytest.assert_eq(frame_group, frame_group_expected)
@@ -935,12 +935,12 @@ def test__FrameGroup__drop_ignored_frames__with_frames_to_no_frames():
     def filter(frame):
         return False
     
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
     
     frame_group = FrameGroup()
-    frame_group.try_add_frame(frame_0)
-    frame_group.try_add_frame(frame_1)
+    frame_group.try_add_frame(frame_proxy_0)
+    frame_group.try_add_frame(frame_proxy_1)
     
     frame_group_expected = FrameGroup()
     
@@ -973,15 +973,15 @@ def test__FrameGroup__apply_frame_filter__with_frames():
     def filter(frame):
         return frame.file_name == 'satori.py'
     
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
     
     frame_group = FrameGroup()
-    frame_group.try_add_frame(frame_0)
-    frame_group.try_add_frame(frame_1)
+    frame_group.try_add_frame(frame_proxy_0)
+    frame_group.try_add_frame(frame_proxy_1)
     
     frame_group_expected = FrameGroup()
-    frame_group_expected.try_add_frame(frame_0)
+    frame_group_expected.try_add_frame(frame_proxy_0)
     
     frame_group.apply_frame_filter(filter)
     vampytest.assert_eq(frame_group, frame_group_expected)
@@ -996,12 +996,12 @@ def test__FrameGroup__apply_frame_filter__with_frames_to_no_frames():
     def filter(frame):
         return False
     
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
     
     frame_group = FrameGroup()
-    frame_group.try_add_frame(frame_0)
-    frame_group.try_add_frame(frame_1)
+    frame_group.try_add_frame(frame_proxy_0)
+    frame_group.try_add_frame(frame_proxy_1)
     
     frame_group_expected = FrameGroup()
     
@@ -1028,15 +1028,15 @@ def test__FrameGroup__iter_frames_no_repeat__non_repeated():
     
     Case: Non-repeated.
     """
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
     frame_group = FrameGroup()
-    frame_group.try_add_frame(frame_0)
-    frame_group.try_add_frame(frame_1)
+    frame_group.try_add_frame(frame_proxy_0)
+    frame_group.try_add_frame(frame_proxy_1)
     
     output = [*frame_group.iter_frames_no_repeat()]
-    vampytest.assert_eq(output, [frame_0, frame_1])
-    vampytest.assert_eq(frame_group.frames, [frame_0, frame_1])
+    vampytest.assert_eq(output, [frame_proxy_0, frame_proxy_1])
+    vampytest.assert_eq(frame_group.frames, [frame_proxy_0, frame_proxy_1])
 
 
 def test__FrameGroup__iter_frames_no_repeat__repeated():
@@ -1045,14 +1045,14 @@ def test__FrameGroup__iter_frames_no_repeat__repeated():
     
     Case: Repeated.
     """
-    frame_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
-    frame_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
+    frame_proxy_0 = FrameProxyVirtual.from_fields(file_name = 'koishi.py')
+    frame_proxy_1 = FrameProxyVirtual.from_fields(file_name = 'satori.py')
     
     repeat_count = 2
-    frames = [frame_0, frame_1]
+    frame_proxies = [frame_proxy_0, frame_proxy_1]
     
-    frame_group = FrameGroup._create_repeated(frames, repeat_count)
+    frame_group = FrameGroup._create_repeated(frame_proxies, repeat_count)
     
     output = [*frame_group.iter_frames_no_repeat()]
-    vampytest.assert_eq(output, [frame_0, frame_1])
-    vampytest.assert_eq(frame_group.frames, [frame_0, frame_1])
+    vampytest.assert_eq(output, [frame_proxy_0, frame_proxy_1])
+    vampytest.assert_eq(frame_group.frames, [frame_proxy_0, frame_proxy_1])

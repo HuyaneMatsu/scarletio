@@ -436,8 +436,14 @@ def _try_match_format_string_end(context):
     if not context.flags & HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT:
         return False
     
-    brace_nesting = context.brace_nesting
-    if (brace_nesting is not None) and (brace_nesting[-1] != TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN):
+    layer_inner_index = context.layer_inner_index
+    if (
+        (layer_inner_index != -1) and
+        (
+            context.tokens[context.layers[layer_inner_index].token_start_index].type
+            != TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN
+        )
+    ):
         return False
     
     content = context.content
@@ -469,8 +475,14 @@ def _try_match_format_string_postfix(context):
     if not context.flags & HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT:
         return False
     
-    brace_nesting = context.brace_nesting
-    if (brace_nesting is not None) and (brace_nesting[-1] != TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN):
+    layer_inner_index = context.layer_inner_index
+    if (
+        (layer_inner_index != -1) and
+        (
+            context.tokens[context.layers[layer_inner_index].token_start_index].type
+            != TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN
+        )
+    ):
         return False
     
     matched = FORMAT_STRING_POSTFIX_RP.match(context.content, context.content_character_index)
@@ -500,8 +512,13 @@ def _try_match_format_string_code(context):
     if not context.flags & HIGHLIGHT_PARSER_FLAG_IN_STRING_FORMAT:
         return False
     
-    brace_nesting = context.brace_nesting
-    if (brace_nesting is not None) and (brace_nesting[-1] != TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN):
+    layer_inner_index = context.layer_inner_index
+    if (
+        (layer_inner_index != -1) and
+        (
+            context.tokens[context.layers[layer_inner_index].token_start_index].type
+            != TOKEN_TYPE_STRING_FORMAT_MARK_BRACE_OPEN)
+    ):
         return False
     
     content = context.content

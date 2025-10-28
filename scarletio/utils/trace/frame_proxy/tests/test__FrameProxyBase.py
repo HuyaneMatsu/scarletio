@@ -3,6 +3,7 @@ from types import CodeType, FunctionType
 import vampytest
 
 from ...expression_parsing import ExpressionInfo, ExpressionKey
+from ...tests.helper_create_dummy_expression_info import create_dummy_expression_info
 
 from ..frame_proxy_base import FrameProxyBase
 
@@ -196,7 +197,7 @@ def test__FrameProxyBase__lines__with_expression():
     Case: expression set.
     """
     frame_proxy = FrameProxyBase()
-    frame_proxy.expression_info = ExpressionInfo(frame_proxy.expression_key, ['hey', 'mister'], 0, True)
+    frame_proxy.expression_info = create_dummy_expression_info(frame_proxy.expression_key, 'hey\nmister')
     
     output = frame_proxy.lines
     vampytest.assert_instance(output, list)
@@ -252,7 +253,7 @@ def test__FrameProxyBase__line__with_expression():
     Case: expression set.
     """
     frame_proxy = FrameProxyBase()
-    frame_proxy.expression_info = ExpressionInfo(frame_proxy.expression_key, ['hey', 'mister'], 0, True)
+    frame_proxy.expression_info = create_dummy_expression_info(frame_proxy.expression_key, 'hey\nmister')
     
     output = frame_proxy.line
     vampytest.assert_instance(output, str)

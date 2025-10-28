@@ -1,5 +1,7 @@
 __all__ = ('add_console_input',)
 
+from ...highlight import get_highlight_parse_result
+
 from .cache_constants import (
     CONSOLE_INPUT_CACHE, CONSOLE_INPUT_MAX_SIZE, CONSOLE_INPUT_CACHE_OUTFLOW_CHECK, FILE_INFO_CACHE
 )
@@ -14,6 +16,7 @@ def add_console_input(file_name, content):
     ----------
     file_name : `None | str`
         File name to add the input as.
+    
     content : `None | str`
         Input content to add.
     """
@@ -21,9 +24,10 @@ def add_console_input(file_name, content):
         return
     
     size = len(content)
-    lines = content.splitlines()
     
-    file_info = FileInfo(file_name, size, 0.0, lines, False, True)
+    parse_result = get_highlight_parse_result(content)
+    
+    file_info = FileInfo(file_name, size, 0.0, content, parse_result, False, True)
     
     # Put file to permanent cache
     CONSOLE_INPUT_CACHE[file_name] = file_info

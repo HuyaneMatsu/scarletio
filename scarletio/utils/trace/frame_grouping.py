@@ -1,6 +1,5 @@
 __all__ = ()
 
-from .expression_parsing import ExpressionInfo
 from .frame_group import FrameGroup
 
 

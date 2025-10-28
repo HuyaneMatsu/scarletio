@@ -1,6 +1,5 @@
 __all__ = ('BasicAuthorization', )
 
-from warnings import warn
 from binascii import Error as EncodeOrDecodeError
 from base64 import b64decode as base64_decode, b64encode as base64_encode
 from re import compile as re_compile
@@ -30,7 +29,7 @@ class BasicAuthorization(RichAttributeErrorBaseType):
     """
     __slots__ = ('encoding', 'password', 'user_id',)
     
-    def __new__(cls, user_id, password = '', *deprecated, encoding = BASIC_AUTH_DEFAULT_ENCODING):
+    def __new__(cls, user_id, password = '', *, encoding = BASIC_AUTH_DEFAULT_ENCODING):
         """
         Creates a new basic auth instance with the given parameters.
         
@@ -53,21 +52,6 @@ class BasicAuthorization(RichAttributeErrorBaseType):
         TypeError
             - if a parameter's type is invalid.
         """
-        # deprecated
-        deprecated_length = len(deprecated)
-        if deprecated_length:
-            warn(
-                (
-                    f'The `encoding` parameter in `{cls.__name__}.__new__` is moved to be '
-                    f'keyword only. Support for positional is deprecated and will be removed in 2025 August.'
-                ),
-                FutureWarning,
-                stacklevel = 2,
-            )
-            
-            encoding = deprecated[0]
-        
-        
         if not isinstance(user_id, str):
             raise TypeError(
                 f'`user_id` can be `str`; got {type(user_id).__name__}; user_id = {user_id!r}.'
@@ -156,7 +140,7 @@ class BasicAuthorization(RichAttributeErrorBaseType):
     
     
     @classmethod
-    def from_header(cls, authorization_header, *deprecated, encoding = BASIC_AUTH_DEFAULT_ENCODING):
+    def from_header(cls, authorization_header, *, encoding = BASIC_AUTH_DEFAULT_ENCODING):
         """
         Creates a new basic auth instance from the given HTTP authorization header value.
         
@@ -180,20 +164,6 @@ class BasicAuthorization(RichAttributeErrorBaseType):
             If cannot parse the authorization headers.
             Cannot decode authorization header.
         """
-        # deprecated
-        deprecated_length = len(deprecated)
-        if deprecated_length:
-            warn(
-                (
-                    f'The `encoding` parameter in `{cls.__name__}.__new__` is moved to be '
-                    f'keyword only. Support for positional is deprecated and will be removed in 2025 August.'
-                ),
-                FutureWarning,
-                stacklevel = 2,
-            )
-            
-            encoding = deprecated[0]
-        
         match = AUTHORIZATION_HEADER_RP.fullmatch(authorization_header)
         if match is None:
             raise ValueError(
@@ -238,52 +208,3 @@ class BasicAuthorization(RichAttributeErrorBaseType):
         authorization_header : `str`
         """
         return f'Basic {base64_encode((f"{self.user_id}:{self.password}").encode(self.encoding)).decode(self.encoding)}'
-    
-    
-    @classmethod
-    def decode(cls, authorization_header, encoding = BASIC_AUTH_DEFAULT_ENCODING):
-        """
-        Deprecated and will be removed 2025 August. Please use `.from_header` instead.
-        """
-        warn(
-            (
-                f'`{cls.__name__}.decode` has been renamed to `from_header`.'
-                f'`.decode` will be removed in 2025 August.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        
-        return cls.from_header(authorization_header, encoding = encoding)
-    
-    
-    def encode(self):
-        """
-        Deprecated and will be removed 2025 August. Please use `.to_header` instead.
-        """
-        warn(
-            (
-                f'`{type(self).__name__}.encode` has been renamed to `to_header`. '
-                f'`.encode` will be removed in 2025 August.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        
-        return self.to_header()
-    
-    
-    @property
-    def username(self):
-        """
-        Deprecated and will be removed in 2025 August. Please use `.user_id` instead.
-        """
-        warn(
-            (
-                f'`{type(self).__name__}.username` has been renamed to `user_id`. '
-                f'`.username` will be removed in 2025 August.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return self.user_id

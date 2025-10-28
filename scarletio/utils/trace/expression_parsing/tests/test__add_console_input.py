@@ -48,7 +48,7 @@ def test__add_console_input__actual_input():
         
         file_info = next(iter(CONSOLE_INPUT_CACHE.values()))
         vampytest.assert_eq(file_info.file_name, file_name)
-        vampytest.assert_eq(file_info.lines, content.splitlines())
+        vampytest.assert_eq(file_info.content, content)
         
     finally:
         CONSOLE_INPUT_CACHE.clear()

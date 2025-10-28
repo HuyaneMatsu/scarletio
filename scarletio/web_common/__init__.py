@@ -51,17 +51,6 @@ __all__ = (
 from warnings import warn
 
 def __getattr__(attribute_name):
-    if attribute_name == 'Formdata':
-        warn(
-            (
-                f'`Formdata` has been renamed to `FormData`.'
-                f'`Formdata` will be removed in 2025 August.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return FormData
-    
     if attribute_name == 'BasicAuth':
         warn(
             (

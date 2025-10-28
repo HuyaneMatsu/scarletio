@@ -358,7 +358,7 @@ class ClientResponse(RichAttributeErrorBaseType):
         return encoding.casefold()
     
     
-    async def text(self, *deprecated, encoding = None, errors = 'strict'):
+    async def text(self, *, encoding = None, errors = 'strict'):
         """
         Loads the response's content as text.
         
@@ -378,25 +378,6 @@ class ClientResponse(RichAttributeErrorBaseType):
         -------
         text : `str`
         """
-        # deprecated
-        deprecated_length = len(deprecated)
-        if deprecated_length:
-            warn(
-                (
-                    f'The `encoding` and `errors` parameters of '
-                    f'`{type(self).__name__}.text` are moved to be keyword only. '
-                    f'Support for positional is deprecated and will be removed in 2025 August.'
-                ),
-                FutureWarning,
-                stacklevel = 2,
-            )
-            
-            encoding = deprecated[0]
-            
-            if deprecated_length > 1:
-                errors = deprecated[1]
-        
-        
         body = await self.read()
         if body is None:
             return
@@ -407,7 +388,7 @@ class ClientResponse(RichAttributeErrorBaseType):
         return body.decode(encoding, errors)
     
     
-    async def json(self, *deprecated, content_type = None, encoding = None, loader = from_json):
+    async def json(self, *, content_type = None, encoding = None, loader = from_json):
         """
         Loads the response's content as a json.
         
@@ -435,27 +416,6 @@ class ClientResponse(RichAttributeErrorBaseType):
         TypeError
             If the response's mime_type do not match.
         """
-        # deprecated
-        deprecated_length = len(deprecated)
-        if deprecated_length:
-            warn(
-                (
-                    f'The `encoding`, `loader` and `content_type` parameters of '
-                    f'`{type(self).__name__}.json` are moved to be keyword only. '
-                    f'Support for positional is deprecated and will be removed in 2025 August.'
-                ),
-                FutureWarning,
-                stacklevel = 2,
-            )
-            
-            encoding = deprecated[0]
-            
-            if deprecated_length > 1:
-                loader = deprecated[1]
-            
-            if deprecated_length > 2:
-                content_type = deprecated[2]
-        
         # body
         body = await self.read()
         if body is None:

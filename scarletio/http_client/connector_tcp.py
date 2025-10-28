@@ -3,10 +3,7 @@
 from functools import partial as partial_func
 from http import HTTPStatus
 from socket import AddressFamily, SOCK_STREAM as SOCKET_TYPE_STREAM
-from ssl import (
-    CertificateError as SSLCertificateError, SSLContext, SSLError, create_default_context as create_default_ssl_context
-)
-from warnings import warn
+from ssl import CertificateError as SSLCertificateError, SSLContext, SSLError
 
 from ..core import CancelledError, Future, SSLBidirectionalTransportLayer, Task
 from ..utils import CauseGroup, IgnoreCaseMultiValueDictionary
@@ -79,11 +76,10 @@ class ConnectorTCP(ConnectorBase):
     def __new__(
         cls,
         loop,
-        *deprecated,
+        *,
         family = AddressFamily.AF_UNSPEC,
         force_close = False,
         local_address = None,
-        ssl = ...,
         ssl_context = None,
         ssl_fingerprint = None,
     ):
@@ -115,65 +111,6 @@ class ConnectorTCP(ConnectorBase):
         TypeError
             - If a parameter's type is incorrect.
         """
-        # deprecated
-        deprecated_length = len(deprecated)
-        if deprecated_length:
-            warn(
-                (
-                    f'The `force_close`, `proxy_headers`, `local_address` and `ssl` parameters in '
-                    f'`{cls.__name__}.__new__` are moved to be keyword only. '
-                    f'Support for positional is deprecated and will be removed in 2025 August.'
-                ),
-                FutureWarning,
-                stacklevel = 2,
-            )
-            
-            family = deprecated[0]
-            
-            if deprecated_length > 1:
-                ssl = deprecated[1]
-            
-            if deprecated_length > 2:
-                local_address = deprecated[2]
-            
-            if deprecated_length > 3:
-                force_close = deprecated[3]
-        
-        
-        if (ssl is not ...):
-            warn(
-                (
-                    f'`{cls.__name__}.__new__`\'s `ssl` parameter is deprecated '
-                    f'and scheduled for removal in 2025 August. '
-                    f'Please use either the `ssl_context` or the `ssl_fingerprint` parameters depending on your needs.'
-                ),
-                FutureWarning,
-                stacklevel = 3,
-            )
-            
-            if ssl is None:
-                ssl_context = None
-                ssl_fingerprint = None
-            
-            elif isinstance(ssl, SSLContext):
-                ssl_context = ssl
-                ssl_fingerprint = None
-            
-            elif isinstance(ssl, SSLFingerprint):
-                ssl_context = None
-                ssl_fingerprint = ssl
-            
-            elif isinstance(ssl, bool):
-                ssl_context = create_default_ssl_context()
-                ssl_fingerprint = None
-                
-            else:
-                raise TypeError(
-                    f'`ssl` can be `None`, `bool`, `{SSLContext.__name__}`, `{SSLFingerprint.__name__}`. '
-                    f'Got {type(ssl).__name__}; {ssl!r}.'
-                )
-        
-        
         self = ConnectorBase.__new__(cls, loop, force_close = force_close)
         
         self.family = family

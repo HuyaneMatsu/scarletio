@@ -2,7 +2,7 @@ import vampytest
 
 from ..frame_ignoring import should_keep_frame_from_defaults
 from ..frame_proxy import FrameProxyVirtual
-from ..expression_parsing import ExpressionInfo
+from ..tests.helper_create_dummy_expression_info import create_dummy_expression_info
 
 
 def test__should_keep_frame_from_defaults__do_not_ignore():
@@ -16,7 +16,7 @@ def test__should_keep_frame_from_defaults__do_not_ignore():
     line = 'koishi()'
     
     frame_proxy = FrameProxyVirtual.from_fields(file_name = file_name, name = name)
-    frame_proxy.expression_info = ExpressionInfo(frame_proxy.expression_key, [line], 0, True)
+    frame_proxy.expression_info = create_dummy_expression_info(frame_proxy.expression_key, line)
     
     output = should_keep_frame_from_defaults(frame_proxy)
     
@@ -35,7 +35,7 @@ def test__should_keep_frame_from_defaults__ignore_from_defaults():
     line = 'koishi()'
     
     frame_proxy = FrameProxyVirtual.from_fields(file_name = file_name, name = name)
-    frame_proxy.expression_info = ExpressionInfo(frame_proxy.expression_key, [line], 0, True)
+    frame_proxy.expression_info = create_dummy_expression_info(frame_proxy.expression_key, line)
     
     mocked = vampytest.mock_globals(should_keep_frame_from_defaults, 2, IGNORED_FRAME_LINES = {(file_name, name): {line}})
     output = mocked(frame_proxy)
