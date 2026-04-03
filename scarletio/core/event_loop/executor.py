@@ -424,7 +424,7 @@ class ExecutorThread(Thread):
         ----------
         func : `callable`
             The function to execute.
-        future : `None`, ``Future`` = `None`, Optional
+        future : ``None | Future`` = `None`, Optional
             A future, what's result is set, when the `func` finishes it's execution.
             
             If not given a new future is created. Defaults to `None`

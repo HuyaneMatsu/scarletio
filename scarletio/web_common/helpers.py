@@ -1,13 +1,16 @@
 __all__ = ('HttpVersion', 'HttpVersion10', 'HttpVersion11', 'freeze_headers',)
 
-from re import I as re_ignore_case, compile as re_compile
-import socket as module_socket
 from collections import namedtuple
+from re import I as re_ignore_case, compile as re_compile
+from socket import (
+    AF_INET as SOCKET_FAMILY_IP_V4, AF_INET6 as SOCKET_FAMILY_IP_V6, IPPROTO_TCP as SOCKET_PROTOCOL_TCP, TCP_NODELAY
+)
 
 from ..core import CancelledError, Task
 from ..utils import IgnoreCaseMultiValueDictionary, include
 
 from .exceptions import PayloadError
+from .headers import METHOD_HEAD
 
 
 RawRequestMessage = include('RawRequestMessage')
@@ -332,12 +335,12 @@ def set_tcp_nodelay(transport, value):
     if socket is None:
         return
     
-    if socket.family not in (module_socket.AF_INET, module_socket.AF_INET6):
+    if socket.family not in (SOCKET_FAMILY_IP_V4, SOCKET_FAMILY_IP_V6):
         return
     
     # socket may be closed already, on windows OSError get raised
     try:
-        socket.setsockopt(module_socket.IPPROTO_TCP, module_socket.TCP_NODELAY, value)
+        socket.setsockopt(SOCKET_PROTOCOL_TCP, TCP_NODELAY, value)
     except OSError:
         pass
 
@@ -503,3 +506,41 @@ def parse_http_headers(data, offset):
         
         # Store, nice!
         headers[name] = value.decode('utf-8', 'surrogateescape')
+
+
+def should_status_code_have_empty_payload(status):
+    """
+    Returns whether the given status code should have an empty payload.
+    
+    Parameters
+    ----------
+    status : `int`
+        Http status code.
+    
+    Returns
+    -------
+    should_have_empty_payload : `bool`
+    """
+    return (
+        (status == 204) or
+        (status == 304) or
+        (status >= 100 and status < 200)
+    )
+
+
+def should_request_method_have_empty_payload(method):
+    """
+    Returns whether he given http method should have an empty payload.
+    
+    Parameters
+    ----------
+    method : `str`
+        Http method.
+    
+    Returns
+    -------
+    should_have_empty_payload : `bool`
+    """
+    return (
+        method == METHOD_HEAD
+    )

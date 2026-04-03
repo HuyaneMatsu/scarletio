@@ -1,5 +1,5 @@
-import socket as module_socket
 from http import HTTPStatus
+from socket import socket as Socket
 from time import sleep as blocking_sleep
 
 import vampytest
@@ -48,7 +48,7 @@ async def test__EventThread__socket_receive__racing():
     http_server = await HttpServer(loop, _handle_request, '127.0.0.1', 6969)
     
     try:
-        socket = module_socket.socket()
+        socket = Socket()
         
         with socket:
             task = loop.create_task(_test__EventThread__socket_receive__racing(loop, http_server, socket))
@@ -98,7 +98,7 @@ async def test__EventThread__socket_receive_into__racing():
     http_server = await HttpServer(loop, _handle_request, '127.0.0.1', 6969)
     
     try:
-        socket = module_socket.socket()
+        socket = Socket()
         
         with socket:
             task = loop.create_task(_test__EventThread__socket_receive_into__racing(loop, http_server, socket))
@@ -151,8 +151,8 @@ async def test__EventThread__socket_send_all__racing():
     """
     loop = get_event_loop()
     
-    read_socket = module_socket.socket()
-    socket = module_socket.socket()
+    read_socket = Socket()
+    socket = Socket()
     with read_socket, socket:
         task = loop.create_task(_test__EventThread__socket_send_all__racing(loop, read_socket, socket))
         task.apply_timeout(10.0)
@@ -218,8 +218,8 @@ async def test__EventThread__socket_connect__racing():
     """
     loop = get_event_loop()
     
-    read_socket = module_socket.socket()
-    write_socket = module_socket.socket()
+    read_socket = Socket()
+    write_socket = Socket()
     with read_socket, write_socket:
         task = loop.create_task(_test__EventThread__socket_connect__racing(loop, read_socket, write_socket))
         task.apply_timeout(10.0)

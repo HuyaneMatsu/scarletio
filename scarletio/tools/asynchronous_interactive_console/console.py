@@ -117,7 +117,7 @@ class AsynchronousInteractiveConsole:
         The event loop on which the console runs it's code.
     stop_on_interruption : `bool`
         Whether the console should be stopped on keyboard interrupt.
-    task : `None`, ``Future``
+    task : ``None | Future``
         Asynchronous task running on the event loop on what's result the console is waiting for.
     """
     _console_counter = 0

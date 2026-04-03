@@ -1,9 +1,14 @@
 __all__ = ()
 
-import socket as module_socket
 import sys
+from socket import (
+    SOCK_DGRAM as SOCKET_TYPE_DATAGRAM, SOCK_STREAM as SOCKET_TYPE_STREAM, SOL_SOCKET as SOCKET_OPTION_LEVEL_SOCKET,
+    SO_REUSEPORT as SOCKET_OPTION_REUSE_PORT
+)
+from ssl import SSLContext, create_default_context as create_default_ssl_context
 from threading import current_thread
 from types import MethodType
+from warnings import warn
 
 from ...utils import DOCS_ENABLED, WeakReferer, docs_property, include
 
@@ -11,91 +16,6 @@ from ..traps import Future, Task, TaskGroup
 
 
 EventThread = include('EventThread')
-
-_HAS_IPv6 = hasattr(module_socket, 'AF_INET6')
-
-def _ip_address_info(host, port, family, type_, protocol):
-    """
-    Gets the address info for the given parameters.
-    
-    Parameters
-    ----------
-    host : `str`, `bytes`
-        The host ip address.
-    port : `int`
-        The host port.
-    family : `AddressFamily`, `int`
-        Address family.
-    type_ : `SocketKind`, `int`
-        Socket type.
-    protocol : `int`
-        Protocol type.
-    
-    Returns
-    -------
-    result : `None`, `tuple` ((`AddressFamily`, `int`), (`SocketKind`, `int`), `int`, `str`, `tuple` (`str, `int`))
-        If everything is correct, returns a `tuple` of 5 elements:
-        - `family` : Address family.
-        - `type_` : Socket type.
-        - `protocol` : Protocol type.
-        - `canonical_name` : Represents the canonical name of the host. (Always empty string.)
-        - `socket_address` : Socket address containing the `host` and the `port`.
-    """
-    # Try to skip get_address_info if `host` is already an IP. Users might have handled name resolution in their own
-    # code and pass in resolved IP-s.
-    if not hasattr(module_socket, 'inet_pton'):
-        return
-    
-    if protocol not in (0, module_socket.IPPROTO_TCP, module_socket.IPPROTO_UDP) or (host is None):
-        return
-    
-    if type_ == module_socket.SOCK_STREAM:
-        protocol = module_socket.IPPROTO_TCP
-    elif type_ == module_socket.SOCK_DGRAM:
-        protocol = module_socket.IPPROTO_UDP
-    else:
-        return
-    
-    if port is None:
-        port = 0
-    elif type(port) is int:
-        # Has the most chance.
-        pass
-    elif isinstance(port, bytes) and port == b'':
-        port = 0
-    elif isinstance(port, str) and port == '':
-        port = 0
-    else:
-        # If port's a service name like "http", don't skip get_address_info.
-        try:
-            port = int(port)
-        except (TypeError, ValueError):
-            return
-    
-    if family == module_socket.AF_UNSPEC:
-        address_families = [module_socket.AF_INET]
-        if _HAS_IPv6:
-            address_families.append(module_socket.AF_INET6)
-    else:
-        address_families = [family]
-    
-    if isinstance(host, bytes):
-        host = host.decode('idna')
-    
-    if '%' in host:
-        return
-    
-    for family in address_families:
-        try:
-            module_socket.inet_pton(family, host)
-            # The host has already been resolved.
-        except OSError:
-            pass
-        else:
-            return family, type_, protocol,'', (host, port)
-    
-    # `host` is not an IP address.
-    return None
 
 
 def _is_datagram_socket(socket):
@@ -111,7 +31,7 @@ def _is_datagram_socket(socket):
     -------
     is_datagram_socket : `bool`
     """
-    return (socket.type & module_socket.SOCK_DGRAM) == module_socket.SOCK_DGRAM
+    return (socket.type & SOCKET_TYPE_DATAGRAM) == SOCKET_TYPE_DATAGRAM
 
 
 def _is_stream_socket(socket):
@@ -127,7 +47,7 @@ def _is_stream_socket(socket):
     -------
     is_stream_socket : `bool`
     """
-    return (socket.type & module_socket.SOCK_STREAM) == module_socket.SOCK_STREAM
+    return (socket.type & SOCKET_TYPE_STREAM) == SOCKET_TYPE_STREAM
 
 
 def _set_reuse_port(socket):
@@ -145,19 +65,16 @@ def _set_reuse_port(socket):
     ValueError
         `reuse_port` is not supported by socket module.
     """
-    if not hasattr(module_socket, 'SO_REUSEPORT'):
+    try:
+        socket.setsockopt(SOCKET_OPTION_LEVEL_SOCKET, SOCKET_OPTION_REUSE_PORT, 1)
+    except OSError as exception:
         raise ValueError(
-            '`reuse_port` not supported by socket module.'
-        )
-    else:
-        try:
-            socket.setsockopt(module_socket.SOL_SOCKET, module_socket.SO_REUSEPORT, 1)
-        except OSError:
-            raise ValueError(
-                '`reuse_port` not supported by socket module, `SO_REUSEPORT` defined but not implemented.'
-            )
+            '`reuse_port` not supported by socket module, the option is defined but not implemented.'
+        ) from exception
+
 
 _OLD_ASYNC_GENERATOR_HOOKS = sys.get_asyncgen_hooks()
+
 
 def _async_generator_first_iteration_hook(async_generator):
     """
@@ -294,3 +211,109 @@ def _iter_futures_of(value):
         
         # Not method, gin-heh
         return
+
+
+def _ssl_deprecation_precheck(ssl):
+    """
+    Validates the given ssl value and raises if it is given as invalid type.
+    
+    Parameters
+    ----------
+    ssl : `None | bool | SSLContext`
+        Ssl to validate and convert to an ssl context.
+    
+    Returns
+    -------
+    ssl_context : `None | SSLContext`
+    """
+    warn(
+        (
+            f'`ssl` parameter is deprecated, please use `ssl_context` instead.'
+        ),
+        FutureWarning,
+        stacklevel = 3,
+    )
+    
+    if ssl is None:
+        ssl_context = None
+    elif isinstance(ssl, SSLContext):
+        ssl_context = ssl
+    elif isinstance(ssl, bool):
+        if ssl:
+            ssl_context = create_default_ssl_context()
+        else:
+            ssl_context = None
+    else:
+        raise TypeError(f'`ssl` if unexpected type: {type(ssl).__name__}; ssl = {ssl!r}.')
+    
+    return ssl_context
+
+
+def _create_connection_shared_precheck(ssl_context, server_host_name, host):
+    """
+    Shared precheck by ``.create_connection_to`` and by ``.create_connection_with``.
+    
+    Parameters
+    ----------
+    ssl : `None | SSLContext`
+        Ssl context to use.
+    
+    server_host_name : `None | str`
+        Overwrites the host name that the target server’s certificate will be matched against.
+        Should only be passed if `ssl_context` is not `None`. By default the value of the host parameter is used.
+        If host is empty, there is no default and you must pass a value for `server_host_name`.
+        If `server_host_name` is an empty string, host name matching is disabled
+        (which is a serious security risk, allowing for potential man-in-the-middle attacks).
+    
+    host : `None | str`
+        To what network interfaces should the connection be bound.
+    
+    Returns
+    -------
+    server_host_name : `None | str`
+    """
+    if (server_host_name is None):
+        if (ssl_context is not None):
+            # Use host as default for server_host_name.
+            if host is None:
+                raise ValueError('You must set `server_host_name` when using `ssl_context` without a `host`.')
+            
+            server_host_name = host
+    else:
+        if ssl_context is None:
+            raise ValueError('`server_host_name` is only meaningful with `ssl_context`.')
+    
+    return server_host_name
+
+    
+def _create_unix_connection_shared_precheck( ssl_context, server_host_name):
+    """
+    Shared precheck used by ``.create_unix_connection_to` and by ``.create_unix_connection_with``.
+    
+    Parameters
+    ----------
+    ssl_context : `None | SSLContext`
+        Ssl context to use.
+    
+    server_host_name : `None | str`
+        Overwrites the host name that the target server’s certificate will be matched against.
+        Should only be passed if `ssl_context` is not `None`.
+    
+    Returns
+    -------
+    server_host_name : `None | str`
+    
+    Raises
+    ------
+    ValueError
+        - If `server_host_name` parameter is given, but `ssl_context` isn't.
+        - If `ssl_context` parameter is given, but `server_host_name` is not.
+    """
+    if (ssl_context is None):
+        if server_host_name is not None:
+            raise ValueError('`server_host_name` is only meaningful with `ssl_context`.')
+    else:
+        if server_host_name is None:
+            raise ValueError('`server_host_name` parameter is required with `ssl_context`.')
+    
+    return server_host_name

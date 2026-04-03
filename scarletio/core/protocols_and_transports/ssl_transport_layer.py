@@ -30,7 +30,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
         Whether the the ``.app_protocol``'s `.connection_made` should be called when handshake is completed.
     _closing : `bool`
         Whether the ssl protocol is shut or shutting down.
-    _connection_made_waiter : `None`, ``Future``
+    _connection_made_waiter : ``None | Future``
         A waiter future, what's result is set when connection is made, aka handshake is completed, or if when the
         connection is lost, depending which happens first.
         
@@ -86,7 +86,7 @@ class SSLBidirectionalTransportLayer(TransportLayerBase, AbstractBidirectionalTr
             `None`, so we create a default ssl context.
             
             Note, that if the connection is server side, a valid `ssl_context` should be given.
-        connection_made_waiter : `None`, ``Future``
+        connection_made_waiter : ``None | Future``
             A waiter future, what's result is set when connection is made, aka handshake is completed, or if when the
             connection is lost, depending which happens first.
             

@@ -3,6 +3,7 @@ __all__ = ('WebSocketServer', )
 from functools import partial as partial_func
 
 from ..core import Task, TaskGroup, skip_poll_cycle
+from ..core.event_loop.event_loop_functionality_helpers import _ssl_deprecation_precheck
 from ..utils import IgnoreCaseMultiValueDictionary
 
 from .web_socket_server_protocol import WebSocketServerProtocol
@@ -29,7 +30,7 @@ class WebSocketServer:
         
         Should be given as an `async-callable` accepting `1` parameter the respective asynchronous server side
         web socket protocol implementations.
-    server : `None`, ``Server``
+    server : ``None | Server``
         Asynchronous server instance. Set meanwhile the web socket server is running.
     protocol_parameters : `tuple` of `object`
         WebSocket protocol parameters.
@@ -94,7 +95,8 @@ class WebSocketServer:
         request_processor = None,
         subprotocol_selector = None,
         web_socket_keyword_parameters = None,
-        ssl = None,
+        ssl_context = None,
+        ssl = ...,
         **server_keyword_parameters,
     ):
         """
@@ -158,7 +160,7 @@ class WebSocketServer:
             - `max_queue` : `None | int`.
                 Max queue size of ``.messages``. If a new payload is added to a full queue, the oldest element of
                 it is removed.
-        ssl : `None`, ``SSLContext`` = `None`, Optional (Keyword only)
+        ssl_context : `None | SSLContext` = `None`, Optional (Keyword only)
             Whether and what ssl is enabled for the connections.
         **server_keyword_parameters : Keyword parameters
             Additional keyword parameters to create the web socket server with.
@@ -187,7 +189,6 @@ class WebSocketServer:
         ------
         TypeError
             - `extra_response_headers` is not given as `None`, neither as `dict-like`.
-            - If `ssl` is not given either as `None`, `ssl.SSLContext`.
             - If `reuse_port` is given as non `bool`.
             - If `reuse_address` is given as non `bool`.
             - If `reuse_port` is given as non `bool`.
@@ -200,6 +201,9 @@ class WebSocketServer:
         OsError
             Error while attempting to binding to address.
         """
+        if (ssl is not ...):
+            ssl_context = _ssl_deprecation_precheck(ssl)
+        
         if web_socket_keyword_parameters is None:
             web_socket_keyword_parameters = {}
         
@@ -240,7 +244,9 @@ class WebSocketServer:
         )
         
         factory = partial_func(protocol, self,)
-        server = await loop.create_server_to(factory, host, port, ssl = ssl, **server_keyword_parameters)
+        server = await loop.create_server_to(
+            factory, host, port, ssl_context = ssl_context, **server_keyword_parameters
+        )
         
         self.server = server
         await server.start()

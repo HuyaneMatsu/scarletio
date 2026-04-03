@@ -210,7 +210,7 @@ class ScarletExecutor:
         The maximal amount of parallelism allowed by the Scarlet executor.
     _loop : `None`, ``EventThread``
         The event loop to what the ScarletExecutor is bound to.
-    _waiter : `None`, ``Future``
+    _waiter : ``None | Future``
         A future which is used to block the main task's execution if the parallelly running tasks' amount is greater or
         equal to the ``._limit``.
     """

@@ -33,7 +33,7 @@ class AsyncQueue:
     _set_result_waiters : `None`, `list` of ``Future``
         Result setter waiters for the queue to become empty.
     
-    _waiter : `None`, ``Future``
+    _waiter : ``None | Future``
         If the queue is empty and it's result is already waited, then this future is set. It's result is set, by the
         first ``.set_result``, ``.set_exception`` call.
     """
@@ -488,7 +488,7 @@ class AsyncLifoQueue(AsyncQueue):
         The loop to what the queue is bound to.
     _results : `deque`
         The results of the queue, which can be retrieved by ``.result``, ``.result_no_wait``, or by awaiting it.
-    _waiter : `None`, ``Future``
+    _waiter : ``None | Future``
         If the queue is empty and it's result is already waited, then this future is set. It's result is set, by the
         first ``.set_result``, ``.set_exception`` call.
     """

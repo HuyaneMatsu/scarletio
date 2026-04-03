@@ -163,7 +163,18 @@ async def test__ConnectorTCP__resolve_host__success():
     protocol_1 = 124
     address_info_1 = (family_1, SocketKind.SOCK_STREAM, protocol_1, '', (host_1, port_1))
     
-    def mock_get_address_info(self, input_host, input_port, *, family = 0, type = 0, protocol = 0, flags = 0):
+    async def mock_get_address_info(
+        self,
+        input_host,
+        input_port,
+        *,
+        family = 0,
+        type = 0,
+        protocol = 0,
+        flags = 0,
+        resolve_configuration = None,
+        ssl_context = None,
+    ):
         nonlocal connector
         nonlocal host
         nonlocal port
@@ -175,9 +186,8 @@ async def test__ConnectorTCP__resolve_host__success():
         vampytest.assert_eq(family, connector.family)
         vampytest.assert_eq(type, SOCKET_TYPE_STREAM)
         
-        future = Future(self)
-        future.set_result([address_info_0, address_info_1])
-        return future
+        return [address_info_0, address_info_1]
+    
     
     original_get_address_info = type(loop).get_address_info
     try:
@@ -224,7 +234,18 @@ async def test__ConnectorTCP__resolve_host__cancelled():
     
     waiter = Future(loop)
     
-    def mock_get_address_info(self, input_host, input_port, *, family = 0, type = 0, protocol = 0, flags = 0):
+    async def mock_get_address_info(
+        self,
+        input_host,
+        input_port,
+        *,
+        family = 0,
+        type = 0,
+        protocol = 0,
+        flags = 0,
+        resolve_configuration = None,
+        ssl_context = None,
+    ):
         nonlocal connector
         nonlocal host
         nonlocal port
@@ -236,7 +257,8 @@ async def test__ConnectorTCP__resolve_host__cancelled():
         
         future = Future(self)
         future.cancel()
-        return future
+        return await future
+    
     
     original_get_address_info = type(loop).get_address_info
     try:
@@ -280,7 +302,18 @@ async def test__ConnectorTCP__resolve_host__exception():
     waiter = Future(loop)
     exception = ValueError('mister')
     
-    def mock_get_address_info(self, input_host, input_port, *, family = 0, type = 0, protocol = 0, flags = 0):
+    async def mock_get_address_info(
+        self,
+        input_host,
+        input_port,
+        *,
+        family = 0,
+        type = 0,
+        protocol = 0,
+        flags = 0,
+        resolve_configuration = None,
+        ssl_context = None,
+    ):
         nonlocal connector
         nonlocal host
         nonlocal port
@@ -291,9 +324,8 @@ async def test__ConnectorTCP__resolve_host__exception():
         vampytest.assert_eq(family, connector.family)
         vampytest.assert_eq(type, SOCKET_TYPE_STREAM)
         
-        future = Future(self)
-        future.set_exception(exception)
-        return future
+        raise exception
+    
     
     original_get_address_info = type(loop).get_address_info
     try:
@@ -345,7 +377,18 @@ async def test__ConnectorTCP__get_resolve_host_waiter():
     protocol_1 = 124
     address_info_1 = (family_1, SocketKind.SOCK_STREAM, protocol_1, '', (host_1, port_1))
     
-    def mock_get_address_info(self, input_host, input_port, *, family = 0, type = 0, protocol = 0, flags = 0):
+    async def mock_get_address_info(
+        self,
+        input_host,
+        input_port,
+        *,
+        family = 0,
+        type = 0,
+        protocol = 0,
+        flags = 0,
+        resolve_configuration = None,
+        ssl_context = None,
+    ):
         nonlocal connector
         nonlocal host
         nonlocal port
@@ -357,9 +400,8 @@ async def test__ConnectorTCP__get_resolve_host_waiter():
         vampytest.assert_eq(family, connector.family)
         vampytest.assert_eq(type, SOCKET_TYPE_STREAM)
         
-        future = Future(self)
-        future.set_result([address_info_0, address_info_1])
-        return future
+        return [address_info_0, address_info_1]
+    
     
     original_get_address_info = type(loop).get_address_info
     try:
@@ -881,12 +923,12 @@ async def test__ConnectorTCP__create_connection():
         host,
         port,
         *,
-        ssl = None,
-        socket_family = 0,
-        socket_protocol = 0,
-        socket_flags = 0,
         local_address = None,
+        socket_family = 0,
+        socket_flags = 0,
+        socket_protocol = 0,
         server_host_name = None,
+        ssl_context = None,
     ):
         nonlocal connector
         nonlocal host_info
@@ -898,7 +940,7 @@ async def test__ConnectorTCP__create_connection():
         
         vampytest.assert_eq(host, host_info.host)
         vampytest.assert_eq(port, host_info.port)
-        vampytest.assert_eq(ssl, SSL_CONTEXT_UNVERIFIED)
+        vampytest.assert_eq(ssl_context, SSL_CONTEXT_UNVERIFIED)
         
         vampytest.assert_eq(socket_family, host_info.family)
         vampytest.assert_eq(socket_flags, host_info.flags)

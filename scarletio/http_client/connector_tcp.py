@@ -402,12 +402,12 @@ class ConnectorTCP(ConnectorBase):
                     partial_func(HttpReadWriteProtocol, self.loop),
                     host_info.host,
                     host_info.port,
-                    ssl = ssl_context,
-                    socket_family = host_info.family,
-                    socket_protocol = host_info.protocol,
-                    socket_flags = host_info.flags,
                     local_address = self.local_address,
+                    socket_family = host_info.family,
+                    socket_flags = host_info.flags,
+                    socket_protocol = host_info.protocol,
                     server_host_name = (None if (ssl_context is None) else host_info.host_name.rstrip('.')),
+                    ssl_context = ssl_context,
                 )
             except (SSLCertificateError, SSLError) as err:
                 err.key = request.connection_key

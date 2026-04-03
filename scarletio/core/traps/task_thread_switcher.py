@@ -40,11 +40,11 @@ class enter_executor:
     
     Attributes
     ----------
-    _enter_future : `None`, ``Future``
+    _enter_future : ``None | Future``
         The future, what blocks the task's the execution, meanwhile the thread switch is taking place.
-    _exit_future : `None`, ``Future``
+    _exit_future : ``None | Future``
         The future, what blocks the task's execution, meanwhile the thread is switching back.
-    _waited_future : `None`, ``Future``
+    _waited_future : ``None | Future``
         Blocking future used inside of the task, meanwhile it is in executor.
     _task : `None`, ``Task``
     """

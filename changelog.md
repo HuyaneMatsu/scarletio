@@ -1,3 +1,18 @@
+# 1.0.96 *\[2025-04-03\]*
+
+#### Improvements
+
+- Better interpret whether a http payload is empty based on its status code / request method.
+- Do not reuse protocols that were written on while unused.
+- `EventThread.get_adddress_info` and `EventThread.get_name_info` do not return a coroutine anymore,
+    since they are nor using executors. Instead their implementation is now fully async.
+
+#### Bug fixes
+
+- Rename all `ssl` parameters to `ssl_context`. Now they accept either `None` or `SSLContext`.
+- Fix `ValueError` in `DatagramSocketTransportLayer.send_to` due to bad logic.
+- Fix waiting on already happened receive in `DatagramSocketTransportLayer.wait_for_receive` due to bad logic.
+
 # 1.0.95 *\[2025-10-28\]*
 
 #### Improvements

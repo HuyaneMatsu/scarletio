@@ -19,7 +19,6 @@ __all__ = (
 )
 
 import os, signal, sys
-import socket as module_socket
 from collections import deque
 from functools import partial, partial as partial_func
 from enum import Enum
@@ -28,26 +27,74 @@ from subprocess import DEVNULL, PIPE, STDOUT
 from threading import current_thread, main_thread
 from types import GeneratorType
 from warnings import warn
+from socket import (
+    AF_UNIX as SOCKET_FAMILY_UNIX, AF_UNSPEC as SOCKET_FAMILY_UNSPECIFIED, AI_PASSIVE as ADDRESS_INFO_FLAG_PASSIVE, 
+    SOCK_DGRAM as SOCKET_TYPE_DATAGRAM, SOCK_STREAM as SOCKET_TYPE_STREAM, SOL_SOCKET as SOCKET_OPTION_LEVEL_SOCKET,
+    SO_BROADCAST as SOCKET_OPTION_BROADCAST, socket as Socket
+)
 
 try:
-    import ssl
+    import ssl as module_ssl
 except ImportError:
-    ssl = None
+    module_ssl = None
 
 from ...core import (
     AbstractProtocolBase, AsyncLifoQueue, AsyncProcess, AsyncQueue, CancelledError, DatagramSocketTransportLayer,
-    Event as HataEvent, EventThread, Executor, Future as HataFuture, Handle, InvalidStateError, Lock as HataLock,
-    LOOP_TIME, ReadProtocolBase, Server, SSLBidirectionalTransportLayer, Task as HataTask, TaskGroup, TimerHandle,
+    Event as ScarletEvent, EventThread, Executor, Future as ScarletFuture, Handle, InvalidStateError, Lock as ScarletLock,
+    LOOP_TIME, ReadProtocolBase, Server, SSLBidirectionalTransportLayer, Task as ScarletTask, TaskGroup, TimerHandle,
     shield as scarletio_shield, skip_ready_cycle, sleep as scarletio_sleep
 )
-from ...core.event_loop.event_loop_functionality_helpers import _is_stream_socket, _set_reuse_port
+from ...core.event_loop.event_loop_functionality_helpers import _is_stream_socket, _set_reuse_port, \
+    _create_connection_shared_precheck, _create_unix_connection_shared_precheck
 from ...core.top_level import get_event_loop as scarletio_get_event_loop, write_exception_async
 from ...utils import (
     IS_UNIX, KeepType, WeakReferer, WeakValueDictionary, alchemy_incendiary, is_coroutine, is_coroutine_function
 )
+from ...dns_query import get_address_info_async
 
 
 __path__ = os.path.dirname(__file__)
+
+
+def _ssl_precheck(ssl_value):
+    """
+    Validates the given ssl value and raises if it is given as invalid type.
+    
+    Parameters
+    ----------
+    ssl_value : `None | bool | SSLContext`
+        Ssl to validate and convert to an ssl context.
+    
+    Returns
+    -------
+    ssl_context : `None | SSLContext`
+    """
+    warn(
+        (
+            f'`ssl` parameter is deprecated, please use `ssl_context` instead.'
+        ),
+        FutureWarning,
+        stacklevel = 3,
+    )
+    
+    if ssl_value is None:
+        ssl_context = None
+    elif (ssl_value is not None) and isinstance(ssl_value, module_ssl.SSLContext):
+        ssl_context = ssl_value
+    elif isinstance(ssl_value, bool):
+        if ssl_value:
+            if module_ssl is None:
+                raise RuntimeError('Python ssl module is not available')
+            
+            ssl_context = module_ssl.create_default_ssl_context()
+        
+        else:
+            ssl_context = None
+    else:
+        raise TypeError(f'`ssl` if unexpected type: {type(ssl_value).__name__}; ssl = {ssl_value!r}.')
+    
+    return ssl_context
+
 
 
 # Additions to EventThread
@@ -172,30 +219,34 @@ class EventThread:
         proto = 0,
         flags = 0,
         sock = None,
-        local_addr = None, server_hostname = None,
+        local_addr = None,
+        server_hostname = None,
         ssl_handshake_timeout = None,
         happy_eyeballs_delay = None,
         interleave = None,
         all_errors = False,
     ):
+        ssl_context = _ssl_precheck(ssl)
+        server_host_name = _create_connection_shared_precheck(ssl_context, server_hostname, host)
+        
         if sock is None:
             return await self._asyncio_create_connection_to(
                 protocol_factory,
                 host,
                 port,
-                ssl = ssl,
+                ssl_context = ssl_context,
                 socket_family = family,
                 socket_protocol = proto,
                 socket_flags = flags,
                 local_address = local_addr,
-                server_host_name = server_hostname,
+                server_host_name = server_host_name,
             )
         else:
             return await self._asyncio_create_connection_with(
                 protocol_factory,
                 sock,
-                ssl = ssl,
-                server_host_name = server_hostname,
+                ssl_context = ssl_context,
+                server_host_name = server_host_name,
             )
     
     
@@ -205,61 +256,66 @@ class EventThread:
         host,
         port,
         *,
-        ssl = None,
+        ssl_context = None,
         socket_family = 0,
         socket_protocol = 0,
         socket_flags = 0,
         local_address = None,
         server_host_name = None
     ):
-        ssl, server_host_name = self._create_connection_shared_precheck(ssl, server_host_name, host)
         
-        future_1 = self._ensure_resolved(
-            (host, port),
-            family = socket_family,
-            type = module_socket.SOCK_STREAM,
-            protocol = socket_protocol,
-            flags = socket_flags,
+        future_0 = ScarletTask(
+            self,
+            get_address_info_async(
+                self,
+                host,
+                port,
+                socket_family,
+                SOCKET_TYPE_STREAM,
+                socket_protocol,
+                socket_flags,
+            ),
         )
         
-        if local_address is not None:
-            future_2 = self._ensure_resolved(
-                local_address,
-                family = socket_family,
-                type = module_socket.SOCK_STREAM,
-                protocol = socket_protocol,
-                flags = socket_flags,
-            )
+        if local_address is None:
+            future_1 = None
         
         else:
-            future_2 = None
+            future_1 = ScarletTask(
+                self,
+                get_address_info_async(
+                    self,
+                    local_address[0],
+                    local_address[1],
+                    socket_family,
+                    SOCKET_TYPE_STREAM,
+                    socket_protocol,
+                    socket_flags,
+                ),
+            )
         
         try:
-            await future_1
+            await future_0
         except:
-            if (future_2 is not None):
-                future_2.cancel()
+            if (future_1 is not None):
+                future_1.cancel()
             raise
         
-        if (future_2 is not None):
-            await future_2
+        if (future_1 is not None):
+            await future_1
         
-        infos = future_1.get_result()
-        if not infos:
-            raise OSError('`get_address_info` returned empty list')
+        infos = future_0.get_result()
         
-        if (future_2 is None):
+        if (future_1 is None):
             local_address_infos = None
         
         else:
-            local_address_infos = future_2.get_result()
-            if not local_address_infos:
-                raise OSError('`get_address_info` returned empty list')
+            local_address_infos = future_1.get_result()
         
         exceptions = []
         for socket_family, socket_type, socket_protocol, socket_address_canonical_name, socket_address in infos:
             
-            socket = module_socket.socket(family = socket_family, type = socket_type, proto = socket_protocol)
+            socket = Socket(family = socket_family, type = socket_type, proto = socket_protocol)
             
             try:
                 socket.setblocking(False)
@@ -311,29 +367,35 @@ class EventThread:
                 # Raise a combined exception so the user can see all the various error messages.
                 raise OSError(f'Multiple exceptions: {", ".join(exception_representations)}')
         
-        return await self._asyncio_create_connection_transport(socket, protocol_factory, ssl, server_host_name, False)
+        return await self._asyncio_create_connection_transport(
+            socket, protocol_factory, ssl_context, server_host_name, False
+        )
     
     
-    async def _asyncio_create_connection_with(self, protocol_factory, socket, *, ssl = None, server_host_name = None):
-        ssl, server_host_name = self._create_connection_shared_precheck(ssl, server_host_name, None)
-        
+    async def _asyncio_create_connection_with(
+        self, protocol_factory, socket, *, ssl_context = None, server_host_name = None
+    ):
         if not _is_stream_socket(socket):
             raise ValueError(f'A stream socket was expected, got {socket!r}.')
         
-        return await self._asyncio_create_connection_transport(socket, protocol_factory, ssl, server_host_name, False)
+        return await self._asyncio_create_connection_transport(
+            socket, protocol_factory, ssl_context, server_host_name, False
+        )
     
     
-    async def _asyncio_create_connection_transport(self, socket, protocol_factory, ssl, server_host_name, server_side):
+    async def _asyncio_create_connection_transport(
+        self, socket, protocol_factory, ssl_context, server_host_name, server_side
+    ):
         socket.setblocking(False)
         
         protocol = protocol_factory()
-        waiter = HataFuture(self)
+        waiter = ScarletFuture(self)
         
-        if ssl is None:
+        if ssl_context is None:
             transport = self._make_socket_transport(socket, protocol, waiter)
         else:
             transport = self._make_ssl_transport(
-                socket, protocol, ssl, waiter, server_side = server_side, server_host_name = server_host_name
+                socket, protocol, ssl_context, waiter, server_side = server_side, server_host_name = server_host_name
             )
         
         try:
@@ -359,7 +421,6 @@ class EventThread:
         allow_broadcast = None,
         sock = None,
     ):
-        
         if sock is None:
             return await self._asyncio_create_datagram_connection_to(
                 protocol_factory,
@@ -395,20 +456,20 @@ class EventThread:
             
             address_info.append((socket_family, socket_protocol, None, None))
         
-        elif hasattr(module_socket, 'AF_UNIX') and socket_family == module_socket.AF_UNIX:
+        elif (socket_family == SOCKET_FAMILY_UNIX):
             if __debug__:
                 if (local_address is not None):
                     if not isinstance(local_address, bytes):
                         raise TypeError(
                             f'`local_address` can be `None`, `str` if `socket_family` is `AF_UNIX`, got '
-                            f'{local_address.__class__.__name__}; {local_address!r}.'
+                            f'{type(local_address).__name__}; {local_address!r}.'
                         )
                 
                 if (remote_address is not None):
                     if not isinstance(remote_address, str):
                         raise TypeError(
                             f'`remote_address` can be `None`, `str` if `socket_family` is `AF_UNIX`, got '
-                            f'{remote_address.__class__.__name__}; {remote_address!r}.'
+                            f'{type(remote_address).__name__}; {remote_address!r}.'
                         )
             
             if (
@@ -431,46 +492,39 @@ class EventThread:
             # join address by (socket_family, socket_protocol)
             address_infos = {}
             if (local_address is not None):
-                infos = await self._ensure_resolved(
-                    local_address,
-                    family = socket_family,
-                    type = module_socket.SOCK_DGRAM,
-                    protocol = socket_protocol,
-                    flags = socket_flags,
-                )
-                
-                if not infos:
-                    raise OSError('`get_address_info` returned empty list')
-                
                 for (
                     iterated_socket_family,
                     iterated_socket_type,
                     iterated_socket_protocol,
                     iterated_socket_canonical_name,
                     iterated_socket_address
-                ) in infos:
+                ) in (await get_address_info_async(
+                    self,
+                    local_address[0],
+                    local_address[1],
+                    socket_family,
+                    SOCKET_TYPE_DATAGRAM,
+                    socket_protocol,
+                    socket_flags,
+                )):
                     address_infos[(iterated_socket_family, iterated_socket_protocol)] = (iterated_socket_address, None)
             
             if (remote_address is not None):
-                infos = await self._ensure_resolved(
-                    remote_address,
-                    family = socket_family,
-                    type = module_socket.SOCK_DGRAM,
-                    protocol = socket_protocol,
-                    flags = socket_flags,
-                )
-                
-                if not infos:
-                    raise OSError('`get_address_info` returned empty list')
-                
-                
                 for (
                     iterated_socket_family,
                     iterated_socket_type,
                     iterated_socket_protocol,
                     iterated_canonical_name,
                     iterated_socket_address,
-                ) in infos:
+                ) in (await get_address_info_async(
+                    self,
+                    remote_address[0],
+                    remote_address[1],
+                    socket_family,
+                    SOCKET_TYPE_DATAGRAM,
+                    socket_protocol,
+                    socket_flags,
+                )):
                     key = (iterated_socket_family, iterated_socket_protocol)
                     
                     try:
@@ -498,9 +552,9 @@ class EventThread:
         
         for socket_family, socket_protocol, local_address, remote_address in address_info:
             try:
-                socket = module_socket.socket(
+                socket = Socket(
                     family = socket_family,
-                    type = module_socket.SOCK_DGRAM,
+                    type = SOCKET_TYPE_DATAGRAM,
                     proto = socket_protocol,
                 )
                 
@@ -508,7 +562,7 @@ class EventThread:
                     _set_reuse_port(socket)
                 
                 if allow_broadcast:
-                    socket.setsockopt(module_socket.SOL_SOCKET, module_socket.SO_BROADCAST, 1)
+                    socket.setsockopt(SOCKET_OPTION_LEVEL_SOCKET, SOCKET_OPTION_BROADCAST, 1)
                 
                 socket.setblocking(False)
                 
@@ -540,7 +594,7 @@ class EventThread:
     
 
     async def _asyncio_create_datagram_connection_with(self, protocol_factory, socket):
-        if socket.type != module_socket.SOCK_DGRAM:
+        if socket.type != SOCKET_TYPE_DATAGRAM:
             raise ValueError(f'A UDP socket was expected, got {socket!r}.')
         
         socket.setblocking(False)
@@ -550,7 +604,7 @@ class EventThread:
     
     async def _asyncio_create_datagram_connection(self, protocol_factory, socket, address):
         protocol = protocol_factory()
-        waiter = HataFuture(self)
+        waiter = ScarletFuture(self)
         transport = DatagramSocketTransportLayer(self, None, socket, protocol, waiter, address)
         
         try:
@@ -572,22 +626,25 @@ class EventThread:
         server_hostname = None,
         ssl_handshake_timeout = None,
     ):
+        ssl_context = _ssl_precheck(ssl)
+        server_host_name = _create_unix_connection_shared_precheck(ssl_context, server_hostname)
+        
         if sock is None:
             return await self._asyncio_create_unix_connection_to(
-                protocol_factory, path, ssl = ssl, server_host_name = server_hostname
+                protocol_factory, path, ssl_context = ssl_context, server_host_name = server_host_name
             )
         
         else:
             return await self._asyncio_create_unix_connection_with(
-                protocol_factory, sock, ssl = ssl, server_host_name = server_hostname
+                protocol_factory, sock, ssl_context = ssl_context, server_host_name = server_host_name
             )
     
     
-    async def _asyncio_create_unix_connection_to(self, protocol_factory, path, *, ssl = None, server_host_name = None):
-        ssl, server_host_name = self._create_unix_connection_shared_precheck(ssl, server_host_name)
-        
+    async def _asyncio_create_unix_connection_to(
+        self, protocol_factory, path, *, ssl_context = None, server_host_name = None
+    ):
         path = os.fspath(path)
-        socket = module_socket.socket(module_socket.AF_UNIX, module_socket.SOCK_STREAM, 0)
+        socket = Socket(SOCKET_FAMILY_UNIX, SOCKET_TYPE_STREAM, 0)
         
         try:
             socket.setblocking(False)
@@ -596,20 +653,22 @@ class EventThread:
             socket.close()
             raise
         
-        return await self._asyncio_create_connection_transport(socket, protocol_factory, ssl, server_host_name, False)
+        return await self._asyncio_create_connection_transport(
+            socket, protocol_factory, ssl_context, server_host_name, False
+        )
     
     
     async def _asyncio_create_unix_connection_with(
-        self, protocol_factory, socket, *, ssl = None, server_host_name = None
+        self, protocol_factory, socket, *, ssl_context = None, server_host_name = None
     ):
-        ssl, server_host_name = self._create_unix_connection_shared_precheck(ssl, server_host_name)
-        
-        if socket.family not in (module_socket.AF_UNIX, module_socket.SOCK_STREAM):
+        if socket.family not in (SOCKET_FAMILY_UNIX, SOCKET_TYPE_STREAM):
             raise ValueError(f'A UNIX Domain Stream Socket was expected, got {socket!r}.')
         
         socket.setblocking(False)
     
-        return await self._asyncio_create_connection_transport(socket, protocol_factory, ssl, server_host_name, False)
+        return await self._asyncio_create_connection_transport(
+            socket, protocol_factory, ssl_context, server_host_name, False
+        )
     
     
     async def create_server(
@@ -618,8 +677,8 @@ class EventThread:
         host = None,
         port = None,
         *,
-        family = module_socket.AF_UNSPEC,
-        flags = module_socket.AI_PASSIVE,
+        family = SOCKET_FAMILY_UNSPECIFIED,
+        flags = ADDRESS_INFO_FLAG_PASSIVE,
         sock = None,
         backlog = 100,
         ssl = None,
@@ -628,6 +687,8 @@ class EventThread:
         ssl_handshake_timeout = None,
         start_serving = True,
     ):
+        ssl_context = _ssl_precheck(ssl)
+        
         if sock is None:
             server = await self.create_server_to(
                 protocol_factory,
@@ -636,12 +697,14 @@ class EventThread:
                 socket_family = family,
                 socket_flags = flags,
                 backlog = backlog,
-                ssl = ssl,
+                ssl_context = ssl_context,
                 reuse_port = reuse_port,
             )
         
         else:
-            server =  await self.create_server_with(protocol_factory, sock, backlog = backlog, ssl = ssl)
+            server =  await self.create_server_with(
+                protocol_factory, sock, backlog = backlog, ssl_context = ssl_context
+            )
         
         if start_serving:
             await server.start()
@@ -660,12 +723,17 @@ class EventThread:
         ssl_handshake_timeout = None,
         start_serving = True,
     ):
+        ssl_context = _ssl_precheck(ssl)
         
         if sock is None:
-            server = await self.create_unix_server_to(protocol_factory, path, backlog = backlog, ssl = ssl)
+            server = await self.create_unix_server_to(
+                protocol_factory, path, backlog = backlog, ssl_context = ssl_context
+            )
         
         else:
-            server = await self.create_unix_server_with(protocol_factory, sock, backlog = backlog, ssl = ssl)
+            server = await self.create_unix_server_with(
+                protocol_factory, sock, backlog = backlog, ssl_context = ssl_context
+            )
         
         if start_serving:
             await server.start()
@@ -686,15 +754,15 @@ class EventThread:
         raised, and there is no way to determine how much data, if any, was
         successfully processed by the receiving end of the connection.
         """
-        if ssl is not None and isinstance(sock, ssl.SSLSocket):
-            raise TypeError("Socket cannot be of type SSLSocket")
+        if (module_ssl is not None) and isinstance(sock, module_ssl.SSLSocket):
+            raise TypeError('Socket cannot be of type SSLSocket')
         
         try:
             return sock.sendto(data, address)
         except (BlockingIOError, InterruptedError):
             pass
 
-        future = HataFuture(self)
+        future = ScarletFuture(self)
         file_descriptor = sock.fileno()
         handle = self.add_writer(file_descriptor, self._sock_sendto, future, sock, data, address)
         future.add_done_callback(partial_func(self._sock_write_done, file_descriptor, handle = handle))
@@ -736,15 +804,15 @@ class EventThread:
         The maximum amount of data to be received at once is specified by
         nbytes.
         """
-        if ssl is not None and isinstance(sock, ssl.SSLSocket):
-            raise TypeError("Socket cannot be of type SSLSocket")
+        if (module_ssl is not None) and isinstance(sock, module_ssl.SSLSocket):
+            raise TypeError('Socket cannot be of type SSLSocket')
 
         try:
             return sock.recvfrom(bufsize)
         except (BlockingIOError, InterruptedError):
             pass
         
-        future = HataFuture(self)
+        future = ScarletFuture(self)
         file_descriptor = sock.fileno()
         self._ensure_fd_no_transport(file_descriptor)
         handle = self._add_reader(file_descriptor, self._sock_recvfrom, future, sock, bufsize)
@@ -775,7 +843,7 @@ class EventThread:
         The received data is written into *buf* (a writable buffer).
         The return value is a tuple of (number of bytes written, address).
         """
-        if ssl is not None and isinstance(sock, ssl.SSLSocket):
+        if (module_ssl is not None) and isinstance(sock, module_ssl.SSLSocket):
             raise TypeError("Socket cannot be of type SSLSocket")
     
         if not nbytes:
@@ -786,7 +854,7 @@ class EventThread:
         except (BlockingIOError, InterruptedError):
             pass
         
-        future = HataFuture(self)
+        future = ScarletFuture(self)
         file_descriptor = sock.fileno()
         handle = self.add_reader(file_descriptor, self._sock_recvfrom_into, future, sock, buf, nbytes)
         future.add_done_callback(partial_func(self._sock_read_done, file_descriptor, handle = handle))
@@ -825,10 +893,10 @@ class EventThread:
         Return a new transport that *protocol* should start using
         immediately.
         """
-        if ssl is None:
+        if module_ssl is None:
             raise RuntimeError('Python ssl module is not available')
 
-        if not isinstance(sslcontext, ssl.SSLContext):
+        if not isinstance(sslcontext, module_ssl.SSLContext):
             raise TypeError(
                 f'sslcontext is expected to be an instance of ssl.SSLContext, got {sslcontext!r}'
             )
@@ -838,7 +906,7 @@ class EventThread:
                 f'transport {transport!r} is not supported by start_tls()'
             )
 
-        waiter = HataFuture(self)
+        waiter = ScarletFuture(self)
         ssl_protocol = SSLBidirectionalTransportLayer(
             self,
             protocol,
@@ -873,11 +941,15 @@ class EventThread:
         protocol_factory,
         sock,
         *,
-        ssl = None,
+        ssl = ...,
+        ssl_context = None,
         ssl_handshake_timeout = None,
         ssl_shutdown_timeout = None,
     ):
-        return await self._scarletio_connect_accepted_socket(protocol_factory, sock, ssl = ssl)
+        if (ssl is not ...):
+            ssl_context = ssl
+        
+        return await self._scarletio_connect_accepted_socket(protocol_factory, sock, ssl_context = ssl_context)
 
 
 async def in_coro(future):
@@ -987,8 +1059,8 @@ class ReadProtocolBase:
         return await self.read_exactly(n)
 
 
-@KeepType(HataFuture)
-class HataFuture:
+@KeepType(ScarletFuture)
+class ScarletFuture:
     @property
     def done(self):
         return self.is_done
@@ -1010,8 +1082,8 @@ class HataFuture:
         return self.get_exception
 
 
-@KeepType(HataTask)
-class HataTask:
+@KeepType(ScarletTask)
+class ScarletTask:
     @property
     def _log_destroy_pending(self):
         return False
@@ -1021,8 +1093,8 @@ class HataTask:
         pass
 
 
-@KeepType(HataLock)
-class HataLock:
+@KeepType(ScarletLock)
+class ScarletLock:
     def locked(self):
         return self.is_locked()
 
@@ -1214,19 +1286,19 @@ class Future:
         if loop is None:
             loop = get_event_loop()
         
-        return HataFuture(loop)
+        return ScarletFuture(loop)
     
     def __instancecheck__(cls, instance):
-        return isinstance(instance, HataFuture) or isinstance(instance, cls)
+        return isinstance(instance, ScarletFuture) or isinstance(instance, cls)
 
     def __subclasscheck__(cls, klass):
-        return issubclass(klass, HataFuture) or (klass is cls)
+        return issubclass(klass, ScarletFuture) or (klass is cls)
 
 # get_loop is new in python 3.7 and required by aiosqlite
 def asyncio_get_loop(self):
     return self._loop
 
-HataFuture.get_loop = asyncio_get_loop
+ScarletFuture.get_loop = asyncio_get_loop
 del asyncio_get_loop
 
 
@@ -1241,12 +1313,12 @@ def isfuture(obj):
     _asyncio_future_blocking.
     See comment in Future for more details.
     """
-    return isinstance(obj, HataFuture)
+    return isinstance(obj, ScarletFuture)
 
 # asyncio.locks
 # Include: Lock, Event, Condition, Semaphore, BoundedSemaphore, Barrier
 
-class Lock(HataLock):
+class Lock(ScarletLock):
     """
     Primitive lock objects.
     
@@ -1304,13 +1376,13 @@ class Lock(HataLock):
         if loop is None:
             loop = get_event_loop()
         
-        return HataLock.__new__(cls, loop)
+        return ScarletLock.__new__(cls, loop)
     
     def __instancecheck__(cls, instance):
-        return isinstance(instance, HataLock)
+        return isinstance(instance, ScarletLock)
     
     def __subclasscheck__(cls, klass):
-        return issubclass(klass, HataLock) or (klass is cls)
+        return issubclass(klass, ScarletLock) or (klass is cls)
 
 
 class Event:
@@ -1324,13 +1396,13 @@ class Event:
         if loop is None:
             loop = get_event_loop()
         
-        return HataEvent(loop)
+        return ScarletEvent(loop)
     
     def __instancecheck__(cls, instance):
-        return isinstance(instance, HataEvent)
+        return isinstance(instance, ScarletEvent)
     
     def __subclasscheck__(cls, klass):
-        return issubclass(klass, HataEvent) or (klass is cls)
+        return issubclass(klass, ScarletEvent) or (klass is cls)
 
 
 class Condition:
@@ -1570,7 +1642,7 @@ class Semaphore:
         0, and then return True.
         """
         while self._value <= 0:
-            future = HataFuture(self._loop)
+            future = ScarletFuture(self._loop)
             self._waiters.append(future)
             
             try:
@@ -2961,7 +3033,7 @@ class TaskMeta(type):
         self.__init__(*args, coro = coro, loop = loop, **kwargs)
         return self
 
-class Task(HataTask, metaclass = TaskMeta, ignore = True):
+class Task(ScarletTask, metaclass = TaskMeta, ignore = True):
     __slots__ = (
         '__weakref__', # Required by anyio
     )
@@ -2974,7 +3046,7 @@ class Task(HataTask, metaclass = TaskMeta, ignore = True):
         if loop is None:
             loop = get_event_loop()
         
-        return HataTask.__new__(cls, loop, coroutine)
+        return ScarletTask.__new__(cls, loop, coroutine)
     
     # Required by aiohttp 3.6
     def current_task(loop = None):
@@ -3212,13 +3284,13 @@ def as_completed(futures, *, loop = None, timeout = None):
     if not tasks:
         return []
     
-    waiter_futures = [HataFuture(loop) for _ in range(len(tasks))]
+    waiter_futures = [ScarletFuture(loop) for _ in range(len(tasks))]
     waited_futures = waiter_futures[::-1]
     
     if timeout is None:
         timeout_future = None
     else:
-        timeout_future = HataFuture(loop)
+        timeout_future = ScarletFuture(loop)
         timeout_future.apply_timeout(timeout)
         tasks.add(timeout_future)
     
@@ -3394,7 +3466,7 @@ def gather(*coroutines_or_futures, loop = None, return_exceptions = False):
     if loop is None:
         detected_loops = None
         for future in coroutines_or_futures:
-            if isinstance(future, HataFuture):
+            if isinstance(future, ScarletFuture):
                 if detected_loops is None:
                     detected_loops = set()
                 detected_loops.add(future._loop)
@@ -3419,7 +3491,7 @@ def gather(*coroutines_or_futures, loop = None, return_exceptions = False):
         )
     
     
-    future = HataFuture(loop)
+    future = ScarletFuture(loop)
     
     if not coroutines_or_futures:
         future.set_result([])
@@ -3609,11 +3681,11 @@ class TaskWrapper:
     
     
     def __instancecheck__(cls, instance):
-        return isinstance(instance, HataTask) or isinstance(instance, cls)
+        return isinstance(instance, ScarletTask) or isinstance(instance, cls)
     
     
     def __subclasscheck__(cls, klass):
-        return issubclass(klass, HataTask) or (klass is cls)
+        return issubclass(klass, ScarletTask) or (klass is cls)
     
     
     def __hash__(self):
@@ -3626,7 +3698,7 @@ class TaskWrapper:
         if isinstance(other, type(self)):
             other_task = other._task
         
-        elif isinstance(other, HataTask):
+        elif isinstance(other, ScarletTask):
             other_task = other
         
         else:

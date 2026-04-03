@@ -10,7 +10,7 @@ from ....web_common import HttpReadWriteProtocol
 class HttpServer:
     __slots__ = ('loop', 'handler', 'protocols', 'close_connection_task', 'server', 'port', 'host')
     
-    async def __new__(cls, loop, handler, host, port, *, ssl = None):
+    async def __new__(cls, loop, handler, host, port, *, ssl_context = None):
         self = object.__new__(cls)
         self.loop = loop
         self.handler = handler
@@ -21,7 +21,7 @@ class HttpServer:
         self.port = port
 
         factory = partial_func(HttpServerProtocol, loop, self)
-        server = await loop.create_server_to(factory, host, port, ssl = ssl)
+        server = await loop.create_server_to(factory, host, port, ssl_context = ssl_context)
         
         self.server = server
         await server.start()

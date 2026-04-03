@@ -1,13 +1,15 @@
-__version__ = '1.0.95'
+__version__ = '1.0.96'
 
 
 from .core import *
+from .dns_query import *
 from .ext import *
 from .utils import *
 
 
 __all__ = (
     *core.__all__,
+    *dns_query.__all__,
     *ext.__all__,
     *utils.__all__,
 )

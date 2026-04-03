@@ -66,7 +66,7 @@ class Task(Future):
     _state : `str`
         The state of the task.
     
-    _waited_future : `None`, ``Future``
+    _waited_future : ``None | Future``
         The future on what's result the future is waiting right now.
     """
     __slots__ = ('_coroutine', '_waited_future')

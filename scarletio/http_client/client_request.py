@@ -1,7 +1,6 @@
 __all__ = ('ClientRequest',)
 
 from http.cookies import Morsel, SimpleCookie
-from warnings import warn
 
 from ..core import CancelledError, Task
 from ..utils import IgnoreCaseMultiValueDictionary, RichAttributeErrorBaseType
@@ -26,10 +25,10 @@ class ClientRequest(RichAttributeErrorBaseType):
     
     Attributes
     ----------
-    authorization : `None | BasicAuthorization`
+    authorization : ``None | BasicAuthorization``
         Authorization sent with the request.
     
-    body : `None | PayloadBase`
+    body : ``None | PayloadBase``
         The request's body.
     
     chunked : `bool`
@@ -50,25 +49,25 @@ class ClientRequest(RichAttributeErrorBaseType):
     original_url : ``URL``
         The original url, what was asked to request.
     
-    proxied_url : `None | Url`
+    proxied_url : ``None | URL``
         The proxied url that the requests connects to.
     
-    proxy : `None | Proxy`
-        Proxy if applicable.4
+    proxy : ``None | Proxy``
+        Proxy if applicable.
     
-    response : `None | ClientResponse`
+    response : ``None | ClientResponse``
         Object representing the received response. Set as `None` till ``.send`` finishes.
     
-    ssl_context : `None | SSLContext`
+    ssl_context : ``None | SSLContext``
         The connection's ssl type.
     
-    ssl_fingerprint : `None | SSLFingerprint`
+    ssl_fingerprint : ``None | SSLFingerprint``
         Alternative way to accept ssl or to block it depending whether the fingerprint is the same or changed.
     
     url : ``URL``
         The url, what will be requested.
     
-    write_body_task : `None | Task<.write_body>`
+    write_body_task : ``None | Task<.write_body>``
         Payload writer task, what is present meanwhile the request's payload is sending.
     """
     __slots__ = (
@@ -108,25 +107,25 @@ class ClientRequest(RichAttributeErrorBaseType):
         headers : ``IgnoreCaseMultiValueDictionary``
             Headers of the request.
         
-        data : `None | bytes-like | io-like | FormData`
+        data : ``None | bytes-like | io-like | FormData``
             Data to send as the request's body.
         
         query : `None | str | dict<None, str | bool | int | float, iterable<...>> | iterable<...>`
             Query string parameters.
         
-        cookies : `None | dict<str, str | Morsel>`
+        cookies : ``None | dict<str, str | Morsel>``
             Cookies OwO.
         
-        authorization : `None | BasicAuthorization`
+        authorization : ``None | BasicAuthorization``
             Authorization sent with the request.
         
-        proxy : `None | Proxy`
+        proxy : ``None | Proxy``
             Proxy if applicable.
         
-        ssl_context : `None | SSLContext``
+        ssl_context : ``None | SSLContext``
             The connection's ssl type.
         
-        ssl_fingerprint : `None | SSLFingerprint`
+        ssl_fingerprint : ``None | SSLFingerprint``
             Alternative way to accept ssl or to block it depending whether the fingerprint is the same or changed.
         
         Raises
@@ -539,77 +538,3 @@ class ClientRequest(RichAttributeErrorBaseType):
                 path = f'{path}?{raw_query_string}'
         
         return path
-    
-    
-    @property
-    def auth(self):
-        """
-        ``.auth`` is deprecated and will be removed in 2025 November.
-        Please use ``.authorization`` instead.
-        """
-        warn(
-            (
-                f'`{type(self).__name__}.auth` is deprecated and will be removed in 2025 November. '
-                f'Please use `.authorization instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        return self.authorization
-
-    
-    @property
-    def proxy_auth(self):
-        """
-        ``.proxy_auth`` is deprecated and will be removed in 2025 November.
-        Please use ``.proxy.authorization`` instead.
-        """
-        warn(
-            (
-                f'`{type(self).__name__}.proxy_auth` is deprecated and will be removed in 2025 November. '
-                f'Please use `.proxy.authorization instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        proxy = self.proxy
-        if (proxy is not None):
-            return proxy.authorization
-
-    
-    @property
-    def proxy_headers(self):
-        """
-        ``.proxy_headers`` is deprecated and will be removed in 2025 November.
-        Please use ``.proxy.headers`` instead.
-        """
-        warn(
-            (
-                f'`{type(self).__name__}.proxy_headers` is deprecated and will be removed in 2025 November. '
-                f'Please use `.proxy.headers instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        proxy = self.proxy
-        if (proxy is not None):
-            return proxy.headers
-    
-    
-    @property
-    def proxy_url(self):
-        """
-        ``.proxy_url`` is deprecated and will be removed in 2025 November.
-        Please use ``.proxy.url`` instead.
-        """
-        warn(
-            (
-                f'`{type(self).__name__}.proxy_url` is deprecated and will be removed in 2025 November. '
-                f'Please use `.proxy.url instead.'
-            ),
-            FutureWarning,
-            stacklevel = 2,
-        )
-        proxy = self.proxy
-        if (proxy is not None):
-            return proxy.url

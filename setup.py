@@ -22,6 +22,7 @@ setup(
     packages = [
         'scarletio',
         'scarletio.core',
+        'scarletio.dns_query',
         'scarletio.ext',
         'scarletio.ext.asyncio',
         'scarletio.core.event_loop',

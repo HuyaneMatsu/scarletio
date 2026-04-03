@@ -208,7 +208,7 @@ def render_waits_into(into, field_added, future):
         The container to render into.
     field_added : `bool`
         Whether any fields were added already.
-    future : `None`, ``Future``
+    future : ``None | Future``
         The waited future.
     
     Returns

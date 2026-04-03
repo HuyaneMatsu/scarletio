@@ -41,7 +41,7 @@ class AsyncProcess:
     
     _connection_lost : `bool`
         Whether all the pipes of the ``AsyncProcess`` lost connection.
-    _drain_waiter : `None`, ``Future``
+    _drain_waiter : ``None | Future``
         A future, what is used to block the writing task, till it's writen data is drained.
     _exit_waiters : `None`, `set of ``Future``
         Waiter futures which wait for the subprocess to shutdown.

@@ -18,61 +18,61 @@ The closing bracket should be on the same level as the expression's start.
 ```py
 # Wrong:
 # Aligned with opening delimiter.
-foo = long_function_name(vairbale_0, vairbale_1,
-                         vairbale_2, vairbale_3)
+output = long_function_name(variable_0, variable_1,
+                         variable_2, variable_3)
 
 # Hell no:
 def long_function_name(
-        vairbale_0, vairbale_1, vairbale_2,
-        vairbale_3):
-    print(vairbale_0)
+        variable_0, variable_1, variable_2,
+        variable_3):
+    print(variable_0)
 
 # Are you joking?:
 # Hanging indents should add a level.
-foo = long_function_name(
-    vairbale_0, vairbale_1,
-    vairbale_2, vairbale_3)
+output = long_function_name(
+    variable_0, variable_1,
+    variable_2, variable_3)
 
 # Feeling funny?:
-foo = long_function_name(vairbale_0, vairbale_1,
-    vairbale_2, vairbale_3)
+output = long_function_name(variable_0, variable_1,
+    variable_2, variable_3)
 
 # lolk:
 def long_function_name(
-    vairbale_0, vairbale_1, vairbale_2,
-    vairbale_3):
-    print(vairbale_0)
+    variable_0, variable_1, variable_2,
+    variable_3):
+    print(variable_0)
 ```
 
 ```py
 # Correct:
 def long_function_name(
-    vairbale_0,
-    vairbale_1,
-    vairbale_2,
-    vairbale_3,
+    variable_0,
+    variable_1,
+    variable_2,
+    variable_3,
 ):
-    print(vairbale_0)
+    print(variable_0)
 
 
 # Correct:
 def long_function_name(
-    vairbale_0, vairbale_1, vairbale_2, vairbale_3
+    variable_0, variable_1, variable_2, variable_3
 ):
-    print(vairbale_0)
+    print(variable_0)
 
 
 # Correct:
-foo = long_function_name(
-    vairbale_0,
-    vairbale_1,
-    vairbale_2,
-    vairbale_3,
+output = long_function_name(
+    variable_0,
+    variable_1,
+    variable_2,
+    variable_3,
 )
 
 # Correct:
-foo = long_function_name(
-    vairbale_0, vairbale_1, vairbale_2, vairbale_3
+output = long_function_name(
+    variable_0, variable_1, variable_2, variable_3
 )
 ```
 
@@ -317,7 +317,7 @@ Use double triple quote. If the docstring extends on multiple lines, do not neve
 please.
 
 ```py
-# Whats worng with you:
+# Whats wrong with you:
 """I like chips.
 
 Shrimp fry.

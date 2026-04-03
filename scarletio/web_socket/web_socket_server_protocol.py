@@ -50,7 +50,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
         If cancelled or marked by done or any other methods, the payload reader will not be cancelled.
     _transport : `None | object`
         Asynchronous transport implementation. Is set meanwhile the protocol is alive.
-    _drain_waiter : `None`, ``Future``
+    _drain_waiter : ``None | Future``
         A future, what is used to block the writing task, till it's writen data is drained.
     _drain_lock : ``Lock``
         Asynchronous lock to ensure, that only `1` frame is written in `1` time.

@@ -667,7 +667,7 @@ class TaskGroup(RichAttributeErrorBaseType):
         
         Returns
         -------
-        future : `None`, ``Future``
+        future : ``None | Future``
         """
         done = self.done
         if done:

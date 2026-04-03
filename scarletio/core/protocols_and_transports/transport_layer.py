@@ -5,7 +5,7 @@ from collections import deque as Deque
 from itertools import islice
 from selectors import EVENT_READ, EVENT_WRITE
 from socket import (
-    AF_INET as SOCKET_FAMILY_INET, AF_INET6 as SOCKET_FAMILY_INET6, IPPROTO_TCP as SOCKET_PROTOL_TCP,
+    AF_INET as SOCKET_FAMILY_IP_V4, AF_INET6 as SOCKET_FAMILY_IP_V6, IPPROTO_TCP as SOCKET_PROTOCOL_TCP,
     SHUT_WR as SOCKET_SHUTDOWN_WR, SOCK_STREAM as SOCKET_TYPE_STREAM, error as SocketError, socket as SocketType
 )
 
@@ -34,11 +34,11 @@ write_exception_async = include('write_exception_async')
 if SOCKET_OPTION_TCP_NODELAY:
     def _set_nodelay(socket):
         if (
-            (socket.family in (SOCKET_FAMILY_INET, SOCKET_FAMILY_INET6)) and
+            (socket.family in (SOCKET_FAMILY_IP_V4, SOCKET_FAMILY_IP_V6)) and
             (socket.type == SOCKET_TYPE_STREAM) and
-            (socket.proto == SOCKET_PROTOL_TCP)
+            (socket.proto == SOCKET_PROTOCOL_TCP)
         ):
-            socket.setsockopt(SOCKET_PROTOL_TCP, SOCKET_OPTION_TCP_NODELAY, 1)
+            socket.setsockopt(SOCKET_PROTOCOL_TCP, SOCKET_OPTION_TCP_NODELAY, 1)
 else:
     def _set_nodelay(socket):
         pass
@@ -178,7 +178,7 @@ class SocketTransportLayerBase(TransportLayerBase):
             The socket used by the transport.
         protocol : ``ReadProtocolBase``
             Asynchronous protocol implementation used by the transport.
-        waiter : `None`, ``Future``
+        waiter : ``None | Future``
             Waiter, what's result is set, when the transport connected.
         """
         extra = set_extra_info(extra, EXTRA_INFO_NAME_SOCKET, socket)
@@ -541,7 +541,7 @@ class SocketTransportLayer(SocketTransportLayerBase):
     _at_eof : `bool`
         Whether ``.write_eof`` was called.
     
-    _server : `None`, ``Server``
+    _server : ``None | Server``
         If the transport is server side, it's server is set as this attribute.
     """
     __slots__ = ('_at_eof', '_server')
@@ -562,7 +562,7 @@ class SocketTransportLayer(SocketTransportLayerBase):
             Asynchronous protocol implementation used by the transport.
         waiter : `None`, ``Future`
             Waiter, what's result is set, when the transport connected. Defaults to `None`.
-        server : `None`, ``Server``
+        server : ``None | Server``
             If the transport is server side, it's server is set as this attribute. Defaults to `None`.
         """
         self = SocketTransportLayerBase.__new__(cls, loop, extra, socket, protocol, waiter)
@@ -989,7 +989,7 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
         """
         if not isinstance(data, (bytes, bytearray, memoryview)):
             raise TypeError(
-                f'`data` can be `bytes-like`, got {data.__class__.__name__}; {reprlib.repr(data)}.'
+                f'`data` can be `bytes-like`, got {type(data).__name__}; {reprlib.repr(data)}.'
             )
         
         if not data:
@@ -997,9 +997,9 @@ class DatagramSocketTransportLayer(SocketTransportLayerBase):
         
         address = self._address
         if (address is not None):
-            if (maybe_address is not None) or (maybe_address != address):
+            if (maybe_address is not None) and (maybe_address != address):
                 raise ValueError(
-                    f'Invalid address: `address` should be `None`, got {maybe_address!r}; current={address!r}.'
+                    f'Invalid address: `address` should be `None`, got {maybe_address!r}; current = {address!r}.'
                 )
             
             maybe_address = address

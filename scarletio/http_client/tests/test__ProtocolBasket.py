@@ -509,6 +509,38 @@ async def test__ProtocolBasket__pop_available_protocol__alive_protocol():
         write_socket.close()
 
 
+async def test__ProtocolBasket__pop_available_protocol__used_protocol():
+    """
+    Tests whether ``ProtocolBasket.pop_available_protocol`` works as intended.
+    
+    Case: Used protocol.
+    
+    This function is a coroutine.
+    """
+    read_socket, write_socket = create_socket_pair()
+    now = 5000
+    
+    try:
+        connection_key = _get_default_connection_key()
+        loop = get_event_loop()
+        
+        protocol_basket = ProtocolBasket(connection_key)
+        
+        protocol = HttpReadWriteProtocol(loop)
+        transport = SocketTransportLayerBase(loop, None, write_socket, protocol, None)
+        protocol.connection_made(transport)
+        protocol.data_received(b'nyan')
+        
+        protocol_basket.add_available_protocol(protocol, now + 100.0, 15.0, 5)
+        
+        output = protocol_basket.pop_available_protocol(now)
+        vampytest.assert_instance(output, tuple)
+        vampytest.assert_eq(output, (None, 0))
+    
+    finally:
+        read_socket.close()
+        write_socket.close()
+
 
 async def test__ProtocolBasket__pop_available_protocol__pop_closest():
     """

@@ -1,6 +1,7 @@
 __all__ = ()
 
 from ..utils import RichAttributeErrorBaseType
+from ..web_common import HttpReadProtocol
 
 
 class ProtocolBasket(RichAttributeErrorBaseType):
@@ -142,7 +143,7 @@ class ProtocolBasket(RichAttributeErrorBaseType):
         
         Returns
         -------
-        protocol : `None | AbstractProtocolBase`
+        protocol : ``None | AbstractProtocolBase``
             Available protocol.
         
         performed_requests : `int`
@@ -168,7 +169,13 @@ class ProtocolBasket(RichAttributeErrorBaseType):
             if (protocol.get_transport() is None):
                 continue
             
-            if now > expiration:
+            # Check whether the protocol:
+            # - expired (15 seconds)
+            # - should be closed (the server wrote on it while it was unused)
+            if (
+                (now > expiration) or
+                (isinstance(protocol, HttpReadProtocol) and protocol.should_close())
+            ):
                 transport = protocol.get_transport()
                 protocol.close()
                 if self.connection_key.secure and (transport is not None):

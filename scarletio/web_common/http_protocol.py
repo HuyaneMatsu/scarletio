@@ -12,7 +12,10 @@ from ..utils import IgnoreCaseMultiValueDictionary, copy_docs
 from .compressors import COMPRESSION_ERRORS, get_decompressor_for
 from .exceptions import PayloadError, WebSocketProtocolError
 from .headers import CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TRANSFER_ENCODING, CONTENT_TYPE, METHOD_CONNECT
-from .helpers import HttpVersion11, parse_http_headers, parse_http_request, parse_http_response
+from .helpers import (
+    HttpVersion11, parse_http_headers, parse_http_request, parse_http_response,
+    should_request_method_have_empty_payload, should_status_code_have_empty_payload
+)
 from .http_message import RawRequestMessage, RawResponseMessage
 from .content_type import parse_content_type
 from .web_socket_frame import WebSocketFrame, apply_web_socket_mask
@@ -404,43 +407,49 @@ class HttpReadProtocol(ReadProtocolBase):
         """
         length = message.headers.get(CONTENT_LENGTH, None)
         if (length is not None):
-            if length.isdigit():
-                length = int(length)
-            else:
+            if not length.isdigit():
                 raise PayloadError(f'{CONTENT_LENGTH} must be a non negative int, got: {length!r}.')
+            
+            length = int(length)
         
         if (not message.upgraded):
-            if message.status == 204:
+            if should_status_code_have_empty_payload(message.status):
                 return None
             
             if message.chunked:
                 decompressor = get_decompressor_for(message.encoding)
                 if decompressor is None:
                     return self._read_chunked
-                else:
-                    return partial_func(self._read_chunked_encoded, decompressor)
+                
+                return partial_func(self._read_chunked_encoded, decompressor)
             
             if (length is not None) and (length > 0):
                 decompressor = get_decompressor_for(message.encoding)
                 if decompressor is None:
                     return partial_func(self._read_exactly, length, False)
-                else:
-                    return partial_func(self._read_exactly_encoded, length, decompressor)
+                
+                return partial_func(self._read_exactly_encoded, length, decompressor)
         
-        if isinstance(message, RawRequestMessage) and (message.method == METHOD_CONNECT):
-            message.upgraded = True
-            return self._read_until_eof
+        if isinstance(message, RawRequestMessage):
+            if should_request_method_have_empty_payload(message.method):
+                return None
+            
+            if (message.method == METHOD_CONNECT):
+                message.upgraded = True
+                return self._read_until_eof
+            
+            return None
         
-        if isinstance(message, RawResponseMessage) and message.status >= 199 and (length is None):
-            if message.status == 204:
+        if isinstance(message, RawResponseMessage) and (length is None):
+            if should_status_code_have_empty_payload(message.status):
                 return None
             
             if message.chunked:
                 decompressor = get_decompressor_for(message.encoding)
                 if decompressor is None:
                     return self._read_chunked
-                else:
-                    return partial_func(self._read_chunked_encoded, decompressor)
+                
+                return partial_func(self._read_chunked_encoded, decompressor)
             
             return self._read_until_eof
         
@@ -673,7 +682,7 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
         If cancelled or marked by done or any other methods, the payload reader will not be cancelled.
     _transport : `None | object`
         Asynchronous transport implementation. Is set meanwhile the protocol is alive.
-    _drain_waiter : `None`, ``Future``
+    _drain_waiter : ``None | Future``
         A future, what is used to block the writing task, till it's writen data is drained.
     """
     __slots__ = ()

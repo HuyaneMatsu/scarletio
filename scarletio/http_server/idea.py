@@ -151,7 +151,7 @@ class HTTPRequestHandler(HttpReadWriteProtocol):
         If cancelled or marked by done or any other methods, the payload reader will not be cancelled.
     _transport : `None | object`
         Asynchronous transport implementation. Is set meanwhile the protocol is alive.
-    _drain_waiter : `None`, ``Future``
+    _drain_waiter : ``None | Future``
         A future, what is used to block the writing task, till it's writen data is drained.
     handler_task : `None`, ``Task`` of ``.lifetime_handler``
         Handles the connected http request meanwhile it is alive.
@@ -285,12 +285,12 @@ class HTTPServer:
         Active request handlers of the server.
     loop : ``EventThread``
         The event loop of the http server.
-    server : `None`, ``Server``
+    server : ``None | Server``
         Asynchronous server instance. Set meanwhile the web socket server is running.
     """
     __slots__ = ('close_connection_task', 'handlers', 'loop', 'server')
     
-    async def __new__(cls, loop, host, port, *, ssl = None, **server_keyword_parameters):
+    async def __new__(cls, loop, host, port, *, ssl_context = None, **server_keyword_parameters):
         """
         Creates a new ``HTTPServer`` with the given parameters.
         
@@ -304,7 +304,7 @@ class HTTPServer:
             To what network interfaces should the server be bound.
         port : `None | int`
             The port to use by the `host`(s).
-        ssl : `None`, ``SSLContext`` = `None`, Optional (Keyword only)
+        ssl_context : `None | SSLContext` = `None`, Optional (Keyword only)
             Whether and what ssl is enabled for the connections.
         **server_keyword_parameters : Keyword parameters
             Additional keyword parameters to create the web socket server with.
@@ -332,7 +332,9 @@ class HTTPServer:
         self.server = None
         
         factory = functools.partial(HTTPRequestHandler, self,)
-        server = await loop.create_server(factory, host, port, ssl = ssl, **server_keyword_parameters)
+        server = await loop.create_server_to(
+            factory, host, port, ssl_context = ssl_context, **server_keyword_parameters
+        )
         
         self.server = server
         await server.start()
