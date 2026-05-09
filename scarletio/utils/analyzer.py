@@ -301,7 +301,7 @@ class CallableAnalyzer:
         """Returns the callable analyzer's representation."""
         repr_parts = []
         repr_parts.append('<')
-        repr_parts.append(self.__class__.__name__)
+        repr_parts.append(type(self).__name__)
         
         if self.is_async():
             repr_parts.append(' async')
@@ -413,7 +413,7 @@ class CallableAnalyzer:
                     real_function = callable_.__new__
                     if not callable(real_function):
                         raise TypeError(
-                            f'`{callable_!r}.__new__` should be callable, got {real_function.__class__.__name__}; '
+                            f'`{callable_!r}.__new__` should be callable, got {type(real_function).__name__}; '
                             f'{real_function!r}.'
                         )
                     
@@ -485,7 +485,7 @@ class CallableAnalyzer:
                 break
             
             raise TypeError(
-                f'Expected `FunctionType`, `MethodType`, `callable`, got {callable_.__class__.__name__}; {callable_!r}.'
+                f'Expected `FunctionType`, `MethodType`, `callable`, got {type(callable_).__name__}; {callable_!r}.'
             )
         
         if as_method and type(callable_) is FunctionType:
@@ -493,7 +493,7 @@ class CallableAnalyzer:
         
         if (real_function is not None) and not hasattr(real_function, '__code__'):
             raise TypeError(
-                f'Expected `function-like`, got {real_function.__class__.__name__}; {real_function!r}.'
+                f'Expected `function-like`, got {type(real_function).__name__}; {real_function!r}.'
             )
         
         parameters = []

@@ -61,19 +61,19 @@ class TaskLocal:
         task = self._task
         if task is not None:
             raise RuntimeError(
-                f'`{self.__class__.__name__}` is already entered inside of {task!r}.'
+                f'`{type(self).__name__}` is already entered inside of {task!r}.'
             )
         
         thread = current_thread()
         if not isinstance(thread, EventThread):
             raise RuntimeError(
-                f'`{self.__class__.__name__}` used outside of `{EventThread.__name__}`, at {thread!r}.'
+                f'`{type(self).__name__}` used outside of `{EventThread.__name__}`, at {thread!r}.'
             )
         
         task = thread.current_task
         if task is None:
             raise RuntimeError(
-                f'`{self.__class__.__name__}` used outside of a `{Task.__name__}`.'
+                f'`{type(self).__name__}` used outside of a `{Task.__name__}`.'
             )
         
         self._task = task
@@ -225,7 +225,7 @@ class HTTPRequestHandler(HttpReadWriteProtocol):
                 err,
                 [
                     'Unhandled exception occurred at `',
-                    self.__class__.__name__,
+                    type(self).__name__,
                     '._try_receive_request`, when reading request.:\n'
                 ],
                 loop = self._loop,
@@ -258,7 +258,7 @@ class HTTPRequestHandler(HttpReadWriteProtocol):
                 err2,
                 [
                     'Unhandled exception occurred at `',
-                    self.__class__.__name__,
+                    type(self).__name__,
                     '._try_receive_request`, when handling an other exception;',
                     repr(err2),
                     ':',
@@ -484,7 +484,7 @@ class Route:
     
     def __repr__(self):
         """Returns the routes representation."""
-        result = ['<', self.__class__.__name__]
+        result = ['<', type(self).__name__]
         
         parameters = self.parameters
         if (parameters is not None):
@@ -1441,7 +1441,7 @@ def _validate_subdomain(subdomain):
             subdomain = str(subdomain)
         else:
             raise TypeError(
-                f'`subdomain` can be `None`, `str`, got {subdomain.__class__.__name__}; {subdomain!r}.'
+                f'`subdomain` can be `None`, `str`, got {type(subdomain).__name__}; {subdomain!r}.'
             )
         
         if not subdomain:
@@ -1483,7 +1483,7 @@ def _validate_parameters(parameters, parameters_name):
         else:
             raise TypeError(
                 f'`{parameters_name}` can be `dict`, `list`, `set`, `tuple`, got '
-                f'{parameters.__class__.__name__}; {parameters!r}.')
+                f'{type(parameters).__name__}; {parameters!r}.')
         
         parameters_validated = []
         
@@ -1491,7 +1491,7 @@ def _validate_parameters(parameters, parameters_name):
             if not isinstance(item, tuple):
                 raise TypeError(
                     f'`{parameters_name}[{index!r}]` element can be `tuple`, got '
-                    f'{item.__class__.__name__}; {item!r}; {parameters_name}={parameters!r}.'
+                    f'{type(item).__name__}; {item!r}; {parameters_name}={parameters!r}.'
                 )
             
             item_length = len(item)
@@ -1510,7 +1510,7 @@ def _validate_parameters(parameters, parameters_name):
             else:
                 raise TypeError(
                     f'`{parameters_name}[{index!r}][0]` can be `str`, got '
-                    f'{parameter_name.__class__.__name__}; {parameter_name!r}; '
+                    f'{type(parameter_name).__name__}; {parameter_name!r}; '
                     f'element={item}; {parameters_name}={parameters!r}.'
                 )
             
@@ -1571,7 +1571,7 @@ def _validate_method(method):
             method = str(method)
         else:
             raise TypeError(
-                f'`method` can be `None`, `str`, got {method.__class__.__name__}; {method!r}.'
+                f'`method` can be `None`, `str`, got {type(method).__name__}; {method!r}.'
             )
         
         method = method.upper()
@@ -1612,7 +1612,7 @@ def _validate_methods(methods):
         if not isinstance(methods, (list, tuple, set)):
             raise TypeError(
                 f'`methods` can be `None`, `list`, `tuple`, `set`, got '
-                f'{methods.__class__.__name__}; {methods!r}.'
+                f'{type(methods).__name__}; {methods!r}.'
             )
         
         for index, method in enumerate(methods):
@@ -1623,7 +1623,7 @@ def _validate_methods(methods):
             else:
                 raise TypeError(
                     f'`methods[{index}]` can be `None`, `str`, got '
-                    f'{method.__class__.__name__}; {method!r}; methods={methods!r}.'
+                    f'{type(method).__name__}; {method!r}; methods={methods!r}.'
                 )
             
             method = method.upper()
@@ -1733,7 +1733,7 @@ def _validate_import_name(import_name):
         import_name = str(import_name)
     else:
         raise TypeError(
-            f'`import_name` can be `str`, got {import_name.__class__.__name__}; {import_name!r}.'
+            f'`import_name` can be `str`, got {type(import_name).__name__}; {import_name!r}.'
         )
     
     if not import_name:
@@ -1770,7 +1770,7 @@ def _validate_template_directory(template_directory):
         else:
             raise TypeError(
                 f'`template_directory` can be `str`, got '
-                f'{template_directory.__class__.__name__}; {template_directory!r}.'
+                f'{type(template_directory).__name__}; {template_directory!r}.'
             )
         
         if not template_directory:
@@ -1839,7 +1839,7 @@ def _validate_root_path(root_path, import_name):
             root_path = str(root_path)
         else:
             raise TypeError(
-                f'`root_path` can be `None`, `str`, got {root_path.__class__.__name__}; {root_path!r}.'
+                f'`root_path` can be `None`, `str`, got {type(root_path).__name__}; {root_path!r}.'
             )
         
         if not root_path:
@@ -1878,7 +1878,7 @@ def _validate_static_directory(static_directory):
             static_directory = str(static_directory)
         else:
             raise TypeError(
-                f'`static_directory` can be `None`, `str`, got {static_directory.__class__.__name__}; {static_directory!r}.'
+                f'`static_directory` can be `None`, `str`, got {type(static_directory).__name__}; {static_directory!r}.'
             )
         
         if not static_directory:
@@ -1916,7 +1916,7 @@ def _validate_static_url_path(static_url_path):
         else:
             raise TypeError(
                 f'`static_url_path` can be `None`, `str`, got '
-                f'{static_url_path.__class__.__name__}; {static_url_path!r}.'
+                f'{type(static_url_path).__name__}; {static_url_path!r}.'
             )
     
     return static_url_path
@@ -1951,7 +1951,7 @@ def _validate_url_prefix(url_prefix):
             url_prefix = str(url_prefix)
         else:
             raise TypeError(
-                f'`url_prefix` can be `None`, `str`, got {url_prefix.__class__.__name__}; {url_prefix!r}.'
+                f'`url_prefix` can be `None`, `str`, got {type(url_prefix).__name__}; {url_prefix!r}.'
             )
         
         url_prefix_processed = tuple(maybe_typed_rule_part(rule_part) for rule_part in URL(url_prefix).path)
@@ -2201,7 +2201,7 @@ class RuleDirectory:
     
     def __repr__(self):
         """Returns the rule directory's representation."""
-        return f'<{self.__class__.__name__} rules={self.rules!r}>'
+        return f'<{type(self).__name__} rules={self.rules!r}>'
     
     def iter_rules(self):
         """
@@ -2346,7 +2346,7 @@ class Rule:
         
         if excepted_parameter_names:
             raise RuntimeError(
-                f'`{self.__class__.__name__}`: {self!r} might be called without all of it\'s expected '
+                f'`{type(self).__name__}`: {self!r} might be called without all of it\'s expected '
                 f'parameters. The following might be missing: {", ".join(excepted_parameter_names)}'
             )
     
@@ -2405,7 +2405,7 @@ class Rule:
     
     def __repr__(self):
         """Returns the rule's representation."""
-        result = ['<', self.__class__.__name__, ' endpoint = ', repr(self.endpoint)]
+        result = ['<', type(self).__name__, ' endpoint = ', repr(self.endpoint)]
         parameters = self.parameters
         if (parameters is not None):
             result.append(', parameters = ')
@@ -2580,7 +2580,7 @@ def _analyze_handler(handler, handler_name, expected_parameter_count):
     analyzed = CallableAnalyzer(handler)
     if not analyzed.is_async():
         raise TypeError(
-            f'`{handler_name}` can be `async-callable`, got {handler.__class__.__name__}; '
+            f'`{handler_name}` can be `async-callable`, got {type(handler).__name__}; '
             f'{handler!r}.'
         )
     
@@ -2895,7 +2895,7 @@ class AppBase:
             analyzed = CallableAnalyzer(view_func)
             if not analyzed.is_async():
                 raise TypeError(
-                    f'`view_func` can be `async-callable`, got {view_func.__class__.__name__}; '
+                    f'`view_func` can be `async-callable`, got {type(view_func).__name__}; '
                     f'{view_func!r}.'
                 )
             
@@ -2956,7 +2956,7 @@ class AppBase:
             if not isinstance(provide_automatic_options, bool):
                 raise TypeError(
                     f'`provide_automatic_options` can be `None`, `bool`, got '
-                    f'{provide_automatic_options.__class__.__name__}; {provide_automatic_options!r}.'
+                    f'{type(provide_automatic_options).__name__}; {provide_automatic_options!r}.'
                 )
         
         if endpoint is None:
@@ -2966,7 +2966,7 @@ class AppBase:
                 try:
                     endpoint = view_func.__name__
                 except AttributeError:
-                    endpoint = view_func.__class__.__name__
+                    endpoint = type(view_func).__name__
         
         if type(endpoint) is str:
             pass
@@ -2974,7 +2974,7 @@ class AppBase:
             endpoint = str(endpoint)
         else:
             raise TypeError(
-                f'`endpoint` can be `str`, got {endpoint.__class__.__name__}; {endpoint!r}.'
+                f'`endpoint` can be `str`, got {type(endpoint).__name__}; {endpoint!r}.'
             )
         
         if type(rule) is str:
@@ -2983,7 +2983,7 @@ class AppBase:
             rule = str(rule)
         else:
             raise TypeError(
-                f'`rule` can be `str`, got {rule.__class__.__name__}; {rule!r}.'
+                f'`rule` can be `str`, got {type(rule).__name__}; {rule!r}.'
             )
         
         rule_processed = tuple(maybe_typed_rule_part(rule_part) for rule_part in URL(rule).parts)
@@ -3119,7 +3119,7 @@ class AppBase:
             error_code = int(error_code)
         else:
             raise TypeError(
-                f'`error_code` can be `int`, got {error_code.__class__.__name__}; {error_code!r}.'
+                f'`error_code` can be `int`, got {type(error_code).__name__}; {error_code!r}.'
             )
         
         return _ErrorHandlerAdder(self, error_code)
@@ -3322,7 +3322,7 @@ class BlueprintState:
         if not isinstance(blueprint, Blueprint):
             raise TypeError(
                 f'`blueprint` can be `{Blueprint.__name__}`, got '
-                f'{blueprint.__class__.__name__}; {blueprint!r}.'
+                f'{type(blueprint).__name__}; {blueprint!r}.'
             )
         
         if options is None:

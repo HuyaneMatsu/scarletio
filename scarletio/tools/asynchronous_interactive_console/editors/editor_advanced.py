@@ -848,7 +848,7 @@ class InputStream:
     
     def __repr__(self):
         """Returns the input stream's representation."""
-        repr_parts = ['<', self.__class__.__name__]
+        repr_parts = ['<', type(self).__name__]
         
         repr_parts.append(' index = ')
         repr_parts.append(repr(self.index))
@@ -991,7 +991,7 @@ class InputTokenizer:
     
     def __repr__(self):
         """Returns the input tokenizer's representation."""
-        return ''.join(['<', self.__class__.__name__, ' stream = ', repr(self.stream), '>'])
+        return ''.join(['<', type(self).__name__, ' stream = ', repr(self.stream), '>'])
     
     
     def next(self):

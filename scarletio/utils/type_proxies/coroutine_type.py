@@ -41,7 +41,7 @@ class CoroutineTypeProxy(ProxyBase):
         
         raise TypeError(
             f'`coroutine` can be either a coroutine or `{cls.__name__}`, '
-            f'got {coroutine.__class__.__name__}.'
+            f'got {type(coroutine).__name__}.'
         )
     
     

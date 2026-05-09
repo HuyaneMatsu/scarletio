@@ -58,7 +58,7 @@ class DictionaryKeyIteratorBase:
     @has_docs
     def __repr__(self):
         """Returns the dictionary key iterator's representation."""
-        return f'<{self.__class__.__name__} to {self._parent!r}>'
+        return f'<{type(self).__name__} to {self._parent!r}>'
 
 
     @has_docs
@@ -125,7 +125,7 @@ class DictionaryValueIteratorBase:
     @has_docs
     def __repr__(self):
         """Returns the dictionary value iterator's representation."""
-        return f'<{self.__class__.__name__} to {self._parent!r}>'
+        return f'<{type(self).__name__} to {self._parent!r}>'
     
     
     @has_docs
@@ -223,7 +223,7 @@ class DictionaryItemIteratorBase:
     @has_docs
     def __repr__(self):
         """Returns the dictionary item iterator's representation."""
-        return f'<{self.__class__.__name__} to {self._parent!r}>'
+        return f'<{type(self).__name__} to {self._parent!r}>'
     
     
     @has_docs

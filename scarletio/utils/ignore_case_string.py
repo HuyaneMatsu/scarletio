@@ -73,7 +73,7 @@ class IgnoreCaseString(str):
     @has_docs
     def __eq__(self, other):
         """Returns whether the two strings are equal."""
-        other_type = other.__class__
+        other_type = type(other)
         if other_type is type(self):
             other_value = other._case_fold
         elif other_type is str:

@@ -662,7 +662,7 @@ class AsyncIO:
             raise ValueError(IO_CLOSED_OR_DETACHED)
         
         io = self._io
-        return await executor.execute(alchemy_incendiary(io.__class__.readlines, (io, hint,),))
+        return await executor.execute(alchemy_incendiary(type(io).readlines, (io, hint,),))
     
     
     async def seek(self, offset, whence = os.SEEK_SET):
@@ -706,7 +706,7 @@ class AsyncIO:
             raise ValueError(IO_CLOSED_OR_DETACHED)
         
         io = self._io
-        return await executor.execute(alchemy_incendiary(io.__class__.seek, (io, offset, whence),))
+        return await executor.execute(alchemy_incendiary(type(io).seek, (io, offset, whence),))
     
     
     def seekable(self):
@@ -775,7 +775,7 @@ class AsyncIO:
             raise ValueError(IO_CLOSED_OR_DETACHED)
         
         io = self._io
-        return await executor.execute(alchemy_incendiary(io.__class__.truncate, (io, size,),))
+        return await executor.execute(alchemy_incendiary(type(io).truncate, (io, size,),))
     
     
     def writable(self):
@@ -820,7 +820,7 @@ class AsyncIO:
             raise ValueError(IO_CLOSED_OR_DETACHED)
         
         io = self._io
-        return await executor.execute(alchemy_incendiary(io.__class__.write, (io, b,),))
+        return await executor.execute(alchemy_incendiary(type(io).write, (io, b,),))
     
     
     async def writelines(self, lines):
@@ -847,14 +847,14 @@ class AsyncIO:
             raise ValueError(IO_CLOSED_OR_DETACHED)
         
         io = self._io
-        return await executor.execute(alchemy_incendiary(io.__class__.writelines, (io, lines,),))
+        return await executor.execute(alchemy_incendiary(type(io).writelines, (io, lines,),))
     
     
     def __repr__(self):
         """Returns the io's representation"""
         repr_parts = [
             '<',
-            self.__class__.__name__,
+            type(self).__name__,
             ' io = ',
             repr(self._io),
         ]
@@ -1114,7 +1114,7 @@ class ReuAsyncIO(AsyncIO):
         if executor is None:
             raise ValueError(IO_CLOSED_OR_DETACHED)
         
-        func = self._io.__class__.read
+        func = type(self._io).read
         if self._should_seek:
             task = alchemy_incendiary(self._seek_and_call, (self, func, size,),)
         else:
@@ -1153,7 +1153,7 @@ class ReuAsyncIO(AsyncIO):
         if executor is None:
             raise ValueError(IO_CLOSED_OR_DETACHED)
         
-        func = self._io.__class__.read1
+        func = type(self._io).read1
         if self._should_seek:
             task = alchemy_incendiary(self._seek_and_call, (self, func, *positional_parameters,),)
         else:
@@ -1184,7 +1184,7 @@ class ReuAsyncIO(AsyncIO):
         if executor is None:
             raise ValueError(IO_CLOSED_OR_DETACHED)
         
-        func = self._io.__class__.readinto
+        func = type(self._io).readinto
         if self._should_seek:
             task = alchemy_incendiary(self._seek_and_call, (self, func, b,),)
         else:
@@ -1217,7 +1217,7 @@ class ReuAsyncIO(AsyncIO):
         if executor is None:
             raise ValueError(IO_CLOSED_OR_DETACHED)
         
-        func = self._io.__class__.readinto1
+        func = type(self._io).readinto1
         if self._should_seek:
             task = alchemy_incendiary(self._seek_and_call, (self, func, b,),)
         else:
@@ -1256,7 +1256,7 @@ class ReuAsyncIO(AsyncIO):
         if executor is None:
             raise ValueError(IO_CLOSED_OR_DETACHED)
         
-        func = self._io.__class__.readline
+        func = type(self._io).readline
         if self._should_seek:
             task = alchemy_incendiary(self._seek_and_call, (self, func, size,),)
         else:
@@ -1294,7 +1294,7 @@ class ReuAsyncIO(AsyncIO):
         if executor is None:
             raise ValueError(IO_CLOSED_OR_DETACHED)
         
-        func = self._io.__class__.readlines
+        func = type(self._io).readlines
         if self._should_seek:
             task = alchemy_incendiary(self._seek_and_call, (self, func, hint,),)
         else:
@@ -1343,7 +1343,7 @@ class ReuAsyncIO(AsyncIO):
         if executor is None:
             raise ValueError(IO_CLOSED_OR_DETACHED)
         
-        func = self._io.__class__.seek
+        func = type(self._io).seek
         if self._should_seek:
             task = alchemy_incendiary(self._seek_and_call, (self, func, offset, whence,),)
         else:
@@ -1375,7 +1375,7 @@ class ReuAsyncIO(AsyncIO):
         
         if self._should_seek:
             io = self._io
-            await executor.execute(alchemy_incendiary(io.__class__.seek, (io, 0,),))
+            await executor.execute(alchemy_incendiary(type(io).seek, (io, 0,),))
             self._should_seek = False
             return 0
         

@@ -238,7 +238,7 @@ class ScarletExecutor:
         else:
             if not isinstance(limit, int):
                 raise TypeError(
-                    f'`limit` can be `int`, got {limit.__class__.__name__}; {limit!r}.'
+                    f'`limit` can be `int`, got {type(limit).__name__}; {limit!r}.'
                 )
             
             if limit < 1:
@@ -272,7 +272,7 @@ class ScarletExecutor:
         loop = current_thread()
         if not isinstance(loop, EventThread):
             raise RuntimeError(
-                f'`{self.__class__.__name__}` used at non `{EventThread.__name__}`, at {loop!r}.'
+                f'`{type(self).__name__}` used at non `{EventThread.__name__}`, at {loop!r}.'
             )
         
         self._loop = loop
@@ -300,7 +300,7 @@ class ScarletExecutor:
         callback = self._callback
         if callback is None:
             raise RuntimeError(
-                f'Calling `{self.__class__.__name__}.add` when `{self!r}` is not entered.'
+                f'Calling `{type(self).__name__}.add` when `{self!r}` is not entered.'
             )
         
         future = self._loop.ensure_future(future)
@@ -408,7 +408,7 @@ class ScarletExecutor:
         """Returns the scarlet executor's representation."""
         repr_parts = [
             '<',
-            self.__class__.__name__,
+            type(self).__name__,
             ' limit = ',
             repr(self._limit),
         ]

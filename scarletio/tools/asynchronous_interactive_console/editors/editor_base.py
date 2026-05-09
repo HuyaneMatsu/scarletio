@@ -21,7 +21,7 @@ def _validate_buffer(buffer):
     """
     if (buffer is not None) and (not isinstance(buffer, list)):
         raise TypeError(
-            f'buffer can be `None`, `list`, got {buffer.__class__.__name__}; {buffer!r}.'
+            f'buffer can be `None`, `list`, got {type(buffer).__name__}; {buffer!r}.'
     )
     
     if buffer is None:
@@ -95,7 +95,7 @@ class EditorBase(RichAttributeErrorBaseType):
     
     def __repr__(self):
         """Returns the editor's representation."""
-        return f'<{self.__class__.__name__}>'
+        return f'<{type(self).__name__}>'
     
     
     def __call__(self):

@@ -1465,7 +1465,7 @@ class Condition:
     
     
     def __repr__(self):
-        repr_parts = ['<', self.__class__.__name__, ' ']
+        repr_parts = ['<', type(self).__name__, ' ']
         
         if not self._lock.is_locked():
             repr_parts.append('un')
@@ -1604,7 +1604,7 @@ class Semaphore:
     
     
     def __repr__(self):
-        repr_parts = ['<', self.__class__.__name__]
+        repr_parts = ['<', type(self).__name__]
         
         if self.locked():
             repr_parts.append(' locked')
@@ -2590,7 +2590,7 @@ class StreamWriter:
     def __repr__(self):
         result = [
             '<',
-            self.__class__.__name__,
+            type(self).__name__,
             'transport = ',
             repr(self._transport)
         ]
@@ -2692,7 +2692,7 @@ class StreamReader:
     def __repr__(self):
         result = [
             '<',
-            self.__class__.__name__,
+            type(self).__name__,
         ]
         
         buffer = self._buffer
@@ -3055,7 +3055,7 @@ class Task(ScarletTask, metaclass = TaskMeta, ignore = True):
         else:
             if not isinstance(loop, EventThread):
                 raise TypeError(
-                    f'`loop` can be `{EventThread.__name__}`, got {loop.__class__.__name__}; {loop!r}.'
+                    f'`loop` can be `{EventThread.__name__}`, got {type(loop).__name__}; {loop!r}.'
                 )
         
         task = loop.current_task
@@ -3665,7 +3665,7 @@ class TaskWrapper:
     
     def __repr__(self):
         return (
-            f'<{self.__class__.__name__} '
+            f'<{type(self).__name__} '
                 f'task={object.__getattribute__(self, "_task")!r}, '
                 f'additional_attributes={object.__getattribute__(self, "_additional_attributes")!r}'
             f'>'

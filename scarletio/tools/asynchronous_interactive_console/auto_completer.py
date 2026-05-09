@@ -50,7 +50,7 @@ class AutoCompleter:
     
     def __repr__(self):
         """Returns the auto completer's representation."""
-        repr_parts = ['<', self.__class__.__name__]
+        repr_parts = ['<', type(self).__name__]
         
         repr_parts.append(' variables: ')
         repr_parts.append(repr(len(self._variables)))

@@ -72,13 +72,13 @@ class enter_executor:
         thread = current_thread()
         if not isinstance(thread, EventThread):
             raise RuntimeError(
-                f'`{self.__class__.__name__}` entered outside of `{EventThread.__name__}`, at {thread!r}.'
+                f'`{type(self).__name__}` entered outside of `{EventThread.__name__}`, at {thread!r}.'
             )
         
         task = thread.current_task
         if task is None:
             raise RuntimeError(
-                f'`{self.__class__.__name__}` entered outside of a `{Task.__name__}`.'
+                f'`{type(self).__name__}` entered outside of a `{Task.__name__}`.'
             )
         
         self._task = task

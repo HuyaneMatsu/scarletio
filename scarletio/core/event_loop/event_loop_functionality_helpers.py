@@ -161,7 +161,7 @@ class EventThreadRunDescriptor:
         if not obj._is_stopped:
             return obj.caller
         
-        raise RuntimeError(f'The {obj.__class__.__name__} is already stopped.')
+        raise RuntimeError(f'The {type(obj).__name__} is already stopped.')
     
     
     def __set__(self, obj, value):

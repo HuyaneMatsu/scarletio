@@ -127,7 +127,7 @@ class Lock:
         """Returns the lock's representation."""
         repr_parts = [
             '<',
-            self.__class__.__name__,
+            type(self).__name__,
             ' locked = ',
         ]
         
@@ -176,7 +176,7 @@ class ScarletLock(Lock):
         ValueError
             `size` is given as non negative `int`.
         """
-        size_type = size.__class__
+        size_type = type(size)
         if size_type is int:
             pass
         elif issubclass(size_type, int):
@@ -286,7 +286,7 @@ class ScarletLock(Lock):
         """Returns the scarlet lock's representation."""
         repr_parts = [
             '<',
-            self.__class__.__name__,
+            type(self).__name__,
             ' size = ',
         ]
         

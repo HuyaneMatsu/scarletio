@@ -163,7 +163,7 @@ class HighlightFormatterContext:
         """
         if (html_class is not None) and (not isinstance(html_class, str)):
             raise TypeError(
-                f'`html_class` can be `None`, `str`, got {html_class.__class__.__name__}; {html_class!r}.'
+                f'`html_class` can be `None`, `str`, got {type(html_class).__name__}; {html_class!r}.'
             )
         
         warn(

@@ -31,7 +31,7 @@ def added_json_serializer(obj):
     if isinstance(obj, Enum):
         return obj.value
     
-    raise TypeError(f'Object of type {obj.__class__.__name__!r} is not JSON serializable, got {obj!r}')
+    raise TypeError(f'Object of type {type(obj).__name__!r} is not JSON serializable, got {obj!r}')
 
 
 @has_docs

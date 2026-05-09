@@ -350,7 +350,7 @@ class HybridValueDictionary(dict):
     @has_docs
     def __repr__(self):
         """Returns the representation of the hybrid value dictionary."""
-        result = [self.__class__.__name__, '({']
+        result = [type(self).__name__, '({']
         if len(self):
             limit = self.MAX_REPR_ELEMENT_LIMIT
             collected = 0
@@ -629,7 +629,7 @@ class HybridValueDictionary(dict):
             The the given `iterable` sot supports neither `.items` or (`.keys` and `.__getitem__`) and one of it's
             element's length is not `2`.
         """
-        iterable_type = iterable.__class__
+        iterable_type = type(iterable)
         if hasattr(iterable_type, 'items'):
             for key, value in iterable.items():
                 self[key] = value

@@ -388,14 +388,18 @@ class ExecutorThread(Thread):
                 
                 try:
                     result = func()
-                except BaseException as err:
-                    if isinstance(err, StopIteration):
-                        exception = RuntimeError(f'{type(err).__name__} cannot be raised to a Future.')
-                        exception.__cause__ = err
-                        err = exception
-                        exception = None
+                except BaseException as exception:
+                    if isinstance(exception, StopIteration):
+                        new_exception = RuntimeError(f'{type(exception).__name__} cannot be raised to a Future.')
+                        new_exception.__cause__ = exception
+                        exception = new_exception
+                        new_exception = None
                     
-                    future._loop.call_soon_thread_safe(type(future).set_exception_if_pending, future, err)
+                    try:
+                        future._loop.call_soon_thread_safe(type(future).set_exception_if_pending, future, exception)
+                    finally:
+                        exception = None
+                
                 else:
                     future._loop.call_soon_thread_safe(type(future).set_result_if_pending, future, result)
                     result = None
@@ -405,14 +409,14 @@ class ExecutorThread(Thread):
                     future = None
                     func = None
             
-            except BaseException as err:
+            except BaseException as exception:
                 extracted = [
                     type(self).__name__,
                     ' exception occurred\n',
                     repr(self),
                     '\n',
                 ]
-                render_exception_into(err, extend = extracted)
+                render_exception_into(exception, extend = extracted)
                 sys.stderr.write(''.join(extracted))
     
     
@@ -723,7 +727,7 @@ class _ClaimEndedCallback:
         executor._shrink_queue()
         if not executor.queue:
             parent = self.parent
-            loop.call_soon_thread_safe(parent.__class__._claim_ended, parent, executor)
+            loop.call_soon_thread_safe(type(parent)._claim_ended, parent, executor)
     
     def __eq__(self, other):
         """Returns whether the two claim ended callbacks are the same."""

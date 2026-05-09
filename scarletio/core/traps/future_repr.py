@@ -34,7 +34,7 @@ def get_exception_short_representation(exception):
     """
     exception_representation = repr(exception)
     if (len(exception_representation) > EXCEPTION_REPR_LENGTH_MAX) or ('\n' in exception_representation):
-        exception_representation = f'<{exception.__class__.__name__} ...>'
+        exception_representation = f'<{type(exception).__name__} ...>'
     
     return exception_representation
 
@@ -226,7 +226,7 @@ def render_waits_into(into, field_added, future):
         
         if isinstance(future, Task):
             into.append('<')
-            into.append(future.__class__.__name__)
+            into.append(type(future).__name__)
             into.append(' coroutine = ')
             into.append(future.qualname)
             into.append(', ...>')
@@ -261,7 +261,7 @@ def render_future_into(into, field_added, future):
         field_added = True
     
     into.append(' future = <')
-    into.append(future.__class__.__name__)
+    into.append(type(future).__name__)
     into.append(' ...>')
     
     return into, field_added

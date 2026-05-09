@@ -92,7 +92,7 @@ class Event:
         """Returns the event's representation."""
         repr_parts = [
             '<',
-            self.__class__.__name__,
+            type(self).__name__,
             ' ',
         ]
         

@@ -243,7 +243,7 @@ class AsyncProcess:
         """Returns the async process's representation."""
         repr_parts = [
             '<',
-            self.__class__.__name__,
+            type(self).__name__,
         ]
         
         if self._closed:
@@ -433,7 +433,7 @@ class AsyncProcess:
         if (pending_calls is None):
             self._do_pipe_connection_lost(file_descriptor, exception)
         else:
-            pending_calls.append((self.__class__._do_pipe_connection_lost, (file_descriptor, exception)))
+            pending_calls.append((type(self)._do_pipe_connection_lost, (file_descriptor, exception)))
         
         self._try_finish()
     
@@ -521,7 +521,7 @@ class AsyncProcess:
         if (pending_calls is None):
             self._do_pipe_data_received(file_descriptor, data)
         else:
-            pending_calls.append((self.__class__._do_pipe_data_received, (file_descriptor, data)))
+            pending_calls.append((type(self)._do_pipe_data_received, (file_descriptor, data)))
     
     
     def _do_pipe_data_received(self, file_descriptor, data):
@@ -669,7 +669,7 @@ class AsyncProcess:
         if (pending_calls is None):
             self._do_connection_lost(None)
         else:
-            pending_calls.append((self.__class__._do_connection_lost, (self, None,)))
+            pending_calls.append((type(self)._do_connection_lost, (self, None,)))
     
     
     async def _feed_stdin(self, input_value):

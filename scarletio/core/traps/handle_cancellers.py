@@ -56,7 +56,7 @@ class _HandleCancellerBase:
     
     def __repr__(self):
         """Returns the handler canceller's representation."""
-        repr_parts = ['<', self.__class__.__name__]
+        repr_parts = ['<', type(self).__name__]
         
         handle = self._handle
         if handle is None:

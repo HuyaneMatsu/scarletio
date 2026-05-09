@@ -420,7 +420,7 @@ def _iter_options__render_waits_into():
             False,
             task,
             (
-                f' waits = <{task.__class__.__name__} coroutine = {task.qualname}, ...>',
+                f' waits = <{type(task).__name__} coroutine = {task.qualname}, ...>',
                 True,
             ),
         )
@@ -429,7 +429,7 @@ def _iter_options__render_waits_into():
             True,
             task,
             (
-                f', waits = <{task.__class__.__name__} coroutine = {task.qualname}, ...>',
+                f', waits = <{type(task).__name__} coroutine = {task.qualname}, ...>',
                 True,
             ),
         )
@@ -467,7 +467,7 @@ def _iter_options__render_future_into():
             False,
             future,
             (
-                f' future = <{future.__class__.__name__} ...>',
+                f' future = <{type(future).__name__} ...>',
                 True,
             ),
         )
@@ -476,7 +476,7 @@ def _iter_options__render_future_into():
             True,
             future,
             (
-                f', future = <{future.__class__.__name__} ...>',
+                f', future = <{type(future).__name__} ...>',
                 True,
             ),
         )
@@ -487,7 +487,7 @@ def _iter_options__render_future_into():
             False,
             task,
             (
-                f' future = <{task.__class__.__name__} ...>',
+                f' future = <{type(task).__name__} ...>',
                 True,
             ),
         )
@@ -496,7 +496,7 @@ def _iter_options__render_future_into():
             True,
             task,
             (
-                f', future = <{task.__class__.__name__} ...>',
+                f', future = <{type(task).__name__} ...>',
                 True,
             ),
         )

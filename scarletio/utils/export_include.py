@@ -105,7 +105,7 @@ def export(obj, obj_name = None):
         try:
             obj_name = obj.__name__
         except AttributeError:
-            obj_name = obj.__class__.__name__
+            obj_name = type(obj).__name__
     
     if isinstance(obj, ModuleType):
         obj_name = obj_name[obj_name.rfind('.') + 1:]

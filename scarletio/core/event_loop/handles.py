@@ -78,7 +78,7 @@ class Handle:
         """
         repr_parts = [
             '<',
-            self.__class__.__name__,
+            type(self).__name__,
         ]
         
         if self.cancelled:
@@ -149,7 +149,7 @@ class Handle:
                 err,
                 [
                     'Exception occurred at ',
-                    self.__class__.__name__,
+                    type(self).__name__,
                     '._run\nAt running ',
                     repr(self.func),
                     '\n',
@@ -216,7 +216,7 @@ class TimerHandle(Handle):
         """Returns the timer handle's representation."""
         repr_parts = [
             '<',
-            self.__class__.__name__,
+            type(self).__name__,
         ]
         
         if self.cancelled:

@@ -32,7 +32,7 @@ class History:
     
     def __repr__(self):
         """Returns representation of the history."""    
-        repr_parts = ['<', self.__class__.__name__]
+        repr_parts = ['<', type(self).__name__]
         
         repr_parts.append(' cache: ')
         repr_parts.append(repr(len(self._line_cache)))

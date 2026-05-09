@@ -84,7 +84,7 @@ class CyclerCallable:
     
     def __repr__(self):
         """Returns the cycler callable's representation."""
-        return f'{self.__class__.__name__}(func={self.func!r}, priority={self.priority!r})'
+        return f'{type(self).__name__}(func = {self.func!r}, priority = {self.priority!r})'
     
     def __gt__(self, other):
         """Returns whether the priority of this cycler callable is greater than the other's."""
@@ -197,7 +197,7 @@ class Cycler:
         if not loop.running and not loop.should_run:
             raise RuntimeError('Event loop is closed.')
         
-        cycle_time_type = cycle_time.__class__
+        cycle_time_type = type(cycle_time)
         if cycle_time_type is not float:
             try:
                 __float__ = getattr(cycle_time_type, '__float__')
@@ -240,7 +240,7 @@ class Cycler:
         if current_thread() is loop:
             handle = loop.call_after(cycle_time, cls._run, self)
         else:
-            handle = loop.call_soon_thread_safe_lazy(loop.__class__.call_after, loop, cycle_time, cls._run, self)
+            handle = loop.call_soon_thread_safe_lazy(type(loop).call_after, loop, cycle_time, cls._run, self)
         
         self.handle = handle
         
@@ -259,7 +259,7 @@ class Cycler:
                 write_exception_async(
                     err,
                     [
-                        self.__class__.__name__,
+                        type(self).__name__,
                         ' exception occurred\nat calling ',
                         repr(func),
                         '\n',
@@ -267,12 +267,12 @@ class Cycler:
                     loop = self.loop,
                 )
         
-        self.handle = self.loop.call_after(self.cycle_time, self.__class__._run, self)
+        self.handle = self.loop.call_after(self.cycle_time, type(self)._run, self)
     
     def __repr__(self):
         """Returns the cycler's representation."""
         repr_parts = [
-            self.__class__.__name__,
+            type(self).__name__,
             '(',
             repr(self.loop),
             ', ',
@@ -320,7 +320,7 @@ class Cycler:
             self._cancel()
             return
         
-        loop.call_soon_thread_safe_lazy(self.__class__._cancel, self)
+        loop.call_soon_thread_safe_lazy(type(self)._cancel, self)
     
     
     def _cancel(self):
@@ -347,7 +347,7 @@ class Cycler:
             self._call_now()
             return
         
-        loop.call_soon_thread_safe_lazy(self.__class__._call_now, self)
+        loop.call_soon_thread_safe_lazy(type(self)._call_now, self)
     
     
     def _call_now(self):
@@ -375,7 +375,7 @@ class Cycler:
             self._reschedule()
             return
         
-        loop.call_soon_thread_safe_lazy(self.__class__._reschedule, self)
+        loop.call_soon_thread_safe_lazy(type(self)._reschedule, self)
     
     
     def _reschedule(self):
@@ -388,7 +388,7 @@ class Cycler:
         if (handle is not None):
             handle.cancel()
         
-        self.handle = self.loop.call_after(self.cycle_time, self.__class__._run, self)
+        self.handle = self.loop.call_after(self.cycle_time, type(self)._run, self)
     
     
     @property
@@ -419,7 +419,7 @@ class Cycler:
         ValueError
             If `cycle_time` is negative or `0`.
         """
-        cycle_time_type = cycle_time.__class__
+        cycle_time_type = type(cycle_time)
         if cycle_time_type is not float:
             try:
                 __float__ = getattr(cycle_time_type, '__float__')
@@ -465,7 +465,7 @@ class Cycler:
             self._append(validated_func)
             return
         
-        loop.call_soon_thread_safe_lazy(self.__class__._append, self, validated_func)
+        loop.call_soon_thread_safe_lazy(type(self)._append, self, validated_func)
     
     
     def _append(self, validated_func):
@@ -501,7 +501,7 @@ class Cycler:
             self._remove(func)
             return
         
-        loop.call_soon_thread_safe_lazy(self.__class__._remove, self, func)
+        loop.call_soon_thread_safe_lazy(type(self)._remove, self, func)
     
     
     def _remove(self, func):

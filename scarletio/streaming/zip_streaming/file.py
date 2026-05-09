@@ -58,7 +58,7 @@ class ZipStreamFile(RichAttributeErrorBaseType):
         check_compression_method_supported(compression_method)
         
         if modified_at is None:
-            modified_at = DateTime.now(tz = TimeZone.utc)
+            modified_at = DateTime.now(TimeZone.utc)
         
         self = object.__new__(cls)
         self.async_generator = async_generator

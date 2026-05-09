@@ -94,7 +94,7 @@ def _modulize_type(klass, globals_, source_module, module_name, module_path):
     for name in dir(klass):
         value = getattr(klass, name)
         
-        value_type = value.__class__
+        value_type = type(value)
         if value_type is FunctionType:
             value = _modulize_function(value, globals_, source_module, module_name, module_path)
             setattr(klass, name, value)
@@ -127,7 +127,7 @@ def modulize(klass):
     """
     if not isinstance(klass, type):
         raise TypeError(
-            f'Only types can be modulized, got {klass.__class__.__name__}; {klass!r}.'
+            f'Only types can be modulized, got {type(klass).__name__}; {klass!r}.'
     )
     
     source_module = klass.__module__

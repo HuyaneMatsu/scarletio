@@ -453,7 +453,10 @@ class ReadProtocolBase(AbstractProtocolBase):
         except EOFError as exception:
             new_exception = ConnectionError('Connection closed unexpectedly with EOF.')
             new_exception.__cause__ = exception
-            payload_stream.set_done_exception(new_exception)
+            try:
+                payload_stream.set_done_exception(new_exception)
+            finally:
+                new_exception = None
         
         except StopIteration:
             payload_stream.set_done_success()
@@ -461,7 +464,10 @@ class ReadProtocolBase(AbstractProtocolBase):
         except GeneratorExit as exception:
             new_exception = ConnectionError('Payload reader destroyed.')
             new_exception.__cause__ = exception
-            payload_stream.set_done_exception(new_exception)
+            try:
+                payload_stream.set_done_exception(new_exception)
+            finally:
+                new_exception = None
         
         except BaseException as exception:
             payload_stream.set_done_exception(exception)
@@ -469,7 +475,10 @@ class ReadProtocolBase(AbstractProtocolBase):
         else:
             payload_reader.close()
             new_exception = RuntimeError('Payload stream ignored eof.')
-            payload_stream.set_done_exception(new_exception)
+            try:
+                payload_stream.set_done_exception(new_exception)
+            finally:
+                new_exception = None
         
         return False
     
@@ -484,29 +493,39 @@ class ReadProtocolBase(AbstractProtocolBase):
             chunks = self._chunks
             chunks.append(data)
         else:
-            try:
-                payload_reader.send(data)
-            except BaseException as exception:
-                payload_stream = self._payload_stream
-                self._payload_reader = None
-                self._payload_stream = None
+            while True:
+                try:
+                    payload_reader.send(data)
+            
+                except StopIteration:
+                    self._payload_stream.set_done_success()
                 
-                if isinstance(exception, StopIteration):
-                    payload_stream.set_done_success()
-                
-                elif isinstance(exception, EOFError):
+                except EOFError as exception:
                     new_exception = ConnectionError('Connection closed unexpectedly with EOF.')
                     new_exception.__cause__ = exception
-                    payload_stream.set_done_exception(new_exception)
+                    try:
+                        self._payload_stream.set_done_exception(new_exception)
+                    finally:
+                        new_exception = None
                 
-                elif isinstance(exception, GeneratorExit):
+                except GeneratorExit as exception:
                     new_exception = ConnectionError('Payload reader destroyed.')
                     new_exception.__cause__ = exception
-                    payload_stream.set_done_exception(new_exception)
+                    try:
+                        self._payload_stream.set_done_exception(new_exception)
+                    finally:
+                        new_exception = None
                 
+                except BaseException as exception:
+                    self._payload_stream.set_done_exception(exception)
                 
                 else:
-                    payload_stream.set_done_exception(exception)
+                    break
+                
+                # Clean these up when an exception occurs.
+                self._payload_reader = None
+                self._payload_stream = None
+                break
         
         # Pause if buffer is too big
         self._pause_reading()
@@ -593,12 +612,18 @@ class ReadProtocolBase(AbstractProtocolBase):
             except EOFError as exception:
                 new_exception = ConnectionError('Connection closed unexpectedly with EOF.')
                 new_exception.__cause__ = exception
-                payload_stream.set_done_exception(new_exception)
+                try:
+                    payload_stream.set_done_exception(new_exception)
+                finally:
+                    new_exception = None
             
             except GeneratorExit as exception:
                 new_exception = ConnectionError('Payload reader destroyed.')
                 new_exception.__cause__ = exception
-                payload_stream.set_done_exception(new_exception)
+                try:
+                    payload_stream.set_done_exception(new_exception)
+                finally:
+                    new_exception = None
             
             except BaseException as exception:
                 payload_stream.set_done_exception(exception)
@@ -689,7 +714,6 @@ class ReadProtocolBase(AbstractProtocolBase):
         ConnectionError
             Connection lost before `n` bytes were received.
         """
-        
         if n > 0:
             return (await self.set_payload_reader(partial_func(self._read_exactly, n, False)))
         

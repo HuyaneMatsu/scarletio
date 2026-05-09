@@ -269,7 +269,7 @@ class WeakMap(dict):
     @has_docs
     def __repr__(self):
         """Returns the weak map's representation."""
-        result = [self.__class__.__name__, '({']
+        result = [type(self).__name__, '({']
         if len(self):
             limit = self.MAX_REPR_ELEMENT_LIMIT
             collected = 0
@@ -462,7 +462,7 @@ class WeakMap(dict):
         
         else:
             raise TypeError(
-                f'Parameter `iterable` must be an iterable, got {iterable.__class__.__name__}; {iterable!r}.'
+                f'Parameter `iterable` must be an iterable, got {type(iterable).__name__}; {iterable!r}.'
             )
     
     

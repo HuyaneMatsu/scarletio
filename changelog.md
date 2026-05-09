@@ -1,3 +1,14 @@
+# 1.0.97 *\[2025-05-09\]*
+
+#### Improvements
+
+- Add new highlight token types for styled differences:
+    - TOKEN_TYPE_DIFFERENCE
+    - TOKEN_TYPE_DIFFERENCE_DELETED
+    - TOKEN_TYPE_DIFFERENCE_INSERTED
+- Update a few default highlight colors.
+- Handle exception clean-up collection at specific io places for better garbage collection.
+
 # 1.0.96 *\[2025-04-03\]*
 
 #### Improvements
@@ -34,7 +45,7 @@
 - Highlighter now creates value-less tokens. Instead it stores their position.
     Currently there is no logic sitting on it, but it opens up more possibilities in the future.
 - Each brace in highlighter now has its own type to improve value-less parsing. This also includes string quotes.
-    Note that `TOKEN_TYPE_STRING_UNICODE_FORMAT` has been renamed to `TOKEN_TYPE_STRING_FORMAT`.
+    Note that `TOKEN_TYPE_STRING_UNICODE_FORMAT` has been ren   amed to `TOKEN_TYPE_STRING_FORMAT`.
 - Fix relaxed format strings did not allow multi-line format code while turned out it is supported.
 - Highlighter now inserts 0 length tokens for missing closing brackets & quotes.
 

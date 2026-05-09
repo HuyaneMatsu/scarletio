@@ -185,7 +185,7 @@ class AsynchronousInteractiveConsole:
             if (not isinstance(editor_type, type)) or (not issubclass(editor_type, EditorBase)):
                 raise TypeError(
                     f'`editor_type` can be `None`, `{EditorBase.__name__}` subclass, got '
-                    f'{editor_type.__class__.__name__}; {editor_type!r}.'
+                    f'{type(editor_type).__name__}; {editor_type!r}.'
                 )
         
         if exit_message is None:

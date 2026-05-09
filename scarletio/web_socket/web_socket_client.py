@@ -253,7 +253,7 @@ class WebSocketClient(WebSocketCommonProtocol):
             else:
                 raise TypeError(
                     '`extra_response_headers` can be `dict-like` with `.items` method, got '
-                    f'{headers.__class__.__name__}; {headers!r}.'
+                    f'{type(headers).__name__}; {headers!r}.'
                 )
         
         async with http_client.request(METHOD_GET, url, request_headers) as response:

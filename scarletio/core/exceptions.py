@@ -32,7 +32,7 @@ def _create_invalid_state_error_message(error):
     future = error.future
     location = error.location
     return (
-        f'`{future.__class__.__name__}.{location}` was called, when `._state` is {future._state} '
+        f'`{type(future).__name__}.{location}` was called, when `._state` is {future._state} '
         f'({get_future_state_name(future._state)}) of {future!r}.'
     )
 
@@ -83,7 +83,7 @@ class InvalidStateError(Exception):
     
     def __repr__(self):
         """Returns the exception's representation."""
-        return f'{self.__class__.__name__}: {self.message}'
+        return f'{type(self).__name__}: {self.message}'
     
     
     def __str__(self):

@@ -26,7 +26,7 @@ def _iter_validate_causes(causes):
             continue
         
         raise TypeError(
-            f'Causes can be `{BaseException.__name__}`, got {cause.__class__.__name__}; {cause!r}.'
+            f'Causes can be `{BaseException.__name__}`, got {type(cause).__name__}; {cause!r}.'
         )
 
 

@@ -81,7 +81,7 @@ class WeakHasher:
     @has_docs
     def __repr__(self):
         """Returns the ``WeakHasher``'s representation."""
-        return f'{self.__class__.__name__}({self.reference!r})'
+        return f'{type(self).__name__}({self.reference!r})'
     
     @has_docs
     def __getattr__(self, name):
@@ -130,7 +130,7 @@ class WeakReferer(WeakrefType):
     
     
     def __repr__(self):
-        repr_parts = ['<', self.__class__.__name__]
+        repr_parts = ['<', type(self).__name__]
         
         value = self()
         if value is None:

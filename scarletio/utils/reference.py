@@ -38,4 +38,4 @@ class Reference(RichAttributeErrorBaseType):
     
     def __repr__(self):
         """Returns the reference's representation"""
-        return f'<{self.__class__.__name__} to {self.value!r}>'
+        return f'<{type(self).__name__} to {self.value!r}>'

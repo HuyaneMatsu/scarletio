@@ -198,7 +198,7 @@ class AsyncQueue:
         
         if isinstance(exception, StopIteration):
             raise TypeError(
-                f'{exception} cannot be raised to a(n) `{self.__class__.__name__}`; {self!r}.'
+                f'{exception} cannot be raised to a(n) `{type(self).__name__}`; {self!r}.'
             )
         
         self._exception = exception
@@ -315,7 +315,7 @@ class AsyncQueue:
     def __repr__(self):
         """Returns the async queue's representation."""
         repr_parts = [
-            self.__class__.__name__,
+            type(self).__name__,
             '([',
         ]
         

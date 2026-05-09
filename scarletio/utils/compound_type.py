@@ -831,7 +831,7 @@ class ImplementationDetail:
     
     def __repr__(self):
         """Returns the implementation detail's representation."""
-        repr_parts = ['<', self.__class__.__name__, ' ', self.implementation_source, '.', self.name, ' ']
+        repr_parts = ['<', type(self).__name__, ' ', self.implementation_source, '.', self.name, ' ']
         
         if self.instance_attribute:
             repr_parts.append('instance_attribute')

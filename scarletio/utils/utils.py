@@ -146,7 +146,7 @@ def change_on_switch(list_, value, new_position, key = None):
     
     old_position = relative_index(list_, value)
     if (old_position == ln) or (list_[old_position] != value):
-        raise ValueError(f'{value!r} is not in the {list_.__class__.__name__}.')
+        raise ValueError(f'{value!r} is not in the {type(list_).__name__}.')
     
     if new_position >= ln:
         new_position = ln - 1

@@ -39,7 +39,7 @@ def run(awaitable, timeout = None):
     local_thread = current_thread()
     if isinstance(local_thread, EventThread):
         raise RuntimeError(
-            f'`{local_thread.__class__.__name__}.run` should not be called from itself; thread={local_thread!r}.'
+            f'`{type(local_thread).__name__}.run` should not be called from itself; thread = {local_thread!r}.'
         )
     
     event_loop = _try_detect_event_loop(local_thread)

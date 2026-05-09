@@ -41,8 +41,8 @@ class WeakReferencable:
         return self.value
     
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.value})'
+        return f'{type(self).__name__}({self.value})'
 
 
 def sort_by_type_first_key(key):
-    return (key.__class__.__name__, key)
+    return (type(key).__name__, key)

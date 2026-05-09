@@ -65,7 +65,7 @@ class EventThreadContextManager:
         thread_waiter = self.thread_waiter
         if thread_waiter is None:
             raise RuntimeError(
-                f'`{self.__class__.__name__}.__enter__` called with thread waiter lock set.'
+                f'`{type(self).__name__}.__enter__` called with thread waiter lock set.'
             )
         
         try:

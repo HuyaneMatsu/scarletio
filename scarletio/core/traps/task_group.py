@@ -99,7 +99,7 @@ class TaskGroupContextManager(RichAttributeErrorBaseType):
     
     def __repr__(self):
         """Returns the task group context manager representation."""
-        return f'<{self.__class__.__name__} task_group = {self.taskk_group}, leaver = {self.leaver.__name__}>'
+        return f'<{type(self).__name__} task_group = {self.taskk_group}, leaver = {self.leaver.__name__}>'
 
 
 def _handler_wait_next():

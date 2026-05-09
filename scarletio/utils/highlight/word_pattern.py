@@ -39,7 +39,7 @@ class WordNode:
     
     def __repr__(self):
         """Returns the word node's representation."""
-        result = ['<', self.__class__.__name__, ' of ', repr(self.character)]
+        result = ['<', type(self).__name__, ' of ', repr(self.character)]
         if self.is_final:
             result.append(' (final)')
         

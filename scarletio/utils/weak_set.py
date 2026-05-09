@@ -516,7 +516,7 @@ class WeakSet(set):
     @has_docs
     def __repr__(self):
         """Returns the set's representation."""
-        result = [self.__class__.__name__, '({']
+        result = [type(self).__name__, '({']
         if len(self):
             limit = self.MAX_REPR_ELEMENT_LIMIT
             collected = 0
@@ -727,7 +727,7 @@ class WeakSet(set):
         
         else:
             raise TypeError(
-                f'`iterable` can be `iterable`, got {iterable.__class__.__name__}; {iterable!r}.'
+                f'`iterable` can be `iterable`, got {type(iterable).__name__}; {iterable!r}.'
             )
         
         new = type(self)()
@@ -765,7 +765,7 @@ class WeakSet(set):
         
         else:
             raise TypeError(
-                f'`iterable` can be `iterable`, got {iterable.__class__.__name__}; {iterable!r}.'
+                f'`iterable` can be `iterable`, got {type(iterable).__name__}; {iterable!r}.'
             )
     
     
@@ -829,7 +829,7 @@ class WeakSet(set):
             return new
         
         raise TypeError(
-            f'`iterable` can be `iterable`, got {iterable.__class__.__name__}; {iterable!r}.'
+            f'`iterable` can be `iterable`, got {type(iterable).__name__}; {iterable!r}.'
         )
     
     
@@ -860,7 +860,7 @@ class WeakSet(set):
         
         else:
             raise TypeError(
-                f'`iterable` can be `iterable`, got {iterable.__class__.__name__}; {iterable!r}.'
+                f'`iterable` can be `iterable`, got {type(iterable).__name__}; {iterable!r}.'
             )
         
         elements_to_remove = []
@@ -908,7 +908,7 @@ class WeakSet(set):
         
         else:
             raise TypeError(
-                f'`iterable` can be `iterable`, got {iterable.__class__.__name__}; {iterable!r}.'
+                f'`iterable` can be `iterable`, got {type(iterable).__name__}; {iterable!r}.'
             )
         
         self_set = set(iter(self))
@@ -946,7 +946,7 @@ class WeakSet(set):
         
         else:
             raise TypeError(
-                f'`iterable` can be `iterable`, got {iterable.__class__.__name__}; {iterable!r}.'
+                f'`iterable` can be `iterable`, got {type(iterable).__name__}; {iterable!r}.'
             )
         
         return set(iter(self)).issubset(iterable)
@@ -983,7 +983,7 @@ class WeakSet(set):
         
         else:
             raise TypeError(
-                f'`iterable` can be `iterable`, got {iterable.__class__.__name__}; {iterable!r}.'
+                f'`iterable` can be `iterable`, got {type(iterable).__name__}; {iterable!r}.'
             )
         
         return set(iter(self)).issuperset(iterable)
@@ -1067,7 +1067,7 @@ class WeakSet(set):
         
         else:
             raise TypeError(
-                f'`iterable` can be `iterable`, got {iterable.__class__.__name__}; {iterable!r}.'
+                f'`iterable` can be `iterable`, got {type(iterable).__name__}; {iterable!r}.'
             )
         
         self_set = set(iter(self))
@@ -1139,7 +1139,7 @@ class WeakSet(set):
         
         else:
             raise TypeError(
-                f'`iterable` can be `iterable`, got {iterable.__class__.__name__}; {iterable!r}.'
+                f'`iterable` can be `iterable`, got {type(iterable).__name__}; {iterable!r}.'
             )
     
     
@@ -1172,7 +1172,7 @@ class WeakSet(set):
         
         else:
             raise TypeError(
-                f'`iterable` can be `iterable`, got {iterable.__class__.__name__}; {iterable!r}.'
+                f'`iterable` can be `iterable`, got {type(iterable).__name__}; {iterable!r}.'
             )
         
         return new
@@ -1200,5 +1200,5 @@ class WeakSet(set):
         
         else:
             raise TypeError(
-                f'`iterable` can be `iterable`, got {iterable.__class__.__name__}; {iterable!r}.'
+                f'`iterable` can be `iterable`, got {type(iterable).__name__}; {iterable!r}.'
             )

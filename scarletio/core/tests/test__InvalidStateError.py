@@ -86,8 +86,8 @@ async def test__InvalidStateError__repr__2_parameters():
     
     representation = repr(error)
     vampytest.assert_instance(representation, str)
-    vampytest.assert_in(error.__class__.__name__, representation)
-    vampytest.assert_in(future.__class__.__name__, representation)
+    vampytest.assert_in(type(error).__name__, representation)
+    vampytest.assert_in(type(future).__name__, representation)
     vampytest.assert_in(location, representation)
 
 
@@ -107,7 +107,7 @@ async def test__InvalidStateError__repr__3_parameters():
     
     representation = repr(error)
     vampytest.assert_instance(representation, str)
-    vampytest.assert_in(error.__class__.__name__, representation)
+    vampytest.assert_in(type(error).__name__, representation)
     vampytest.assert_in(message, representation)
 
 
@@ -127,7 +127,7 @@ async def test__InvalidStateError__str__2_parameters():
     
     string = str(error)
     vampytest.assert_instance(string, str)
-    vampytest.assert_in(future.__class__.__name__, string)
+    vampytest.assert_in(type(future).__name__, string)
     vampytest.assert_in(location, string)
 
 
@@ -166,7 +166,7 @@ async def test__InvalidStateError__message__2_parameters():
     message = error.message
     vampytest.assert_instance(message, str)
     vampytest.assert_eq(message, error._message)
-    vampytest.assert_in(future.__class__.__name__, message)
+    vampytest.assert_in(type(future).__name__, message)
     vampytest.assert_in(message, message)
 
 

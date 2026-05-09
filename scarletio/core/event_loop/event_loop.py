@@ -208,7 +208,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
     
     def __repr__(self):
         """Returns the event thread's representation."""
-        repr_parts = ['<', self.__class__.__name__, ' ', self._name]
+        repr_parts = ['<', type(self).__name__, ' ', self._name]
         self.is_alive() # easy way to get ._is_stopped set when appropriate
         
         if not self.started:
@@ -589,7 +589,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
         
         raise TypeError(
             f'`coroutine_or_future` can be `{Future.__name__}`, `Coroutine`, `awaitable`, got '
-            f'{coroutine_or_future.__class__.__name__}; {coroutine_or_future!r}.'
+            f'{type(coroutine_or_future).__name__}; {coroutine_or_future!r}.'
         )
     
     
@@ -637,7 +637,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
 
         raise TypeError(
             f'`coroutine_or_future` can be `{Future.__name__}`, `Coroutine`, `awaitable`, got '
-            f'{coroutine_or_future.__class__.__name__}; {coroutine_or_future!r}.'
+            f'{type(coroutine_or_future).__name__}; {coroutine_or_future!r}.'
         )
     
     run = EventThreadRunDescriptor()
@@ -3209,7 +3209,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
             Not supported on windows by the library.
         """
         if not isinstance(command, (bytes, str)):
-            raise TypeError(f'`command` can be `bytes`, `str`, got {command.__class__.__name__}; {command!r}.')
+            raise TypeError(f'`command` can be `bytes`, `str`, got {type(command).__name__}; {command!r}.')
         
         process_open_keyword_parameters = {
             'preexec_fn' : preexecution_function,

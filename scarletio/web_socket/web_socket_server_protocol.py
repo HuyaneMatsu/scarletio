@@ -228,7 +228,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
                     err,
                     [
                         'Unhandled exception occurred at',
-                        self.__class__.__name__,
+                        type(self).__name__,
                         '.lifetime_handler meanwhile running: ',
                         repr(self.handler),
                         '\n',
@@ -506,7 +506,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
                 err,
                 [
                     'Unhandled exception occurred at ',
-                    self.__class__.__name__,
+                    type(self).__name__,
                     '.handshake, when handshaking:\n'
                 ],
                 loop = self._loop,
@@ -570,7 +570,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
                     err2,
                     [
                         'Unhandled exception occurred at ',
-                        self.__class__.__name__,
+                        type(self).__name__,
                         '.handshake, when handling an other exception;',
                         repr(err),
                         ':\n',

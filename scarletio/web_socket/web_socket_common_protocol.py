@@ -350,7 +350,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             data = data.encode('utf-8')
         else:
             raise TypeError(
-                f'Data must be `bytes-like`, `str`, got: {data.__class__.__name__}; {reprlib.repr(data)}.'
+                f'Data must be `bytes-like`, `str`, got: {type(data).__name__}; {reprlib.repr(data)}.'
             )
         
         await self.write_frame(operation_code, data)
@@ -470,7 +470,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             data = data.encode('utf-8')
         else:
             raise TypeError(
-                f'Data must be `bytes-like`, `str`, got: {data.__class__.__name__}; {reprlib.repr(data)}.'
+                f'Data must be `bytes-like`, `str`, got: {type(data).__name__}; {reprlib.repr(data)}.'
             )
         
         pings = self.pings
@@ -514,7 +514,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
             data = data.encode('utf-8')
         else:
             raise TypeError(
-                f'Data must be `bytes-like`, `str`, got: {data.__class__.__name__}; {reprlib.repr(data)}.'
+                f'Data must be `bytes-like`, `str`, got: {type(data).__name__}; {reprlib.repr(data)}.'
             )
         
         await self.write_frame(WEB_SOCKET_OPERATION_PONG, data)

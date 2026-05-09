@@ -210,6 +210,12 @@ The token types for coloring are the following:
 +-----------------------------------------------------------+-------+-----------------------------------------------+
 | TOKEN_TYPE_TEXT_UNKNOWN                                   | 3004  | TOKEN_TYPE_TEXT                               |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_DIFFERENCE                                     | 4000  | TOKEN_TYPE_ALL                                |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_DIFFERENCE_DELETED                             | 4001  | TOKEN_TYPE_DIFFERENCE                         |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_DIFFERENCE_INSERTED                            | 4002  | TOKEN_TYPE_DIFFERENCE                         |
++-----------------------------------------------------------+-------+-----------------------------------------------+
 """
 __all__ = ()
 
@@ -337,6 +343,12 @@ TOKEN_TYPE_TEXT_POSITIVE = 3002
 TOKEN_TYPE_TEXT_NEUTRAL = 3003
 TOKEN_TYPE_TEXT_UNKNOWN = 3004
 TOKEN_TYPE_TEXT_TITLE = 3005
+
+# DIFFERENCE
+
+TOKEN_TYPE_DIFFERENCE = 4000
+TOKEN_TYPE_DIFFERENCE_DELETED = 4001
+TOKEN_TYPE_DIFFERENCE_INSERTED = 4002
 
 
 TOKEN_STRUCTURE = {
@@ -487,5 +499,9 @@ TOKEN_STRUCTURE = {
         TOKEN_TYPE_TEXT_NEUTRAL : None,
         TOKEN_TYPE_TEXT_UNKNOWN : None,
         TOKEN_TYPE_TEXT_TITLE : None,
-    }
+    },
+    TOKEN_TYPE_DIFFERENCE : {
+        TOKEN_TYPE_DIFFERENCE_DELETED : None,
+        TOKEN_TYPE_DIFFERENCE_INSERTED : None,
+    },
 }

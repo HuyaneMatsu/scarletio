@@ -48,7 +48,7 @@ class SortedList(list):
     @has_docs
     def __repr__(self):
         """Returns the sorted list's representation."""
-        result = [self.__class__.__name__, '([']
+        result = [type(self).__name__, '([']
         
         limit = len(self)
         if limit:
@@ -220,7 +220,7 @@ class SortedList(list):
         """Returns the index of the given value inside of the SortedList."""
         index = self.relative_index(value)
         if index == len(self) or self[index] != value:
-            raise ValueError(f'{value!r} is not in the {self.__class__.__name__}.')
+            raise ValueError(f'{value!r} is not in the {type(self).__name__}.')
         
         return index
     
