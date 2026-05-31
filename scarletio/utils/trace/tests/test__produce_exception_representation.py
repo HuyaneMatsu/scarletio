@@ -280,9 +280,9 @@ def test__produce_exception_representation_syntax_error__no_highlight():
     type_name = SyntaxError.__name__
     
     expected_output = (
-        '  File "<string>", line 1\n'
-        '    from as as\n'
-        '    ^^^^\n'
+        '    File "<string>", line 1\n'
+        '        from as as\n'
+        '        ^^^^\n'
         'SyntaxError: invalid syntax\n'
     )
     
@@ -326,9 +326,9 @@ def test__produce_exception_representation_syntax_error__with_highlight():
     type_name = SyntaxError.__name__
     
     expected_output = (
-        '  File "<string>", line 1\n'
-        '    from as as\n'
-        '    ^^^^\n'
+        '    File "<string>", line 1\n'
+        '        from as as\n'
+        '        ^^^^\n'
         'SyntaxError: invalid syntax\n'
     )
     

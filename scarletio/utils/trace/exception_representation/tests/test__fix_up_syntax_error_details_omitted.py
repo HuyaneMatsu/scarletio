@@ -1,11 +1,11 @@
 import vampytest
 
-from ..syntax_error_helpers import fixup_syntax_error_details_omitted
+from ..syntax_error_helpers import fix_up_syntax_error_details_omitted
 
 
-def test__fixup_syntax_error_details_omitted():
+def test__fix_up_syntax_error_details_omitted():
     """
-    Tests whether ``fixup_syntax_error_details_omitted`` works as intended.
+    Tests whether ``fix_up_syntax_error_details_omitted`` works as intended.
     """
     message = 'message'
     file_name = 'file_name.py'
@@ -27,7 +27,7 @@ def test__fixup_syntax_error_details_omitted():
         exception.end_lineno = end_line_number
         exception.end_offset = end_offset
     
-    fixup_syntax_error_details_omitted(exception)
+    fix_up_syntax_error_details_omitted(exception)
     
     details = (file_name, line_number, offset, line)
     if length_6:

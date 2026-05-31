@@ -2,7 +2,13 @@ __all__ = ('ExpressionInfo', 'get_expression_info')
 
 from .file_info import get_file_info
 
-from ...highlight import search_layer_index, search_line_end_index_in_tokens, search_line_start_index_in_tokens
+from ...highlight import (
+    HIGHLIGHT_TOKEN_TYPES, search_layer_index, search_line_end_index_in_tokens, search_line_start_index_in_tokens
+)
+
+
+EXPRESSION_SURROUND_DEFAULT_REACH = 2
+EXPRESSION_SURROUND_UPPER_DISTANCE_FROM_CENTER = 6
 
 
 class ExpressionInfo:
@@ -191,7 +197,7 @@ class ExpressionInfo:
         return self.line.splitlines()
 
 
-def get_expression_area(file_name, line_index):
+def get_expression_area(file_name, expression_exact_line_index):
     """
     Gets the expression's area.
     
@@ -200,7 +206,7 @@ def get_expression_area(file_name, line_index):
     file_name : `str`
         The file's name to get the expressions for.
     
-    line_index : `int`
+    expression_exact_line_index : `int`
         The line's index in the file.
     
     Returns
@@ -212,11 +218,11 @@ def get_expression_area(file_name, line_index):
     tokens = parse_result.tokens
     layers = parse_result.layers
     
-    expression_line_start_index = line_index
-    expression_line_end_index = line_index
+    expression_line_start_index = expression_exact_line_index
+    expression_line_end_index = expression_exact_line_index
     
-    expression_token_start_index = search_line_start_index_in_tokens(tokens, line_index)
-    expression_token_end_index = search_line_end_index_in_tokens(tokens, line_index)
+    expression_token_start_index = search_line_start_index_in_tokens(tokens, expression_exact_line_index)
+    expression_token_end_index = search_line_end_index_in_tokens(tokens, expression_exact_line_index)
     
     if expression_token_start_index == expression_token_end_index:
         expression_character_start_index = 0
@@ -310,6 +316,62 @@ def normalize_and_dedent_lines(lines):
     return removed_indentation_characters
 
 
+def get_shared_indentation_length(tokens, token_start_index, token_end_index):
+    """
+    Gets how much indentation is shared in the given lines described by their token index.
+    
+    Parameters
+    ----------
+    tokens : ``list<Token>``
+        Tokens to iterate over.
+    
+    token_start_index : `int`
+        First token of the area.
+    
+    token_end_index : `int`
+        Last token of the area.
+    
+    Returns
+    -------
+    shared_indentation_length : `int`
+    """
+    if token_start_index == token_end_index:
+        return 0
+    
+    previous_character_line_break = True
+    shared_indentation_length = 0
+    current_indentation_length = 0
+    
+    for token_index in range(token_start_index, token_end_index):
+        token = tokens[token_index]
+        token_type = token.type
+        
+        if token_type == HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK:
+            previous_character_line_break = True
+            continue
+        
+        if previous_character_line_break:
+            # Just because we are an indention, it does not mean that we will actually indent anything;
+            # Limit indentation length only on the next token.
+            if (token_type == HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_SPACE):
+                previous_character_line_break = False
+                current_indentation_length = token.length
+                continue
+            
+            shared_indentation_length = 0
+            break
+        
+        if not current_indentation_length:
+            shared_indentation_length = 0
+            break
+        
+        if (not shared_indentation_length) or (current_indentation_length < shared_indentation_length):
+            shared_indentation_length = current_indentation_length
+        continue
+    
+    return shared_indentation_length
+
+
 def get_expression_info(expression_key):
     """
     Gets expression info for the given expression key.
@@ -353,4 +415,100 @@ def get_expression_info(expression_key):
         expression_token_end_index,
         removed_indentation_characters,
         line,
+    )
+
+
+def get_surround_area(
+    tokens,
+    expression_exact_line_index,
+    expression_line_start_index,
+    expression_line_end_index,
+    expression_token_start_index,
+    expression_token_end_index,
+):
+    """
+    Gets area surrounding an expression.
+    
+    Parameters
+    ----------
+    tokens : ``list<Token>``
+        Tokens to iterate over.
+    
+    expression_exact_line_index : `int`
+        The line's index in the file.
+        
+    expression_line_start_index : `int`
+        The line's index where the expression starts.
+    
+    expression_line_end_index : `int`
+        The line's index where the expression ends.
+    
+    expression_token_start_index : `int`
+        The token's index where the expression starts at.
+    
+    expression_token_end_index : `int`
+        The token's index where the expression ends at.
+    
+    removed_indentation_characters : `int`
+        By how much characters the expression should be dedented.
+    
+    Returns
+    -------
+    surround_area : `(int, int, int, int)`
+    """
+    # Calculate surround area.
+    
+    surround_upwards_line_count = EXPRESSION_SURROUND_DEFAULT_REACH
+    surround_downwards_line_count = EXPRESSION_SURROUND_DEFAULT_REACH
+    
+    # Limit by file end & start.
+    if expression_line_start_index < surround_upwards_line_count:
+        surround_upwards_line_count = expression_line_start_index
+    
+    if tokens is None:
+        file_end_line_index = 0
+    else:
+        last_token = tokens[-1]
+        file_end_line_index = last_token.line_index + (last_token.type == HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK)
+    
+    lines_after_expression = max(0, file_end_line_index - expression_line_end_index)
+    if lines_after_expression < surround_downwards_line_count:
+        surround_downwards_line_count = lines_after_expression
+    
+    # Limit by distance from the exact line index.
+    lines_from_expression_center = expression_exact_line_index - expression_line_start_index
+    lines_allowed_before_expression = EXPRESSION_SURROUND_UPPER_DISTANCE_FROM_CENTER - lines_from_expression_center
+    if lines_allowed_before_expression < 0:
+        lines_allowed_before_expression = 0
+    
+    if lines_allowed_before_expression < surround_upwards_line_count:
+        surround_upwards_line_count = lines_allowed_before_expression
+    
+    lines_from_expression_center = expression_line_end_index - expression_exact_line_index
+    lines_allowed_before_expression = EXPRESSION_SURROUND_UPPER_DISTANCE_FROM_CENTER - lines_from_expression_center
+    if lines_allowed_before_expression < 0:
+        lines_allowed_before_expression = 0
+    
+    if lines_allowed_before_expression < surround_downwards_line_count:
+        surround_downwards_line_count = lines_allowed_before_expression
+    
+    surround_line_start_index = expression_line_start_index - surround_upwards_line_count
+    surround_line_end_index = expression_line_end_index + surround_downwards_line_count
+    
+    # Calculate surround token start and end indexes
+    if surround_line_start_index == expression_line_start_index:
+        surround_token_start_index = expression_token_start_index
+    else:
+        surround_token_start_index = search_line_start_index_in_tokens(tokens, surround_line_start_index)
+    
+    if surround_line_end_index == expression_line_end_index:
+        surround_token_end_index = expression_token_end_index
+    else:
+        surround_token_end_index = search_line_end_index_in_tokens(tokens, surround_line_end_index)
+    
+    return (
+        surround_line_start_index,
+        surround_line_end_index,
+        surround_token_start_index,
+        surround_token_end_index,
     )

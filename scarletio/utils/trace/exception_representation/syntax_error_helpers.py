@@ -146,7 +146,7 @@ def is_syntax_error_details_omitted(exception):
     return _are_details_valid(details)
 
 
-def fixup_syntax_error_details_omitted(syntax_error):
+def fix_up_syntax_error_details_omitted(syntax_error):
     """
     Fixes up the syntax error's details if they are omitted.
     
@@ -158,7 +158,7 @@ def fixup_syntax_error_details_omitted(syntax_error):
     syntax_error.args = (syntax_error.args[0], _get_details_from_slots(syntax_error))
 
 
-def fixup_syntax_error_line_from_buffer(syntax_error, buffer):
+def fix_up_syntax_error_line_from_buffer(syntax_error, buffer):
     """
     Tries to fix up the syntax error's missing line.
     

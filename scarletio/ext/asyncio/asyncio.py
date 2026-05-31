@@ -901,11 +901,6 @@ class EventThread:
                 f'sslcontext is expected to be an instance of ssl.SSLContext, got {sslcontext!r}'
             )
 
-        if not getattr(transport, '_start_tls_compatible', False):
-            raise TypeError(
-                f'transport {transport!r} is not supported by start_tls()'
-            )
-
         waiter = ScarletFuture(self)
         ssl_protocol = SSLBidirectionalTransportLayer(
             self,
@@ -3098,7 +3093,7 @@ def create_task(coroutine, *, name = None):
     Return a Task object.
     """
     loop = get_running_loop()
-    return Task(loop, coroutine)
+    return Task(coroutine, loop)
 
 
 FIRST_COMPLETED = 'FIRST_COMPLETED'

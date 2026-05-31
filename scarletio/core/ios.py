@@ -14,6 +14,7 @@ OPERATION_READ = 1
 
 IO_CLOSED_OR_DETACHED = 'I/O operation on closed or on a detached file.'
 
+
 class ReuBytesIO(BytesIO):
     """
     Reusable bytes io, what seeks the cursor at `0`, when calling ``.close``. Use ``.real_close`` to close it for real,

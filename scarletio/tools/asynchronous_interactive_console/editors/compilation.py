@@ -4,7 +4,7 @@ import sys, warnings
 
 from ....utils import add_console_input
 from ....utils.trace.exception_representation.syntax_error_helpers import (
-    is_syntax_error_details_omitted, fixup_syntax_error_details_omitted, is_syntax_error, right_strip_syntax_error_line
+    is_syntax_error_details_omitted, fix_up_syntax_error_details_omitted, is_syntax_error, right_strip_syntax_error_line
 )
 
 PYTHON_COMPILE_FLAG_DONT_IMPLY_DEDENT = 1 << 9
@@ -92,7 +92,7 @@ def maybe_compile(buffer, file_name):
             if (exception_0 is None):
                 if (exception_1 is not None):
                     if is_syntax_error_details_omitted(exception_1):
-                        fixup_syntax_error_details_omitted(exception_1)
+                        fix_up_syntax_error_details_omitted(exception_1)
                     raise exception_1
             
             else:
@@ -101,7 +101,7 @@ def maybe_compile(buffer, file_name):
                         is_syntax_error(exception_0) or
                         (
                             is_syntax_error_details_omitted(exception_0) and
-                            (fixup_syntax_error_details_omitted(exception_0) is None)
+                            (fix_up_syntax_error_details_omitted(exception_0) is None)
                         )
                     ):
                         right_strip_syntax_error_line(exception_0)
@@ -110,7 +110,7 @@ def maybe_compile(buffer, file_name):
                         is_syntax_error(exception_1) or
                         (
                             is_syntax_error_details_omitted(exception_1) and
-                            (fixup_syntax_error_details_omitted(exception_1) is None)
+                            (fix_up_syntax_error_details_omitted(exception_1) is None)
                         )
                     ):
                         right_strip_syntax_error_line(exception_1)

@@ -83,7 +83,7 @@ setup(
     ],
     include_package_data = False,
     package_data = {},
-    python_requires = '>=3.6',
+    python_requires = '>=3.6,<3.12',
     install_requires = [
         'chardet>=2.0',
     ],

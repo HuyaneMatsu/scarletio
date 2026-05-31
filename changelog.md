@@ -1,3 +1,21 @@
+# 1.0.98 *\[2025-05-30\]*
+
+- Add new highlight token types for traces:
+    - TOKEN_TYPE_TRACE_CODE
+    - TOKEN_TYPE_TRACE_CODE_LINE_NUMBER
+    - TOKEN_TYPE_TRACE_CODE_LINE_NUMBER_EXACT
+    - TOKEN_TYPE_TRACE_CODE_LINE_NUMBER_EXPRESSION
+    - TOKEN_TYPE_TRACE_CODE_LINE_NUMBER_SURROUND
+    - TOKEN_TYPE_TRACE_CODE_POINTER
+    - TOKEN_TYPE_TRACE_CODE_POINTER_EXACT
+    - TOKEN_TYPE_TRACE_CODE_POINTER_EXPRESSION
+    - TOKEN_TYPE_TRACE_CODE_POINTER_SURROUND
+- Improve trace rendering output by showing line number, and surround as well.
+
+### scarletio.ext.async
+- Fix `create_task` created `Task` not with `asyncio`'s parameter order.
+- Fix `EventThrad.start_tls` failing `tls` compatibility check.
+
 # 1.0.97 *\[2025-05-09\]*
 
 #### Improvements
@@ -45,7 +63,7 @@
 - Highlighter now creates value-less tokens. Instead it stores their position.
     Currently there is no logic sitting on it, but it opens up more possibilities in the future.
 - Each brace in highlighter now has its own type to improve value-less parsing. This also includes string quotes.
-    Note that `TOKEN_TYPE_STRING_UNICODE_FORMAT` has been ren   amed to `TOKEN_TYPE_STRING_FORMAT`.
+    Note that `TOKEN_TYPE_STRING_UNICODE_FORMAT` has been renamed to `TOKEN_TYPE_STRING_FORMAT`.
 - Fix relaxed format strings did not allow multi-line format code while turned out it is supported.
 - Highlighter now inserts 0 length tokens for missing closing brackets & quotes.
 

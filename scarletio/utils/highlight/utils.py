@@ -1,15 +1,11 @@
 __all__ = (
-    'add_highlighted_part_into', 'add_highlighted_parts_into', 'get_highlight_parse_result',
-    'get_token_type_and_repr_mode_for_variable', 'iter_highlight_code_lines',
+    'get_highlight_parse_result', 'get_token_type_and_repr_mode_for_variable',
     'iter_highlight_code_token_types_and_values', 'search_layer_index', 'search_line_end_index_in_tokens',
     'search_line_start_index_in_tokens',
 )
 
-from warnings import warn
-
 from .constants import BUILTIN_CONSTANTS, BUILTIN_EXCEPTIONS, BUILTIN_VARIABLES
 from .flags import HIGHLIGHT_PARSER_MASK_DEFAULT
-from .highlight_streamer import get_highlight_streamer
 from .parse_result import ParseResult
 from .parser_context import HighlightParserContext
 from .token_types import (
@@ -17,51 +13,6 @@ from .token_types import (
     TOKEN_TYPE_IDENTIFIER_BUILTIN_VARIABLE, TOKEN_TYPE_IDENTIFIER_VARIABLE, TOKEN_TYPE_NON_SPACE_UNIDENTIFIED,
     TOKEN_TYPE_NUMERIC_FLOAT, TOKEN_TYPE_NUMERIC_INTEGER, TOKEN_TYPE_STRING_BINARY, TOKEN_TYPE_STRING_UNICODE
 )
-
-
-def iter_highlight_code_lines(lines, formatter_context):
-    """
-    Matches the given python code lines and iterates it's formatted representation.
-    
-    This function is an iterable generator.
-    
-    Parameters
-    ----------
-    lines : `list` of `str`
-        Lines to format.
-    
-    formatter_context : ``HighlightFormatterContext``
-        Context to use for highlighting.
-    
-    Yields
-    ------
-    content : `str`
-    """
-    warn(
-        (
-            f'`iter_highlight_code_lines` is deprecated and will be removed 2025 October. '
-            f'Please use `iter_highlight_code_token_types_and_values` paired with `get_highlight_streamer` '
-            f'instead accordingly. '
-        ),
-        FutureWarning,
-        stacklevel = 2,
-    )
-    
-    code = ''.join(lines)
-    context = HighlightParserContext(code, HIGHLIGHT_PARSER_MASK_DEFAULT)
-    context.match()
-    highlight_streamer = get_highlight_streamer(formatter_context)
-    for token in context.tokens:
-        length = token.length
-        if not length:
-            continue
-        
-        content_character_index = token.content_character_index
-        value = code[content_character_index : content_character_index + length]
-        
-        yield from highlight_streamer.asend((token.type, value))
-    
-    yield from highlight_streamer.asend(None)
 
 
 def iter_highlight_code_token_types_and_values(code):
@@ -110,99 +61,6 @@ def get_highlight_parse_result(content):
     context = HighlightParserContext(content, HIGHLIGHT_PARSER_MASK_DEFAULT)
     context.match()
     return ParseResult(context.layers, context.tokens)
-
-
-def add_highlighted_part_into(token_type, part, highlighter, into):
-    """
-    Adds a highlighted part extending the given list of strings.
-    
-    Parameters
-    ----------
-    token_type : `int`
-        Token type identifier.
-    
-    part : `str`
-        The part to add.
-    
-    highlighter : ``None | HighlightFormatterContext``
-        Stores how the output should be highlighted.
-    
-    into : `list<str>`
-        The list of strings to extend.
-    
-    Returns
-    -------
-    into : `list<str>`
-    """
-    warn(
-        (
-            f'`add_highlighted_part_into` is deprecated and will be removed 2025 October. '
-            f'Please use `into.extend(highlight_streamer.asend((token_type, part)))` instead accordingly. '
-            f'For more information read `get_highlight_streamer`\'s documentation.'
-        ),
-        FutureWarning,
-        stacklevel = 2,
-    )
-
-    if (highlighter is None):
-        into.append(part)
-    else:
-        detail = highlighter.formatter_nodes[token_type].detail
-        if (detail is None):
-            into.append(part)
-        
-        else:
-            into.extend(detail.start())
-            into.extend(detail.transform_content(part))
-            into.extend(detail.end())
-    
-    return into
-    
-
-def add_highlighted_parts_into(producer, highlighter, into):
-    """
-    Iterates over a producer and applies highlighter for each produced item extending the given list of strings with
-    them.
-    
-    Parameters
-    ----------
-    producer : `iterable<(int, str)>`
-        Iterable to produce token_type - part items.
-    
-    highlighter : ``None | HighlightFormatterContext``
-        Stores how the output should be highlighted.
-    
-    into : `list<str>`
-        The list of strings to extend.
-    
-    Yields
-    ------
-    into : `list<str>`
-    """
-    warn(
-        (
-            f'`add_highlighted_parts_into` is deprecated and will be removed 2025 October. '
-            f'Please use `for item in producer: into.extend(highlight_streamer.asend(item))` instead accordingly. '
-            f'For more information read `get_highlight_streamer`\'s documentation.'
-        ),
-        FutureWarning,
-        stacklevel = 2,
-    )
-    
-    for token_type, part in producer:
-        if (highlighter is None):
-            into.append(part)
-        else:
-            detail = highlighter.formatter_nodes[token_type].detail
-            if (detail is None):
-                into.append(part)
-            
-            else:
-                into.extend(detail.start())
-                into.extend(detail.transform_content(part))
-                into.extend(detail.end())
-    
-    return into
 
 
 def get_token_type_and_repr_mode_for_variable(variable):

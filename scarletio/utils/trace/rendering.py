@@ -6,6 +6,7 @@ from ..highlight.constants import (
     BUILTIN_EXCEPTION_NAMES, BUILTIN_VARIABLE_NAMES, MAGIC_FUNCTION_NAMES, MAGIC_VARIABLE_NAMES
 )
 
+from .expression_parsing.expression_info import get_shared_indentation_length, get_surround_area
 from .exception_representation import (
     ExceptionRepresentationAttributeError, ExceptionRepresentationGeneric, ExceptionRepresentationSyntaxError
 )
@@ -115,11 +116,73 @@ def produce_frame_group(frame_group):
         yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK, '\n'
 
 
+
+def _produce_pointer(
+    expression_exact_line_index,
+    expression_line_start_index,
+    expression_line_end_index,
+    current_line_index,
+    line_number_string_length_upper_threshold,
+):
+    """
+    Produces pointer to prefix a code line.
+    
+    This function is an iterable generator.
+    
+    Parameters
+    ----------
+    expression_exact_line_index : `int`
+        The line's index in the file.
+    
+    expression_line_start_index : `int`
+        The line's index where the expression starts.
+    
+    expression_line_end_index : `int`
+        The line's index where the expression ends.
+    
+    line_number_string_length_upper_threshold : `int`
+        The upper length threshold of line number indicator.
+    
+    Yields
+    ------
+    token_type_and_part : `(int, str)`
+    """
+    line_number_string = str(current_line_index + 1)
+    yield (
+        HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_SPACE,
+        ' ' * (8 + line_number_string_length_upper_threshold - len(line_number_string)),
+    )
+    
+    if current_line_index == expression_exact_line_index:
+        token_type_line_number = HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_CODE_LINE_NUMBER_EXACT
+        token_type_pointer = HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_CODE_POINTER_EXACT
+        space = ' '
+        pointer = '>>>'
+    elif (
+        (current_line_index >= expression_line_start_index) and
+        (current_line_index <= expression_line_end_index)
+    ):
+        token_type_line_number = HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_CODE_LINE_NUMBER_EXPRESSION
+        token_type_pointer = HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_CODE_POINTER_EXPRESSION
+        space = '   '
+        pointer = '~'
+    else:
+        token_type_line_number = HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_CODE_LINE_NUMBER_SURROUND
+        token_type_pointer = HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_CODE_POINTER_SURROUND
+        space = '   '
+        pointer = '|'
+    
+    yield token_type_line_number, line_number_string
+    yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_SPACE, space
+    yield token_type_pointer, pointer
+    
+
+
 def produce_frame_proxy(frame):
     """
     Produces each part of the frame to render.
     
-    This method is an iterable generator.
+    This function is an iterable generator.
     
     Parameters
     ----------
@@ -144,36 +207,69 @@ def produce_frame_proxy(frame):
     ):
         return
     
-    removed_indentation_characters = expression_info.removed_indentation_characters
-    previous_character_line_break = True
     
     file_info = expression_info.file_info
     tokens = file_info.parse_result.tokens
-    content = file_info.content
+    expression_exact_line_index = frame.line_index
     
-    for token_index in range(expression_info.expression_token_start_index, expression_info.expression_token_end_index):
+    
+    expression_line_start_index = expression_info.expression_line_start_index
+    expression_line_end_index = expression_info.expression_line_end_index
+    
+    (
+        surround_line_start_index,
+        surround_line_end_index,
+        surround_token_start_index,
+        surround_token_end_index,
+    ) = get_surround_area(
+        tokens,
+        expression_exact_line_index,
+        expression_line_start_index,
+        expression_line_end_index,
+        expression_info.expression_token_start_index,
+        expression_info.expression_token_end_index,
+    )
+    shared_indentation_level = get_shared_indentation_length(
+        tokens,
+        surround_token_start_index,
+        surround_token_end_index,
+    )
+    
+    content = file_info.content
+    previous_character_line_break = True
+    current_line_index = surround_line_start_index
+    line_number_string_length_upper_threshold = len(str(surround_line_end_index + 1))
+    
+    for token_index in range(surround_token_start_index, surround_token_end_index):
+        if previous_character_line_break:
+            yield from _produce_pointer(
+                expression_exact_line_index,
+                expression_line_start_index,
+                expression_line_end_index,
+                current_line_index,
+                line_number_string_length_upper_threshold,
+            )
+        
         token = tokens[token_index]
         token_type = token.type
         
         if token_type == HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK:
             previous_character_line_break = True
             yield token_type, '\n'
+            current_line_index += 1
             continue
         
         token_content_character_index = token.content_character_index
         length = token.length
         
-        if (
-            previous_character_line_break and
-            removed_indentation_characters and
-            (token_type == HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_SPACE)
-        ):
-            token_content_character_index += removed_indentation_characters
-            length -= removed_indentation_characters
-        
         if previous_character_line_break:
-            yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_SPACE, '    '
-            previous_character_line_break = False
+            if shared_indentation_level and (token_type == HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_SPACE):
+                token_content_character_index += shared_indentation_level
+                length -= shared_indentation_level
+            
+            if previous_character_line_break:
+                previous_character_line_break = False
+                yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_SPACE, ' '
         
         if length <= 0:
             continue
@@ -181,7 +277,17 @@ def produce_frame_proxy(frame):
         yield token_type, content[token_content_character_index : token_content_character_index + length]
         continue
     
-    if not previous_character_line_break:
+    # The last line of a file does not end with a line break, so render is separately.
+    if (current_line_index <= surround_line_end_index):
+        if previous_character_line_break:
+            yield from _produce_pointer(
+                expression_exact_line_index,
+                expression_line_start_index,
+                expression_line_end_index,
+                current_line_index,
+                line_number_string_length_upper_threshold,
+            )
+        
         yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK, '\n'
 
 
@@ -209,7 +315,7 @@ def _produce_file_location(file_name, line_index, name, multi_line):
     ------
     token_type_and_part : `(int, str)`
     """
-    yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LOCATION, '  File '
+    yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_LOCATION, '    File '
     
     if file_name:
         file_name = file_name.replace('"', '\\"') # Add escapes into the file name
@@ -273,14 +379,14 @@ def _produce_exception_representation_syntax_error(exception_representation):
     line = exception_representation.line
     if line:
         # Add line
-        yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_SPACE, '    '
+        yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_SPACE, '        '
         yield from iter_highlight_code_token_types_and_values(line)
         yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK, '\n'
         
         # Add pointer
         pointer_length = exception_representation.pointer_length
         if pointer_length:
-            yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_SPACE, ' ' * (4 + exception_representation.pointer_start_offset)
+            yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_SPACE, ' ' * (8 + exception_representation.pointer_start_offset)
             yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_TRACE_TITLE_EXCEPTION_REPR, '^' * pointer_length
             yield HIGHLIGHT_TOKEN_TYPES.TOKEN_TYPE_LINE_BREAK, '\n'
     

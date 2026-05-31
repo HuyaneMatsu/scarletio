@@ -8,7 +8,7 @@ The token types for coloring are the following:
 +-----------------------------------------------------------+-------+-----------------------------------------------+
 | TOKEN_TYPE_SPACE                                          |   1   | TOKEN_TYPE_ALL                                |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
-| TOKEN_TYPE_LINE_BREAK                                      |   2   | TOKEN_TYPE_ALL                                |
+| TOKEN_TYPE_LINE_BREAK                                     |   2   | TOKEN_TYPE_ALL                                |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
 | TOKEN_TYPE_NON_SPACE                                      |   3   | TOKEN_TYPE_ALL                                |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
@@ -16,7 +16,7 @@ The token types for coloring are the following:
 +-----------------------------------------------------------+-------+-----------------------------------------------+
 | TOKEN_TYPE_COMMENT                                        |   5   | TOKEN_TYPE_ALL                                |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
-| TOKEN_TYPE_LINE_BREAK_ESCAPED                              |   6   | TOKEN_TYPE_LINE_BREAK                          |
+| TOKEN_TYPE_LINE_BREAK_ESCAPED                             |   6   | TOKEN_TYPE_LINE_BREAK                         |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
 | TOKEN_TYPE_CONSTANT                                       | 100   | TOKEN_TYPE_NON_SPACE                          |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
@@ -172,6 +172,24 @@ The token types for coloring are the following:
 +-----------------------------------------------------------+-------+-----------------------------------------------+
 | TOKEN_TYPE_TRACE_FRAME_REPEAT                             | 1301  | TOKEN_TYPE_TRACE_FRAME                        |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_TRACE_CODE                                     | 1400  | TOKEN_TYPE_TRACE                              |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_TRACE_CODE_LINE_NUMBER                         | 1410  | TOKEN_TYPE_TRACE_CODE                         |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_TRACE_CODE_LINE_NUMBER_EXACT                   | 1411  | TOKEN_TYPE_TRACE_CODE_LINE_NUMBER             |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_TRACE_CODE_LINE_NUMBER_EXPRESSION              | 1412  | TOKEN_TYPE_TRACE_CODE_LINE_NUMBER             |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_TRACE_CODE_LINE_NUMBER_SURROUND                | 1413  | TOKEN_TYPE_TRACE_CODE_LINE_NUMBER             |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_TRACE_CODE_POINTER                             | 1420  | TOKEN_TYPE_TRACE_CODE                         |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_TRACE_CODE_POINTER_EXACT                       | 1421  | TOKEN_TYPE_TRACE_CODE_POINTER                 |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_TRACE_CODE_POINTER_EXPRESSION                  | 1422  | TOKEN_TYPE_TRACE_CODE_POINTER                 |
++-----------------------------------------------------------+-------+-----------------------------------------------+
+| TOKEN_TYPE_TRACE_CODE_POINTER_SURROUND                    | 1423  | TOKEN_TYPE_TRACE_CODE_POINTER                 |
++-----------------------------------------------------------+-------+-----------------------------------------------+
 | TOKEN_TYPE_CONSOLE                                        | 2000  | TOKEN_TYPE_ALL                                |
 +-----------------------------------------------------------+-------+-----------------------------------------------+
 | TOKEN_TYPE_CONSOLE_BANNER                                 | 2100  | TOKEN_TYPE_CONSOLE                            |
@@ -314,6 +332,16 @@ TOKEN_TYPE_TRACE_LOCATION_NAME = 1203
 
 TOKEN_TYPE_TRACE_FRAME = 1300
 TOKEN_TYPE_TRACE_FRAME_REPEAT = 1301
+
+TOKEN_TYPE_TRACE_CODE = 1400
+TOKEN_TYPE_TRACE_CODE_LINE_NUMBER = 1410
+TOKEN_TYPE_TRACE_CODE_LINE_NUMBER_EXACT = 1411
+TOKEN_TYPE_TRACE_CODE_LINE_NUMBER_EXPRESSION = 1412
+TOKEN_TYPE_TRACE_CODE_LINE_NUMBER_SURROUND = 1413
+TOKEN_TYPE_TRACE_CODE_POINTER = 1420
+TOKEN_TYPE_TRACE_CODE_POINTER_EXACT = 1421
+TOKEN_TYPE_TRACE_CODE_POINTER_EXPRESSION = 1422
+TOKEN_TYPE_TRACE_CODE_POINTER_SURROUND = 1423
 
 # CONSOLE
 
@@ -470,6 +498,18 @@ TOKEN_STRUCTURE = {
         TOKEN_TYPE_TRACE_FRAME : {
             TOKEN_TYPE_TRACE_FRAME_REPEAT : None,
         },
+        TOKEN_TYPE_TRACE_CODE : {
+            TOKEN_TYPE_TRACE_CODE_LINE_NUMBER : {
+                TOKEN_TYPE_TRACE_CODE_LINE_NUMBER_EXACT : None,
+                TOKEN_TYPE_TRACE_CODE_LINE_NUMBER_EXPRESSION : None,
+                TOKEN_TYPE_TRACE_CODE_LINE_NUMBER_SURROUND : None,
+            },
+            TOKEN_TYPE_TRACE_CODE_POINTER : {
+                TOKEN_TYPE_TRACE_CODE_POINTER_EXACT : None,
+                TOKEN_TYPE_TRACE_CODE_POINTER_EXPRESSION : None,
+                TOKEN_TYPE_TRACE_CODE_POINTER_SURROUND : None,
+            },
+        }
     },
     TOKEN_TYPE_CONSOLE : {
         TOKEN_TYPE_CONSOLE_BANNER : {

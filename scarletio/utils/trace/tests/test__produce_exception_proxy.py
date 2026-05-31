@@ -36,22 +36,32 @@ def _get_input_exception_proxy():
     )
 
 
-def _get_expected_output_string():
-    return (
-        '  File "orin.py", around line 13, in sit\n'
-        '    hey\n'
-        '    sister\n'
-        '  File "okuu.py", line 16, in mind_read\n'
-        '    darling\n'
-         'Exception(\'hey mister\')\n'
-    )
+EXPECTED_OUTPUT_STRING = (
+    '    File "orin.py", around line 13, in sit\n'
+    '        11   |\n'
+    '        12   |\n'
+    '        13 >>> hey\n'
+    '        14   ~ sister\n'
+    '        15   |\n'
+    '    File "okuu.py", line 16, in mind_read\n'
+    '        14   |\n'
+    '        15   |\n'
+    '        16 >>> darling\n'
+    '        17   |\n'
+    'Exception(\'hey mister\')\n'
+)
 
 
+@vampytest.returning(EXPECTED_OUTPUT_STRING)
 def test__produce_exception_proxy__no_highlight():
     """
     Tests whether ``produce_exception_proxy`` works as intended.
     
     Case: No highlight.
+    
+    Returns
+    -------
+    output : `str`
     """
     exception_proxy = _get_input_exception_proxy()
     highlight_streamer = get_highlight_streamer(None)
@@ -64,18 +74,19 @@ def test__produce_exception_proxy__no_highlight():
     for element in output:
         vampytest.assert_instance(element, str)
     
-    output_string = ''.join(output)
-    vampytest.assert_eq(
-        output_string,
-        _get_expected_output_string(),
-    )
+    return ''.join(output)
 
 
+@vampytest.returning(EXPECTED_OUTPUT_STRING)
 def test__produce_exception_proxy__with_highlight():
     """
     Tests whether ``produce_exception_proxy`` works as intended.
     
     Case: With highlight.
+    
+    Returns
+    -------
+    output : `str`
     """
     exception_proxy = _get_input_exception_proxy()
     highlight_streamer = get_highlight_streamer(DEFAULT_ANSI_HIGHLIGHTER)
@@ -92,8 +103,4 @@ def test__produce_exception_proxy__with_highlight():
     split = [*iter_split_ansi_format_codes(output_string)]
     vampytest.assert_true(any(item[0] for item in split))
     
-    output_string = ''.join([item[1] for item in split if not item[0]])
-    vampytest.assert_eq(
-        output_string,
-        _get_expected_output_string(),
-    )
+    return ''.join([item[1] for item in split if not item[0]])

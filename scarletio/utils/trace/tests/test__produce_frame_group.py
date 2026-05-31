@@ -52,21 +52,31 @@ def _get_input_frame_group():
     return frame_group
 
 
-def _get_expected_output_string():
-    return (
-        '  File "koishi.py", around line 13, in sit\n'
-        '    hey\n'
-        '    mister\n'
-        '  File "satori.py", line 16, in mind_read\n'
-        '    i love you\n'
-    )
+EXPECTED_OUTPUT_STRING = (
+    '    File "koishi.py", around line 13, in sit\n'
+    '        11   |\n'
+    '        12   |\n'
+    '        13 >>> hey\n'
+    '        14   ~ mister\n'
+    '        15   |\n'
+    '    File "satori.py", line 16, in mind_read\n'
+    '        14   |\n'
+    '        15   |\n'
+    '        16 >>> i love you\n'
+    '        17   |\n'
+)
 
 
+@vampytest.returning(EXPECTED_OUTPUT_STRING)
 def test__produce_frame_group__no_repeat_no_highlight():
     """
     Tests whether ``produce_frame_group`` works as intended.
     
     Case: No repeat & no highlight.
+    
+    Returns
+    -------
+    output : `str`
     """
     frame_group = _get_input_frame_group()
     highlight_streamer = get_highlight_streamer(None)
@@ -79,18 +89,19 @@ def test__produce_frame_group__no_repeat_no_highlight():
     for element in output:
         vampytest.assert_instance(element, str)
     
-    output_string = ''.join(output)
-    vampytest.assert_eq(
-        output_string,
-        _get_expected_output_string(),
-    )
+    return ''.join(output)
 
 
+@vampytest.returning(EXPECTED_OUTPUT_STRING)
 def test__produce_frame_group__no_repeat_with_highlight():
     """
     Tests whether ``produce_frame_group`` works as intended.
     
     Case: No repeat & with highlight.
+    
+    Returns
+    -------
+    output : `str`
     """
     frame_group = _get_input_frame_group()
     highlight_streamer = get_highlight_streamer(DEFAULT_ANSI_HIGHLIGHTER)
@@ -107,18 +118,33 @@ def test__produce_frame_group__no_repeat_with_highlight():
     split = [*iter_split_ansi_format_codes(output_string)]
     vampytest.assert_true(any(item[0] for item in split))
     
-    output_string = ''.join([item[1] for item in split if not item[0]])
-    vampytest.assert_eq(
-        output_string,
-        _get_expected_output_string(),
-    )
+    return ''.join([item[1] for item in split if not item[0]])
 
 
+@vampytest.returning(
+    '[Following 2 frames were repeated 3 times]\n'
+    '    File "koishi.py", around line 13, in sit\n'
+    '        11   |\n'
+    '        12   |\n'
+    '        13 >>> hey\n'
+    '        14   ~ mister\n'
+    '        15   |\n'
+    '    File "satori.py", line 16, in mind_read\n'
+    '        14   |\n'
+    '        15   |\n'
+    '        16 >>> i love you\n'
+    '        17   |\n'
+    '[End of repeated frames]\n'
+)
 def test__produce_frame_group__with_repeat_no_highlight():
     """
     Tests whether ``produce_frame_group`` works as intended.
     
     Case: With repeat & no highlight.
+    
+    Returns
+    -------
+    output : `str`
     """
     frame_proxy_0 = FrameProxyVirtual.from_fields(
         file_name = 'koishi.py', line_index = 12, name = 'sit', instruction_index = 6
@@ -147,16 +173,4 @@ def test__produce_frame_group__with_repeat_no_highlight():
     for element in output:
         vampytest.assert_instance(element, str)
     
-    output_string = ''.join(output)
-    vampytest.assert_eq(
-        output_string,
-        (
-            '[Following 2 frames were repeated 3 times]\n'
-            '  File "koishi.py", around line 13, in sit\n'
-            '    hey\n'
-            '    mister\n'
-            '  File "satori.py", line 16, in mind_read\n'
-            '    i love you\n'
-            '[End of repeated frames]\n'
-        )
-    )
+    return ''.join(output)

@@ -11,7 +11,7 @@ from ...core import (
 from ...utils import HIGHLIGHT_TOKEN_TYPES, get_highlight_streamer, is_awaitable, render_exception_into
 from ...utils.trace.exception_representation import ExceptionRepresentationSyntaxError
 from ...utils.trace.exception_representation.syntax_error_helpers import (
-    fixup_syntax_error_line_from_buffer, is_syntax_error
+    fix_up_syntax_error_line_from_buffer, is_syntax_error
 )
 from ...utils.trace.rendering import _produce_exception_representation_syntax_error
 
@@ -516,7 +516,7 @@ class AsynchronousInteractiveConsole:
             # syntax_error.args = (message, (self.get_file_name(), *additional_details))
             
             if (editor is not None):
-                fixup_syntax_error_line_from_buffer(syntax_error, editor.get_buffer())
+                fix_up_syntax_error_line_from_buffer(syntax_error, editor.get_buffer())
             
             highlighter_stream = get_highlight_streamer(self.highlighter)
             for item in _produce_exception_representation_syntax_error(

@@ -1,11 +1,11 @@
 import vampytest
 
-from ..syntax_error_helpers import fixup_syntax_error_line_from_buffer
+from ..syntax_error_helpers import fix_up_syntax_error_line_from_buffer
 
 
 def _iter_options():
     buffer = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
-    # nothing to fixup
+    # nothing to fix up
     yield (
         ('message', ('koishi.py', 5, 6, 'pass')),
         buffer,
@@ -17,7 +17,7 @@ def _iter_options():
         ('message', ('koishi.py', 5, 6, 'pass', 8, 9)),
     )
     
-    # fixup
+    # fix up
     yield (
         ('message', ('koishi.py', 5, 6, None)),
         buffer,
@@ -55,9 +55,9 @@ def _iter_options():
 
 
 @vampytest._(vampytest.call_from(_iter_options()).returning_last())
-def test__fixup_syntax_error_line_from_buffer(input_parameters, buffer):
+def test__fix_up_syntax_error_line_from_buffer(input_parameters, buffer):
     """
-    Tests whether ``fixup_syntax_error_line_from_buffer`` works as intended.
+    Tests whether ``fix_up_syntax_error_line_from_buffer`` works as intended.
     
     Parameters
     ----------
@@ -72,5 +72,5 @@ def test__fixup_syntax_error_line_from_buffer(input_parameters, buffer):
     """
     syntax_error = SyntaxError()
     syntax_error.args = input_parameters
-    fixup_syntax_error_line_from_buffer(syntax_error, buffer)
+    fix_up_syntax_error_line_from_buffer(syntax_error, buffer)
     return syntax_error.args

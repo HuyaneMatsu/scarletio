@@ -9,19 +9,49 @@ from ..rendering import (
 
 def _iter_options__produce_file_location():
     # default
-    yield 'koishi.py', 56, 'watch', False, '  File "koishi.py", line 57, in watch\n'
+    yield (
+        'koishi.py',
+        56,
+        'watch',
+        False,
+        '    File "koishi.py", line 57, in watch\n',
+    )
     
     # expression line count > 1
-    yield 'koishi.py', 56, 'watch', True, '  File "koishi.py", around line 57, in watch\n'
+    yield (
+        'koishi.py',
+        56,
+        'watch',
+        True,
+        '    File "koishi.py", around line 57, in watch\n',
+    )
     
     # `"` in file name
-    yield 'koi"shi.py', 56, 'watch', False, '  File "koi\\"shi.py", line 57, in watch\n'
+    yield (
+        'koi"shi.py',
+        56,
+        'watch',
+        False,
+        '    File "koi\\"shi.py", line 57, in watch\n',
+    )
     
     # no file name
-    yield '', 56, 'watch', False, '  File unknown location, line 57, in watch\n'
+    yield (
+        '',
+        56,
+        'watch',
+        False,
+        '    File unknown location, line 57, in watch\n',
+    )
     
     # no function name
-    yield 'koishi.py', 56, '', False, '  File "koishi.py", line 57\n'
+    yield (
+        'koishi.py',
+        56,
+        '',
+        False,
+        '    File "koishi.py", line 57\n',
+    )
 
 
 @vampytest._(vampytest.call_from(_iter_options__produce_file_location()).returning_last())

@@ -13,21 +13,28 @@ def _get_input_frame():
     )
     frame_proxy.expression_info = create_dummy_expression_info(frame_proxy.expression_key, 'hey\nmister')
     return frame_proxy
-    
-
-def _get_expected_output_string():
-    return (
-        '  File "koishi.py", around line 13, in sit\n'
-        '    hey\n'
-        '    mister\n'
-    )
 
 
+EXPECTED_OUTPUT_STRING = (
+    '    File "koishi.py", around line 13, in sit\n'
+    '        11   |\n'
+    '        12   |\n'
+    '        13 >>> hey\n'
+    '        14   ~ mister\n'
+    '        15   |\n'
+)
+
+
+@vampytest.returning(EXPECTED_OUTPUT_STRING)
 def test__produce_frame_proxy__no_highlighter():
     """
     Tests whether ``produce_frame_proxy`` works as intended.
     
     Case: No highlighter.
+    
+    Returns
+    -------
+    output : `str`
     """
     frame_proxy = _get_input_frame()
     highlight_streamer = get_highlight_streamer(None)
@@ -41,15 +48,20 @@ def test__produce_frame_proxy__no_highlighter():
     for element in output:
         vampytest.assert_instance(element, str)
     
-    output_string = ''.join(output)
+    return ''.join(output)
     vampytest.assert_eq(output_string, _get_expected_output_string())
 
 
+@vampytest.returning(EXPECTED_OUTPUT_STRING)
 def test__produce_frame_proxy__with_highlighter():
     """
     Tests whether ``produce_frame_proxy`` works as intended.
     
     Case: With highlighter.
+    
+    Returns
+    -------
+    output : `str`
     """
     frame_proxy = _get_input_frame()
     highlight_streamer = get_highlight_streamer(DEFAULT_ANSI_HIGHLIGHTER)
@@ -66,5 +78,4 @@ def test__produce_frame_proxy__with_highlighter():
     split = [*iter_split_ansi_format_codes(output_string)]
     vampytest.assert_true(any(item[0] for item in split))
     
-    output_string = ''.join([item[1] for item in split if not item[0]])
-    vampytest.assert_eq(output_string, _get_expected_output_string())
+    return ''.join([item[1] for item in split if not item[0]])

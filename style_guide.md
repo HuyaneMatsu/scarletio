@@ -174,7 +174,7 @@ When an import line passes the recommended line length it should be broke into m
 
 ```py
 from ...utils.trace import (
-    _render_syntax_error_representation_into, fixup_syntax_error_line_from_buffer, get_exception_representation,
+    _render_syntax_error_representation_into, fix_up_syntax_error_line_from_buffer, get_exception_representation,
     is_syntax_error
 )
 ```
