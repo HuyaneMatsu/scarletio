@@ -119,7 +119,7 @@ class FutureWrapperAsync(FutureWrapperBase):
     
     def __new__(cls, future, loop):
         """
-        Creates a new ``FutureWrapperAsync`` object bound to the given `loop` and `future`.
+        Creates a new instance object bound to the given `loop` and `future`.
         
         Parameters
         ----------

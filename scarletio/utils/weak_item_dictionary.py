@@ -22,7 +22,7 @@ class _WeakItemDictionaryValueCallback:
     @has_docs
     def __new__(cls, parent):
         """
-        Creates a new ``_WeakItemDictionaryValueCallback``.
+        Creates a new instance.
         
         Parameters
         ----------
@@ -307,7 +307,7 @@ class WeakItemDictionary(dict):
     @has_docs
     def __init__(self, iterable = None):
         """
-        Creates a new ``WeakItemDictionary`` from the given iterable.
+        Creates a new instance from the given iterable.
         
         Parameters
         ----------

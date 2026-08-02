@@ -1,4 +1,12 @@
+# 1.0.99 *\[2025-08-02\]*
+
+#### Bug fixes
+
+- Fix `http` protocol boundary failed to be read when the boundary was located at the start of the current chunk.
+
 # 1.0.98 *\[2025-05-30\]*
+
+#### Improvements
 
 - Add new highlight token types for traces:
     - TOKEN_TYPE_TRACE_CODE
@@ -13,6 +21,7 @@
 - Improve trace rendering output by showing line number, and surround as well.
 
 ### scarletio.ext.async
+#### Bug fixes
 - Fix `create_task` created `Task` not with `asyncio`'s parameter order.
 - Fix `EventThrad.start_tls` failing `tls` compatibility check.
 

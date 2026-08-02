@@ -85,7 +85,7 @@ class AsyncProcess:
         cls, loop, process_parameters, shell, stdin, stdout, stderr, buffer_size, extra, process_open_kwargs
     ):
         """
-        Creates a new ``AsyncProcess``.
+        Creates a new instance.
         
         This method is a coroutine.
         
@@ -682,7 +682,7 @@ class AsyncProcess:
         
         Parameters
         ----------
-        input_value : `None`, `bytes-like`
+        input_value : `None | bytes-like`
             Optional data to be sent to the sub-process.
         """
         stdin = self.stdin
@@ -755,7 +755,7 @@ class AsyncProcess:
         
         Parameters
         ----------
-        input_value : `None`, `bytes-like` = `None` , Optional
+        input_value : `None | bytes-like` = `None` , Optional
             Optional data to be sent to the sub-process.
         timeout : `None`, `float` = `None`, Optional
             The maximal amount of time to wait for the process to close in seconds.

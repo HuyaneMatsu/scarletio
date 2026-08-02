@@ -21,7 +21,7 @@ class _WeakValueDictionaryCallback:
     @has_docs
     def __new__(cls, parent):
         """
-        Creates a new ``_WeakValueDictionaryCallback`` bound to the given ``WeakValueDictionary`` or
+        Creates a new instance bound to the given ``WeakValueDictionary`` or
         ``HybridValueDictionary``.
         
         Parameters
@@ -307,7 +307,7 @@ class WeakValueDictionary(dict):
     @has_docs
     def __init__(self, iterable = None):
         """
-        Creates a new ``WeakValueDictionary`` from the given iterable.
+        Creates a new instance from the given iterable.
         
         Parameters
         ----------

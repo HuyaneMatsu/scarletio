@@ -35,7 +35,7 @@ class TaskLocal:
     
     def __new__(cls, **keyword_parameters):
         """
-        Creates a new ``TaskLocal``.
+        Creates a new instance.
         
         Parameters
         ----------
@@ -162,7 +162,7 @@ class HTTPRequestHandler(HttpReadWriteProtocol):
     
     def __new__(cls, server):
         """
-        Creates a new ``HTTPRequestHandler`` bound to it's server.
+        Creates a new instance bound to it's server.
         
         Parameters
         ----------
@@ -292,7 +292,7 @@ class HTTPServer:
     
     async def __new__(cls, loop, host, port, *, ssl_context = None, **server_keyword_parameters):
         """
-        Creates a new ``HTTPServer`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         This method is a coroutine.
         
@@ -452,7 +452,7 @@ class Route:
     
     def __init__(self, rule):
         """
-        Creates a new ``Route`` with the given `func`.
+        Creates a new instance with the given `func`.
         
         Parameters
         ----------
@@ -732,7 +732,7 @@ class ParameterValidatorPathStep:
     
     def __new__(cls, parameter_type, parameter_name):
         """
-        Creates a new ``ParameterValidatorPathStep`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         Parameters
         ----------
@@ -953,7 +953,7 @@ class PathRouter:
     
     def __init__(self):
         """
-        Creates a new ``PathRouter``.
+        Creates a new instance.
         """
         self.route_step_paths = None
         self.route_step_validated = None
@@ -1379,7 +1379,7 @@ class _ErrorHandlerAdder:
     
     def __new__(cls, parent, error_code):
         """
-        Creates a new ``_ErrorHandlerAdder`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         Parameters
         ----------
@@ -2058,7 +2058,7 @@ class RuleDirectory:
     def __init__(self, view_func, positional_parameter_names, keyword_parameter_names, keyword_parameters_parameter_supported,
             endpoint):
         """
-        Creates a new ``RuleDirectory``.
+        Creates a new instance.
         
         Parameters
         ----------
@@ -2258,7 +2258,7 @@ class Rule:
     def __init__(self, rule, view_func, positional_parameter_names, keyword_parameter_names,
             keyword_parameters_parameter_supported, endpoint, request_methods, parameters, subdomain):
         """
-        Creates a new ``Rule``.
+        Creates a new instance.
         
         Parameters
         ----------
@@ -3481,7 +3481,7 @@ class Blueprint(AppBase):
         url_defaults = None,
     ):
         """
-        Creates a new ``Blueprint``.
+        Creates a new instance.
         
         Parameters
         ----------
@@ -3656,7 +3656,7 @@ class WebApp(AppBase):
         static_url_path = None,
     ):
         """
-        Creates a new ``WebApp``.
+        Creates a new instance.
         
         Parameters
         ----------
@@ -3813,7 +3813,7 @@ class RequestHandler:
     
     def __new__(cls, application):
         """
-        Creates a new ``RequestHandler``.
+        Creates a new instance.
         
         Parameters
         ----------

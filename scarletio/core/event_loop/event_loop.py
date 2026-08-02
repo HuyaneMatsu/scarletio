@@ -110,7 +110,7 @@ class EventThread(Executor, Thread, metaclass = EventThreadType):
     
     def __init__(self):
         """
-        Creates a new ``EventThread`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         Notes
         -----

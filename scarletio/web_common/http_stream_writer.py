@@ -29,7 +29,7 @@ class HTTPStreamWriter:
     
     def __init__(self, protocol, compression, chunked):
         """
-        Creates a new ``HTTPStreamWriter`` with the given parameter.
+        Creates a new instance with the given parameter.
         
         Parameters
         ----------

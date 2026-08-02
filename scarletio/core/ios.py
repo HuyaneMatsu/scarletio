@@ -236,7 +236,7 @@ class AsyncIO:
     
     async def __new__(cls, *positional_parameters, **keyword_parameters):
         """
-        Creates a new ``AsyncIO`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         This method is a coroutine.
         
@@ -963,7 +963,7 @@ class ReuAsyncIO(AsyncIO):
     
     async def __new__(cls, path, mode = 'rb', *positional_parameters, **keyword_parameters):
         """
-        Creates a new ``AsyncIO`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         This method is a coroutine.
         

@@ -162,7 +162,7 @@ class WebSocketServerProtocol(WebSocketCommonProtocol):
     
     def __new__(cls, server):
         """
-        Creates a new ``WebSocketServerProtocol`` with the given parameters.
+        Creates a new `instance with the given parameters.
         
         This method is usually wrapped into a partial function.
         

@@ -24,7 +24,7 @@ class SubprocessWritePipeProtocol(AbstractProtocolBase):
     
     def __new__(cls, process, file_descriptor):
         """
-        Creates a new ``SubprocessWritePipeProtocol`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         Parameters
         ----------

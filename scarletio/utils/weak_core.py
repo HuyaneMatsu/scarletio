@@ -51,7 +51,7 @@ class WeakHasher:
     @has_docs
     def __init__(self, reference):
         """
-        Creates a new ``WeakHasher`` from the given reference.
+        Creates a new instance from the given reference.
         
         Parameters
         ----------
@@ -161,7 +161,7 @@ class KeyedReferer(WeakReferer):
     @has_docs
     def __new__(cls, obj, callback, key, ):
         """
-        Creates a new ``KeyedReferer`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         Parameters
         ----------
@@ -248,7 +248,7 @@ class weak_method(WeakReferer, MethodLike):
     @has_docs
     def __new__(cls, obj, func, callback = None):
         """
-        Creates a new ``weak_method`` with the given parameter.
+        Creates a new instance with the given parameter.
         
         Parameters
         ----------
@@ -322,7 +322,7 @@ class weak_method(WeakReferer, MethodLike):
     @has_docs
     def from_method(cls, method_, callback = None):
         """
-        Creates a new ``weak_method`` from the given `method`.
+        Creates a new instance from the given `method`.
         
         Parameters
         ----------

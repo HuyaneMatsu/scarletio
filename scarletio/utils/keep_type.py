@@ -34,7 +34,7 @@ class KeepType:
     @has_docs
     def __new__(cls, old_class, *, new_class = None):
         """
-        Creates a new ``KeepType`` with given `old_class` to extend. Can be used as a decorator if `new_class`
+        Creates a new instance with given `old_class` to extend. Can be used as a decorator if `new_class`
         parameter is not given.
         
         Parameters

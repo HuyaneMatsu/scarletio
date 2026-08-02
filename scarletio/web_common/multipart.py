@@ -29,7 +29,7 @@ INVALID_QDTEXT_CHAR_RP = re_compile(br'[\x00-\x08\x0A-\x1F\x7F]')
 
 def create_payload(data, keyword_parameters):
     """
-    Creates a new ``PayloadBase`` with the given parameters.
+    Creates a new instance with the given parameters.
     
     Parameters
     ----------
@@ -100,7 +100,7 @@ class PayloadBase:
     
     def __init__(self, data, keyword_parameters):
         """
-        Creates a new ``PayloadBase``.
+        Creates a new instance.
         
         Parameters
         ----------
@@ -226,7 +226,7 @@ class BytesPayload(PayloadBase):
     
     def __init__(self, data, keyword_parameters):
         """
-        Creates a new ``BytesPayload``.
+        Creates a new instance.
         
         Parameters
         ----------
@@ -278,7 +278,7 @@ class StringPayload(BytesPayload):
     
     def __init__(self, data, keyword_parameters):
         """
-        Creates a new ``StringPayload``.
+        Creates a new instance.
         
         Parameters
         ----------
@@ -334,7 +334,7 @@ class StringIOPayload(StringPayload):
     
     def __init__(self, data, keyword_parameters):
         """
-        Creates a new ``StringIOPayload``.
+        Creates a new instance.
         
         Parameters
         ----------
@@ -369,7 +369,7 @@ class IOBasePayload(PayloadBase):
     __slots__ = ()
     def __init__(self, data, keyword_parameters):
         """
-        Creates a new ``IOBasePayload``.
+        Creates a new instance.
         
         Parameters
         ----------
@@ -440,7 +440,7 @@ class TextIOPayload(IOBasePayload):
     
     def __init__(self, data, keyword_parameters):
         """
-        Creates a new ``TextIOPayload``.
+        Creates a new instance.
         
         Parameters
         ----------
@@ -524,7 +524,7 @@ class BytesIOPayload(IOBasePayload):
     
     def __init__(self, data, keyword_parameters):
         """
-        Creates a new ``BytesIOPayload``.
+        Creates a new instance.
         
         Parameters
         ----------
@@ -564,7 +564,7 @@ class BufferedReaderPayload(IOBasePayload):
     
     def __init__(self, data, keyword_parameters):
         """
-        Creates a new ``BufferedReaderPayload``.
+        Creates a new instance.
         
         Parameters
         ----------
@@ -606,7 +606,7 @@ class JsonPayload(BytesPayload):
     
     def __init__(self, data, keyword_parameters):
         """
-        Creates a new ``AsyncIterablePayload``.
+        Creates a new instance.
         
         Parameters
         ----------
@@ -648,7 +648,7 @@ class AsyncIterablePayload(PayloadBase):
     
     def __init__(self, data, keyword_parameters):
         """
-        Creates a new ``AsyncIterablePayload``.
+        Creates a new instance.
         
         Parameters
         ----------
@@ -755,7 +755,7 @@ class BodyPartReaderPayload(PayloadBase):
     
     def __init__(self, data, keyword_parameters):
         """
-        Creates a new ``BodyPartReaderPayload``.
+        Creates a new instance.
         
         Parameters
         ----------
@@ -1092,7 +1092,7 @@ class MultipartWriter(PayloadBase):
     
     def __init__(self, subtype = 'mixed', boundary = None):
         """
-        Creates a new ``MultipartWriter`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         Parameters
         ----------
@@ -1436,7 +1436,7 @@ class MultipartPayloadWriter:
     
     def __new__(cls, writer, content_encoding, transfer_encoding):
         """
-        Creates a new ``MultipartPayloadWriter`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         Parameters
         ----------

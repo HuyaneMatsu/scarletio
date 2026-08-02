@@ -20,7 +20,7 @@ class _WeakMapCallback:
     @has_docs
     def __new__(cls, parent):
         """
-        Creates a new ``_WeakMapCallback`` bound to the given ``WeakMap``.
+        Creates a new instance bound to the given ``WeakMap``.
         
         Parameters
         ----------
@@ -182,7 +182,7 @@ class WeakMap(dict):
     @has_docs
     def __init__(self, iterable = None):
         """
-        Creates a new ``WeakMap`` from the given iterable.
+        Creates a new instance from the given iterable.
         
         Parameters
         ----------

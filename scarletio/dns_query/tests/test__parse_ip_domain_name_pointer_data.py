@@ -6,7 +6,7 @@ from ..building_and_parsing import parse_domain_name_pointer_data
 def _iter_options():
     yield None, None
     yield b'', None
-    yield b'\05aaaaa\01b\00', 'aaaaa.b'
+    yield b'\005aaaaa\001b\000', 'aaaaa.b'
 
 
 @vampytest._(vampytest.call_from(_iter_options()).returning_last())

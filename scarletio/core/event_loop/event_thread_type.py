@@ -141,7 +141,7 @@ class EventThreadType(type):
     """
     def __call__(cls, daemon = False, name = None, start_later = True, **keyword_parameters):
         """
-        Creates a new ``EventThread`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         Parameters
         ----------

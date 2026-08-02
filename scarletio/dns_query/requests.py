@@ -704,7 +704,7 @@ async def get_address_info_async(
         #         RESOURCE_RECORD_TYPE_OPT,
         #         1232,
         #         0,
-        #         OPTION_TYPE_KEEP_ALIVE.to_bytes(2, 'big') + b'\00\00',
+        #         OPTION_TYPE_KEEP_ALIVE.to_bytes(2, 'big') + b'\000\000',
         #     ),
         # ),
         

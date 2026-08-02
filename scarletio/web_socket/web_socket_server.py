@@ -100,7 +100,7 @@ class WebSocketServer:
         **server_keyword_parameters,
     ):
         """
-        Creates a new ``WebSocketServer`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         This method is a coroutine.
         

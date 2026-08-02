@@ -90,7 +90,7 @@ class SSLPipe:
     
     def __init__(self, context, server_side, server_host_name):
         """
-        Creates a new ``SSLPipe`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         Parameters
         ----------

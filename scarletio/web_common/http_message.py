@@ -414,7 +414,7 @@ class RawRequestMessage(RawMessage):
     
     def __new__(cls, version, method, path, headers):
         """
-        Creates a new ``RawRequestMessage`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         Parameters
         ----------

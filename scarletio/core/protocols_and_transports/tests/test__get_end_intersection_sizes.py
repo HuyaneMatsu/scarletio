@@ -4,11 +4,103 @@ from ..protocol import _get_end_intersection_sizes
 
 
 def _iter_options():
-    yield 'hey mister', 0, 'mister, water heater for sale', [6]
-    yield 'hey mister', 0, 'r mister, water heater for sale', [1]
-    yield 'hey mister', 5, 'mister, water heater for sale', None
-    yield 'hey mister', 5, 'r mister, water heater for sale', [1]
-    yield 'ay aya', 0, 'ayaya', [3, 1]
+    yield (
+        b'abc',
+        0,
+        b'abc abc',
+        [3],
+    )
+    
+    yield (
+        b'abc',
+        1,
+        b'abc abc',
+        None,
+    )
+    
+    yield (
+        b'abc',
+        2,
+        b'abc abc',
+        None,
+    )
+    
+    yield (
+        b'aab',
+        1,
+        b'abc abc',
+        [2],
+    )
+    
+    yield (
+        b'aab',
+        2,
+        b'abc abc',
+        None,
+    )
+    
+    yield (
+        b'aaa',
+        2,
+        b'abc abc',
+        [1],
+    )
+    
+    yield (
+        b'abc abc',
+        0,
+        b'abc abc abc',
+        [7, 3],
+    )
+    
+    yield (
+        b'abc abc',
+        1,
+        b'abc abc abc',
+        [3],
+    )
+    
+    yield (
+        b'abc abc',
+        2,
+        b'abc abc abc',
+        [3],
+    )
+    
+    yield (
+        b'abc abc',
+        3,
+        b'abc abc abc',
+        [3],
+    )
+    
+    yield (
+        b'abc abc',
+        4,
+        b'abc abc abc',
+        [3],
+    )
+    
+    yield (
+        b'abc abc',
+        5,
+        b'abc abc abc',
+        None,
+    )
+    
+    yield (
+        b'nyan',
+        0,
+        b'\r\n',
+        None,
+    )
+    
+    yield (
+        b'nyan\r',
+        0,
+        b'\r\n',
+        [1],
+    )
 
 
 @vampytest._(vampytest.call_from(_iter_options()).returning_last())

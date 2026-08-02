@@ -41,7 +41,7 @@ class AsyncQueue:
     
     def __new__(cls, loop, iterable = None, max_length = None, exception = None):
         """
-        Creates a new ``AsyncQueue`` with the given parameter.
+        Creates a new instance with the given parameter.
         
         Parameters
         ----------

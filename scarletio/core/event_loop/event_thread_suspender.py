@@ -38,7 +38,7 @@ class ThreadSuspenderContext:
     
     def __init__(self, loop):
         """
-        Creates a new ``ThreadSuspenderContext`` bound to the given event loop.
+        Creates a new instance bound to the given event loop.
         
         Parameters
         ----------

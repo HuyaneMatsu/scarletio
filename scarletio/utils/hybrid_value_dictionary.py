@@ -277,7 +277,7 @@ class HybridValueDictionary(dict):
     @has_docs
     def __init__(self, iterable = None):
         """
-        Creates a new ``HybridValueDictionary`` from the given iterable.
+        Creates a new instance from the given iterable.
         
         Parameters
         ----------

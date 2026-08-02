@@ -16,7 +16,7 @@ class _FutureChainer:
     
     def __init__(self, target):
         """
-        Creates a new ``_FutureChainer`` with the given target future.
+        Creates a new instance with the given target future.
         
         Parameters
         ----------

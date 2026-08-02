@@ -42,7 +42,7 @@ class SyncWait:
     
     def __init__(self):
         """
-        Creates a new ``SyncWait``.
+        Creates a new instance.
         """
         self._result = None
         self._waiter = SyncEvent()
@@ -98,7 +98,7 @@ class SyncQueue:
     
     def __init__(self, iterable = None, max_length = None, cancelled = False):
         """
-        Creates a new ``SyncQueue`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         Parameters
         ----------
@@ -674,7 +674,7 @@ class ExecutionPair:
     
     def __init__(self, func, future):
         """
-        Creates a new ``ExecutionPair``.
+        Creates a new instance.
         
         Parameters
         ----------
@@ -708,7 +708,7 @@ class _ClaimEndedCallback:
     
     def __init__(self, parent, executor):
         """
-        Creates a new ``_ClaimEndedCallback`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         Parameters
         ----------
@@ -848,7 +848,7 @@ class ExecutionEndedCallback:
     
     def __init__(self, parent, executor):
         """
-        Creates a new ``ExecutionEndedCallback`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         Parameters
         ----------

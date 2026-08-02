@@ -30,7 +30,7 @@ class SortedList(list):
     @has_docs
     def __init__(self, iterable = None, reverse = False):
         """
-        Creates a new ``SortedList`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         Parameters
         ----------

@@ -4,11 +4,68 @@ from ..protocol import _finish_intersection_sizes
 
 
 def _iter_options():
-    yield 'ayaya', 'ayaya', [3, 1], (-1, None)
-    yield 'yayaya', 'ayaya', [3, 1], (2, None)
-    yield ', water heater for sale', 'mister, water heater for sale', [6], (23, None)
-    yield 'ister, water heater for sale', 'mister, water heater for sale', [1], (28, None)
-    yield ', water heater for', 'mister, water heater for sale', [6], (-1, [6])
+    yield (
+        b'abc nyan nyan',
+        b'abc abc',
+        [1],
+        (-1, None),
+    )
+    
+    yield (
+        b'abc nyan nyan',
+        b'abc abc',
+        [2],
+        (-1, None),
+    )
+    
+    yield (
+        b'abc nyan nyan',
+        b'abc abc',
+        [3],
+        (-1, None),
+    )
+    
+    yield (
+        b'abc nyan nyan',
+        b'abc abc',
+        [4],
+        (3, None),
+    )
+    
+    yield (
+        b'abc nyan nyan',
+        b'abc abc',
+        [5],
+        (-1, None),
+    )
+    
+    yield (
+        b'abc nyan nyan',
+        b'abc abc',
+        [1, 2, 3, 4, 5, 6],
+        (3, None),
+    )
+    
+    yield (
+        b'abc',
+        b' abc abc',
+        [1],
+        (-1, [1]),
+    )
+    
+    yield (
+        b'\nnyan',
+        b'\r\n',
+        [1],
+        (1, None),
+    )
+    
+    yield (
+        b'nyan',
+        b'\r\n',
+        [1],
+        (-1, None),
+    )
 
 
 @vampytest._(vampytest.call_from(_iter_options()).returning_last())

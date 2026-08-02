@@ -111,7 +111,7 @@ class BaseMethodDescriptor:
     @has_docs
     def __init__(self, fget):
         """
-        Creates a new ``BaseMethodDescriptor`` with the given parameter.
+        Creates a new instance with the given parameter.
         
         Parameters
         ----------

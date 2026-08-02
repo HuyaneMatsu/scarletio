@@ -445,7 +445,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         
         Parameters
         ----------
-        data : `None`, `bytes-like`, `str`
+        data : `None | bytes-like`, `str`
             Ping payload to send. Defaults to `None`.
             
             If the given or generated payload is already waiting for response, then will regenerate it, till a free
@@ -454,7 +454,7 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         Raises
         ------
         TypeError
-            `data` is not given neither as `None`, `bytes-like`, `str`.
+            `data` is not given neither as `None | bytes-like`, `str`.
         ConnectionClosed
             WebSocket connection closed.
         Exception
@@ -492,13 +492,13 @@ class WebSocketCommonProtocol(HttpReadWriteProtocol):
         
         Parameters
         ----------
-        data : `None`, `bytes-like`, `str`
+        data : `None | bytes-like`, `str`
             Ping payload to send. Defaults to `None`.
         
         Raises
         ------
         TypeError
-            `data` is not given neither as `None`, `bytes-like`, `str`.
+            `data` is not given neither as `None | bytes-like`, `str`.
         ConnectionClosed
             WebSocket connection closed.
         Exception

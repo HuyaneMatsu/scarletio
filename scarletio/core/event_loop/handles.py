@@ -30,7 +30,7 @@ class Handle:
     
     def __init__(self, func, args):
         """
-        Creates a new ``Handle`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         Parameters
         ----------
@@ -196,7 +196,7 @@ class TimerHandle(Handle):
     
     def __init__(self, when, func, args):
         """
-        Creates a new ``TimerHandle`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         Parameters
         ----------
@@ -327,7 +327,7 @@ class TimerWeakHandle(TimerHandle):
     
     def __init__(self, when, func, args):
         """
-        Creates a new ``TimerWeakHandle`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         Parameters
         ----------

@@ -84,7 +84,7 @@ class Future:
     
     def __new__(cls, loop):
         """
-        Creates a new ``Future`` object bound to the given `loop`.
+        Creates a new instance object bound to the given `loop`.
         
         Parameters
         ----------

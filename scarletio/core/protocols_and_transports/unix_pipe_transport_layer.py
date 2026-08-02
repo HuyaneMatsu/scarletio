@@ -52,7 +52,7 @@ class UnixReadPipeTransportLayer(TransportLayerBase):
     
     async def __new__(cls, loop, extra, pipe, protocol):
         """
-        Creates a new ``UnixReadPipeTransportLayer`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         This method is a coroutine.
         
@@ -310,7 +310,7 @@ class UnixWritePipeTransportLayer(TransportLayerBase):
     
     async def __new__(cls, loop, pipe, protocol, extra = None):
         """
-        Creates a new ``UnixWritePipeTransportLayer`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         This method is a coroutine.
         

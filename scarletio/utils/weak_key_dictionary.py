@@ -21,7 +21,7 @@ class _WeakKeyDictionaryCallback:
     @has_docs
     def __new__(cls, parent):
         """
-        Creates a new ``_WeakKeyDictionaryCallback`` bound to the given ``WeakKeyDictionary``.
+        Creates a new instance bound to the given ``WeakKeyDictionary``.
         
         Parameters
         ----------
@@ -281,7 +281,7 @@ class WeakKeyDictionary(dict):
     @has_docs
     def __init__(self, iterable = None):
         """
-        Creates a new ``WeakKeyDictionary`` from the given iterable.
+        Creates a new instance from the given iterable.
         
         Parameters
         ----------

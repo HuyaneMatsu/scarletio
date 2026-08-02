@@ -3,10 +3,12 @@ __all__ = (
     'is_coroutine_generator_function', 'is_generator', 'is_generator_function', 'to_coroutine'
 )
 
-import sys
+from sys import version_info as VERSION_INFO
 from types import AsyncGeneratorType, CoroutineType, FunctionType, GeneratorType, MethodType
 
-from .code import CODE_FLAG_COROUTINE_GENERATOR, CODE_FLAG_COROUTINE_ALL, CODE_FLAG_GENERATOR, CODE_FLAG_ITERABLE_COROUTINE
+from .code import (
+    CODE_FLAG_COROUTINE_GENERATOR, CODE_FLAG_COROUTINE_ALL, CODE_FLAG_GENERATOR, CODE_FLAG_ITERABLE_COROUTINE
+)
 from .docs import has_docs, set_docs
 
 
@@ -164,7 +166,7 @@ def is_generator(obj):
     return isinstance(obj, GeneratorType)
 
 
-if sys.version_info >= (3, 11, 0):
+if VERSION_INFO >= (3, 11, 0):
     def to_coroutine(function):
         if not isinstance(function, FunctionType):
             raise TypeError(
@@ -206,7 +208,7 @@ if sys.version_info >= (3, 11, 0):
         
         return function
 
-elif sys.version_info >= (3, 8, 0):
+elif VERSION_INFO >= (3, 8, 0):
     def to_coroutine(function):
         if not isinstance(function, FunctionType):
             raise TypeError(
@@ -284,7 +286,8 @@ else:
         
         return function
 
-set_docs(to_coroutine,
+set_docs(
+    to_coroutine,
     """
     Transforms the given generator function to coroutine function.
     
@@ -302,4 +305,5 @@ set_docs(to_coroutine,
     TypeError
         - `function`'s type is incorrect.
         - `FunctionType` cannot be turned to coroutine.
-    """)
+    """,
+)

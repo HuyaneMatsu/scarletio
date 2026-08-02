@@ -29,7 +29,7 @@ class CyclerCallable:
     
     def __new__(cls, func, priority):
         """
-        Creates a new ``CyclerCallable`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         Parameters
         ----------
@@ -165,7 +165,7 @@ class Cycler:
     
     def __new__(cls, loop, cycle_time, *funcs, priority = 0):
         """
-        Creates a new ``Cycler`` with the given parameters.
+        Creates a new instance with the given parameters.
         
         Parameters
         ----------

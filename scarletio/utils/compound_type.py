@@ -805,7 +805,7 @@ class ImplementationDetail:
     
     def __new__(cls, instance_attribute, implemented, implementation, implementation_source, name):
         """
-        Creates a new ``ImplementationDetail``.
+        Creates a new instance.
         
         Parameters
         ----------

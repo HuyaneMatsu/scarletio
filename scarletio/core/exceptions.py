@@ -62,7 +62,7 @@ class InvalidStateError(Exception):
     
     def __new__(cls, future, location, message = None):
         """
-        Creates a new ``InvalidStateError``.
+        Creates a new instance.
         
         Parameters
         ----------

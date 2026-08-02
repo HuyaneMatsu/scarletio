@@ -22,7 +22,7 @@ class FormatterNode:
     
     def __new__(cls, formatter, id_):
         """
-        Creates a new ``TokenClassNode`` with the given identifier.
+        Creates a new instance with the given identifier.
         
         Parameters
         ----------

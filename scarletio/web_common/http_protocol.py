@@ -732,7 +732,7 @@ class HttpReadWriteProtocol(ReadWriteProtocolBase, HttpReadProtocol):
             Response headers.
         version : ``HttpVersion`` = `HttpVersion11`, Optional
             Http version of the response. Defaults to `HttpVersion11`.
-        body : `None`, `bytes-like` = `None`, Optional
+        body : `None | bytes-like` = `None`, Optional
             Http response body.
         
         Raises

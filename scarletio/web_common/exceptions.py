@@ -226,7 +226,7 @@ class ConnectionClosed(Exception):
     
     def __new__(cls, code, exception, reason = None):
         """
-        Creates a new ``ConnectionClosed`` exception from the given parameters.
+        Creates a new instance exception from the given parameters.
         
         Parameters
         ----------

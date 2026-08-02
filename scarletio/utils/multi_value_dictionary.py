@@ -83,7 +83,7 @@ class MultiValueDictionary(dict):
     @has_docs
     def __init__(self, iterable = None):
         """
-        Creates a new ``MultiValueDictionary``.
+        Creates a new instance.
         
         Parameters
         ----------

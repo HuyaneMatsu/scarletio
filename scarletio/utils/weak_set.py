@@ -20,7 +20,7 @@ class _WeakSetCallback:
     @has_docs
     def __new__(cls, parent):
         """
-        Creates a new ``_WeakKeyDictionaryCallback`` bound to the given ``WeakSet``.
+        Creates a new instance bound to the given ``WeakSet``.
         
         Parameters
         ----------
@@ -250,7 +250,7 @@ class WeakSet(set):
     @has_docs
     def __init__(self, iterable = None):
         """
-        Creates a new ``WeakSet`` from the given iterable.
+        Creates a new instance from the given iterable.
         
         Parameters
         ----------

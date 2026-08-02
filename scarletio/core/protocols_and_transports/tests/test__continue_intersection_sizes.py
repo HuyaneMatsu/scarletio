@@ -4,9 +4,26 @@ from ..protocol import _continue_intersection_sizes
 
 
 def _iter_options():
-    yield 'ayaya', 'ayayaya', [3, 1], None
-    yield 'yaya', 'ayayayaya', [3, 1], [7, 5]
-    yield ', water heater for', 'mister, water heater for sale', [6], [24]
+    yield (
+        b'abc',
+        b' abc abc',
+        [1],
+        [4],
+    )
+    
+    yield (
+        b'abc',
+        b' abc abc',
+        [1, 2, 3, 4, 5, 6],
+        [4, 8],
+    )
+    
+    yield (
+        b'dddd',
+        b' abc abc',
+        [2],
+        None,
+    )
 
 
 @vampytest._(vampytest.call_from(_iter_options()).returning_last())

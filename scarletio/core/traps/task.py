@@ -73,7 +73,7 @@ class Task(Future):
     
     def __new__(cls, loop, coroutine):
         """
-        Creates a new ``Task`` object running the given coroutine on the given event loop.
+        Creates a new instance object running the given coroutine on the given event loop.
         
         Parameters
         ----------

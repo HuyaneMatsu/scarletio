@@ -78,18 +78,20 @@ def _finish_intersection_sizes(chunk, boundary, intersection_sizes):
     -------
     consumed_bytes : `int`
         Returns `-1` on failure.
+    
     intersection_sizes : `None | list<int>`
         Leftover intersection sizes if chunk size is too small.
     """
     chunk_length = len(chunk)
-    boundary_length = len(boundary) - 1
+    boundary_length = len(boundary)
     continued_intersection_sizes = None
     
     for intersection_size in intersection_sizes:
-        leftover_size = boundary_length - intersection_size + 1
+        leftover_size = boundary_length - intersection_size
         if leftover_size > chunk_length:
             if continued_intersection_sizes is None:
                 continued_intersection_sizes = []
+            
             continued_intersection_sizes.append(intersection_size)
             continue
         
@@ -141,7 +143,7 @@ def _continue_intersection_sizes(chunk, boundary, intersection_sizes):
     return continued_intersection_sizes
 
 
-def _get_released_from_held_back(held_back, amount_to_keep):
+def _get_released_from_held_back(held_back, amount_to_drop):
     """
     Releases from held back chunks.
     
@@ -150,7 +152,7 @@ def _get_released_from_held_back(held_back, amount_to_keep):
     held_back : `None | list<bytes | memoryview>`
         The held back chunks.
     
-    amount_to_keep : `int`
+    amount_to_drop : `int`
         The amount of bytes to hold back.
     
     Returns
@@ -161,10 +163,10 @@ def _get_released_from_held_back(held_back, amount_to_keep):
     if held_back is None:
         return None, None
     
-    if amount_to_keep <= 0:
+    if amount_to_drop <= 0:
         return held_back, None
     
-    amount_to_release = sum(len(chunk) for chunk in held_back) - amount_to_keep
+    amount_to_release = sum(len(chunk) for chunk in held_back) - amount_to_drop
     if amount_to_release <= 0:
         return None, held_back
     
@@ -226,6 +228,234 @@ def _merge_intersection_sizes(intersection_sizes_0, intersection_sizes_1):
         return intersection_sizes_0
     
     return [*intersection_sizes_0, *intersection_sizes_1]
+
+
+def _iter_release_from_held_back_chunks_with_start_and_end_boundary(held_back_offset, held_back, dropped_bytes):
+    """
+    Iterates over and released held back chunks.
+    
+    This function is an iterable generator.
+    
+    Parameters
+    ----------
+    held_back_offset : `int`
+        Offset applied from the start.
+    
+    held_back : `list<bytes>`
+        Held back chunks.
+    
+    dropped_bytes : `int`
+        Offset applies from the end.
+    
+    Yields
+    ------
+    chunk : `bytes | memoryview`
+    """
+    total_length = sum(len(chunk) for chunk in held_back) - held_back_offset - dropped_bytes
+    if total_length <= 0:
+        return
+    
+    for chunk in held_back:
+        chunk_length = len(chunk) - held_back_offset
+        if chunk_length > total_length:
+            yield memoryview(chunk)[held_back_offset : held_back_offset + total_length]
+            break
+        
+        if held_back_offset:
+            yield memoryview(chunk)[held_back_offset:]
+            held_back_offset = 0
+        else:
+            yield chunk
+        
+        if chunk_length < total_length:
+            total_length -= chunk_length
+            continue
+        
+        break
+
+
+def _iter_release_from_held_back_chunks_with_start_boundary(held_back_offset, held_back):
+    """
+    Iterates over and released held back chunks.
+    
+    This function is an iterable generator.
+    
+    Parameters
+    ----------
+    held_back_offset : `int`
+        Offset applied from the start.
+    
+    held_back : `list<bytes>`
+        Held back chunks.
+    
+    Yields
+    ------
+    chunk : `bytes | memoryview`
+    """
+    for chunk in held_back:
+        if held_back_offset:
+            yield memoryview(chunk)[held_back_offset:]
+            held_back_offset = 0
+        else:
+            yield chunk
+
+
+def _iter_release_from_held_back_chunks_unused(held_back_offset, held_back, kept_bytes):
+    """
+    Iterates over and released held back chunks.
+    
+    This function is an iterable generator.
+    
+    Parameters
+    ----------
+    held_back_offset : `int`
+        Offset applied from the start.
+    
+    held_back : `list<bytes>`
+        Held back chunks.
+    
+    kept_bytes : `int`
+        The lower threshold of bytes to keep from the end.
+    
+    Yields
+    ------
+    chunk : `bytes | memoryview`
+    """
+    total_length = sum(len(chunk) for chunk in held_back) - held_back_offset - kept_bytes
+    if total_length <= 0:
+        return
+    
+    while held_back:
+        chunk = held_back[0]
+        chunk_length = len(chunk) - held_back_offset
+        if chunk_length > total_length:
+            break
+        
+        del held_back[0]
+        if held_back_offset:
+            yield memoryview(chunk)[held_back_offset:]
+            held_back_offset = 0
+        else:
+            yield chunk
+        
+        if chunk_length < total_length:
+            total_length -= chunk_length
+            continue
+        
+        break
+
+
+async def _read_until_by_chunk(read_protocol, boundary):
+    """
+    Payload reader task, that reads until `boundary` is hit. Yields back each data chunk.
+    
+    This function is a coroutine generator.
+    
+    Parameters
+    ----------
+    read_protocol : ``ReadProtocolBase``
+        Read protocol base.
+    
+    boundary : `bytes`
+        The boundary to read until. Consumed but not returned.
+    
+    Raises
+    ------
+    EofError
+        Connection lost before boundary hit.
+    """
+    chunks = read_protocol._chunks
+    intersection_sizes = None
+    held_back_offset = 0
+    held_back = None
+    
+    while True:
+        if chunks:
+            chunk = chunks[0]
+            offset = read_protocol._offset
+        else:
+            if read_protocol._at_eof:
+                raise EOFError(b'')
+            
+            chunk = await read_protocol._wait_for_data()
+            offset = 0
+        
+        if (intersection_sizes is not None):
+            offset, intersection_sizes = _finish_intersection_sizes(chunk, boundary, intersection_sizes)
+            # Found boundary in between?
+            if offset != -1:
+                # Do not offset if offset if at the end of the chunk. Delete chunk instead.
+                if offset == len(chunk):
+                    del chunks[0]
+                    offset = 0
+                read_protocol._offset = offset
+                
+                for released_chunk in _iter_release_from_held_back_chunks_with_start_and_end_boundary(
+                    held_back_offset, held_back, len(boundary) - offset
+                ):
+                    yield released_chunk
+                
+                return
+            
+            if (intersection_sizes is None):
+                # Release all.
+                for released_chunk in _iter_release_from_held_back_chunks_with_start_boundary(
+                    held_back_offset, held_back
+                ):
+                    yield released_chunk
+                
+                released_chunk = None
+                held_back = None
+                read_protocol._offset = 0
+                offset = 0
+            
+            else:
+                del chunks[0]
+                read_protocol._offset = 0
+                # Chunk too small?
+                held_back.append(chunk)
+                intersection_sizes = _merge_intersection_sizes(
+                    _continue_intersection_sizes(chunk, boundary, intersection_sizes),
+                    _get_end_intersection_sizes(chunk, 0, boundary),
+                )
+                
+                for released_chunk in _iter_release_from_held_back_chunks_unused(held_back_offset, held_back, len(boundary)):
+                    yield released_chunk
+                    held_back_offset = 0
+                
+                released_chunk = None
+                if not held_back:
+                    held_back = None
+                continue
+        
+        index = chunk.find(boundary, offset)
+        
+        # Found boundary?
+        if index != -1:
+            original_offset = offset
+            offset = index + len(boundary)
+            if offset == len(chunk):
+                del chunks[0]
+                offset = 0
+            read_protocol._offset = offset
+            
+            if original_offset != index:
+                yield memoryview(chunk)[original_offset : index]
+            return
+        
+        del chunks[0]
+        read_protocol._offset = 0
+        
+        intersection_sizes = _get_end_intersection_sizes(chunk, offset, boundary)
+        if (intersection_sizes is None):
+            yield (memoryview(chunk)[offset:] if offset else chunk)
+            
+        else:
+            held_back_offset = offset
+            held_back = [chunk]
+        
+        # Repeat loop
+        continue
 
 
 class ReadProtocolBase(AbstractProtocolBase):
@@ -945,115 +1175,6 @@ class ReadProtocolBase(AbstractProtocolBase):
         return b''.join(chunks)
     
     
-    async def _read_until_by_chunk(self, boundary):
-        """
-        Payload reader task, what reads until `boundary` is hit. Yields back each data chunk.
-        
-        This method is a coroutine.
-        
-        Parameters
-        ----------
-        boundary : `bytes`
-            The boundary to read until. Consumed but not returned.
-        
-        Raises
-        ------
-        EofError
-            Connection lost before boundary hit.
-        """
-        chunks = self._chunks
-        intersection_sizes = None
-        held_back = None
-        
-        while True:
-            if chunks:
-                chunk = chunks[0]
-                offset = self._offset
-            else:
-                if self._at_eof:
-                    raise EOFError(b'')
-                
-                chunk = await self._wait_for_data()
-                offset = 0
-            
-            if (intersection_sizes is not None):
-                offset, intersection_sizes = _finish_intersection_sizes(chunk, boundary, intersection_sizes)
-                # Found boundary in between?
-                if offset != -1:
-                    # Do not offset if offset if at the end of the chunk. Delete chunk instead.
-                    if offset == len(chunk):
-                        del chunks[0]
-                        offset = 0
-                    self._offset = offset
-                    
-                    released, held_back = _get_released_from_held_back(held_back, len(boundary) - offset)
-                    if (released is not None):
-                        for to_release in released:
-                            yield to_release
-                    released = None
-                    return
-                
-                if (intersection_sizes is None):
-                    # Release all.
-                    for to_release in held_back:
-                        yield to_release
-                    held_back = None
-                    self._offset = 0
-                    offset = 0
-                
-                else:
-                    del chunks[0]
-                    self._offset = 0
-                    # Chunk too small?
-                    held_back.append(chunk)
-                    intersection_sizes = _merge_intersection_sizes(
-                        _continue_intersection_sizes(chunk, boundary, intersection_sizes),
-                        _get_end_intersection_sizes(chunk, 0, boundary),
-                    )
-                    released, held_back = _get_released_from_held_back(held_back, len(boundary))
-                    if (released is not None):
-                        for to_release in released:
-                            yield to_release
-                    
-                    released = None
-                    continue
-            
-            index = chunk.find(boundary, offset)
-            
-            # Found boundary?
-            if index != -1:
-                original_offset = offset
-                offset = index + len(boundary)
-                if offset == len(chunk):
-                    del chunks[0]
-                    offset = 0
-                self._offset = offset
-                
-                if original_offset != index:
-                    yield memoryview(chunk)[original_offset : index]
-                return
-            
-            del chunks[0]
-            self._offset = 0
-            if offset:
-                chunk = memoryview(chunk)[offset:]
-            intersection_sizes = _get_end_intersection_sizes(chunk, offset, boundary)
-            if (intersection_sizes is not None):
-                offset = len(chunk) - intersection_sizes[0]
-                held_back = [memoryview(chunk)[offset:]]
-                
-                # Do not yield if `offset == 0` 
-                if not offset:
-                    continue
-                
-                chunk = memoryview(chunk)[:offset]
-            
-            yield chunk
-            
-            # Repeat loop
-            continue
-    
-    
     async def _read_until(self, boundary, payload_stream):
         """
         Payload reader task, what reads until `boundary` is hit.
@@ -1073,7 +1194,7 @@ class ReadProtocolBase(AbstractProtocolBase):
         EofError
             Connection lost before boundary hit.
         """
-        async for chunk in self._read_until_by_chunk(boundary):
+        async for chunk in _read_until_by_chunk(self, boundary):
             payload_stream.add_received_chunk(chunk)
     
     
@@ -1094,7 +1215,7 @@ class ReadProtocolBase(AbstractProtocolBase):
             Connection lost before boundary hit.
         """
         chunks = []
-        async for chunk in self._read_until_by_chunk(boundary):
+        async for chunk in _read_until_by_chunk(self, boundary):
             chunks.append(chunk)
         
         return b''.join(chunks)

@@ -12,7 +12,7 @@ class ConnectionKey(RichAttributeErrorBaseType):
     host : `str`
         The host's ip address.
     
-    port : `int`
+    port : `None | int`
         The host's port.
     
     proxy : `None | Proxy`
@@ -40,7 +40,7 @@ class ConnectionKey(RichAttributeErrorBaseType):
         host : `str`
             The host's ip address.
         
-        port : `int`
+        port : `None | int`
             The host's port.
         
         proxy : `None | Proxy`
@@ -145,7 +145,10 @@ class ConnectionKey(RichAttributeErrorBaseType):
         hash_value ^= hash(self.host)
         
         # port
-        hash_value ^= self.port << 17
+        port = self.port
+        if (port is not None):
+            hash_value ^= 1 << 10
+            hash_value ^= port << 17
         
         # proxy
         proxy = self.proxy

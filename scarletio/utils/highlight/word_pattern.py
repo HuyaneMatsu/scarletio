@@ -20,7 +20,7 @@ class WordNode:
     
     def __new__(cls, character, is_final, parent):
         """
-        Creates a new ``WordNode`` with the given `character`.
+        Creates a new instance with the given `character`.
         
         Parameters
         ----------
