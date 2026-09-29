@@ -1,6 +1,6 @@
 __all__ = ()
 
-from ..rich_attribute_error import RichAttributeErrorBaseType
+from ..rich_type import RichAttributeErrorBaseType
 
 from .frame_ignoring import should_keep_frame, should_keep_frame_from_filter
 from .frame_proxy import FrameProxyVirtual

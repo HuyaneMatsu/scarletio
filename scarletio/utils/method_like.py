@@ -3,10 +3,11 @@ __all__ = ('MethodLike',)
 from types import MethodType
 
 from .docs import has_docs
+from .rich_type import RichType
 
 
 @has_docs
-class SubCheckType(type):
+class SubCheckType(RichType):
     """
     A meta-type that can be used for sub-type checks. It's type instances should implement a `.__sub_types__`
     type attribute that contains all of it's "sub-types".

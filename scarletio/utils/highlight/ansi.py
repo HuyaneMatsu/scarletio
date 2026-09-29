@@ -3,7 +3,7 @@ __all__ = (
     'stream_split_ansi_format_codes',
 )
 
-from ..rich_attribute_error import RichAttributeErrorBaseType
+from ..rich_type import RichAttributeErrorBaseType
 
 
 def iter_produce_ansi_format_code(

@@ -114,10 +114,10 @@ def should_keep_frame(frame_proxy, *, filter = None):
 
 # ---- Ignore frames / module_rich_attribute_error ----
 
-from .. import rich_attribute_error as module_rich_attribute_error
+from .. import rich_type as module_rich_attribute_error
 
 ignore_frame(
-    module_rich_attribute_error.__spec__.origin, '__getattr__', 'raise AttributeError(self, attribute_name)'
+    module_rich_attribute_error.__spec__.origin, 'rich_getattr', 'raise AttributeError(self, attribute_name)'
 )
 
 

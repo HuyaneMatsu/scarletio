@@ -1,11 +1,11 @@
 __all__ = ('ResourceStreamFunction',)
 
-from ...utils import MethodLike, RichAttributeErrorBaseType, docs_property
+from ...utils import MethodLike, docs_property
 
 from .resource_stream import ResourceStream
 
 
-class ResourceStreamFunction(RichAttributeErrorBaseType, MethodLike):
+class ResourceStreamFunction(MethodLike):
     __doc__ = docs_property()
     
     __type_doc__ = (

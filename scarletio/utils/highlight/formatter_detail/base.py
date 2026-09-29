@@ -1,6 +1,6 @@
 __all__ = ('FormatterDetailBase',)
 
-from ...rich_attribute_error import RichAttributeErrorBaseType
+from ...rich_type import RichAttributeErrorBaseType
 
 
 class FormatterDetailBase(RichAttributeErrorBaseType):

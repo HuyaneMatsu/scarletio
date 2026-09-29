@@ -1,6 +1,6 @@
 __all__ = ()
 
-from ..rich_attribute_error import RichAttributeErrorBaseType
+from ..rich_type import RichAttributeErrorBaseType
 
 from .layer import Layer
 from .matching import _keep_python_parsing

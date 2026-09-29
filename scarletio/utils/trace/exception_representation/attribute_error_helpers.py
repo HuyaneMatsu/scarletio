@@ -2,7 +2,7 @@ __all__ = ()
 
 from builtins import AttributeError as PlainAttributeError
 
-from ...rich_attribute_error import ATTRIBUTE_ERROR_HAS_RICH_SLOTS, AttributeError as RichAttributeError
+from ...rich_type import ATTRIBUTE_ERROR_HAS_RICH_SLOTS, AttributeError as RichAttributeError
 
 INSTANCE_SLOT = RichAttributeError.instance
 ATTRIBUTE_NAME_SLOT = RichAttributeError.attribute_name

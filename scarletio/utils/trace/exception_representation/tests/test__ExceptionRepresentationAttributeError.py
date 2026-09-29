@@ -1,6 +1,6 @@
 import vampytest
 
-from ....rich_attribute_error import AttributeError
+from ....rich_type import AttributeError
 
 from ...frame_proxy import FrameProxyVirtual
 

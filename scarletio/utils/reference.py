@@ -1,6 +1,6 @@
 __all__ = ('Reference',)
 
-from .rich_attribute_error import RichAttributeErrorBaseType
+from .rich_type import RichAttributeErrorBaseType
 
 
 class Reference(RichAttributeErrorBaseType):

@@ -1,3 +1,10 @@
+# 1.0.100 *\[2025-09-30\]*
+
+#### Improvements
+
+- Add new `RichType` meta-type which auto adds `__getattr__`, `__repr__`, `__eq__` and `__hash__` as requested.
+    `RichAttributeErrorBaseType` is now an instance of `RichType`; this may cause meta-type conflicts. 
+
 # 1.0.99 *\[2025-08-02\]*
 
 #### Bug fixes
