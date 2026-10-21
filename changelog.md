@@ -1,3 +1,7 @@
+# 1.0.101 *\[2025-10-21\]*
+
+- Add exclusion of specific environment from resolve configuration loading.
+
 # 1.0.100 *\[2025-09-30\]*
 
 #### Improvements

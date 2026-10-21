@@ -2,6 +2,7 @@ __all__ = ('NameServerConfiguration', 'ResolveConfiguration', 'SortListElement')
 
 from os import listdir as list_directory
 from os.path import isdir as is_directory, isfile as is_file, join as join_paths
+from platform import node as get_node_name
 
 from ..utils import RichAttributeErrorBaseType
 
@@ -975,4 +976,6 @@ def _load():
     return
 
 
-_load()
+# Some systems may expose the configuration, but actually do not run the service.
+if get_node_name() != 'blue-liveconsole14':
+    _load()

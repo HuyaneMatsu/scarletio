@@ -721,7 +721,8 @@ async def get_address_info_async(
                             (
                                 RESOURCE_RECORD_TYPE_IP_V4_ADDRESS
                                 if socket_family == SOCKET_FAMILY_IP_V4 else
-                                RESOURCE_RECORD_TYPE_IP_V6_ADDRESS),
+                                RESOURCE_RECORD_TYPE_IP_V6_ADDRESS
+                            ),
                             CLASS_CODE_INTERNET,
                         )
                         for socket_family in socket_families

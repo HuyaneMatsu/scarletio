@@ -74,7 +74,7 @@ class ConnectionKey(RichAttributeErrorBaseType):
         repr_parts.append(repr(self.host))
         
         # port
-        repr_parts.append(', post = ')
+        repr_parts.append(', port = ')
         repr_parts.append(repr(self.port))
         
         # proxy
